@@ -1,6 +1,6 @@
 # Data Schema — Concrete Batch Analysis System
 
-**Status:** Draft for M1-02 · **Owner:** Tyler · **Approver:** Meels
+**Status:** Draft for M1-02 
 **Last updated:** 2026-09-28
 
 This file is the single source of truth for every piece of data the app stores. The names here are the exact names used in the C# classes, the API, and the UI bindings. If you need a field that isn't here, don't invent one: open a PR against this file first.
