@@ -57,14 +57,9 @@ git --version
 ## Getting started
 
 ```powershell
-# 1. Clone
-git clone https://github.com/<owner>/<repo>.git
-cd <repo>
-
-# 2. Switch to the working branch
+git clone https://github.com/emmyatri/concrete-analysis-system.git
+cd concrete-analysis-system
 git checkout dev
-
-# 3. Build and test
 dotnet build
 dotnet test
 ```
