@@ -3554,7 +3554,7 @@
       "MixWaterPh": 7.1,
       "IsSynthetic": true,
       "Composition": {
-        "CementPct": 10.1,
+        "CementPct": 10.0,
         "ScmPct": 0,
         "ScmType": "None",
         "CoarseAggregatePct": 40,
@@ -3565,7 +3565,7 @@
         "AluminaPct": 4.9,
         "IronOxidePct": 3.2,
         "MagnesiumOxidePct": 2.2,
-        "SulfurTrioxidePct": 3.3
+        "SulfurTrioxidePct": 2.7
       },
       "Specimens": [
         {
@@ -3576,7 +3576,7 @@
           "IsSynthetic": true,
           "BreakResult": {
             "BrokenAt": "2026-06-24T12:05:00Z",
-            "StrengthPsi": 3333
+            "StrengthPsi": 2950
           },
           "CuringReadings": [
             {
