@@ -1,0 +1,6 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+  <ItemGroup>
+    <ProjectReference Include="..\Vulcan.Application\Vulcan.Application.csproj"/>
+    <ProjectReference Include="..\Vulcan.Infrastructure\Vulcan.Infrastructure.csproj"/>
+  </ItemGroup>
+</Project>
