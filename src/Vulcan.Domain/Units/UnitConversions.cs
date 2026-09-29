@@ -1,4 +1,5 @@
 namespace Vulcan.Domain.Units;
+namespace DefaultNamespace;
 
 public static class UnitConversions
 {
@@ -11,4 +12,5 @@ public static class UnitConversions
     {
         return celsius * 9m / 5m + 32m;
     }
+
 }
