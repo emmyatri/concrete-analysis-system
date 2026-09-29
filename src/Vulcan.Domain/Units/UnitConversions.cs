@@ -1,4 +1,5 @@
 namespace Vulcan.Domain.Units;
+
 namespace DefaultNamespace;
 
 public static class UnitConversions
