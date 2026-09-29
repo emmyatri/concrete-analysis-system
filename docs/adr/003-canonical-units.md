@@ -5,90 +5,107 @@
 
 The Vulcan Materials Concrete Batch Analysis and Strength Prediction System collects and processes measurements associated with concrete composition, specimen dimensions, curing conditions, environmental conditions, and compressive strength testing.
 
-To ensure consistent calculations, reliable data validation, and accurate reporting, the application requires a standardized set of measurement units.
+To ensure consistent calculations, reliable validation, and accurate reporting, the application requires a standardized set of measurement units.
 
-Storing measurements in different units without explicitly identifying them introduces the risk of incorrect calculations and inconsistent comparisons between concrete batches. Additionally, concrete mix composition percentages and water-to-cement ratios use different measurement bases and must be distinguished.
+Storing measurements in inconsistent units introduces the risk of incorrect calculations and unreliable comparisons between concrete batches. Additionally, concrete mix composition percentages and cement chemistry percentages represent different quantities and must remain distinct.
 
-The team must establish canonical measurement units to ensure that all components of the application interpret and process stored data consistently.
+The team must therefore establish canonical units for all stored measurements, consistent with the approved data schema and client decisions.
 
 ## 2. Decision
 
-The team has selected a standardized set of canonical measurement units for all numerical measurements stored in the application's database.
+The team has selected standardized canonical measurement units for all measurements stored in the application's database.
 
 ### 2.1 Canonical Units
 
-| Measurement | Canonical Unit | Symbol |
+| Measurement | Schema Field | Canonical Unit |
 |---|---|---|
-| Weight | Pounds | lb |
-| Length and specimen dimensions | Inches | in |
-| Compressive strength | Pounds per square inch | PSI |
-| Temperature | Degrees Fahrenheit | °F |
-| Electrical resistance per unit length | Ohms per foot | ohms/ft |
-| Concentration | Parts per million | ppm |
-| Concrete mix composition | Percentage by volume | % |
-| Water-to-cement ratio | Ratio by weight | Unitless |
-| Timestamps | Coordinated Universal Time | UTC |
+| Batch weight | `FinalWeightLb` | Pounds (lb) |
+| Specimen dimensions | `LengthIn`, `WidthIn` | Inches (in) |
+| Compressive strength | `StrengthPsi`, `ExpectedFinalBreakPsi` | Pounds per square inch (PSI) |
+| Temperature | `InternalTempF`, `AmbientTempF` | Degrees Fahrenheit (°F) |
+| Electrical resistivity | `ResistivityOhmPerFt` | Ohms per foot (ohms/ft) |
+| Carbon dioxide concentration | `Co2Ppm` | Parts per million (ppm) |
+| Cement oxide composition | `AluminaPct`, `IronOxidePct`, `MagnesiumOxidePct`, `SulfurTrioxidePct` | Percentage of cement (%) |
+| Concrete mix composition | `CementPct`, `ScmPct`, `CoarseAggregatePct`, `FineAggregatePct`, `WaterPct` | Percentage by absolute volume (%) |
+| Mix-water pH | `MixWaterPh` | Unitless |
+| Moisture | `MoisturePct` | Percentage (%) |
+| Relative humidity | `RelativeHumidityPct` | Percentage (%) |
+| Test age | `TestAgeDays` | Days |
+| Timestamps | `CastAt`, `BrokenAt`, `TakenAt` and audit timestamps | Coordinated Universal Time (UTC) |
 
-All measurements will be converted to their canonical units before being persisted in the database.
+All percentages are stored as values from 0 to 100. For example, 12.5 represents 12.5%, not 0.125.
 
-Concrete mix composition percentages will be stored by volume. The water-to-cement ratio will be calculated using the respective weights of water and cement.
+Timestamps are stored in UTC and displayed in the workstation's local time.
 
-Timestamps will be stored in UTC to ensure consistent representation of dates and times.
+### 2.2 Calculated Values
 
-### 2.2 Input Validation and Unit Conversion
+The water-to-cement ratio is calculated dynamically from the stored mix percentages and material-specific gravities. It is not stored in the database.
 
-The application will distinguish between user-entered values and the canonical values stored in the database.
+The calculation follows the approved schema:
 
-Where alternative input units are supported, measurements must be converted to their corresponding canonical units before persistence.
+WaterCementRatio =
+(WaterPct × SG_water) /
+(CementPct × SG_cement + ScmPct × SG_scm)
 
-The application service layer will enforce the approved validation rules against canonical values before they are stored.
+When SCM is present, the calculated value is technically a water-to-cementitious-materials ratio (w/cm).
 
-The WPF interface may perform preliminary validation to provide immediate feedback, but authoritative validation must occur before database persistence.
+The total composition percentage and remaining air/other percentage are also calculated rather than stored.
 
-This ensures that measurements are interpreted consistently regardless of how they are entered or which application component initiates an operation.
+### 2.3 Input Validation and Unit Conversion
 
-### 2.3 Database Representation
+The WPF interface performs preliminary validation to provide immediate feedback when an operator enters invalid or incomplete data.
 
-Database fields representing physical measurements will use clearly defined names that identify their associated units.
+All submitted data passes through the ASP.NET Core API, which delegates authoritative validation to the application service layer before persistence.
+
+Unit conversion occurs exclusively within `Domain.Units`. Where alternative input units are supported, measurements are converted to their canonical units before storage.
+
+Values exceeding the permitted precision of two decimal places are rejected rather than rounded. Fields with explicitly defined alternative precision, such as curing temperatures, follow their field-specific rules.
+
+The application enforces the approved validation limits against canonical values to ensure consistent interpretation across the UI, API, and database.
+
+### 2.4 Database Representation
+
+Database fields use the names and units established in the approved data schema.
 
 For example:
 
 - `FinalWeightLb`
-- `CylinderLengthIn`
-- `CylinderDiameterIn`
-- `BreakStrengthPsi`
+- `LengthIn`
+- `WidthIn`
+- `StrengthPsi`
 - `AmbientTempF`
+- `Co2Ppm`
 
-Measurements will be stored using appropriate numeric data types and precision for their intended use.
+The application maintains a distinction between mix composition percentages by absolute volume and cement oxide percentages by cement content.
 
-The application will maintain a consistent distinction between percentages by volume and ratios by weight.
-
-All date and time fields will use UTC.
+All database operations must preserve the established canonical units.
 
 ## 3. Consequences
 
 | Positive Consequences | Trade-offs |
 |---|---|
-| Consistent measurement storage across all concrete batches | Alternative input units require conversion before storage |
+| Consistent measurement storage across concrete batches | Alternative input units require conversion before storage |
 | Reduced risk of unit-related calculation errors | Conversion logic must be implemented and tested |
-| Simplified validation and comparison of measurements | Validation limits must use the correct canonical units |
-| Consistent reporting and graphical representation | Alternative display units require additional conversion logic |
-| Clear database field definitions | Developers must consistently follow established naming conventions |
+| Consistent validation in both the UI and API | Both layers must follow the approved validation rules |
+| Simplified comparison of measurements | Developers must consistently use the established units |
+| Clear database field definitions | Changes to canonical units may require database migrations |
 | Standardized timestamps | Local times must be converted to and from UTC |
 
 ### Data Integrity
 
 Establishing canonical units reduces the risk of inconsistent measurements being stored or used in calculations.
 
-All measurements must satisfy the approved validation rules before persistence. Unit conversion must not introduce unintended rounding or precision loss.
+Values with more than two decimal places are rejected rather than rounded, except where the approved schema specifies a different precision.
+
+Unit conversion is centralized in `Domain.Units` to prevent inconsistent conversion logic across application components.
 
 ### Reporting and Calculations
 
-Calculations and reports will operate on canonical values.
+Calculations and reports operate on canonical values.
 
-Where alternative display units are supported, conversions will occur when presenting data without changing the underlying stored measurements.
+Where alternative display units are supported, conversions occur when presenting data without modifying the underlying stored measurements.
 
-Graph labels and generated reports must clearly identify the units associated with displayed values.
+Graph labels and generated reports must clearly identify their associated units.
 
 ### Future Changes
 
@@ -99,3 +116,8 @@ Any such changes must preserve the integrity of existing records and maintain co
 ## 4. Status
 
 **Proposed** — Pending Co-Lead approval.
+
+## References
+
+- [Approved Data Schema](../schema.md)
+- [Client Decisions](../client-decisions.md)

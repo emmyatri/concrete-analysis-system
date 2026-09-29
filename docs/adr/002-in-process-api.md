@@ -33,7 +33,7 @@ This separation establishes a consistent data-access pathway and prevents duplic
 
 ### 2.2 Authoritative Validation
 
-The WPF interface may perform preliminary validation to provide immediate feedback to the operator.
+The WPF interface performs preliminary validation to provide immediate feedback to the operator.
 
 However, all submitted data will pass through the ASP.NET Core API, which delegates validation to the application service layer.
 
