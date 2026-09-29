@@ -1,4 +1,4 @@
-﻿namespace Vulcan.Domain.Tests;
+namespace Vulcan.Domain.Tests;
 
 public class UnitTest1
 {

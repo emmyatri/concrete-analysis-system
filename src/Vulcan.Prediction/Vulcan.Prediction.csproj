@@ -1,5 +1,5 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <ItemGroup>
-    <ProjectReference Include="..\Vulcan.Domain\Vulcan.Domain.csproj" />
+    <ProjectReference Include="..\Vulcan.Domain\Vulcan.Domain.csproj"/>
   </ItemGroup>
 </Project>
