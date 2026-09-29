@@ -7,4 +7,10 @@
     <Project Path="src/Vulcan.Infrastructure/Vulcan.Infrastructure.csproj" />
     <Project Path="src/Vulcan.Prediction/Vulcan.Prediction.csproj" />
   </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/Vulcan.Api.Tests/Vulcan.Api.Tests.csproj" />
+    <Project Path="tests/Vulcan.Application.Tests/Vulcan.Application.Tests.csproj" />
+    <Project Path="tests/Vulcan.Domain.Tests/Vulcan.Domain.Tests.csproj" />
+    <Project Path="tests/Vulcan.Infrastructure.Tests/Vulcan.Infrastructure.Tests.csproj" />
+  </Folder>
 </Solution>
