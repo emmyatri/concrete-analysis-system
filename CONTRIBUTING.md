@@ -70,6 +70,7 @@ docs(SCRUM-86): add approved data schema
 - The type matches your branch type.
 - Write what the commit **does**, not what you did today. "add batch form," not "worked on stuff."
 - The ticket number is what shows your commit on the Jira ticket. Don't leave it out.
+- ALWAYS Run `dotnet format` before you push. **CI fails on formatting.**
 
 ---
 
