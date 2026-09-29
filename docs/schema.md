@@ -119,7 +119,7 @@ erDiagram
         datetime CreatedAtUtc
     }
 ```
-
+[Link to ER Diagram](schema-ERD-draft.png)
 ---
 
 ## 2. Conventions (apply to every table)
