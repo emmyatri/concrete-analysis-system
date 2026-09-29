@@ -34,12 +34,12 @@ You can't push directly to `main` or `dev`. GitHub will reject it. Everything go
 <type>/SCRUM-<number>-<short-name>
 ```
 
-| Type | Use it for | Example |
-|---|---|---|
-| `feat` | New features or screens | `feat/SCRUM-42-batch-form` |
-| `fix` | Bug fixes | `fix/SCRUM-57-ph-message` |
-| `docs` | Documentation only | `docs/SCRUM-86-schema` |
-| `test` | Adding or fixing tests only | `test/SCRUM-61-oxide-edges` |
+| Type    | Use it for                  | Example                      |
+|---------|-----------------------------|------------------------------|
+| `feat`  | New features or screens     | `feat/SCRUM-42-batch-form`   |
+| `fix`   | Bug fixes                   | `fix/SCRUM-57-ph-message`    |
+| `docs`  | Documentation only          | `docs/SCRUM-86-schema`       |
+| `test`  | Adding or fixing tests only | `test/SCRUM-61-oxide-edges`  |
 | `chore` | Setup, config, CI, packages | `chore/SCRUM-88-ci-workflow` |
 
 Rules:
@@ -87,7 +87,8 @@ docs(SCRUM-86): add approved data schema
 - Every PR needs **one approval from a lead** (Amelia or Tyler). GitHub adds them automatically.
 - You can't approve your own PR. Leads review each other's.
 - Leads aim to review within **one business day**. If yours has waited longer, ping in the team channel.
-- Reply to every comment, either by fixing it or explaining why not. The PR can't merge until all conversations are resolved.
+- Reply to every comment, either by fixing it or explaining why not. The PR can't merge until all conversations are
+  resolved.
 
 ### Merging
 
@@ -101,7 +102,8 @@ docs(SCRUM-86): add approved data schema
 A ticket is **Done** only when all of these are true:
 
 1. **Tests pass on GitHub.** The green check on the PR, not just on your machine.
-2. **Every validation rule you touched has edge tests.** Test the minimum, the maximum, just below, and just above. Example for cement 10–15%: test 9.99 (rejected), 10 (saved), 15 (saved), 15.01 (rejected).
+2. **Every validation rule you touched has edge tests.** Test the minimum, the maximum, just below, and just above.
+   Example for cement 10–15%: test 9.99 (rejected), 10 (saved), 15 (saved), 15.01 (rejected).
 3. **A lead approved the PR.**
 4. **Requirement numbers are listed** in the PR (e.g. FR-2.1, NFR-6). They're on the Jira ticket.
 5. **Screen changes have a screenshot** in the PR.
@@ -114,8 +116,10 @@ A ticket is **Done** only when all of these are true:
 These are the ones reviewers will send PRs back for.
 
 - **All validation lives in `Vulcan.Domain`.** Not in the screens, not in the API.
-- **Never hard-code a limit.** Ranges come from the `ValidationLimit` table. If you type `15` or `3000` in a rule, it's wrong.
-- **The schema is locked.** Need a new or renamed field? Open a PR that changes `docs/schema.md` first, and write the code after it's approved.
+- **Never hard-code a limit.** Ranges come from the `ValidationLimit` table. If you type `15` or `3000` in a rule, it's
+  wrong.
+- **The schema is locked.** Need a new or renamed field? Open a PR that changes `docs/schema.md` first, and write the
+  code after it's approved.
 - **No real Vulcan data in the repo, ever.** Only synthetic data, in `data/synthetic/`. This is in our contract.
 - **Ask a lead before adding a NuGet package.**
 - **Don't commit `bin/`, `obj/`, `.db` files, or anything in `.gitignore`.** If `git status` shows them, stop and ask.
@@ -149,4 +153,5 @@ If you get a merge conflict and don't know which side to keep, **stop and ask a 
 
 ## Stuck?
 
-Ask in the team channel. Include the ticket number, what you tried, and the exact error message or a screenshot. If you've been stuck for more than an hour, you've waited too long to ask.
+Ask in the team channel. Include the ticket number, what you tried, and the exact error message or a screenshot. If
+you've been stuck for more than an hour, you've waited too long to ask.
