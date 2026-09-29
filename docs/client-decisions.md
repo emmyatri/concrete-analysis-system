@@ -21,8 +21,7 @@ The exact numbers for every rule are in [`schema.md`](schema.md), section 4. Thi
 
 ## 1. Mix percentages are by volume, not weight
 
-Rev 1 gives a percentage for each ingredient but never says whether it means weight or volume. We're treating them as *
-*volume**: how much space each ingredient takes up in the finished concrete.
+Rev 1 gives a percentage for each ingredient but never says whether it means weight or volume. We're treating them as **volume**: how much space each ingredient takes up in the finished concrete.
 
 Rev 1's ranges (cement 10–15%, sand 25–30%, gravel 40–55%, water 15–20%) are almost word for word the volume proportions
 NRMCA publishes: "Typically, a mixture is by volume about 10 to 15 percent cement, 60 to 75 percent aggregates and 15 to
