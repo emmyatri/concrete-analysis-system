@@ -12,7 +12,7 @@ The following rules apply to the respective numerical field. Empty ranges indica
 | `Composition.FineAggregatePct`   | 25      | 30      |                | Reject   | Fine aggregate composition must be within the range \[25-30\]                                                                                   | FR-2.1          | schema.md, client-decisions.md |
 | `Composition.CoarseAggregatePct` | 40      | 55      |                | Reject   | Coarse aggregate composition must be within the range \[40-55\]                                                                                 | FR-2.1          | schema.md, client-decisions.md |
 | `Composition.WaterPct`           | 15      | 20      |                | Reject   | Water composition must be within the range \[15-20\]                                                                                            | FR-2.1          | schema.md, client-decisions.md |
-| `Composition.TotalPct`           |         | 100     |                | Reject   | Total composition is expected to be less than 100%                                                                                              | NA / Decision 2 | schema.md, client-decisions.md |
+| `Composition.TotalPct`           |         | 100     |                | Reject   | Total composition must not exceed 100%                                                                                                          | NA / Decision 2 | schema.md, client-decisions.md |
 | `Composition.WaterCementRatio`   | 0.40    | 0.60    |                | Warn     | The water to cement ratio is outside the normal range \[0.4-0.6\]                                                                               | FR-8            | schema.md, client-decisions.md |
 | `Oxide.AluminaPct`               | 3.0     | 7.5     |                | Warn     | The aluminum oxide percent is outside the normal range \[3.0-7.5\]                                                                              | FR-3            | schema.md, client-decisions.md |
 | `Oxide.AluminaPct`               | 0       | 100     |                | Reject   | The aluminum oxide percent must be a valid percentage \[0-100\]                                                                                 | FR-3            | schema.md, client-decisions.md |
@@ -41,12 +41,14 @@ Each field has a test case covering:
 - The value just within the lower bound of the range
 - The value just within the upper bound of the range
 - A value with a rounding error
+
 This holds true for both warning and error (Reject) thresholds.
 ### Boundary Tests
 | field                            | input | output |
 | -------------------------------- | ----- | ------ |
 | `Batch.FinalWeightLb`            | 0.00  | Reject |
 | `Batch.FinalWeightLb`            | 0.01  | Valid  |
+| `Batch.FinalWeightLb`            | 0.02  | Valid  |
 | `Batch.ExpectedFinalBreakPsi`    | 2999  | Reject |
 | `Batch.ExpectedFinalBreakPsi`    | 3000  | Valid  |
 | `Batch.ExpectedFinalBreakPsi`    | 10000 | Valid  |
@@ -80,7 +82,7 @@ This holds true for both warning and error (Reject) thresholds.
 | `Composition.WaterPct`           | 20    | Valid  |
 | `Composition.WaterPct`           | 21    | Reject |
 | `Composition.TotalPct`           | 99    | Valid  |
-| `Composition.TotalPct`           | 100   | Reject |
+| `Composition.TotalPct`           | 100   | Valid  |
 | `Composition.TotalPct`           | 101   | Reject |
 | `Composition.WaterCementRatio`   | 0.39  | Warn   |
 | `Composition.WaterCementRatio`   | 0.40  | Valid  |
@@ -152,8 +154,10 @@ This holds true for both warning and error (Reject) thresholds.
 | `Curing.RelativeHumidityPct`     | 101   | Reject |
 | `Curing.ResistivityOhmPerFt`     | 0     | Reject |
 | `Curing.ResistivityOhmPerFt`     | 0.01  | Valid  |
+| `Curing.ResistivityOhmPerFt`     | 0.02  | Valid  |
 | `Curing.Co2Ppm`                  | -1    | Reject |
 | `Curing.Co2Ppm`                  | 0     | Valid  |
+| `Curing.Co2Ppm`                  | 1     | Valid  |
 ### Rounding Tests
 | field                  | input  | output |
 | ---------------------- | ------ | ------ |
