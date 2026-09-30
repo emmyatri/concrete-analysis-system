@@ -27,6 +27,7 @@ The following rules apply to the respective numerical field. Empty ranges indica
 | `BreakResult.StrengthPsi`               | 1       | 10000   | 0              | Reject   | PSI must be within the range \[1-10000\]                                                                                                        | FR-5            | SLA, schema.md                 |
 | `BreakResult.StrengthPsi`               | 3000    | 10000   | 0              | Warn     | PSI is below expected value \[3000\]                                                                                                            | FR-5            | schema.md                      |
 | `CuringReading.InternalTempF`           |         |         | 1              | Reject   | Internal temperature must be within one decimal                                                                                                 | FR-6            | schema.md, client-decisions.md |
+| `CuringReading.InternalTempF`           | 0       | 200     |                | Reject   | Internal temperature must be within the range \[0-200\]                                                                                         | FR-6            | schema.md                      |
 | `CuringReading.AmbientTempF`            | 60      | 80      |                | Warn     | Ambient temperature is outside the normal range \[60-80\]                                                                                       | FR-6            | schema.md, client-decisions.md |
 | `CuringReading.AmbientTempF`            | 0       | 150     |                | Reject   | Ambient temperature must be within the range \[0-150\]                                                                                          | FR-6            | schema.md, client-decisions.md |
 | `CuringReading.MoisturePct`             | 0       | 100     |                | Reject   | Moisture percent must be a valid percentage \[0-100\]                                                                                           | FR-6            | schema.md                      |
@@ -137,6 +138,10 @@ This holds true for both warning and error (Reject) thresholds.
 | `CuringReading.AmbientTempF`            | 60    | Valid  |
 | `CuringReading.AmbientTempF`            | 80    | Valid  |
 | `CuringReading.AmbientTempF`            | 81    | Warn   |
+| `CuringReading.InternalTempF`           | -1    | Reject |
+| `CuringReading.InternalTempF`           | 0     | Valid  |
+| `CuringReading.InternalTempF`           | 200   | Valid  |
+| `CuringReading.InternalTempF`           | 201   | Reject |
 | `CuringReading.MoisturePct`             | -1    | Reject |
 | `CuringReading.MoisturePct`             | 0     | Valid  |
 | `CuringReading.MoisturePct`             | 100   | Valid  |
