@@ -12,6 +12,6 @@ using (var scope = app.Services.CreateScope())
     database.Database.Migrate();
 }
 
-app.MapGet("/", () => "Hello World!");
+var app = ApiHost.Create(args);
 
 app.Run();
