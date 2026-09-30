@@ -37,9 +37,6 @@ public partial class App : Application
         // Ensure the application log directory exists before configuring Serilog.
         Directory.CreateDirectory(_logDirectory);
 
-        // Register the global handler for unhandled UI-thread exceptions.
-        DispatcherUnhandledException += OnDispatcherUnhandledException;
-
         // Write one log file per day and retain the most recent 14 files.
         Log.Logger = new LoggerConfiguration()
             .MinimumLevel.Information()
@@ -48,6 +45,27 @@ public partial class App : Application
                 rollingInterval: RollingInterval.Day,
                 retainedFileCountLimit: 14)
             .CreateLogger();
+
+        // Register global exception handlers after Serilog is configured.
+        DispatcherUnhandledException += OnDispatcherUnhandledException;
+
+        AppDomain.CurrentDomain.UnhandledException += (_, args) =>
+        {
+            Log.Fatal(
+                args.ExceptionObject as Exception,
+                "Unhandled non-UI exception");
+
+            Log.CloseAndFlush();
+        };
+
+        TaskScheduler.UnobservedTaskException += (_, args) =>
+        {
+            Log.Error(
+                args.Exception,
+                "Unobserved task exception");
+
+            args.SetObserved();
+        };
 
         var version = Assembly.GetExecutingAssembly()
             .GetName()
