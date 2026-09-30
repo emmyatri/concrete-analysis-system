@@ -120,6 +120,10 @@ public partial class App : Application
             _serviceProvider = services.BuildServiceProvider();
 
             Log.Information("In-process API host started successfully");
+
+            var window = new MainWindow();
+            MainWindow = window;
+            window.Show();
         }
         catch (Exception ex)
         {
@@ -145,21 +149,31 @@ public partial class App : Application
         base.OnStartup(e);
     }
 
-    protected override async void OnExit(ExitEventArgs e)
+    protected override void OnExit(ExitEventArgs e)
     {
+        Log.Information("Vulcan CBAS application shutting down");
+
         if (_apiHost is not null)
         {
-            await _apiHost.StopAsync();
-            await _apiHost.DisposeAsync();
+            try
+            {
+                // Run on the thread pool so blocking the UI thread can't deadlock.
+                Task.Run(async () =>
+                {
+                    await _apiHost.StopAsync();
+                    await _apiHost.DisposeAsync();
+                }).Wait(TimeSpan.FromSeconds(5));
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, "Error stopping in-process API host");
+            }
         }
 
         _serviceProvider?.Dispose();
 
-        Log.Information("Vulcan CBAS application shutting down");
-
         // Flush any buffered log events before the process exits.
         Log.CloseAndFlush();
-
         base.OnExit(e);
     }
 }
