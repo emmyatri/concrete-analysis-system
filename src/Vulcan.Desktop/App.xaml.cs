@@ -93,25 +93,54 @@ public partial class App : Application
         Log.Information("Application version: {Version}", version);
         Log.Information("Log location: {LogDirectory}", _logDirectory);
 
-        _apiHost = ApiHost.Create([]);
-
-        await _apiHost.StartAsync();
-
-        var server = _apiHost.Services.GetRequiredService<IServer>();
-        var addresses = server.Features.Get<IServerAddressesFeature>();
-
-        var serverAddress = addresses?.Addresses.Single()
-                            ?? throw new InvalidOperationException(
-                                "The API server did not provide a listening address.");
-
-        var services = new ServiceCollection();
-
-        services.AddSingleton(new ApiServerInfo
+        try
         {
-            BaseAddress = new Uri(serverAddress)
-        });
+            _apiHost = ApiHost.Create([]);
 
-        _serviceProvider = services.BuildServiceProvider();
+            await _apiHost.StartAsync();
+
+            var server = _apiHost.Services.GetRequiredService<IServer>();
+            var addresses = server.Features.Get<IServerAddressesFeature>();
+
+            var serverAddress = addresses?.Addresses.Single()
+                                ?? throw new InvalidOperationException(
+                                    "The API server did not provide a listening address.");
+
+            Log.Information(
+                "In-process API host listening at {ServerAddress}",
+                serverAddress);
+
+            var services = new ServiceCollection();
+
+            services.AddSingleton(new ApiServerInfo
+            {
+                BaseAddress = new Uri(serverAddress)
+            });
+
+            _serviceProvider = services.BuildServiceProvider();
+
+            Log.Information("In-process API host started successfully");
+        }
+        catch (Exception ex)
+        {
+            Log.Fatal(ex, "Failed to start in-process API host");
+
+            if (_apiHost is not null)
+            {
+                await _apiHost.DisposeAsync();
+                _apiHost = null;
+            }
+
+            MessageBox.Show(
+                "The application server could not be started. " +
+                "The error has been recorded in the application log.",
+                "Vulcan CBAS",
+                MessageBoxButton.OK,
+                MessageBoxImage.Error);
+
+            Shutdown();
+            return;
+        }
 
         base.OnStartup(e);
     }

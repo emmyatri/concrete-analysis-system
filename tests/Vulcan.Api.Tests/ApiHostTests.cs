@@ -63,6 +63,7 @@ public class ApiHostTests
 
         // The API must listen only on IPv4 loopback and use an
         // OS-selected port rather than a hard-coded application port.
+        uri.Scheme.ShouldBe(Uri.UriSchemeHttp);
         uri.Host.ShouldBe("127.0.0.1");
         uri.Port.ShouldBeGreaterThan(0);
 
