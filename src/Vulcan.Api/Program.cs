@@ -1,7 +1,6 @@
-var builder = WebApplication.CreateBuilder(args);
-var app = builder.Build();
+using Vulcan.Api;
 
-app.MapGet("/", () => "Hello World!");
+var app = ApiHost.Create(args);
 
 app.Run();
 

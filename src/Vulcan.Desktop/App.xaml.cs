@@ -2,12 +2,24 @@ using System.IO;
 using System.Reflection;
 using System.Windows;
 using System.Windows.Threading;
+using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Hosting.Server;
+using Microsoft.AspNetCore.Hosting.Server.Features;
+using Microsoft.Extensions.DependencyInjection;
 using Serilog;
+using Vulcan.Api;
+using Vulcan.Desktop.Services;
 
 namespace Vulcan.Desktop;
 
+/// <summary>
+/// Interaction logic for App.xaml
+/// </summary>
 public partial class App : Application
 {
+    private WebApplication? _apiHost;
+    private ServiceProvider? _serviceProvider;
+
     private static readonly string _logDirectory = Path.Combine(
         Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
         "VulcanCBAS",
@@ -16,6 +28,11 @@ public partial class App : Application
     private static readonly string _logPath = Path.Combine(
         _logDirectory,
         "app-.log");
+
+    public IServiceProvider Services =>
+        _serviceProvider
+        ?? throw new InvalidOperationException(
+            "Desktop services are not available until application startup completes.");
 
     private static void OnDispatcherUnhandledException(
         object sender,
@@ -32,7 +49,7 @@ public partial class App : Application
         e.Handled = true;
     }
 
-    protected override void OnStartup(StartupEventArgs e)
+    protected override async void OnStartup(StartupEventArgs e)
     {
         // Ensure the application log directory exists before configuring Serilog.
         Directory.CreateDirectory(_logDirectory);
@@ -76,6 +93,59 @@ public partial class App : Application
         Log.Information("Application version: {Version}", version);
         Log.Information("Log location: {LogDirectory}", _logDirectory);
 
+        try
+        {
+            _apiHost = ApiHost.Create([]);
+
+            await _apiHost.StartAsync();
+
+            var server = _apiHost.Services.GetRequiredService<IServer>();
+            var addresses = server.Features.Get<IServerAddressesFeature>();
+
+            var serverAddress = addresses?.Addresses.Single()
+                                ?? throw new InvalidOperationException(
+                                    "The API server did not provide a listening address.");
+
+            Log.Information(
+                "In-process API host listening at {ServerAddress}",
+                serverAddress);
+
+            var services = new ServiceCollection();
+
+            services.AddSingleton(new ApiServerInfo
+            {
+                BaseAddress = new Uri(serverAddress)
+            });
+
+            _serviceProvider = services.BuildServiceProvider();
+
+            Log.Information("In-process API host started successfully");
+
+            var window = new MainWindow();
+            MainWindow = window;
+            window.Show();
+        }
+        catch (Exception ex)
+        {
+            Log.Fatal(ex, "Failed to start in-process API host");
+
+            if (_apiHost is not null)
+            {
+                await _apiHost.DisposeAsync();
+                _apiHost = null;
+            }
+
+            MessageBox.Show(
+                "The application server could not be started. " +
+                "The error has been recorded in the application log.",
+                "Vulcan CBAS",
+                MessageBoxButton.OK,
+                MessageBoxImage.Error);
+
+            Shutdown();
+            return;
+        }
+
         base.OnStartup(e);
     }
 
@@ -83,10 +153,27 @@ public partial class App : Application
     {
         Log.Information("Vulcan CBAS application shutting down");
 
+        if (_apiHost is not null)
+        {
+            try
+            {
+                // Run on the thread pool so blocking the UI thread can't deadlock.
+                Task.Run(async () =>
+                {
+                    await _apiHost.StopAsync();
+                    await _apiHost.DisposeAsync();
+                }).Wait(TimeSpan.FromSeconds(5));
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, "Error stopping in-process API host");
+            }
+        }
+
+        _serviceProvider?.Dispose();
+
         // Flush any buffered log events before the process exits.
         Log.CloseAndFlush();
-
         base.OnExit(e);
     }
 }
-
