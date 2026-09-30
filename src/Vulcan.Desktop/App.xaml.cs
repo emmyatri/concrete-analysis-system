@@ -16,6 +16,11 @@ public partial class App : Application
     private WebApplication? _apiHost;
     private ServiceProvider? _serviceProvider;
 
+    public IServiceProvider Services =>
+        _serviceProvider
+        ?? throw new InvalidOperationException(
+            "Desktop services are not available until application startup completes.");
+
     protected override async void OnStartup(StartupEventArgs e)
     {
         _apiHost = ApiHost.Create([]);
