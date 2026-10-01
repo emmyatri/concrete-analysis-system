@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.FileProviders;
 using Vulcan.Api.Technicians;
 using Vulcan.Infrastructure;
+using Microsoft.OpenApi;
 
 namespace Vulcan.Api;
 
@@ -33,8 +34,19 @@ public static class ApiHost
 
         // Bind only to this computer and let the OS select an available port.
         builder.WebHost.UseUrls($"http://127.0.0.1:{port}");
-        builder.Services.AddDatabase(builder.Configuration);
-        builder.Services.AddSingleton<TechnicianSettings>();
+
+        builder.Services
+            .AddDatabase(builder.Configuration)
+            .AddSingleton<TechnicianSettings>()
+            .AddEndpointsApiExplorer()
+            .AddSwaggerGen(o =>
+            {
+                o.SwaggerDoc("v1", new OpenApiInfo()
+                {
+                    Title = "Vulcan API",
+                    Version = "v1",
+                });
+            });
 
         // use overrides if provided
         configureServices?.Invoke(builder.Services);
@@ -57,6 +69,17 @@ public static class ApiHost
         // Every API endpoint lives under /api.
         var api = app.MapGroup("/api");
         api.MapGet("/health", () => Results.Ok(new { status = "ok" }));
+
+        if (app.Environment.IsDevelopment())
+        {
+            app.UseSwagger();
+            app.UseSwaggerUI(o =>
+            {
+                o.SwaggerEndpoint("/swagger/v1/swagger.json", "Vulcan API");
+                // makes docs visible at http://host:port/api/v1/docs
+                o.RoutePrefix = "api/v1/docs";
+            });
+        }
 
         api.MapTechnicianEndpoints();
 
