@@ -98,8 +98,8 @@ public class UnitTest1(DatabaseFixture dbFixture) : IClassFixture<DatabaseFixtur
         Assert.Equal(1, retrievedBatch.Id);
         Assert.Equal(batch.CementOxideAnalysis.IronOxidePct, retrievedBatch.CementOxideAnalysis!.IronOxidePct);
         Assert.Equal(batch.CementType, retrievedBatch.CementType);
-        Assert.Contains(batch.Specimens, x => x.Label == "WOW");
-        Assert.Contains(batch.Specimens
+        Assert.Contains(retrievedBatch.Specimens, x => x.Label == "WOW");
+        Assert.Contains(retrievedBatch.Specimens
                 .Where(s => s.BreakResult != null),
             (s => s.BreakResult!.SpecimenId == s.Id));
     }
