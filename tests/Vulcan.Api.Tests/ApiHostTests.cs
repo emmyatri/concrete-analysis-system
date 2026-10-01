@@ -13,9 +13,9 @@ public class ApiHostTests
     private readonly string[] _args = ["--environment=Testing"];
 
     [Fact]
-    public void Database_is_not_real()
+    public async Task Database_is_not_real()
     {
-        var app = ApiHost.Create(_args);
+        await using var app = ApiHost.Create(_args);
 
         using var scope = app.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<VulcanDbContext>();

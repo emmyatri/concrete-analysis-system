@@ -173,7 +173,7 @@ public class VulcanDbContextTests(DatabaseFixture dbFixture) : IClassFixture<Dat
     }
 
     [Fact]
-    public async Task Batches_cannot_have_same_label_case_insensitive()
+    public async Task Batches_cannot_have_same_number_case_insensitive()
     {
         await using var db = _dbFixture.CreateDbContext();
         await db.Database.MigrateAsync();
