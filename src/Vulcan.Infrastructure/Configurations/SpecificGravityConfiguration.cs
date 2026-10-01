@@ -16,5 +16,7 @@ public class SpecificGravityConfiguration : IEntityTypeConfiguration<SpecificGra
             .HasConversion(
                 x => x.ToString(),
                 x => Enum.Parse<Material>(x));
+        builder.HasIndex(x => x.Material)
+            .IsUnique();
     }
 }

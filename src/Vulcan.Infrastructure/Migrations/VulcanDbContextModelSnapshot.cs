@@ -311,6 +311,9 @@ namespace Vulcan.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("Material")
+                        .IsUnique();
+
                     b.ToTable("SpecificGravity");
                 });
 
