@@ -11,12 +11,12 @@ Vulcan Materials.
 
 ## Status
 
-| Milestone                               | Scope                                                                                    | Due                  |
-|-----------------------------------------|------------------------------------------------------------------------------------------|----------------------|
+| Milestone                               | Scope                                                        | Due                  |
+| --------------------------------------- | ------------------------------------------------------------ | -------------------- |
 | **M1 — Batch Record & Data Validation** | Installable build, batch/cylinder/curing/break entry, validation, search by batch number | **Fri, Oct 9, 2026** |
-| M2 — Strength Charting & Prediction     | PSI-vs-time chart, 3/7/28-day predictions, early-warning flags                           | Fri, Oct 30, 2026    |
-| M3 — Calibration & Reporting            | Calibration against real breaks, printable/exportable reports                            | Fri, Nov 20, 2026    |
-| Final delivery                          | Signed installer, docs, training, source handoff                                         | Fri, Dec 4, 2026     |
+| M2 — Strength Charting & Prediction     | PSI-vs-time chart, 3/7/28-day predictions, early-warning flags | Fri, Oct 30, 2026    |
+| M3 — Calibration & Reporting            | Calibration against real breaks, printable/exportable reports | Fri, Nov 20, 2026    |
+| Final delivery                          | Signed installer, docs, training, source handoff             | Fri, Dec 4, 2026     |
 
 Current version: `0.1.0-m1` (pre-release)
 
@@ -24,34 +24,43 @@ Current version: `0.1.0-m1` (pre-release)
 
 ## Tech stack
 
-| Layer              | Choice                                                         |
-|--------------------|----------------------------------------------------------------|
-| Language / runtime | C# on .NET 10                                                  |
-| Desktop UI         | WPF, MVVM (CommunityToolkit.Mvvm)                              |
+| Layer              | Choice                                                       |
+| ------------------ | ------------------------------------------------------------ |
+| Language / runtime | C# on .NET 10                                                |
+| Desktop window     | WPF window that hosts **WebView2** and starts the server     |
+| Screens            | **Angular + PrimeNG**, running inside WebView2               |
 | Server             | ASP.NET Core, hosted **inside** the desktop app on `127.0.0.1` |
-| Database           | SQLite via EF Core                                             |
-| Tests              | xUnit + Shouldly                                               |
-| Logging            | Serilog (rolling file)                                         |
-| Installer          | Inno Setup                                                     |
-| CI                 | GitHub Actions (`windows-latest`)                              |
+| Database           | SQLite via EF Core                                           |
+| Tests              | xUnit + Shouldly (.NET), `ng test` (Angular)                 |
+| Logging            | Serilog (rolling file)                                       |
+| Installer          | Inno Setup (bundles the WebView2 runtime)                    |
+| CI                 | GitHub Actions (`windows-latest`)                            |
 
 The reasons behind these choices are in [`docs/adr/`](docs/adr/).
+
+**How the pieces fit:** the app opens one WPF window. That window starts the built-in server on a random local port,
+then points WebView2 at it. The server hands out the compiled Angular app from its `wwwroot` folder, and every API
+route lives under `/api`. Nothing leaves the computer.
 
 ---
 
 ## Prerequisites
 
-- **Windows 10 or 11, 64-bit.** WPF does not build or run on macOS or Linux. Mac users need a Windows VM or lab machine.
+- **Windows 10 or 11, 64-bit.** WPF does not build or run on macOS or Linux. Mac users need a Windows VM or lab
+  machine to run the full app, but can work on the Angular screens on a Mac (see [UI work](#ui-work)).
 - **.NET 10 SDK**: https://dotnet.microsoft.com/download/dotnet/10.0
-- **Visual Studio 2026** with these workloads:
-    - .NET desktop development
-    - ASP.NET and web development
+- **Node.js LTS** (includes npm): https://nodejs.org
+- **Visual Studio 2026** (with the *.NET desktop development* and *ASP.NET and web development* workloads) or
+  **JetBrains Rider**
+- **WebView2 Runtime**: already installed on Windows 11 and most Windows 10 machines. If the app opens to a blank
+  window, install it from https://developer.microsoft.com/microsoft-edge/webview2/
 - **Git**
 
 Check your setup:
 
 ```powershell
 dotnet --version   # should start with 10.
+node --version     # should be an LTS version
 git --version
 ```
 
@@ -63,16 +72,27 @@ git --version
 git clone https://github.com/emmyatri/concrete-analysis-system.git
 cd concrete-analysis-system
 git checkout dev
+
+# Angular screens
+cd src/Vulcan.Web
+npm ci
+npm test -- --watch=false
+cd ../..
+
+# .NET
 dotnet build
 dotnet test
 ```
 
-Both commands should finish with **0 warnings and 0 errors**. Warnings are treated as errors, so a warning will fail the
+Everything should finish with **0 warnings and 0 errors**. Warnings are treated as errors, so a warning will fail the
 build.
+
+`dotnet build` also builds the Angular app and copies it into `src/Vulcan.Api/wwwroot/`. That folder is generated, so
+don't edit or commit it.
 
 ### Run the app
 
-Open `Vulcan.sln` in Visual Studio, set **Vulcan.Desktop** as the startup project, and press **F5**.
+Open `Vulcan.sln` in Visual Studio or Rider, set **Vulcan.Desktop** as the startup project, and press **F5**.
 
 Or from the command line:
 
@@ -82,6 +102,20 @@ dotnet run --project src/Vulcan.Desktop
 
 On first launch the app asks for a technician name, creates its database, and starts its built-in server. No setup is
 needed.
+
+### UI work
+
+For fast screen work you don't need the desktop app. Run Angular on its own in a browser with fake data:
+
+```powershell
+cd src/Vulcan.Web
+npm start          # opens http://localhost:4200 using mock API responses
+```
+
+Changes reload instantly. Before opening a PR, run the full desktop app once to check the screen inside WebView2.
+
+The approved screen designs are in Figma: **Vulcan CBAS — Hi-Fi** (link pinned in the team channel). Build to the
+mockup. If something in it doesn't work, ask a lead before changing it.
 
 ---
 
@@ -94,8 +128,10 @@ Vulcan.sln
 │  ├─ Vulcan.Application/     App logic (services) and the data shapes sent to/from the API.
 │  ├─ Vulcan.Prediction/      Strength prediction (empty until Milestone 2).
 │  ├─ Vulcan.Infrastructure/  Database (EF Core + SQLite), audit stamping, logging.
-│  ├─ Vulcan.Api/             Server endpoints; re-checks every value (SLA NFR-6).
-│  └─ Vulcan.Desktop/         The WPF window and screens; hosts the API.
+│  ├─ Vulcan.Api/             Server endpoints under /api; re-checks every value (SLA NFR-6).
+│  │                          Also serves the built Angular app from wwwroot/.
+│  ├─ Vulcan.Web/             The screens: Angular + PrimeNG. Not part of Vulcan.sln; built by npm.
+│  └─ Vulcan.Desktop/         The WPF window: starts the API and shows the screens in WebView2.
 ├─ tests/                     One test project per src project.
 ├─ data/
 │  └─ synthetic/              Fake test/demo data. Every record is marked IsSynthetic.
@@ -104,23 +140,39 @@ Vulcan.sln
 └─ .github/                   CI workflow, PR template, CODEOWNERS.
 ```
 
-**The one rule that matters most:** validation lives in `Vulcan.Domain` and nowhere else. The screens and the API both
-call the same rules. Never write a range check in a ViewModel or controller, and never type a limit into code: every
-limit comes from the `ValidationLimit` table.
+**The one rule that matters most:** validation lives in `Vulcan.Domain` and nowhere else. The API runs those rules on
+every save. The Angular screens get the limits from the API so they can show errors as you type, but the server always
+has the final say. Never write a range check in an Angular component or a controller, and never type a limit into code:
+every limit comes from the `ValidationLimit` table.
+
+---
+
+## UI conventions
+
+The full look is in the Figma mockup. These are the rules people most often get wrong:
+
+- **Use PrimeNG components** (table, dialog, dropdown, date picker, tag) before building your own.
+- **Theme:** Vulcan navy `#263A78` as the primary color, **Inter** font, Vulcan logo top-left.
+- **No internet (SLA NFR-3):** fonts, icons and images are bundled in the app. No CDN links, no Google Fonts.
+- **Errors and warnings** use the shared field display (M1-45):
+  - **Reject** is red. It blocks Save.
+  - **Warn** is amber. It still saves.
+  - In tables, ⚠ goes **after** the number, and the highlight covers **only the number**.
+- **Synthetic data** shows a `SYNTHETIC` tag wherever a batch appears (SLA FR-20).
 
 ---
 
 ## Documentation
 
-| File                                                     | What's in it                                                                        |
-|----------------------------------------------------------|-------------------------------------------------------------------------------------|
-| [`docs/schema.md`](docs/schema.md)                       | Every field the app stores: name, type, unit, rules, plus the ERD diagram           |
-| [`docs/validation-matrix.md`](docs/validation-matrix.md) | Every validation rule, its range, severity (Reject/Warn) and message                |
-| [`docs/api.md`](docs/api.md)                             | Every server endpoint, request/response shape and status code                       |
+| File                                                     | What's in it                                                 |
+| -------------------------------------------------------- | ------------------------------------------------------------ |
+| [`docs/schema.md`](docs/schema.md)                       | Every field the app stores: name, type, unit, rules, plus the ERD diagram |
+| [`docs/validation-matrix.md`](docs/validation-matrix.md) | Every validation rule, its range, severity (Reject/Warn) and message |
+| [`docs/api.md`](docs/api.md)                             | Every server endpoint, request/response shape and status code |
 | [`docs/client-decisions.md`](docs/client-decisions.md)   | Decisions adopted from the client's Rev 1 spec and industry standards, with sources |
-| [`docs/adr/`](docs/adr/)                                 | Architecture decisions (SQLite, in-process API, canonical units)                    |
-| [`docs/m1-acceptance.md`](docs/m1-acceptance.md)         | The Milestone 1 test script used for the bug bash and the demo                      |
-| [`CONTRIBUTING.md`](CONTRIBUTING.md)                     | Branching, PR rules and the Definition of Done. **Read before your first PR.**      |
+| [`docs/adr/`](docs/adr/)                                 | Architecture decisions (SQLite, in-process API, canonical units, Angular in WebView2) |
+| [`docs/m1-acceptance.md`](docs/m1-acceptance.md)         | The Milestone 1 test script used for the bug bash and the demo |
+| [`CONTRIBUTING.md`](CONTRIBUTING.md)                     | Branching, PR rules and the Definition of Done. **Read before your first PR.** |
 
 ---
 
@@ -140,7 +192,7 @@ limit comes from the `ValidationLimit` table.
 ## Where the app keeps its files
 
 | What           | Location                              |
-|----------------|---------------------------------------|
+| -------------- | ------------------------------------- |
 | Database       | `%LOCALAPPDATA%\VulcanCBAS\vulcan.db` |
 | Logs (14 days) | `%LOCALAPPDATA%\VulcanCBAS\logs\`     |
 | Installed app  | `C:\Program Files\Vulcan CBAS\`       |
@@ -153,10 +205,10 @@ To start over with an empty database, close the app and delete `vulcan.db`. It's
 
 Settings live in `src/Vulcan.Desktop/appsettings.json`.
 
-| Setting             | Default | What it does                                                                         |
-|---------------------|---------|--------------------------------------------------------------------------------------|
-| `UseMocks`          | `false` | `true` makes the screens use fake API responses (for UI work before endpoints exist) |
-| `SeedSyntheticData` | `false` | `true` loads `data/synthetic/` into an empty database (turn on for demos)            |
+| Setting             | Default | What it does                                                 |
+| ------------------- | ------- | ------------------------------------------------------------ |
+| `UseMocks`          | `false` | `true` makes the screens use fake API responses inside the desktop app (for UI work before endpoints exist). `npm start` always uses mocks. |
+| `SeedSyntheticData` | `false` | `true` loads `data/synthetic/` into an empty database (turn on for demos) |
 
 For personal overrides, use `appsettings.Development.local.json`. It's git-ignored.
 
@@ -176,6 +228,7 @@ For personal overrides, use `appsettings.Development.local.json`. It's git-ignor
 ## Building the installer
 
 CI builds the installer automatically on every push to `dev` and `main`; download it from the workflow run's **Artifacts
+
 **.
 
 To build locally:
@@ -185,18 +238,22 @@ dotnet publish src/Vulcan.Desktop -p:PublishProfile=win-x64-selfcontained
 # then compile installer/vulcan.iss with Inno Setup
 ```
 
-The installer is self-contained: the target computer does not need .NET installed.
+The installer is self-contained and works offline (SLA NFR-1, NFR-3). The target computer does not need .NET, Node or
+internet access. If the WebView2 runtime is missing, the installer installs it from the copy bundled inside.
 
 ---
 
 ## Troubleshooting
 
-| Problem                                    | Fix                                                        |
-|--------------------------------------------|------------------------------------------------------------|
-| `dotnet format` fails in CI                | Run `dotnet format` locally and commit the changes         |
-| App won't start / crashes                  | Check the latest file in `%LOCALAPPDATA%\VulcanCBAS\logs\` |
-| Database looks wrong after a schema change | Delete `vulcan.db`; migrations recreate it                 |
-| Can't push to `dev` or `main`              | Expected: open a pull request instead                      |
+| Problem                                    | Fix                                                          |
+| ------------------------------------------ | ------------------------------------------------------------ |
+| `dotnet format` fails in CI                | Run `dotnet format` locally and commit the changes           |
+| App won't start / crashes                  | Check the latest file in `%LOCALAPPDATA%\VulcanCBAS\logs\`   |
+| App opens to a blank white window          | Install the WebView2 Runtime, or run `npm ci` in `src/Vulcan.Web` and rebuild |
+| Screen changes don't show in the app       | Rebuild: the app shows the last Angular build, not your live code |
+| `npm ci` fails                             | Check you're on Node LTS; delete `node_modules` and retry    |
+| Database looks wrong after a schema change | Delete `vulcan.db`; migrations recreate it                   |
+| Can't push to `dev` or `main`              | Expected: open a pull request instead                        |
 
 ---
 
@@ -211,4 +268,4 @@ client email copies the faculty supervisor (SLA 6.2).
 
 This software is being built for Vulcan Materials. At final delivery, the complete source code transfers to a repository
 under Vulcan Materials' control (SLA §4). Third-party packages must allow commercial use; check with a lead before
-adding any new NuGet package.
+adding any new NuGet or npm package.
