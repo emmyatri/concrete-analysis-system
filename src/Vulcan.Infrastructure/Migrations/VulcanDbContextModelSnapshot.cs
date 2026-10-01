@@ -356,7 +356,8 @@ namespace Vulcan.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("BatchId");
+                    b.HasIndex("BatchId", "Label")
+                        .IsUnique();
 
                     b.ToTable("Specimen");
                 });
@@ -412,7 +413,7 @@ namespace Vulcan.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("Key")
+                    b.HasIndex("Key", "Severity")
                         .IsUnique();
 
                     b.ToTable("ValidationLimit");

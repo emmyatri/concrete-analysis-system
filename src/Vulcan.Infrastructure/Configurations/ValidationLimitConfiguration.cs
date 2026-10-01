@@ -10,7 +10,7 @@ public class ValidationLimitConfiguration : AuditableEntityConfiguration<Validat
     {
         base.Configure(builder);
 
-        builder.HasIndex(x => x.Key)
+        builder.HasIndex(x => new { x.Key, x.Severity })
             .IsUnique();
         builder.Property(x => x.Key)
             .HasMaxLength(64);

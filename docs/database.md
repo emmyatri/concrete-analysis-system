@@ -7,7 +7,7 @@ The following is for those who wish to manage migrations via the command line. T
 ### Installing the Migration Tool
 
 ```bash
-dotnet install --global dotnet-ef
+dotnet tool install --global dotnet-ef
 ```
 
 > Make sure the tools directory is on your PATH:

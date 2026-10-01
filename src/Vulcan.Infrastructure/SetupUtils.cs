@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Vulcan.Infrastructure;
@@ -6,24 +7,25 @@ namespace Vulcan.Infrastructure;
 public static class SetupUtils
 {
     /// <summary>
-    /// Initializes the Sqlite database at %APPDATA%/VulcanDBAS/vulcan.db and registers it with the builder services.
+    /// Initializes the Sqlite database at %APPDATA%/VulcanCBAS/vulcan.db and registers it with the builder services.
     /// </summary>
     /// <param name="services"></param>
+    /// <param name="config"></param>
     /// <returns></returns>
-    public static IServiceCollection AddDatabase(this IServiceCollection services)
+    public static IServiceCollection AddDatabase(this IServiceCollection services, IConfiguration config)
     {
         // create the database at %APPDATA%/VulcanCBAS/vulcan.db
         // On linux this is ~/.config/VulcanCBAS/vulcan.db
         // Or $HOME/.var/app/com.jetbrains.Rider/config/VulcanCBAS/vulcan.db if using Rider.
-        var appData = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
-
-        var directory = Path.Combine(appData, "VulcanCBAS");
-        Directory.CreateDirectory(directory);
-
-        var dbPath = Path.Combine(directory, "vulcan.db");
-
-        services.AddDbContext<VulcanDbContext>(options => options.UseSqlite($"Data Source={dbPath}"));
-
+        var cs = config.GetConnectionString("Vulcan");
+        if (string.IsNullOrWhiteSpace(cs))
+        {
+            var dir = Path.Combine(
+                Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "VulcanCBAS");
+            Directory.CreateDirectory(dir);
+            cs = $"Data Source={Path.Combine(dir, "vulcan.db")}";
+        }
+        services.AddDbContext<VulcanDbContext>(o => o.UseSqlite(cs));
         return services;
     }
 }

@@ -12,7 +12,7 @@ public static class ApiHost
 
         // Bind only to this computer and let the OS select an available port.
         builder.WebHost.UseUrls("http://127.0.0.1:0");
-        builder.Services.AddDatabase();
+        builder.Services.AddDatabase(builder.Configuration);
 
         var app = builder.Build();
         app.EnsureMigrated();

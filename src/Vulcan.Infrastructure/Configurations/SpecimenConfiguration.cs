@@ -20,5 +20,8 @@ public class SpecimenConfiguration : AuditableEntityConfiguration<Specimen>
                 x => Enum.Parse<TestAgeDays>(x));
         builder.Property(x => x.Label)
             .HasMaxLength(20);
+        // label cannot be reused within a batch
+        builder.HasIndex(x => new { x.BatchId, x.Label })
+            .IsUnique();
     }
 }
