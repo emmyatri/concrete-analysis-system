@@ -1,16 +1,33 @@
 using Microsoft.AspNetCore.Hosting.Server;
 using Microsoft.AspNetCore.Hosting.Server.Features;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Shouldly;
+using Vulcan.Infrastructure;
 
 namespace Vulcan.Api.Tests;
 
 public class ApiHostTests
 {
+    // makes ApiHost use the test db connection
+    private readonly string[] _args = ["--environment=Testing"];
+
+    [Fact]
+    public async Task Database_is_not_real()
+    {
+        await using var app = ApiHost.Create(_args);
+
+        using var scope = app.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<VulcanDbContext>();
+        var connectionString = db.Database.GetConnectionString();
+
+        connectionString.ShouldBe("Filename=:memory:");
+    }
+
     [Fact]
     public async Task StartAsync_AcceptsHttpRequests()
     {
-        await using var app = ApiHost.Create([]);
+        await using var app = ApiHost.Create(_args);
 
         // Start the in-process API and wait until Kestrel is ready
         // to accept requests.
@@ -44,7 +61,7 @@ public class ApiHostTests
     [Fact]
     public async Task StartAsync_BindsToLoopbackOnDynamicPort()
     {
-        await using var app = ApiHost.Create([]);
+        await using var app = ApiHost.Create(_args);
 
         // Start the in-process server and wait until Kestrel has selected
         // an available port and is ready to accept requests.
@@ -73,7 +90,7 @@ public class ApiHostTests
     [Fact]
     public async Task StopAsync_StopsAcceptingHttpRequests()
     {
-        await using var app = ApiHost.Create([]);
+        await using var app = ApiHost.Create(_args);
 
         await app.StartAsync();
 
