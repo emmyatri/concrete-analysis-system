@@ -8,8 +8,4 @@ import { ButtonModule } from 'primeng/button';
   templateUrl: './app.html',
   styleUrl: './app.scss',
 })
-export class App {
-
-  const broken = 1
-
-}
+export class App {}
