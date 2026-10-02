@@ -16,12 +16,15 @@ public static class ApiHost
     /// Folder that holds the built Angular app. Defaults to the wwwroot folder next to the running program.
     /// Tests pass their own folder.
     /// </param>
-    public static WebApplication Create(string[] args, string? webRootPath = null)
+    /// <param name="port">
+    /// 0 (default) lets the OS choose. Only live-reload mode uses a fixed port.
+    /// </param>
+    public static WebApplication Create(string[] args, string? webRootPath = null, int port = 0)
     {
         var builder = WebApplication.CreateBuilder(args);
 
         // Bind only to this computer and let the OS select an available port.
-        builder.WebHost.UseUrls("http://127.0.0.1:0");
+        builder.WebHost.UseUrls($"http://127.0.0.1:{port}");
         builder.Services.AddDatabase(builder.Configuration);
 
         var app = builder.Build();

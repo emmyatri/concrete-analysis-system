@@ -35,6 +35,15 @@ npm run lint
 npm run build    # output: src/Vulcan.Api/wwwroot/ (served by the API)
 ```
 
+## Live reload inside the desktop app
+
+1. In `src/Vulcan.Web`, run `npm start`.
+2. Run Vulcan.Desktop with the **"Vulcan.Desktop (live reload)"** profile (Rider), or:
+```powershell
+   dotnet run --project src/Vulcan.Desktop --launch-profile "Vulcan.Desktop (live reload)"
+```
+Screen changes show in the window as you save. Debug builds only. In this mode the API uses port 5180.
+
 ## Rules
 
 - **Do not upgrade these packages past these major versions:** `primeng` 21, `@primeuix/themes` 2, `primeicons` 7. Newer versions are commercially licensed and would cost Vulcan money. Versions are pinned exactly in `package.json`. Ask a lead before changing any of them.

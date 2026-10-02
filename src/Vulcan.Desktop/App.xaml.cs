@@ -115,7 +115,7 @@ public partial class App : Application
 
         try
         {
-            _apiHost = ApiHost.Create([]);
+            _apiHost = ApiHost.Create([], port: GetUiDevServer() is null ? 0 : _devApiPort);
 
             await _apiHost.StartAsync();
 
