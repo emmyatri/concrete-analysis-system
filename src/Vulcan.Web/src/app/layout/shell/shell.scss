@@ -1,0 +1,196 @@
+﻿// Sizes and spacing from the hi-fi mockup. Colors come from theme tokens only.
+
+.shell {
+  display: grid;
+  grid-template-columns: var(--p-vulcan-sidebar-width) 1fr;
+  grid-template-rows: var(--p-vulcan-header-height) 1fr;
+  grid-template-areas:
+    'header header'
+    'sidebar content';
+  height: 100vh;
+  color: var(--p-text-color);
+}
+
+// ---------- Header ----------
+
+.shell-header {
+  grid-area: header;
+  display: grid;
+  grid-template-columns: var(--p-vulcan-sidebar-width) 1fr;
+  background: var(--p-surface-0);
+  border-bottom: 1px solid var(--p-content-border-color);
+}
+
+.shell-brand {
+  display: flex;
+  align-items: center;
+  padding-left: 20px;
+  border-right: 1px solid var(--p-content-border-color);
+}
+
+.shell-logo {
+  height: 34px;
+}
+
+.shell-header-main {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 21px 0 24px;
+}
+
+.shell-title {
+  margin: 0;
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+}
+
+.shell-title-name {
+  font-size: 17px;
+  font-weight: 600;
+}
+
+.shell-title-full {
+  font-size: 13px;
+  color: var(--p-text-muted-color);
+}
+
+.shell-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.api-status {
+  font-size: 13px;
+  font-weight: 500;
+  padding: 4px 10px;
+}
+
+.status-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+.synthetic-toggle {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  font-size: 13px;
+  color: var(--p-text-muted-color);
+
+  label {
+    cursor: pointer;
+  }
+}
+
+.technician-chip {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  height: 36px;
+  padding: 0 12px 0 4px;
+  border: 1px solid var(--p-content-border-color);
+  border-radius: 999px;
+  font-size: 14px;
+
+  ::ng-deep .technician-avatar {
+    width: 28px;
+    height: 28px;
+    font-size: 12px;
+    font-weight: 600;
+    background: var(--p-primary-100);
+    color: var(--p-primary-color);
+  }
+
+  .pi {
+    font-size: 12px;
+    color: var(--p-surface-700);
+  }
+}
+
+// ---------- Side menu ----------
+
+.shell-sidebar {
+  grid-area: sidebar;
+  display: flex;
+  flex-direction: column;
+  background: var(--p-surface-0);
+  border-right: 1px solid var(--p-content-border-color);
+  overflow-y: auto;
+}
+
+.shell-section-label {
+  margin: 20px 16px 6px;
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: var(--p-text-muted-color);
+}
+
+.shell-menu {
+  margin: 0;
+  padding: 0 0 8px;
+  list-style: none;
+  border-bottom: 1px solid var(--p-text-muted-color);
+  margin-inline: 16px 15px;
+}
+
+.shell-menu-link {
+  position: relative;
+  margin-left: -16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  height: 48px;
+  padding-left: 18px;
+  font-size: 14px;
+  color: var(--p-vulcan-link-color);
+  text-decoration: none;
+
+  .pi {
+    width: 20px;
+    font-size: 18px;
+    color: var(--p-surface-700);
+  }
+
+  &:hover {
+    background: var(--p-surface-50);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--p-primary-color);
+    outline-offset: -2px;
+  }
+
+  &.active {
+    font-weight: 600;
+
+    &::before {
+      content: '';
+      position: absolute;
+      inset: 0 auto 0 0;
+      width: 4px;
+      background: var(--p-vulcan-link-color);
+    }
+  }
+}
+
+.shell-version {
+  margin: auto 16px 16px;
+  font-size: 11px;
+  color: var(--p-text-muted-color);
+}
+
+// ---------- Page ----------
+
+.shell-content {
+  grid-area: content;
+  overflow-y: auto;
+  padding: 16px 24px 24px;
+  background: var(--p-surface-50);
+}

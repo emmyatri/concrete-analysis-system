@@ -1,15 +1,25 @@
+import { provideHttpClient } from '@angular/common/http';
+import { provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
+import { Router, provideRouter, withComponentInputBinding } from '@angular/router';
+import { RouterTestingHarness } from '@angular/router/testing';
 import { providePrimeNG } from 'primeng/config';
 
 import { App } from './app';
+import { routes } from './app.routes';
 import { VulcanPreset } from './theme/vulcan-preset';
 
 describe('App', () => {
-  beforeEach(async () => {
-    await TestBed.configureTestingModule({
+  beforeEach(() => {
+    TestBed.configureTestingModule({
       imports: [App],
-      providers: [providePrimeNG({ theme: { preset: VulcanPreset } })],
-    }).compileComponents();
+      providers: [
+        provideRouter(routes, withComponentInputBinding()),
+        provideHttpClient(),
+        provideHttpClientTesting(),
+        providePrimeNG({ theme: { preset: VulcanPreset } }),
+      ],
+    });
   });
 
   it('creates the app', () => {
@@ -17,17 +27,17 @@ describe('App', () => {
     expect(fixture.componentInstance).toBeTruthy();
   });
 
-  it('shows the Vulcan logo', async () => {
-    const fixture = TestBed.createComponent(App);
-    await fixture.whenStable();
-    const logo = (fixture.nativeElement as HTMLElement).querySelector('img.app-logo');
-    expect(logo?.getAttribute('src')).toBe('assets/vulcan-logo.svg');
+  it('shows the shell on the home route', async () => {
+    const harness = await RouterTestingHarness.create('/');
+    const root = harness.routeNativeElement as HTMLElement;
+
+    expect(root.querySelector('.shell-logo')?.getAttribute('src')).toBe('assets/vulcan-logo.svg');
   });
 
-  it('shows a PrimeNG button', async () => {
-    const fixture = TestBed.createComponent(App);
-    await fixture.whenStable();
-    const button = (fixture.nativeElement as HTMLElement).querySelector('p-button button');
-    expect(button?.textContent).toContain('Save batch');
+  it('sends unknown routes home', async () => {
+    const harness = await RouterTestingHarness.create('/does-not-exist');
+
+    expect(TestBed.inject(Router).url).toBe('/');
+    expect(harness).toBeTruthy();
   });
 });
