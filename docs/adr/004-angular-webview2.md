@@ -48,7 +48,7 @@ The application must work with no internet connection. Therefore:
 
 - All fonts (Inter), icons (PrimeIcons), styles and scripts are bundled into the Angular build.
 - The UI makes no requests to CDNs, Google Fonts or any other external address.
-- The API sends a Content Security Policy that only allows scripts, styles, fonts and images from the application's own address, so an accidental external reference fails during testing instead of at Vulcan.
+- The API sends a Content Security Policy that only allows scripts, fonts, images and network requests from the application's own address, so an accidental external reference fails during testing instead of at Vulcan. Styles are limited to the application's own address but may be inline (`style-src 'self' 'unsafe-inline'`), because PrimeNG adds its theme styles at runtime. Scripts are never allowed inline. Angular's critical CSS inlining (`optimization.styles.inlineCritical`) is turned off, because it relies on an inline script handler that this policy blocks, and it gives no benefit when the UI loads from the same computer.
 
 ### 2.5 Installation (NFR-1)
 
