@@ -65,6 +65,10 @@ The installer remains a single file:
 - CI runs the Angular unit tests and production build in addition to the .NET build and tests. Either failing fails the pipeline.
 - For screen development, the Angular app can run on its own in a browser (`npm start`) against mock API responses.
 
+### 2.7 Versions and Licensing
+
+The UI uses Angular 21 and PrimeNG 21.1.10, with `@primeuix/themes` 2.0.3 and `primeicons` 7.0.0. These are the last MIT-licensed releases. From version 22, PrimeNG, its themes and its icons require a paid commercial license for an organization of Vulcan's size, which would cost the client money and conflicts with the source handoff (SLA §4). Versions are pinned exactly and must not be upgraded past these major versions without lead approval. Angular 21 remains supported beyond final delivery.
+
 ## 3. Consequences
 
 | Positive Consequences                                        | Trade-offs                                                   |
