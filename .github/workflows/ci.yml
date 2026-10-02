@@ -22,11 +22,40 @@ env:
 jobs:
   ci:
     runs-on: windows-latest
-    timeout-minutes: 15
+    timeout-minutes: 20
 
     steps:
       - name: Check out code
         uses: actions/checkout@v5
+
+      # ---------- Angular (src/Vulcan.Web) ----------
+
+      - name: Install Node.js 24
+        uses: actions/setup-node@v6
+        with:
+          node-version: '24' # Same as docs/frontend.md
+          cache: npm
+          cache-dependency-path: src/Vulcan.Web/package-lock.json
+
+      - name: Install npm packages
+        working-directory: src/Vulcan.Web
+        run: npm ci
+
+      - name: Lint (Angular)
+        working-directory: src/Vulcan.Web
+        run: npm run lint
+
+      - name: Test (Angular)
+        working-directory: src/Vulcan.Web
+        run: npm test -- --watch=false
+
+      # Writes the production build to src/Vulcan.Api/wwwroot.
+      # Must run before the .NET build so the UI gets copied into the app.
+      - name: Build (Angular)
+        working-directory: src/Vulcan.Web
+        run: npm run build
+
+      # ---------- .NET ----------
 
       - name: Install .NET 10
         uses: actions/setup-dotnet@v5
@@ -48,6 +77,14 @@ jobs:
 
       - name: Build
         run: dotnet build --no-restore --configuration Release
+
+      # Proves the desktop app ships with the UI (ADR-004 §2.6).
+      - name: Check the UI is in the desktop app
+        shell: pwsh
+        run: |
+          $index = "src/Vulcan.Desktop/bin/Release/net10.0-windows/wwwroot/index.html"
+          if (-not (Test-Path $index)) { throw "Angular build missing from desktop output: $index" }
+          Write-Host "Found $index"
 
       - name: Test
         run: dotnet test --no-build --configuration Release --logger trx --results-directory TestResults
