@@ -1,5 +1,4 @@
-﻿
-# ADR-003: Canonical Measurement Units
+﻿# ADR-003: Canonical Measurement Units
 
 ## 1. Context
 
@@ -17,21 +16,21 @@ The team has selected standardized canonical measurement units for all measureme
 
 ### 2.1 Canonical Units
 
-| Measurement | Schema Field | Canonical Unit |
-|---|---|---|
-| Batch weight | `FinalWeightLb` | Pounds (lb) |
-| Specimen dimensions | `LengthIn`, `WidthIn` | Inches (in) |
-| Compressive strength | `StrengthPsi`, `ExpectedFinalBreakPsi` | Pounds per square inch (PSI) |
-| Temperature | `InternalTempF`, `AmbientTempF` | Degrees Fahrenheit (°F) |
-| Electrical resistivity | `ResistivityOhmPerFt` | Ohms per foot (ohms/ft) |
-| Carbon dioxide concentration | `Co2Ppm` | Parts per million (ppm) |
-| Cement oxide composition | `AluminaPct`, `IronOxidePct`, `MagnesiumOxidePct`, `SulfurTrioxidePct` | Percentage of cement (%) |
-| Concrete mix composition | `CementPct`, `ScmPct`, `CoarseAggregatePct`, `FineAggregatePct`, `WaterPct` | Percentage by absolute volume (%) |
-| Mix-water pH | `MixWaterPh` | Unitless |
-| Moisture | `MoisturePct` | Percentage (%) |
-| Relative humidity | `RelativeHumidityPct` | Percentage (%) |
-| Test age | `TestAgeDays` | Days |
-| Timestamps | `CastAt`, `BrokenAt`, `TakenAt` and audit timestamps | Coordinated Universal Time (UTC) |
+| Measurement                  | Schema Field                                                 | Canonical Unit                    |
+| ---------------------------- | ------------------------------------------------------------ | --------------------------------- |
+| Batch weight                 | `FinalWeightLb`                                              | Pounds (lb)                       |
+| Specimen dimensions          | `LengthIn`, `WidthIn`                                        | Inches (in)                       |
+| Compressive strength         | `StrengthPsi`, `ExpectedFinalBreakPsi`                       | Pounds per square inch (PSI)      |
+| Temperature                  | `InternalTempF`, `AmbientTempF`                              | Degrees Fahrenheit (°F)           |
+| Electrical resistivity       | `ResistivityOhmPerFt`                                        | Ohms per foot (ohms/ft)           |
+| Carbon dioxide concentration | `Co2Ppm`                                                     | Parts per million (ppm)           |
+| Cement oxide composition     | `AluminaPct`, `IronOxidePct`, `MagnesiumOxidePct`, `SulfurTrioxidePct` | Percentage of cement (%)          |
+| Concrete mix composition     | `CementPct`, `ScmPct`, `CoarseAggregatePct`, `FineAggregatePct`, `WaterPct` | Percentage by absolute volume (%) |
+| Mix-water pH                 | `MixWaterPh`                                                 | Unitless                          |
+| Moisture                     | `MoisturePct`                                                | Percentage (%)                    |
+| Relative humidity            | `RelativeHumidityPct`                                        | Percentage (%)                    |
+| Test age                     | `TestAgeDays`                                                | Days                              |
+| Timestamps                   | `CastAt`, `BrokenAt`, `TakenAt` and audit timestamps         | Coordinated Universal Time (UTC)  |
 
 All percentages are stored as values from 0 to 100. For example, 12.5 represents 12.5%, not 0.125.
 
@@ -53,11 +52,11 @@ The total composition percentage and remaining air/other percentage are also cal
 
 ### 2.3 Input Validation and Unit Conversion
 
-The WPF interface performs preliminary validation to provide immediate feedback when an operator enters invalid or incomplete data.
+The UI performs preliminary validation to provide immediate feedback when an operator enters invalid or incomplete data.
 
 All submitted data passes through the ASP.NET Core API, which delegates authoritative validation to the application service layer before persistence.
 
-Unit conversion occurs exclusively within `Domain.Units`. Where alternative input units are supported, measurements are converted to their canonical units before storage.
+Unit conversion occurs exclusively within `Vulcan.Domain.Units`. Where alternative input units are supported, measurements are converted to their canonical units before storage.
 
 Values exceeding the permitted precision of two decimal places are rejected rather than rounded. Fields with explicitly defined alternative precision, such as curing temperatures, follow their field-specific rules.
 
@@ -82,14 +81,14 @@ All database operations must preserve the established canonical units.
 
 ## 3. Consequences
 
-| Positive Consequences | Trade-offs |
-|---|---|
-| Consistent measurement storage across concrete batches | Alternative input units require conversion before storage |
-| Reduced risk of unit-related calculation errors | Conversion logic must be implemented and tested |
-| Consistent validation in both the UI and API | Both layers must follow the approved validation rules |
-| Simplified comparison of measurements | Developers must consistently use the established units |
-| Clear database field definitions | Changes to canonical units may require database migrations |
-| Standardized timestamps | Local times must be converted to and from UTC |
+| Positive Consequences                                  | Trade-offs                                                 |
+| ------------------------------------------------------ | ---------------------------------------------------------- |
+| Consistent measurement storage across concrete batches | Alternative input units require conversion before storage  |
+| Reduced risk of unit-related calculation errors        | Conversion logic must be implemented and tested            |
+| Consistent validation in both the UI and API           | Both layers must follow the approved validation rules      |
+| Simplified comparison of measurements                  | Developers must consistently use the established units     |
+| Clear database field definitions                       | Changes to canonical units may require database migrations |
+| Standardized timestamps                                | Local times must be converted to and from UTC              |
 
 ### Data Integrity
 
@@ -97,7 +96,7 @@ Establishing canonical units reduces the risk of inconsistent measurements being
 
 Values with more than two decimal places are rejected rather than rounded, except where the approved schema specifies a different precision.
 
-Unit conversion is centralized in `Domain.Units` to prevent inconsistent conversion logic across application components.
+Unit conversion is centralized in `Vulcan.Domain.Units` to prevent inconsistent conversion logic across application components.
 
 ### Reporting and Calculations
 
@@ -115,7 +114,7 @@ Any such changes must preserve the integrity of existing records and maintain co
 
 ## 4. Status
 
-**Proposed** — Pending Co-Lead approval.
+**Approved** —
 
 ## References
 

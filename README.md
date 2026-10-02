@@ -27,8 +27,8 @@ Current version: `0.1.0-m1` (pre-release)
 | Layer              | Choice                                                       |
 | ------------------ | ------------------------------------------------------------ |
 | Language / runtime | C# on .NET 10                                                |
-| Desktop window     | WPF window that hosts **WebView2** and starts the server     |
-| Screens            | **Angular + PrimeNG**, running inside WebView2               |
+| Desktop UI         | **Angular + PrimeNG** in WebView2, hosted by WPF             |
+| Desktop host       | WPF window that starts the server and shows WebView2         |
 | Server             | ASP.NET Core, hosted **inside** the desktop app on `127.0.0.1` |
 | Database           | SQLite via EF Core                                           |
 | Tests              | xUnit + Shouldly (.NET), `ng test` (Angular)                 |
@@ -92,7 +92,7 @@ don't edit or commit it.
 
 ### Run the app
 
-Open `Vulcan.sln` in Visual Studio or Rider, set **Vulcan.Desktop** as the startup project, and press **F5**.
+Open `Vulcan.slnx` in Visual Studio or Rider, set **Vulcan.Desktop** as the startup project, and press **F5**.
 
 Or from the command line:
 
@@ -122,7 +122,7 @@ mockup. If something in it doesn't work, ask a lead before changing it.
 ## Project structure
 
 ```
-Vulcan.sln
+Vulcan.slnx
 ├─ src/
 │  ├─ Vulcan.Domain/          Data classes and every validation rule. Uses nothing else.
 │  ├─ Vulcan.Application/     App logic (services) and the data shapes sent to/from the API.
@@ -203,7 +203,7 @@ To start over with an empty database, close the app and delete `vulcan.db`. It's
 
 ## Configuration
 
-Settings live in `src/Vulcan.Desktop/appsettings.json`.
+Settings live in `src/Vulcan.Api/appsettings.json`.
 
 | Setting             | Default | What it does                                                 |
 | ------------------- | ------- | ------------------------------------------------------------ |
@@ -227,9 +227,7 @@ For personal overrides, use `appsettings.Development.local.json`. It's git-ignor
 
 ## Building the installer
 
-CI builds the installer automatically on every push to `dev` and `main`; download it from the workflow run's **Artifacts
-
-**.
+CI builds the installer automatically on every push to `dev` and `main`; download it from the workflow run's **Artifacts**.
 
 To build locally:
 
