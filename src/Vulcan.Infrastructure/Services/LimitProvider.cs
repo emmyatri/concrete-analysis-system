@@ -13,6 +13,12 @@ public class LimitProvider(VulcanDbContext dbContext) : ILimitProvider
             .Where(v => v.Key == key)
             .ToList();
 
+        if (limits.Count == 0)
+        {
+            throw new InvalidOperationException(
+                $"No validation limits configured for key '{key}'.");
+        }
+
         var warningLimit = limits.FirstOrDefault(x => x.Severity == Severity.Warn);
         var rejectLimit = limits.FirstOrDefault(x => x.Severity == Severity.Reject);
 

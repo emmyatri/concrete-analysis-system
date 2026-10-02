@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Vulcan.Domain.Constants;
 using Vulcan.Domain.Entities;
 using Vulcan.Domain.Enums;
 using Vulcan.Domain.Interfaces;
@@ -48,5 +49,15 @@ public class LimitProviderTests(DatabaseFixture dbFixture) : IClassFixture<Datab
         limitSet.Reject.ShouldNotBeNull();
         limitSet.Reject.Min.ShouldBe(0);
         limitSet.Reject.Max.ShouldBe(100);
+    }
+
+    [Fact]
+    public async Task Limit_provider_rejects_unknown_key()
+    {
+        await using var db = dbFixture.CreateDbContext();
+        await db.Database.MigrateAsync();
+
+        ILimitProvider limitProvider = new LimitProvider(db);
+        Should.Throw<InvalidOperationException>(() => limitProvider.Get("Unknown.Key"));
     }
 }

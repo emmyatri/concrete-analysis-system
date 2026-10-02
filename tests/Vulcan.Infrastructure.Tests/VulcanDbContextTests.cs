@@ -300,4 +300,67 @@ public class VulcanDbContextTests(DatabaseFixture dbFixture) : IClassFixture<Dat
             .Count()
             .ShouldBe(materials.Count);
     }
+
+    [Fact]
+    public async Task Seed_validation_limits_adds_missing_records_without_overwriting_existing()
+    {
+        await using var db = _dbFixture.CreateDbContext();
+        await db.Database.EnsureDeletedAsync();
+        await db.Database.MigrateAsync();
+
+        var existing = new ValidationLimit
+        {
+            Key = LimitKeys.CementPct,
+            Severity = Severity.Reject,
+            Min = 11,
+            Max = 14,
+            Unit = "%",
+            Message = "Cement composition must be within the range [10-15]",
+            Source = "Test"
+        };
+
+        db.ValidationLimit.Add(existing);
+        await db.SaveChangesAsync();
+
+        db.SeedValidationLimits();
+
+        var limits = await db.ValidationLimit.ToListAsync();
+
+        limits.ShouldContain(x =>
+            x.Key == LimitKeys.CementPct &&
+            x.Severity == Severity.Reject &&
+            x.Min == 11 &&
+            x.Max == 14);
+
+        limits.ShouldContain(x =>
+            x.Key != LimitKeys.CementPct);
+    }
+
+    [Fact]
+    public async Task Seed_specific_gravities_adds_missing_records_without_overwriting_existing()
+    {
+        await using var db = _dbFixture.CreateDbContext();
+        await db.Database.EnsureDeletedAsync(); // else a unique constraint is hit when adding the below
+        await db.Database.MigrateAsync();
+
+        var existing = new SpecificGravity
+        {
+            Material = Material.Cement,
+            Value = 9.99m
+        };
+
+        db.SpecificGravity.Add(existing);
+        await db.SaveChangesAsync();
+
+        db.SeedSpecificGravities();
+
+        var gravities = await db.SpecificGravity.ToListAsync();
+
+        gravities.ShouldContain(x =>
+            x.Material == Material.Cement &&
+            x.Value == 9.99m);
+
+        gravities.ShouldContain(x =>
+            x.Material != Material.Cement);
+    }
 }
