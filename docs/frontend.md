@@ -32,7 +32,7 @@ npm run lint
 ## Build
 
 ```powershell
-npm run build    # output: src/Vulcan.Web/dist/vulcan-web/browser/
+npm run build    # output: src/Vulcan.Api/wwwroot/ (served by the API)
 ```
 
 ## Rules
