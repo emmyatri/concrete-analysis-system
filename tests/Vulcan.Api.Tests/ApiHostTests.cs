@@ -1,15 +1,19 @@
+using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting.Server;
 using Microsoft.AspNetCore.Hosting.Server.Features;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
-using Shouldly;
 using Vulcan.Infrastructure;
 
 namespace Vulcan.Api.Tests;
 
+/// <summary>
+/// Checks how the in-process API starts, where it listens and how it shuts down.
+/// UI serving is covered in <see cref="ApiHostUiTests"/>.
+/// </summary>
 public class ApiHostTests
 {
-    // makes ApiHost use the test db connection
+    // Makes ApiHost use the in-memory test database (appsettings.Testing.json).
     private readonly string[] _args = ["--environment=Testing"];
 
     [Fact]
@@ -19,41 +23,22 @@ public class ApiHostTests
 
         using var scope = app.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<VulcanDbContext>();
-        var connectionString = db.Database.GetConnectionString();
 
-        connectionString.ShouldBe("Filename=:memory:");
+        db.Database.GetConnectionString().ShouldBe("Filename=:memory:");
     }
 
     [Fact]
     public async Task StartAsync_AcceptsHttpRequests()
     {
         await using var app = ApiHost.Create(_args);
-
-        // Start the in-process API and wait until Kestrel is ready
-        // to accept requests.
         await app.StartAsync();
 
-        // Retrieve the actual address selected by Kestrel because the
-        // application requests a dynamically assigned port.
-        var server = app.Services.GetRequiredService<IServer>();
-        var addresses = server.Features.Get<IServerAddressesFeature>();
+        using var client = new HttpClient { BaseAddress = GetListeningAddress(app) };
 
-        var address = addresses?.Addresses.Single();
-
-        address.ShouldNotBeNull();
-
-        using var client = new HttpClient
-        {
-            BaseAddress = new Uri(address)
-        };
-
-        // Verify the in-process server can receive an HTTP request
-        // through its dynamically assigned loopback address.
-        var response = await client.GetAsync("/");
-        var content = await response.Content.ReadAsStringAsync();
+        var response = await client.GetAsync("/api/health");
 
         response.IsSuccessStatusCode.ShouldBeTrue();
-        content.ShouldBe("Hello World!");
+        (await response.Content.ReadAsStringAsync()).ShouldContain("\"status\":\"ok\"");
 
         await app.StopAsync();
     }
@@ -62,27 +47,15 @@ public class ApiHostTests
     public async Task StartAsync_BindsToLoopbackOnDynamicPort()
     {
         await using var app = ApiHost.Create(_args);
-
-        // Start the in-process server and wait until Kestrel has selected
-        // an available port and is ready to accept requests.
         await app.StartAsync();
 
-        // Retrieve the address assigned by Kestrel so the test can verify
-        // that the server is restricted to the local machine.
-        var server = app.Services.GetRequiredService<IServer>();
-        var addresses = server.Features.Get<IServerAddressesFeature>();
+        var address = GetListeningAddress(app);
 
-        var address = addresses?.Addresses.Single();
-
-        address.ShouldNotBeNull();
-
-        var uri = new Uri(address);
-
-        // The API must listen only on IPv4 loopback and use an
-        // OS-selected port rather than a hard-coded application port.
-        uri.Scheme.ShouldBe(Uri.UriSchemeHttp);
-        uri.Host.ShouldBe("127.0.0.1");
-        uri.Port.ShouldBeGreaterThan(0);
+        // Only this computer can reach the API (IPv4 loopback),
+        // and the OS picks the port, so nothing is hard-coded.
+        address.Scheme.ShouldBe(Uri.UriSchemeHttp);
+        address.Host.ShouldBe("127.0.0.1");
+        address.Port.ShouldBeGreaterThan(0);
 
         await app.StopAsync();
     }
@@ -91,32 +64,31 @@ public class ApiHostTests
     public async Task StopAsync_StopsAcceptingHttpRequests()
     {
         await using var app = ApiHost.Create(_args);
-
         await app.StartAsync();
 
-        // Retrieve the active server address so the same endpoint can
-        // be tested both before and after shutdown.
-        var server = app.Services.GetRequiredService<IServer>();
-        var addresses = server.Features.Get<IServerAddressesFeature>();
+        using var client = new HttpClient { BaseAddress = GetListeningAddress(app) };
 
-        var address = addresses?.Addresses.Single();
+        // Reachable before shutdown...
+        (await client.GetAsync("/api/health")).IsSuccessStatusCode.ShouldBeTrue();
 
-        address.ShouldNotBeNull();
-
-        using var client = new HttpClient
-        {
-            BaseAddress = new Uri(address)
-        };
-
-        // Confirm the server is reachable before attempting shutdown.
-        var responseBeforeStop = await client.GetAsync("/");
-        responseBeforeStop.IsSuccessStatusCode.ShouldBeTrue();
-
-        // A clean shutdown should stop Kestrel from accepting any
-        // additional HTTP requests on the previously assigned address.
         await app.StopAsync();
 
+        // ...and refuses connections after.
         await Should.ThrowAsync<HttpRequestException>(
-            async () => await client.GetAsync("/"));
+            async () => await client.GetAsync("/api/health"));
+    }
+
+    /// <summary>
+    /// Returns the address Kestrel actually bound to. The port is chosen by the OS at startup.
+    /// </summary>
+    private static Uri GetListeningAddress(WebApplication app)
+    {
+        var addresses = app.Services.GetRequiredService<IServer>()
+            .Features.Get<IServerAddressesFeature>();
+
+        var address = addresses?.Addresses.Single();
+        address.ShouldNotBeNull();
+
+        return new Uri(address);
     }
 }

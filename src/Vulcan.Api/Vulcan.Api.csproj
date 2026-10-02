@@ -9,4 +9,10 @@
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
   </ItemGroup>
+  <ItemGroup>
+    <!-- The Angular build (src/Vulcan.Web) writes here. Copy it next to the program on build and publish,
+         so Vulcan.Desktop and the installer can serve it. -->
+    <Content Remove="wwwroot\**" />
+    <None Include="wwwroot\**" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+  </ItemGroup>
 </Project>
