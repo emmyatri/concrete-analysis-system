@@ -19,6 +19,13 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\Vulcan.Domain\Vulcan.Domain.csproj" />
+    <ProjectReference Include="..\..\src\Vulcan.Infrastructure\Vulcan.Infrastructure.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Reference Include="Microsoft.Data.Sqlite">
+      <HintPath>..\..\..\..\..\.nuget\packages\microsoft.data.sqlite.core\10.0.12\lib\net8.0\Microsoft.Data.Sqlite.dll</HintPath>
+    </Reference>
   </ItemGroup>
 
 </Project>

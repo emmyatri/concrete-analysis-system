@@ -1,5 +1,7 @@
+using System.Reflection;
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
+using Vulcan.Domain.Constants;
 using Vulcan.Domain.Entities;
 using Vulcan.Domain.Enums;
 
@@ -236,5 +238,66 @@ public class VulcanDbContextTests(DatabaseFixture dbFixture) : IClassFixture<Dat
         var ex = await Should.ThrowAsync<DbUpdateException>(
             () => db.SaveChangesAsync());
         ex.InnerException.ShouldBeOfType<SqliteException>();
+    }
+
+    [Fact]
+    public async Task All_validation_keys_are_in_seed_data()
+    {
+        await using var db = _dbFixture.CreateDbContext();
+        await db.Database.MigrateAsync();
+
+        db.SeedValidationLimits();
+
+        // yeah https://stackoverflow.com/a/21230891
+        List<string> validationKeys =
+        [
+            .. typeof(LimitKeys)
+                .GetFields(BindingFlags.Public | BindingFlags.Static | BindingFlags.FlattenHierarchy)
+                .Where(f => f.FieldType == typeof(string) && f is { IsInitOnly: false, IsPublic: true })
+                .Select(f => (string)f.GetValue(null)!)
+        ];
+
+        await using var readDb = _dbFixture.CreateDbContext();
+        await readDb.Database.MigrateAsync();
+
+        // each key should have an entry in the database
+        validationKeys
+            .ForEach(key =>
+                readDb.ValidationLimit
+                    .Any(x => x.Key == key)
+                    .ShouldBeTrue());
+        // number of unique keys should match
+        readDb.ValidationLimit
+            .Select(x => x.Key)
+            .Distinct()
+            .Count()
+            .ShouldBe(validationKeys.Count);
+    }
+
+    [Fact]
+    public async Task All_specific_gravity_materials_are_in_seed_data()
+    {
+        await using var db = _dbFixture.CreateDbContext();
+        await db.Database.MigrateAsync();
+
+        db.SeedSpecificGravities();
+
+        List<string> materials = [.. typeof(Material).GetEnumNames()];
+
+        await using var readDb = _dbFixture.CreateDbContext();
+        await readDb.Database.MigrateAsync();
+
+        // all specific gravity materials should be in the db
+        materials
+            .ForEach(material =>
+                readDb.SpecificGravity
+                    .Select(x => x.Material.ToString())
+                    .ToList() // otherwise the next call fails to convert to SQL
+                    .Any(x => string.Equals(x, material))
+                    .ShouldBeTrue());
+        // number of materials should match
+        readDb.SpecificGravity
+            .Count()
+            .ShouldBe(materials.Count);
     }
 }

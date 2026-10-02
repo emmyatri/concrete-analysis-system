@@ -1,4 +1,3 @@
-using Microsoft.AspNetCore.Builder;
 using Microsoft.EntityFrameworkCore;
 using Vulcan.Infrastructure;
 
@@ -17,6 +16,13 @@ public static class ApiHost
         var app = builder.Build();
         app.EnsureMigrated();
 
+        // skip seed data in ApiHostTests.
+        // will fail due to migration connection not persisting to seeding
+        if (!builder.Environment.IsEnvironment("Testing"))
+        {
+            app.SeedData();
+        }
+
         app.MapGet("/", () => "Hello World!");
 
         return app;
@@ -27,5 +33,14 @@ public static class ApiHost
         using var scope = app.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<VulcanDbContext>();
         db.Database.Migrate();
+    }
+
+    private static void SeedData(this WebApplication app)
+    {
+        using var scope = app.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<VulcanDbContext>();
+
+        db.SeedValidationLimits();
+        db.SeedSpecificGravities();
     }
 }
