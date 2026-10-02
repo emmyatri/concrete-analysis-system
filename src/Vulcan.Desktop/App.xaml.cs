@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting.Server;
 using Microsoft.AspNetCore.Hosting.Server.Features;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Web.WebView2.Core;
 using Serilog;
 using Vulcan.Api;
 using Vulcan.Desktop.Services;
@@ -19,6 +20,10 @@ public partial class App : Application
 {
     private WebApplication? _apiHost;
     private ServiceProvider? _serviceProvider;
+
+    // Fixed API port, used only with the Angular dev server (live reload).
+    // Must match src/Vulcan.Web/proxy.conf.json.
+    private const int _devApiPort = 5180;
 
     private static readonly string _logDirectory = Path.Combine(
         Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
@@ -93,6 +98,21 @@ public partial class App : Application
         Log.Information("Application version: {Version}", version);
         Log.Information("Log location: {LogDirectory}", _logDirectory);
 
+        if (!TryGetWebView2Version(out var webView2Version))
+        {
+            MessageBox.Show(
+                "Vulcan CBAS can't start because the Microsoft Edge WebView2 Runtime isn't installed on this computer.\n\n" +
+                "Reinstall Vulcan CBAS (the installer includes it). Details are in the application log.",
+                "Vulcan CBAS",
+                MessageBoxButton.OK,
+                MessageBoxImage.Error);
+
+            Shutdown();
+            return;
+        }
+
+        Log.Information("WebView2 runtime version: {WebView2Version}", webView2Version);
+
         try
         {
             _apiHost = ApiHost.Create([]);
@@ -121,7 +141,7 @@ public partial class App : Application
 
             Log.Information("In-process API host started successfully");
 
-            var window = new MainWindow();
+            var window = new MainWindow(GetUiDevServer() ?? new Uri(serverAddress));
             MainWindow = window;
             window.Show();
         }
@@ -175,5 +195,37 @@ public partial class App : Application
         // Flush any buffered log events before the process exits.
         Log.CloseAndFlush();
         base.OnExit(e);
+    }
+
+    /// <summary>
+    /// Returns the WebView2 runtime version, or false if the runtime isn't installed.
+    /// </summary>
+    private static bool TryGetWebView2Version(out string version)
+    {
+        try
+        {
+            version = CoreWebView2Environment.GetAvailableBrowserVersionString();
+            return true;
+        }
+        catch (WebView2RuntimeNotFoundException ex)
+        {
+            Log.Fatal(ex, "WebView2 runtime is not installed");
+            version = string.Empty;
+            return false;
+        }
+    }
+
+    /// <summary>
+    /// Debug builds only: if VULCAN_UI_DEV_SERVER is set (e.g. http://localhost:4200),
+    /// show the Angular dev server instead of the built files, for live reload.
+    /// </summary>
+    private static Uri? GetUiDevServer()
+    {
+#if DEBUG
+        var value = Environment.GetEnvironmentVariable("VULCAN_UI_DEV_SERVER");
+        return Uri.TryCreate(value, UriKind.Absolute, out var uri) ? uri : null;
+#else
+        return null;
+#endif
     }
 }
