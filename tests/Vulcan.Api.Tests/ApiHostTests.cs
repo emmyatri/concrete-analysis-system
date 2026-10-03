@@ -1,8 +1,10 @@
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting.Server;
 using Microsoft.AspNetCore.Hosting.Server.Features;
+using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using Vulcan.Infrastructure;
 
 namespace Vulcan.Api.Tests;
@@ -13,7 +15,6 @@ namespace Vulcan.Api.Tests;
 /// </summary>
 public class ApiHostTests
 {
-    // Makes ApiHost use the in-memory test database (appsettings.Testing.json).
     private readonly string[] _args = ["--environment=Testing"];
 
     [Fact]
@@ -25,6 +26,18 @@ public class ApiHostTests
         var db = scope.ServiceProvider.GetRequiredService<VulcanDbContext>();
 
         db.Database.GetConnectionString().ShouldBe("Filename=:memory:");
+    }
+
+    [Fact]
+    public async Task Seed_data_exists()
+    {
+        await using var app = ApiHost.Create(_args);
+
+        using var scope = app.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<VulcanDbContext>();
+
+        db.ValidationLimit.ShouldNotBeEmpty();
+        db.SpecificGravity.ShouldNotBeEmpty();
     }
 
     [Fact]
@@ -74,8 +87,7 @@ public class ApiHostTests
         await app.StopAsync();
 
         // ...and refuses connections after.
-        await Should.ThrowAsync<HttpRequestException>(
-            async () => await client.GetAsync("/api/health"));
+        await Should.ThrowAsync<HttpRequestException>(async () => await client.GetAsync("/api/health"));
     }
 
     /// <summary>

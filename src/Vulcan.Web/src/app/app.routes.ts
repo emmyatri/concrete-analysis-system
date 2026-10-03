@@ -1,13 +1,18 @@
 import { Routes } from '@angular/router';
 
+import { technicianGuard } from './core/session/technician.guard';
 import { Shell } from './layout/shell/shell';
 import { PlaceholderPage } from './pages/placeholder-page';
+import { StartSession } from './pages/start-session/start-session';
 
-/** Every screen is a child of the shell, so it shows inside the header and side menu. */
 export const routes: Routes = [
+  // Asks who is using the app. Outside the shell: no menu until there's a technician (M1-42).
+  { path: 'start', component: StartSession },
   {
+    // Every screen is a child of the shell, so it shows inside the header and side menu.
     path: '',
     component: Shell,
+    canActivate: [technicianGuard],
     children: [
       { path: '', pathMatch: 'full', component: PlaceholderPage, data: { heading: 'Home' } },
       { path: 'batches/new', component: PlaceholderPage, data: { heading: 'New batch' } },

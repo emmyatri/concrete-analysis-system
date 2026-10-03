@@ -1,0 +1,122 @@
+﻿// Layout from the hi-fi mockup ("01 · Start session"). Colors from theme tokens only.
+
+.start-page {
+  display: grid;
+  place-items: center;
+  min-height: 100vh;
+  padding: 24px;
+  box-sizing: border-box;
+  background: var(--p-surface-50);
+  color: var(--p-text-color);
+}
+
+.start-card {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  width: 100%;
+  max-width: 456px;
+  padding: 32px;
+  box-sizing: border-box;
+  background: var(--p-surface-0);
+  border: 1px solid var(--p-content-border-color);
+  border-radius: 8px;
+  box-shadow: 0 4px 16px rgb(0 0 0 / 6%);
+}
+
+.start-logo {
+  height: 56px;
+}
+
+.start-app {
+  margin: 10px 0 0;
+  font-size: 13px;
+  color: var(--p-text-muted-color);
+}
+
+.start-title {
+  margin: 24px 0 0;
+  font-size: 22px;
+  font-weight: 600;
+}
+
+.start-help {
+  margin: 6px 0 0;
+  font-size: 14px;
+  line-height: 1.4;
+  color: var(--p-text-muted-color);
+}
+
+.start-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  align-self: stretch;
+  margin-top: 24px;
+
+  label {
+    font-size: 14px;
+    font-weight: 500;
+  }
+
+  input {
+    width: 100%;
+  }
+}
+
+.start-message {
+  font-size: 12px;
+  color: var(--p-text-muted-color);
+}
+
+.start-field--error {
+  input {
+    border-color: var(--p-red-400);
+  }
+
+  .start-message {
+    color: var(--p-red-600);
+  }
+}
+
+.start-status {
+  margin-top: 20px;
+}
+
+.api-status {
+  font-size: 13px;
+  font-weight: 500;
+  padding: 4px 10px;
+}
+
+.status-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+.start-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  align-self: stretch;
+  margin-top: 12px;
+  padding: 8px 12px;
+  border-left: 4px solid var(--p-red-600);
+  border-radius: 4px;
+  background: var(--p-red-100);
+  color: var(--p-red-700);
+  font-size: 13px;
+}
+
+.start-submit {
+  align-self: stretch;
+  margin-top: 16px;
+
+  ::ng-deep .start-button {
+    width: 100%;
+    justify-content: flex-start;
+  }
+}
