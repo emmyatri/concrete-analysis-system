@@ -69,6 +69,18 @@ describe('BatchEntry', () => {
     expect(scmType.errors?.['scmType']?.message).toBe('Must be None when SCM is 0%');
   });
 
+  it('never counts the cement oxides in the composition Total', () => {
+    form().controls.composition.patchValue({ cementPct: '16', waterPct: '17', coarseAggregatePct: '40', fineAggregatePct: '25', scmType: 'FlyAsh', scmPct: '2' });
+    fixture.detectChanges();
+    expect(tile('total')).toBe('100.00%');
+
+    form().controls.oxides.patchValue({ aluminaPct: '7.5', ironOxidePct: '6', magnesiumOxidePct: '6', sulfurTrioxidePct: '4.5' });
+    fixture.detectChanges();
+
+    expect(tile('total')).toBe('100.00%');
+    expect(tile('air-other')).toBe('0.00%');
+  });
+
   it('rejects batch numbers with spaces or symbols', () => {
     const batchNumber = form().controls.batch.controls.batchNumber;
 
