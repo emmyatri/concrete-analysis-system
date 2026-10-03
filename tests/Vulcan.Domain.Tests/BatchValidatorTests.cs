@@ -19,7 +19,7 @@ public class BatchValidatorTests
     }
 
     // Batch numbers are required and may contain only letters, numbers, and dashes.
-    // Extra whitespace is removed before validation.
+    // Leading and trailing whitespace is removed before validation.
     [Fact]
     public void BatchNumber_IsRequired()
     {
@@ -28,12 +28,11 @@ public class BatchValidatorTests
         Assert.False(BatchValidator.IsBatchNumberValid("   "));
     }
 
-    // Extra whitespace is removed from anywhere in the batch number before validation.
+    // Leading and trailing whitespace is removed before validation.
     [Theory]
     [InlineData("  VM-123  ", "VM-123")]
-    [InlineData("VM 123", "VM123")]
-    [InlineData(" VM 12 3 ", "VM123")]
-    public void BatchNumber_RemovesExtraWhitespace(
+    [InlineData("\tVM-123\t", "VM-123")]
+    public void BatchNumber_RemovesLeadingAndTrailingWhitespace(
         string batchNumber,
         string expected)
     {
@@ -41,6 +40,15 @@ public class BatchValidatorTests
 
         Assert.Equal(expected, result);
         Assert.True(BatchValidator.IsBatchNumberValid(result));
+    }
+
+    // Whitespace inside a batch number is not allowed.
+    [Theory]
+    [InlineData("VM 123")]
+    [InlineData("VM 12 3")]
+    public void BatchNumber_WithInnerWhitespace_IsInvalid(string batchNumber)
+    {
+        Assert.False(BatchValidator.IsBatchNumberValid(batchNumber));
     }
 
     // Batch numbers have a maximum length of 32 characters.

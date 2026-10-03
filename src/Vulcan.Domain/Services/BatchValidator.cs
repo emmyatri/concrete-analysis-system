@@ -9,8 +9,7 @@ public partial class BatchValidator(LimitEvaluator limitEvaluator)
 {
     public static string NormalizeBatchNumber(string? batchNumber)
     {
-        return string.Concat((batchNumber ?? string.Empty)
-            .Where(c => !char.IsWhiteSpace(c)));
+        return (batchNumber ?? string.Empty).Trim();
     }
 
     public static bool IsBatchNumberValid(string? batchNumber)
