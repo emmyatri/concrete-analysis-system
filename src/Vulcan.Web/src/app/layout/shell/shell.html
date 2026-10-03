@@ -21,11 +21,19 @@
           <label for="synthetic-toggle">Synthetic data</label>
         </div>
 
-        <span class="technician-chip" data-testid="technician">
+        <button
+          type="button"
+          class="technician-chip"
+          data-testid="technician"
+          aria-haspopup="menu"
+          [attr.aria-label]="'Technician: ' + technicianName()"
+          (click)="technicianMenuRef.toggle($event)"
+        >
           <p-avatar [label]="technicianInitials()" shape="circle" styleClass="technician-avatar" />
           <span class="technician-name">{{ technicianName() }}</span>
           <i class="pi pi-chevron-down" aria-hidden="true"></i>
-        </span>
+        </button>
+        <p-menu #technicianMenuRef [model]="technicianMenu" [popup]="true" appendTo="body" />
       </div>
     </div>
   </header>
