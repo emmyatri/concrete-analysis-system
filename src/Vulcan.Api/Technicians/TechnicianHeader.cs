@@ -12,8 +12,6 @@ public static class TechnicianHeader
 {
     public const string Name = "X-Technician";
 
-    private const string _itemKey = "Vulcan.Technician";
-
     /// <summary>
     /// Rejects any save (POST, PUT, PATCH, DELETE under /api) that has no valid technician name, even if the UI
     /// already checked (NFR-6). Saving the name itself is the one exception: that's how a session starts.
@@ -40,21 +38,16 @@ public static class TechnicianHeader
                         title: "Every save needs the technician's name.").ExecuteAsync(context);
                     return;
                 }
-
-                context.Items[_itemKey] = TechnicianName.Normalize(name);
             }
 
             await next(context);
         });
 
     /// <summary>
-    /// The technician for this save, trimmed. For audit stamping (M1-22): fill CreatedBy / ModifiedBy from this.
-    /// Null outside a save request.
+    /// The technician name from the request header, decoded (not trimmed or checked).
+    /// Null if the header is missing or badly encoded. ICurrentTechnician (M1-22) can build on this.
     /// </summary>
-    public static string? GetTechnician(this HttpContext context) =>
-        context.Items.TryGetValue(_itemKey, out var name) ? name as string : null;
-
-    private static string? Read(HttpRequest request)
+    public static string? Read(HttpRequest request)
     {
         var raw = request.Headers[Name].ToString();
         if (string.IsNullOrEmpty(raw))
