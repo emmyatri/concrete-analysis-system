@@ -24,9 +24,9 @@ describe('BatchEntry', () => {
   const el = () => fixture.nativeElement as HTMLElement;
   const tile = (id: string) => el().querySelector(`[data-testid="${id}"] .tile-value`)?.textContent?.trim();
 
-  it('shows the Batch, Cement oxides and Composition cards', () => {
+  it('shows the Batch and Composition cards', () => {
     const titles = Array.from(el().querySelectorAll('.card-header h2')).map((h) => h.textContent?.trim());
-    expect(titles).toEqual(['Batch', 'Cement oxides', 'Composition']);
+    expect(titles).toEqual(['Batch', 'Composition']);
   });
 
   it('calculates the totals live, matching the hi-fi mockup', () => {
@@ -75,13 +75,11 @@ describe('toCreateBatchRequest', () => {
     form.patchValue({
       batch: { batchNumber: ' VM-2026-0142 ', finalWeightLb: '4,380.00', expectedFinalBreakPsi: '6000', cementType: 'TypeIII', mixWaterPh: '7.2' },
       composition: { cementPct: '12', waterPct: '17', coarseAggregatePct: '40', fineAggregatePct: '25', scmType: 'FlyAsh', scmPct: '2' },
-      oxides: { aluminaPct: '4.8', ironOxidePct: '2.8', magnesiumOxidePct: '1.8', sulfurTrioxidePct: '2.2' },
     });
 
     const request = toCreateBatchRequest(form);
 
     expect(request.batch).toMatchObject({ batchNumber: 'VM-2026-0142', finalWeightLb: 4380, expectedFinalBreakPsi: 6000, cementType: 'TypeIII', mixWaterPh: 7.2 });
     expect(request.composition).toMatchObject({ cementPct: 12, scmType: 'FlyAsh', scmPct: 2 });
-    expect(request.oxides.aluminaPct).toBe(4.8);
   });
 });

@@ -23,7 +23,7 @@ const TEMP_SPECIFIC_GRAVITIES = new Map<string, number>([
 ]);
 
 /**
- * "New batch" screen (M1-43, mockup "03 · Batch Entry"): batch details, mix recipe and cement oxides,
+ * "New batch" screen (M1-43, mockup "03 · Batch Entry"): batch details and mix recipe,
  * with the composition totals calculated live.
  */
 @Component({

@@ -6,7 +6,7 @@
 export type CementType = 'TypeI' | 'TypeII' | 'TypeIII';
 export type ScmType = 'None' | 'FlyAsh' | 'Slag' | 'SilicaFume';
 
-/** POST /api/batches: the batch, its composition and its cement oxides in one request. */
+/** POST /api/batches: the batch and its composition in one request. */
 export interface CreateBatchRequest {
   batch: {
     batchNumber: string;
@@ -23,12 +23,6 @@ export interface CreateBatchRequest {
     fineAggregatePct: number;
     scmType: ScmType;
     scmPct: number;
-  };
-  oxides: {
-    aluminaPct: number;
-    ironOxidePct: number;
-    magnesiumOxidePct: number;
-    sulfurTrioxidePct: number;
   };
 }
 
