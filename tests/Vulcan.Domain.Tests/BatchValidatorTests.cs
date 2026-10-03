@@ -6,7 +6,7 @@ namespace Vulcan.Domain.Tests;
 public class BatchValidatorTests
 {
     // Batch numbers are required and may contain only letters, numbers, and dashes.
-    // Leading and trailing whitespace is removed before validation.
+    // Extra whitespace is removed before validation.
     [Fact]
     public void BatchNumber_IsRequired()
     {
@@ -14,16 +14,20 @@ public class BatchValidatorTests
         Assert.False(BatchValidator.IsBatchNumberValid(""));
         Assert.False(BatchValidator.IsBatchNumberValid("   "));
     }
-
-    [Fact]
-    public void BatchNumber_RemovesLeadingAndTrailingSpaces()
+    // Extra whitespace is removed from anywhere in the batch number before validation.
+    [Theory]
+    [InlineData("  VM-123  ", "VM-123")]
+    [InlineData("VM 123", "VM123")]
+    [InlineData(" VM 12 3 ", "VM123")]
+    public void BatchNumber_RemovesExtraWhitespace(
+        string batchNumber,
+        string expected)
     {
-        var result = BatchValidator.NormalizeBatchNumber("  VM-123  ");
+        var result = BatchValidator.NormalizeBatchNumber(batchNumber);
 
-        Assert.Equal("VM-123", result);
-        Assert.True(BatchValidator.IsBatchNumberValid("  VM-123  "));
+        Assert.Equal(expected, result);
+        Assert.True(BatchValidator.IsBatchNumberValid(result));
     }
-
     // Batch numbers have a maximum length of 32 characters.
     [Fact]
     public void BatchNumber_With32Characters_IsValid()
@@ -53,7 +57,6 @@ public class BatchValidatorTests
     }
 
     [Theory]
-    [InlineData("ABC 123")]
     [InlineData("ABC_123")]
     [InlineData("ABC.123")]
     [InlineData("ABC@123")]

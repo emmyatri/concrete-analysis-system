@@ -7,7 +7,8 @@ public static partial class BatchValidator
 {
     public static string NormalizeBatchNumber(string? batchNumber)
     {
-        return batchNumber?.Trim() ?? string.Empty;
+        return string.Concat((batchNumber ?? string.Empty)
+            .Where(c => !char.IsWhiteSpace(c)));
     }
 
     public static bool IsBatchNumberValid(string? batchNumber)
