@@ -2,10 +2,7 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.FileProviders;
-using Vulcan.Domain.Interfaces;
-using Vulcan.Domain.Services;
 using Vulcan.Infrastructure;
-using Vulcan.Infrastructure.Services;
 
 namespace Vulcan.Api;
 
@@ -36,9 +33,6 @@ public static class ApiHost
         // Bind only to this computer and let the OS select an available port.
         builder.WebHost.UseUrls($"http://127.0.0.1:{port}");
         builder.Services.AddDatabase(builder.Configuration);
-        builder.Services
-            .AddScoped<ILimitProvider, LimitProvider>()
-            .AddScoped<LimitEvaluator>();
 
         // use overrides if provided
         configureServices?.Invoke(builder.Services);

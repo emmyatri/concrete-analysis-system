@@ -4,6 +4,9 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Vulcan.Domain.Entities;
+using Vulcan.Domain.Interfaces;
+using Vulcan.Domain.Services;
+using Vulcan.Infrastructure.Services;
 
 namespace Vulcan.Infrastructure;
 
@@ -30,6 +33,9 @@ public static class SetupUtils
         }
 
         services.AddDbContext<VulcanDbContext>(o => o.UseSqlite(cs));
+        services.AddScoped<ILimitProvider, LimitProvider>();
+        services.AddScoped<LimitEvaluator>();
+
         return services;
     }
 
