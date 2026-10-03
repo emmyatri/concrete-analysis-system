@@ -296,6 +296,7 @@ These rows are loaded on first run (M1-21). Changing them later is a data change
 | `Oxide.IronOxidePct`             | Reject   | 0    | 100   | %       | FR-3                                   |
 | `Specimen.LengthIn`              | Reject   | 0.01 | 12.00 | in      | FR-4                                   |
 | `Specimen.WidthIn`               | Reject   | 0.01 | 6.00  | in      | FR-4                                   |
+| `Batch.FinalWeightLb`            | Reject   | 0.01 | —     | lb      | schema.md field dictionary             |
 | `Batch.ExpectedFinalBreakPsi`    | Reject   | 3000 | 10000 | PSI     | Client doc / FR-5                      |
 | `Break.StrengthPsi`              | Reject   | 1    | 10000 | PSI     | Client doc / FR-5, Decision 3          |
 | `Break.StrengthPsi`              | Warn     | 3000 | 10000 | PSI     | Client doc / FR-5                      |

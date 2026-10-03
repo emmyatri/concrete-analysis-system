@@ -77,6 +77,7 @@ git checkout dev
 cd src/Vulcan.Web
 npm ci
 npm test -- --watch=false
+npm run build
 cd ../..
 
 # .NET
@@ -87,8 +88,9 @@ dotnet test
 Everything should finish with **0 warnings and 0 errors**. Warnings are treated as errors, so a warning will fail the
 build.
 
-`dotnet build` also builds the Angular app and copies it into `src/Vulcan.Api/wwwroot/`. That folder is generated, so
-don't edit or commit it.
+Build the Angular app **before** the .NET build: `npm run build` (in `src/Vulcan.Web`) writes it to
+`src/Vulcan.Api/wwwroot/`, and `dotnet build` then copies it into the desktop app. CI runs them in that order.
+That folder is generated, so **don't edit or commit it.**
 
 ### Run the app
 

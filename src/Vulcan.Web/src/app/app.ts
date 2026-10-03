@@ -1,11 +1,10 @@
 import { Component } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
-import { ButtonModule } from 'primeng/button';
 
+/** Root component. Everything visible is in the shell (layout/shell) and its routed pages. */
 @Component({
   selector: 'app-root',
-  imports: [RouterOutlet, ButtonModule],
+  imports: [RouterOutlet],
   templateUrl: './app.html',
-  styleUrl: './app.scss',
 })
 export class App {}

@@ -1,0 +1,13 @@
+{
+  "profiles": {
+    "Vulcan.Desktop": {
+      "commandName": "Project"
+    },
+    "Vulcan.Desktop (live reload)": {
+      "commandName": "Project",
+      "environmentVariables": {
+        "VULCAN_UI_DEV_SERVER": "http://localhost:4200"
+      }
+    }
+  }
+}

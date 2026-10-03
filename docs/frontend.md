@@ -32,8 +32,17 @@ npm run lint
 ## Build
 
 ```powershell
-npm run build    # output: src/Vulcan.Web/dist/vulcan-web/browser/
+npm run build    # output: src/Vulcan.Api/wwwroot/ (served by the API)
 ```
+
+## Live reload inside the desktop app
+
+1. In `src/Vulcan.Web`, run `npm start`.
+2. Run Vulcan.Desktop with the **"Vulcan.Desktop (live reload)"** profile (Rider), or:
+```powershell
+   dotnet run --project src/Vulcan.Desktop --launch-profile "Vulcan.Desktop (live reload)"
+```
+Screen changes show in the window as you save. Debug builds only. In this mode the API uses port 5180.
 
 ## Rules
 
