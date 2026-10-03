@@ -19,6 +19,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\Vulcan.Domain\Vulcan.Domain.csproj" />
+    <ProjectReference Include="..\..\src\Vulcan.Infrastructure\Vulcan.Infrastructure.csproj" />
   </ItemGroup>
 
 </Project>
