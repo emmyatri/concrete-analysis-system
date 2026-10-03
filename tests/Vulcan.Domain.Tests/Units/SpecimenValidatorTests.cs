@@ -86,6 +86,7 @@ public class SpecimenValidatorTests
                 decimal.Parse(value)));
     }
 
+    // Length Run
     [Fact]
     public void Validate_WithExcessPrecision_ReturnsPrecisionMessage()
     {
@@ -98,6 +99,22 @@ public class SpecimenValidatorTests
 
         Assert.Contains(
             "Specimen length cannot have more than two decimal places.",
+            errors);
+    }
+
+    // Width Run
+    [Fact]
+    public void Validate_WithExcessWidthPrecision_ReturnsPrecisionMessage()
+    {
+        var specimen = CreateSpecimen(
+            lengthIn: 4m,
+            widthIn: 4.005m,
+            testAgeDays: TestAgeDays.Day7);
+
+        var errors = _validator.Validate(specimen);
+
+        Assert.Contains(
+            "Specimen width cannot have more than two decimal places.",
             errors);
     }
 
