@@ -1,9 +1,12 @@
 ﻿using Vulcan.Domain.Services;
+using Vulcan.Domain.Enums;
 
 namespace Vulcan.Domain.Tests;
 
 public class BatchValidatorTests
 {
+    // Batch numbers are required and may contain only letters, numbers, and dashes.
+    // Leading and trailing whitespace is removed before validation.
     [Fact]
     public void BatchNumber_IsRequired()
     {
@@ -21,6 +24,7 @@ public class BatchValidatorTests
         Assert.True(BatchValidator.IsBatchNumberValid("  VM-123  "));
     }
 
+    // Batch numbers have a maximum length of 32 characters.
     [Fact]
     public void BatchNumber_With32Characters_IsValid()
     {
@@ -58,7 +62,9 @@ public class BatchValidatorTests
     {
         Assert.False(BatchValidator.IsBatchNumberValid(batchNumber));
     }
-    
+
+    // Final weight must be greater than zero and contain no more than
+    // two decimal places.
     [Theory]
     [InlineData("0.01")]
     [InlineData("1")]
@@ -82,5 +88,65 @@ public class BatchValidatorTests
         var finalWeightLb = decimal.Parse(value);
 
         Assert.False(BatchValidator.IsFinalWeightValid(finalWeightLb));
+    }
+
+    // Cast time is required and cannot be later than the current time.
+    // A fixed UTC time keeps the boundary tests deterministic.
+    [Fact]
+    public void CastAt_IsRequired()
+    {
+        var nowUtc = new DateTime(2026, 10, 3, 18, 0, 0, DateTimeKind.Utc);
+
+        Assert.False(BatchValidator.IsCastAtValid(default, nowUtc));
+    }
+
+    [Fact]
+    public void CastAt_AtCurrentTime_IsValid()
+    {
+        var nowUtc = new DateTime(2026, 10, 3, 18, 0, 0, DateTimeKind.Utc);
+
+        Assert.True(BatchValidator.IsCastAtValid(nowUtc, nowUtc));
+    }
+
+    [Fact]
+    public void CastAt_JustBeforeCurrentTime_IsValid()
+    {
+        var nowUtc = new DateTime(2026, 10, 3, 18, 0, 0, DateTimeKind.Utc);
+        var castAt = nowUtc.AddTicks(-1);
+
+        Assert.True(BatchValidator.IsCastAtValid(castAt, nowUtc));
+    }
+
+    [Fact]
+    public void CastAt_JustAfterCurrentTime_IsInvalid()
+    {
+        var nowUtc = new DateTime(2026, 10, 3, 18, 0, 0, DateTimeKind.Utc);
+        var castAt = nowUtc.AddTicks(1);
+
+        Assert.False(BatchValidator.IsCastAtValid(castAt, nowUtc));
+    }
+    
+    // Cement type is required and must be one of the three supported types.
+    [Theory]
+    [InlineData(CementType.TypeI)]
+    [InlineData(CementType.TypeII)]
+    [InlineData(CementType.TypeIII)]
+    public void CementType_WithSupportedType_IsValid(CementType cementType)
+    {
+        Assert.True(BatchValidator.IsCementTypeValid(cementType));
+    }
+
+    [Fact]
+    public void CementType_WithDefaultValue_IsInvalid()
+    {
+        Assert.False(BatchValidator.IsCementTypeValid(default));
+    }
+
+    [Fact]
+    public void CementType_WithUnsupportedValue_IsInvalid()
+    {
+        var cementType = (CementType)4;
+
+        Assert.False(BatchValidator.IsCementTypeValid(cementType));
     }
 }
