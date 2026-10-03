@@ -1,15 +1,18 @@
 import { AbstractControl } from '@angular/forms';
-import { Component, Input } from '@angular/core';
+import { Component, input } from '@angular/core';
 
+// Reusable component for rendering a form field with label, input, and optional hint.
 @Component({
   selector: 'app-field',
   templateUrl: './app-field.html',
-  styleUrl: './app-field.scss',
+  styleUrls: ['./app-field.scss'],
 })
+
+// Class representing the app-field component.
 export class AppField {
-  @Input() label!: string;
-  @Input() inputId!: string;
-  @Input() control!: AbstractControl;
-  @Input() limitKey!: string;
-  @Input() hint = '';
+  readonly label = input.required<string>();
+  readonly inputId = input.required<string>();
+  readonly control = input.required<AbstractControl>();
+  readonly limitKey = input<string>('');
+  readonly hint = input<string>('');
 }
