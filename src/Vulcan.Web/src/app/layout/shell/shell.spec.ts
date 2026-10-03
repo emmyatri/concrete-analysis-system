@@ -6,6 +6,7 @@ import { RouterTestingHarness } from '@angular/router/testing';
 import { providePrimeNG } from 'primeng/config';
 
 import { routes } from '../../app.routes';
+import { TECHNICIAN_SETTINGS_URL, TechnicianSession } from '../../core/session/technician-session';
 import { VulcanPreset } from '../../theme/vulcan-preset';
 import { SHELL_MENU } from './menu-items';
 
@@ -23,8 +24,13 @@ describe('Shell', () => {
       ],
     });
 
-    harness = await RouterTestingHarness.create('/');
     http = TestBed.inject(HttpTestingController);
+
+    // Every screen needs a technician (M1-42).
+    TestBed.inject(TechnicianSession).start('J. Rivera').subscribe();
+    http.expectOne(TECHNICIAN_SETTINGS_URL).flush(null);
+
+    harness = await RouterTestingHarness.create('/');
   });
 
   const page = () => harness.routeNativeElement as HTMLElement;
@@ -66,6 +72,27 @@ describe('Shell', () => {
     expect(page().querySelector('[data-testid="api-status"]')?.textContent).toContain('Local API ready');
   });
 
+  it('shows the technician in the top bar', () => {
+    const chip = page().querySelector('[data-testid="technician"]');
+
+    expect(chip?.textContent).toContain('J. Rivera');
+    expect(chip?.querySelector('.technician-avatar')?.textContent?.trim()).toBe('JR');
+  });
+
+  it('"Switch technician" reopens Start session and comes back to the same page', async () => {
+    await harness.navigateByUrl('/batches');
+    page().querySelector<HTMLButtonElement>('[data-testid="technician"]')!.click();
+    harness.detectChanges();
+
+    const item = Array.from(document.querySelectorAll<HTMLElement>('.p-menu-item-link')).find((link) =>
+      link.textContent?.includes('Switch technician'),
+    );
+    item!.click();
+    await harness.fixture.whenStable();
+
+    expect(TestBed.inject(Router).url).toBe('/start?returnUrl=%2Fbatches');
+  });
+  
   it('shows "Starting local service…" while waiting for the API', () => {
     expect(page().querySelector('[data-testid="api-status"]')?.textContent).toContain('Starting local service');
   });

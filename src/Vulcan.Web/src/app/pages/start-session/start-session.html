@@ -1,0 +1,54 @@
+﻿<main class="start-page">
+  <form class="start-card" [formGroup]="form" (ngSubmit)="start()" novalidate>
+    <img src="assets/vulcan-logo.svg" alt="Vulcan Materials Company" class="start-logo" />
+    <p class="start-app">CBAS · Concrete Batch Analysis System</p>
+
+    <h1 class="start-title">Start session</h1>
+    <p class="start-help">Your name is saved as "created by" on every record you enter until you close the app.</p>
+
+    <div class="start-field" [class.start-field--error]="error()">
+      <label for="technicianName">Technician name</label>
+      <input
+        pInputText
+        id="technicianName"
+        formControlName="name"
+        autocomplete="name"
+        aria-describedby="technicianName-message"
+        [attr.aria-invalid]="error() ? true : null"
+      />
+      <small id="technicianName-message" class="start-message" [attr.role]="error() ? 'alert' : null">
+        {{ error() ?? 'Required' }}
+      </small>
+    </div>
+
+    <div class="start-status">
+      <p-tag [severity]="statusDisplay().severity" [rounded]="true" styleClass="api-status" data-testid="api-status">
+        <span class="status-dot" aria-hidden="true"></span>
+        {{ statusDisplay().label }}
+      </p-tag>
+    </div>
+
+    @if (status() === 'failed') {
+      <div class="start-banner" role="alert" data-testid="api-failed">
+        <span>The local service didn't start. Close and reopen the app, or try again.</span>
+        <p-button label="Retry" [text]="true" size="small" (onClick)="retry()" data-testid="retry" />
+      </div>
+    }
+
+    @if (saveFailed()) {
+      <div class="start-banner" role="alert" data-testid="save-failed">
+        Your name couldn't be saved. Try again.
+      </div>
+    }
+
+    <p-button
+      class="start-submit"
+      type="submit"
+      label="Start session"
+      styleClass="start-button"
+      [disabled]="!canStart()"
+      [loading]="saving()"
+      data-testid="start-session"
+    />
+  </form>
+</main>
