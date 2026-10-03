@@ -81,17 +81,25 @@ public sealed class TechnicianTests : IDisposable
         (await response.Content.ReadAsStringAsync()).ShouldContain("\"Technician\"");
     }
 
-    [Fact]
-    public async Task A_save_with_a_technician_gets_through()
+    [Theory]
+    [InlineData("POST")]
+    [InlineData("PUT")]
+    [InlineData("PATCH")]
+    [InlineData("DELETE")]
+    public async Task A_save_with_no_technician_is_rejected(string method)
     {
         await using var app = await StartAsync();
         using var client = ClientFor(app);
-        client.DefaultRequestHeaders.Add(TechnicianHeader.Name, Uri.EscapeDataString("José Rivera"));
 
-        var response = await client.PostAsJsonAsync("/api/batches", new { });
+        using var request = new HttpRequestMessage(new HttpMethod(method), "/api/batches")
+        {
+            Content = JsonContent.Create(new { }),
+        };
 
-        // No batches endpoint yet, so it reaches the JSON 404 instead of being stopped at the door.
-        response.StatusCode.ShouldBe(HttpStatusCode.NotFound);
+        var response = await client.SendAsync(request);
+
+        response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
+        (await response.Content.ReadAsStringAsync()).ShouldContain("\"Technician\":");
     }
 
     [Fact]
