@@ -1,28 +1,22 @@
 // Field states from the hi-fi mockup ("03 · Batch Entry"). Colors from theme tokens only.
-
 :host {
   display: flex;
   flex-direction: column;
   gap: 6px;
   min-width: 0;
 }
-
-// Label styles for the field.
 label {
   font-size: 14px;
   font-weight: 500;
-  color: var(--p-text-color); 
+  color: var(--p-text-color);
 }
-
 // Every PrimeNG input inside a field fills its width.
 .app-field-control {
   display: flex;
-
   ::ng-deep :is(.p-inputtext, .p-select, .p-datepicker) {
     width: 100%;
   }
 }
-
 // Grey hint (normal) and the message line (error / warning) share this look.
 .app-field-hint,
 .app-field-message {
@@ -32,21 +26,22 @@ label {
   font-size: 12px;
   color: var(--p-text-muted-color);
 }
-
 // Error: red border, red message. Blocks Save.
 :host(.app-field--error) {
   .app-field-message {
     color: var(--p-red-600);
   }
-
   ::ng-deep :is(.p-inputtext, .p-select) {
     border-color: var(--p-red-400);
   }
 }
-
 // Warning: amber border and fill, amber message. Still saves.
 :host(.app-field--warn) {
   .app-field-message {
     color: var(--p-orange-600);
+  }
+  ::ng-deep :is(.p-inputtext, .p-select) {
+    border-color: var(--p-orange-400);
+    background: var(--p-orange-50);
   }
 }
