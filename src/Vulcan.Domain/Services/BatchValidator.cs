@@ -1,9 +1,11 @@
 using System.Text.RegularExpressions;
+using Vulcan.Domain.Constants;
 using Vulcan.Domain.Enums;
+using Vulcan.Domain.Validation;
 
 namespace Vulcan.Domain.Services;
 
-public static partial class BatchValidator
+public partial class BatchValidator(LimitEvaluator limitEvaluator)
 {
     public static string NormalizeBatchNumber(string? batchNumber)
     {
@@ -28,9 +30,13 @@ public static partial class BatchValidator
         return BatchNumberPattern().IsMatch(normalized);
     }
 
-    public static bool IsFinalWeightValid(decimal finalWeightLb)
+    public bool IsFinalWeightValid(decimal finalWeightLb)
     {
-        if (finalWeightLb <= 0)
+        var result = limitEvaluator.Check(
+            LimitKeys.FinalWeightLb,
+            finalWeightLb);
+
+        if (result is LimitResult.Reject)
         {
             return false;
         }
@@ -53,6 +59,15 @@ public static partial class BatchValidator
         return cementType is CementType.TypeI
             or CementType.TypeII
             or CementType.TypeIII;
+    }
+
+    public bool IsExpectedFinalBreakPsiValid(int expectedFinalBreakPsi)
+    {
+        var result = limitEvaluator.Check(
+            LimitKeys.ExpectedFinalBreakPsi,
+            expectedFinalBreakPsi);
+
+        return result is not LimitResult.Reject;
     }
 
     [GeneratedRegex(@"^[A-Za-z0-9-]+$")]

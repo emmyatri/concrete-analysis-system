@@ -1,10 +1,23 @@
+using Vulcan.Domain.Constants;
+using Vulcan.Domain.Entities;
 using Vulcan.Domain.Enums;
+using Vulcan.Domain.Interfaces;
 using Vulcan.Domain.Services;
+using Vulcan.Domain.Validation;
 
 namespace Vulcan.Domain.Tests;
 
 public class BatchValidatorTests
 {
+    private readonly BatchValidator _validator;
+
+    public BatchValidatorTests()
+    {
+        var limitProvider = new TestLimitProvider();
+        var limitEvaluator = new LimitEvaluator(limitProvider);
+        _validator = new BatchValidator(limitEvaluator);
+    }
+
     // Batch numbers are required and may contain only letters, numbers, and dashes.
     // Extra whitespace is removed before validation.
     [Fact]
@@ -14,6 +27,7 @@ public class BatchValidatorTests
         Assert.False(BatchValidator.IsBatchNumberValid(""));
         Assert.False(BatchValidator.IsBatchNumberValid("   "));
     }
+
     // Extra whitespace is removed from anywhere in the batch number before validation.
     [Theory]
     [InlineData("  VM-123  ", "VM-123")]
@@ -28,6 +42,7 @@ public class BatchValidatorTests
         Assert.Equal(expected, result);
         Assert.True(BatchValidator.IsBatchNumberValid(result));
     }
+
     // Batch numbers have a maximum length of 32 characters.
     [Fact]
     public void BatchNumber_With32Characters_IsValid()
@@ -67,7 +82,7 @@ public class BatchValidatorTests
     }
 
     // Final weight must be greater than zero and contain no more than
-    // two decimal places.
+    // two decimal places. The numeric range comes from the configured limit.
     [Theory]
     [InlineData("0.01")]
     [InlineData("1")]
@@ -78,7 +93,7 @@ public class BatchValidatorTests
     {
         var finalWeightLb = decimal.Parse(value);
 
-        Assert.True(BatchValidator.IsFinalWeightValid(finalWeightLb));
+        Assert.True(_validator.IsFinalWeightValid(finalWeightLb));
     }
 
     [Theory]
@@ -90,7 +105,7 @@ public class BatchValidatorTests
     {
         var finalWeightLb = decimal.Parse(value);
 
-        Assert.False(BatchValidator.IsFinalWeightValid(finalWeightLb));
+        Assert.False(_validator.IsFinalWeightValid(finalWeightLb));
     }
 
     // Cast time is required and cannot be later than the current time.
@@ -151,5 +166,62 @@ public class BatchValidatorTests
         var cementType = (CementType)4;
 
         Assert.False(BatchValidator.IsCementTypeValid(cementType));
+    }
+
+    // Expected final break strength must be between 3,000 and 10,000 PSI,
+    // inclusive. The numeric range comes from the configured limit.
+    [Theory]
+    [InlineData(3000)]
+    [InlineData(10000)]
+    public void ExpectedFinalBreakPsi_AtBoundary_IsValid(int value)
+    {
+        Assert.True(_validator.IsExpectedFinalBreakPsiValid(value));
+    }
+
+    [Theory]
+    [InlineData(2999)]
+    [InlineData(10001)]
+    public void ExpectedFinalBreakPsi_OutsideBoundary_IsInvalid(int value)
+    {
+        Assert.False(_validator.IsExpectedFinalBreakPsiValid(value));
+    }
+
+    private sealed class TestLimitProvider : ILimitProvider
+    {
+        public LimitSet Get(string key)
+        {
+            return key switch
+            {
+                LimitKeys.FinalWeightLb => new LimitSet
+                {
+                    Reject = new ValidationLimit
+                    {
+                        Key = LimitKeys.FinalWeightLb,
+                        Severity = Severity.Reject,
+                        Min = 0.01m,
+                        Max = null,
+                        Unit = "lb",
+                        Message = "Weight must be greater than 0",
+                        Source = "schema.md"
+                    }
+                },
+
+                LimitKeys.ExpectedFinalBreakPsi => new LimitSet
+                {
+                    Reject = new ValidationLimit
+                    {
+                        Key = LimitKeys.ExpectedFinalBreakPsi,
+                        Severity = Severity.Reject,
+                        Min = 3000m,
+                        Max = 10000m,
+                        Unit = "PSI",
+                        Message = "PSI must be within the range [3000-10,000]",
+                        Source = "Client doc / FR-5"
+                    }
+                },
+
+                _ => new LimitSet()
+            };
+        }
     }
 }
