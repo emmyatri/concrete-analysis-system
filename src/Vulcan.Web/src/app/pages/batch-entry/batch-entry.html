@@ -79,6 +79,36 @@
           </div>
         </div>
       </section>
+
+      <!-- ---------- Cement oxides ---------- -->
+      <section class="card" formGroupName="oxides" aria-labelledby="oxides-card-title">
+        <header class="card-header">
+          <i class="pi pi-database" aria-hidden="true"></i>
+          <h2 id="oxides-card-title">Cement oxides</h2>
+          <span class="card-note">% of cement · mill certificate</span>
+        </header>
+        <div class="card-body fields">
+          <div class="field">
+            <label for="aluminaPct">Alumina Al₂O₃ (%)</label>
+            <input pInputText id="aluminaPct" formControlName="aluminaPct" inputmode="decimal" />
+          </div>
+          <div class="field">
+            <label for="ironOxidePct">Iron oxide Fe₂O₃ (%)</label>
+            <input pInputText id="ironOxidePct" formControlName="ironOxidePct" inputmode="decimal" />
+          </div>
+          <div class="field">
+            <label for="magnesiumOxidePct">Magnesium oxide MgO (%)</label>
+            <input pInputText id="magnesiumOxidePct" formControlName="magnesiumOxidePct" inputmode="decimal" />
+          </div>
+          <div class="field">
+            <label for="sulfurTrioxidePct">Sulfur trioxide SO₃ (%)</label>
+            <input pInputText id="sulfurTrioxidePct" formControlName="sulfurTrioxidePct" inputmode="decimal" />
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <div class="column">
       <!-- ---------- Composition ---------- -->
       <section class="card" formGroupName="composition" aria-labelledby="composition-card-title">
         <header class="card-header">
