@@ -48,6 +48,18 @@ public class ApiHostTests
     }
 
     [Fact]
+    public async Task Seed_data_exists()
+    {
+        await using var app = ApiHost.Create([], configureServices: ConfigureServices());
+
+        using var scope = app.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<VulcanDbContext>();
+
+        db.ValidationLimit.ShouldNotBeEmpty();
+        db.SpecificGravity.ShouldNotBeEmpty();
+    }
+
+    [Fact]
     public async Task StartAsync_AcceptsHttpRequests()
     {
         await using var app = ApiHost.Create([], configureServices: ConfigureServices());
