@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.FileProviders;
+using Vulcan.Api.Technicians;
 using Vulcan.Infrastructure;
 
 namespace Vulcan.Api;
@@ -26,6 +27,7 @@ public static class ApiHost
         // Bind only to this computer and let the OS select an available port.
         builder.WebHost.UseUrls($"http://127.0.0.1:{port}");
         builder.Services.AddDatabase(builder.Configuration);
+        builder.Services.AddSingleton<TechnicianSettings>();
 
         var app = builder.Build();
         app.EnsureMigrated();
@@ -38,9 +40,14 @@ public static class ApiHost
         app.UseDefaultFiles(new DefaultFilesOptions { FileProvider = uiFiles });
         app.UseStaticFiles(new StaticFileOptions { FileProvider = uiFiles });
 
+        // Saves without a technician name are rejected before they reach an endpoint.
+        app.RequireTechnicianOnSaves();
+
         // Every API endpoint lives under /api.
         var api = app.MapGroup("/api");
         api.MapGet("/health", () => Results.Ok(new { status = "ok" }));
+
+        api.MapTechnicianEndpoints();
 
         // Unknown /api routes return a JSON 404, never the Angular page.
         api.Map("/{**path}", () => Results.Problem(
