@@ -1,9 +1,7 @@
 // API types for the Vulcan web application.
 
-// Interface representing the severity of a validation result.
-export interface ValidationSeverity {
-  severity: 'Reject' | 'Warn';
-}
+// Type representing the severity of a validation result.
+export type ValidationSeverity = 'Reject' | 'Warn';
 
 // Interface representing a validation limit for a specific key.
 export interface ValidationLimit {

@@ -1,7 +1,7 @@
 import { AbstractControl } from '@angular/forms';
 import { Component, input } from '@angular/core';
 
-// Reusable component for rendering a form field with label, input, and optional hint.
+// Reusable wrapper for a form control with a label and optional hint.
 @Component({
   selector: 'app-field',
   templateUrl: './app-field.html',

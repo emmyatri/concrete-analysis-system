@@ -1,0 +1,23 @@
+// Styles for the AppField component
+:host {
+  display: block;
+}
+
+// Styles for the label element within the AppField component
+label {
+  display: block;
+  //margin-bottom: 4px; - TBD by design system or project guidelines
+  //font-size: 16px; - TBD by design system or project guidelines
+}
+
+// Styles for the control element within the AppField component
+.app-field-control {
+  display: block;
+}
+// Styles for the hint element within the AppField component
+.app-field-hint {
+  display: block;
+  //margin-top: 4px; - TBD by design system or project guidelines
+  //font-size: 14px; - TBD by design system or project guidelines
+  color: var(--p-text-muted-color); // Project's theme-token for muted text color
+}
