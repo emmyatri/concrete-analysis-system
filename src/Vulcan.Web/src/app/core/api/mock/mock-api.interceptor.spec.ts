@@ -33,7 +33,8 @@ describe('mockApiInterceptor', () => {
     const lower = await firstValueFrom(api.getBatches({ search: 'vm-syn' }));
     const upper = await firstValueFrom(api.getBatches({ search: 'VM-SYN' }));
 
-    expect(lower.map((b) => b.batchNumber)).toEqual(['VM-SYN-0003', 'VM-SYN-0002', 'VM-SYN-0001']);
+    expect(lower).toHaveLength(9);
+    expect(lower[0].batchNumber).toBe('VM-SYN-009');
     expect(upper).toEqual(lower);
   });
 

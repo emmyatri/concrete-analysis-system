@@ -47,11 +47,21 @@ export const MOCK_SPECIFIC_GRAVITIES: SpecificGravity[] = [
 ];
 
 /** The three batches from the hi-fi mockup (Home), plus synthetic ones for search and the toggle. */
+/**
+ * Batches for Home and Search. The three VM-2026 rows are the ones in the hi-fi mockup (not synthetic, so the
+ * Synthetic data toggle has something to hide). The VM-SYN rows summarise data/synthetic/batches.json.
+ */
 export const MOCK_BATCHES: BatchSummary[] = [
   { id: 142, batchNumber: 'VM-2026-0142', castAt: '2026-09-29T11:40:00Z', cementType: 'TypeIII', expectedFinalBreakPsi: 6000, waterCementRatio: 0.31, cylinderCount: 6, breaksRecorded: 0, average28DayPsi: null, warningCount: 1, isSynthetic: false },
   { id: 141, batchNumber: 'VM-2026-0141', castAt: '2026-09-26T11:30:00Z', cementType: 'TypeI', expectedFinalBreakPsi: 6200, waterCementRatio: 0.45, cylinderCount: 9, breaksRecorded: 3, average28DayPsi: null, warningCount: 0, isSynthetic: false },
   { id: 139, batchNumber: 'VM-2026-0139', castAt: '2026-09-22T11:15:00Z', cementType: 'TypeII', expectedFinalBreakPsi: 5800, waterCementRatio: 0.48, cylinderCount: 9, breaksRecorded: 3, average28DayPsi: null, warningCount: 0, isSynthetic: false },
-  { id: 903, batchNumber: 'VM-SYN-0003', castAt: '2026-08-14T12:00:00Z', cementType: 'TypeI', expectedFinalBreakPsi: 5000, waterCementRatio: 0.52, cylinderCount: 9, breaksRecorded: 9, average28DayPsi: 5180, warningCount: 0, isSynthetic: true },
-  { id: 902, batchNumber: 'VM-SYN-0002', castAt: '2026-08-07T12:00:00Z', cementType: 'TypeIII', expectedFinalBreakPsi: 7000, waterCementRatio: 0.38, cylinderCount: 9, breaksRecorded: 9, average28DayPsi: 2950, warningCount: 1, isSynthetic: true },
-  { id: 901, batchNumber: 'VM-SYN-0001', castAt: '2026-07-31T12:00:00Z', cementType: 'TypeII', expectedFinalBreakPsi: 5500, waterCementRatio: 0.47, cylinderCount: 9, breaksRecorded: 9, average28DayPsi: 5620, warningCount: 0, isSynthetic: true },
+  { id: 9, batchNumber: 'VM-SYN-009', castAt: '2026-07-03T12:00:00Z', cementType: 'TypeIII', expectedFinalBreakPsi: 5500, waterCementRatio: 0.41, cylinderCount: 9, breaksRecorded: 9, average28DayPsi: 5639, warningCount: 1, isSynthetic: true },
+  { id: 8, batchNumber: 'VM-SYN-008', castAt: '2026-06-29T12:00:00Z', cementType: 'TypeII', expectedFinalBreakPsi: 5700, waterCementRatio: 0.429, cylinderCount: 9, breaksRecorded: 9, average28DayPsi: 5821, warningCount: 0, isSynthetic: true },
+  { id: 7, batchNumber: 'VM-SYN-007', castAt: '2026-06-25T12:00:00Z', cementType: 'TypeI', expectedFinalBreakPsi: 6100, waterCementRatio: 0.401, cylinderCount: 9, breaksRecorded: 9, average28DayPsi: 6383, warningCount: 0, isSynthetic: true },
+  { id: 6, batchNumber: 'VM-SYN-006', castAt: '2026-06-21T12:00:00Z', cementType: 'TypeIII', expectedFinalBreakPsi: 6200, waterCementRatio: 0.603, cylinderCount: 9, breaksRecorded: 9, average28DayPsi: 4461, warningCount: 2, isSynthetic: true },
+  { id: 5, batchNumber: 'VM-SYN-005', castAt: '2026-06-17T12:00:00Z', cementType: 'TypeII', expectedFinalBreakPsi: 5700, waterCementRatio: 0.476, cylinderCount: 9, breaksRecorded: 9, average28DayPsi: 5912, warningCount: 0, isSynthetic: true },
+  { id: 4, batchNumber: 'VM-SYN-004', castAt: '2026-06-13T12:00:00Z', cementType: 'TypeI', expectedFinalBreakPsi: 5900, waterCementRatio: 0.435, cylinderCount: 9, breaksRecorded: 9, average28DayPsi: 6076, warningCount: 0, isSynthetic: true },
+  { id: 3, batchNumber: 'VM-SYN-003', castAt: '2026-06-09T12:00:00Z', cementType: 'TypeIII', expectedFinalBreakPsi: 6000, waterCementRatio: 0.419, cylinderCount: 9, breaksRecorded: 9, average28DayPsi: 6248, warningCount: 0, isSynthetic: true },
+  { id: 2, batchNumber: 'VM-SYN-002', castAt: '2026-06-05T12:00:00Z', cementType: 'TypeII', expectedFinalBreakPsi: 5600, waterCementRatio: 0.439, cylinderCount: 9, breaksRecorded: 9, average28DayPsi: 5629, warningCount: 0, isSynthetic: true },
+  { id: 1, batchNumber: 'VM-SYN-001', castAt: '2026-06-01T12:00:00Z', cementType: 'TypeI', expectedFinalBreakPsi: 6200, waterCementRatio: 0.476, cylinderCount: 9, breaksRecorded: 9, average28DayPsi: 6681, warningCount: 0, isSynthetic: true },
 ];
