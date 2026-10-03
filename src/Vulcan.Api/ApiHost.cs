@@ -20,7 +20,14 @@ public static class ApiHost
     /// <param name="port">
     /// 0 (default) lets the OS choose. Only live-reload mode uses a fixed port.
     /// </param>
-    public static WebApplication Create(string[] args, string? webRootPath = null, int port = 0)
+    /// <param name="configureServices">
+    /// Optional override for builder service configuration.
+    /// </param>
+    public static WebApplication Create(
+        string[] args,
+        string? webRootPath = null,
+        int port = 0,
+        Action<IServiceCollection>? configureServices = null)
     {
         var builder = WebApplication.CreateBuilder(args);
 
@@ -29,8 +36,12 @@ public static class ApiHost
         builder.Services.AddDatabase(builder.Configuration);
         builder.Services.AddSingleton<TechnicianSettings>();
 
+        // use overrides if provided
+        configureServices?.Invoke(builder.Services);
+
         var app = builder.Build();
         app.EnsureMigrated();
+        app.SeedData();
 
         // Angular files: index.html, scripts, styles, fonts and images.
         webRootPath ??= Path.Combine(AppContext.BaseDirectory, "wwwroot");
@@ -65,5 +76,14 @@ public static class ApiHost
         using var scope = app.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<VulcanDbContext>();
         db.Database.Migrate();
+    }
+
+    private static void SeedData(this WebApplication app)
+    {
+        using var scope = app.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<VulcanDbContext>();
+
+        db.SeedValidationLimits();
+        db.SeedSpecificGravities();
     }
 }

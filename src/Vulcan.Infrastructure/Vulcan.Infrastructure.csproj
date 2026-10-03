@@ -5,4 +5,8 @@
   <ItemGroup>
     <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" />
   </ItemGroup>
+  <ItemGroup>
+    <!-- ensure seed data is available at runtime -->
+    <EmbeddedResource Include="Seed\*.json" />
+  </ItemGroup>
 </Project>
