@@ -1,4 +1,4 @@
-﻿using System.Text.RegularExpressions;
+using System.Text.RegularExpressions;
 using Vulcan.Domain.Enums;
 
 namespace Vulcan.Domain.Services;
@@ -15,30 +15,38 @@ public static partial class BatchValidator
         var normalized = NormalizeBatchNumber(batchNumber);
 
         if (string.IsNullOrWhiteSpace(normalized))
+        {
             return false;
+        }
 
         if (normalized.Length > 32)
+        {
             return false;
+        }
 
         return BatchNumberPattern().IsMatch(normalized);
     }
-    
+
     public static bool IsFinalWeightValid(decimal finalWeightLb)
     {
         if (finalWeightLb <= 0)
+        {
             return false;
+        }
 
         return decimal.Round(finalWeightLb, 2) == finalWeightLb;
     }
-    
+
     public static bool IsCastAtValid(DateTime castAt, DateTime nowUtc)
     {
         if (castAt == default)
+        {
             return false;
+        }
 
         return castAt <= nowUtc;
     }
-    
+
     public static bool IsCementTypeValid(CementType cementType)
     {
         return cementType is CementType.TypeI

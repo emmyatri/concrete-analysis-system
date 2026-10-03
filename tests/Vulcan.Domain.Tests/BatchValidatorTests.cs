@@ -1,5 +1,5 @@
-﻿using Vulcan.Domain.Services;
 using Vulcan.Domain.Enums;
+using Vulcan.Domain.Services;
 
 namespace Vulcan.Domain.Tests;
 
@@ -125,7 +125,7 @@ public class BatchValidatorTests
 
         Assert.False(BatchValidator.IsCastAtValid(castAt, nowUtc));
     }
-    
+
     // Cement type is required and must be one of the three supported types.
     [Theory]
     [InlineData(CementType.TypeI)]
