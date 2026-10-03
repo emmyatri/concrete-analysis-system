@@ -1,7 +1,7 @@
 ﻿import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 
-import { BatchQuery, BatchSummary, SpecificGravity, ValidationLimit } from './models';
+import { BatchDetail, BatchQuery, BatchSummary, SpecificGravity, ValidationLimit } from './models';
 
 /**
  * Every call the screens make to the local API (M1-60), one method per request. All paths are under /api.
@@ -26,5 +26,10 @@ export class VulcanApiService {
       if (value !== undefined && value !== '') params = params.set(name, String(value));
     }
     return this.http.get<BatchSummary[]>('/api/batches', { params });
+  }
+
+  /** Everything about one batch. Fails with a 404 if there's no batch with that number. */
+  getBatch(batchNumber: string) {
+    return this.http.get<BatchDetail>(`/api/batches/${encodeURIComponent(batchNumber)}`);
   }
 }

@@ -80,6 +80,38 @@ describe('mockApiInterceptor', () => {
     expect(created.warnings.map((w) => w.key)).toEqual(['Batch.MixWaterPh']);
   });
 
+  it('returns a whole batch from the synthetic dataset, with its saved warnings', async () => {
+    const api = setUp(true);
+
+    const batch = await firstValueFrom(api.getBatch('vm-syn-006'));
+
+    expect(batch.batchNumber).toBe('VM-SYN-006');
+    expect(batch.specimens).toHaveLength(9);
+    expect(batch.specimens.flatMap((s) => s.curingReadings)).toHaveLength(63);
+    expect(batch.composition.waterCementRatio).toBe(0.603);
+    expect(batch.warnings.map((w) => [w.limitKey, w.value])).toEqual([
+      ['Composition.WaterCementRatio', 0.603],
+      ['Break.StrengthPsi', 2950],
+    ]);
+  });
+
+  it('every fake batch with warnings has the same count on Search and Batch Detail', async () => {
+    const api = setUp(true);
+
+    for (const summary of await firstValueFrom(api.getBatches())) {
+      const detail = await firstValueFrom(api.getBatch(summary.batchNumber)).catch(() => null);
+      if (detail) expect([summary.batchNumber, detail.warnings.length]).toEqual([summary.batchNumber, summary.warningCount]);
+    }
+  });
+
+  it('answers an unknown batch number with a 404', async () => {
+    const api = setUp(true);
+
+    const error = await firstValueFrom(api.getBatch('VM-NOPE')).catch((e: unknown) => e);
+
+    expect((error as HttpErrorResponse).status).toBe(404);
+  });
+
   it('talks to the real server when useMocks is false', () => {
     const api = setUp(false);
 
