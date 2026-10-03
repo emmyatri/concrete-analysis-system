@@ -15,31 +15,12 @@ namespace Vulcan.Api.Tests;
 /// </summary>
 public class ApiHostTests
 {
-    private Action<IServiceCollection> ConfigureServices()
-    {
-        // override VulcanDbContext
-        return services =>
-        {
-            services.RemoveAll<VulcanDbContext>();
-            // let DI manage the lifetime
-            services.AddSingleton<SqliteConnection>(_ =>
-            {
-                var connection = new SqliteConnection("Filename=:memory:");
-                connection.Open();
-                return connection;
-            });
-            services
-                .AddDbContext<VulcanDbContext>((provider, options) =>
-                    options.UseSqlite(
-                        provider.GetRequiredService<SqliteConnection>())
-                );
-        };
-    }
+    private readonly string[] _args = ["--environment=Testing"];
 
     [Fact]
     public async Task Database_is_not_real()
     {
-        await using var app = ApiHost.Create([], configureServices: ConfigureServices());
+        await using var app = ApiHost.Create(_args);
 
         using var scope = app.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<VulcanDbContext>();
@@ -50,7 +31,7 @@ public class ApiHostTests
     [Fact]
     public async Task Seed_data_exists()
     {
-        await using var app = ApiHost.Create([], configureServices: ConfigureServices());
+        await using var app = ApiHost.Create(_args);
 
         using var scope = app.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<VulcanDbContext>();
@@ -62,7 +43,7 @@ public class ApiHostTests
     [Fact]
     public async Task StartAsync_AcceptsHttpRequests()
     {
-        await using var app = ApiHost.Create([], configureServices: ConfigureServices());
+        await using var app = ApiHost.Create(_args);
         await app.StartAsync();
 
         using var client = new HttpClient { BaseAddress = GetListeningAddress(app) };
@@ -78,7 +59,7 @@ public class ApiHostTests
     [Fact]
     public async Task StartAsync_BindsToLoopbackOnDynamicPort()
     {
-        await using var app = ApiHost.Create([], configureServices: ConfigureServices());
+        await using var app = ApiHost.Create(_args);
         await app.StartAsync();
 
         var address = GetListeningAddress(app);
@@ -95,7 +76,7 @@ public class ApiHostTests
     [Fact]
     public async Task StopAsync_StopsAcceptingHttpRequests()
     {
-        await using var app = ApiHost.Create([], configureServices: ConfigureServices());
+        await using var app = ApiHost.Create(_args);
         await app.StartAsync();
 
         using var client = new HttpClient { BaseAddress = GetListeningAddress(app) };

@@ -1,5 +1,6 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -32,7 +33,23 @@ public static class SetupUtils
             cs = $"Data Source={Path.Combine(dir, "vulcan.db")}";
         }
 
-        services.AddDbContext<VulcanDbContext>(o => o.UseSqlite(cs));
+        if (cs.Contains(":memory:", StringComparison.OrdinalIgnoreCase))
+        {
+            // An in-memory database only lives while a connection is open, so keep one open for the app's lifetime (tests).
+            services.AddSingleton(_ =>
+            {
+                var connection = new SqliteConnection(cs);
+                connection.Open();
+                return connection;
+            });
+            services.AddDbContext<VulcanDbContext>((provider, o) =>
+                o.UseSqlite(provider.GetRequiredService<SqliteConnection>()));
+        }
+        else
+        {
+            services.AddDbContext<VulcanDbContext>(o => o.UseSqlite(cs));
+        }
+
         services.AddScoped<ILimitProvider, LimitProvider>();
         services.AddScoped<LimitEvaluator>();
 
@@ -53,7 +70,7 @@ public static class SetupUtils
         var json = (
             typeof(SetupUtils).Assembly.GetManifestResourceStream("Vulcan.Infrastructure.Seed.validation-limits.json")
         ) ?? throw new InvalidOperationException(
-                "Could not find validation-limits file. Please ensure it is in Vulcan.Infrastructure/Seed/validation-limits.json");
+            "Could not find validation-limits file. Please ensure it is in Vulcan.Infrastructure/Seed/validation-limits.json");
         var validationLimits = JsonSerializer.Deserialize<List<ValidationLimit>>(json, _jsonOptions)
                                ?? throw new JsonException("Validation Limit seed data is malformed");
         return validationLimits;
@@ -81,7 +98,7 @@ public static class SetupUtils
         var json = (
             typeof(SetupUtils).Assembly.GetManifestResourceStream("Vulcan.Infrastructure.Seed.specific-gravity.json")
         ) ?? throw new InvalidOperationException(
-                "Could not the specific-gravity file. Please ensure it is in Vulcan.Infrastructure/Seed/specific-gravity.json");
+            "Could not the specific-gravity file. Please ensure it is in Vulcan.Infrastructure/Seed/specific-gravity.json");
         var specificGravities = JsonSerializer.Deserialize<List<SpecificGravity>>(json, _jsonOptions)
                                 ?? throw new JsonException("Specific Gravity seed data is malformed");
         return specificGravities;
