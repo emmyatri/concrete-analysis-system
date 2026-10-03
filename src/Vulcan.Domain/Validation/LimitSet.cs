@@ -1,4 +1,6 @@
-namespace Vulcan.Domain.Entities;
+using Vulcan.Domain.Entities;
+
+namespace Vulcan.Domain.Validation;
 
 /// <summary>
 /// Holds validation limits for a given key.

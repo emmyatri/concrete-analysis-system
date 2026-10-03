@@ -7,11 +7,6 @@
   </ItemGroup>
   <ItemGroup>
     <!-- ensure seed data is available at runtime -->
-    <None Update="Seed\validation-limits.json">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Update="Seed\specific-gravity.json">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
+    <EmbeddedResource Include="Seed\*.json" />
   </ItemGroup>
 </Project>

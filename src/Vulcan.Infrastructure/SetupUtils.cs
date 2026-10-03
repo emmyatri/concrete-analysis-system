@@ -44,8 +44,10 @@ public static class SetupUtils
 
     public static List<ValidationLimit> LoadValidationLimits()
     {
-        var json = File.ReadAllText(
-            Path.Combine(AppContext.BaseDirectory, "Seed", "validation-limits.json"));
+        var json = (
+            typeof(SetupUtils).Assembly.GetManifestResourceStream("Vulcan.Infrastructure.Seed.validation-limits.json")
+        ) ?? throw new InvalidOperationException(
+                "Could not find validation-limits file. Please ensure it is in Vulcan.Infrastructure/Seed/validation-limits.json");
         var validationLimits = JsonSerializer.Deserialize<List<ValidationLimit>>(json, _jsonOptions)
                                ?? throw new JsonException("Validation Limit seed data is malformed");
         return validationLimits;
@@ -70,8 +72,10 @@ public static class SetupUtils
 
     public static List<SpecificGravity> LoadSpecificGravities()
     {
-        var json = File.ReadAllText(
-            Path.Combine(AppContext.BaseDirectory, "Seed", "specific-gravity.json"));
+        var json = (
+            typeof(SetupUtils).Assembly.GetManifestResourceStream("Vulcan.Infrastructure.Seed.specific-gravity.json")
+        ) ?? throw new InvalidOperationException(
+                "Could not the specific-gravity file. Please ensure it is in Vulcan.Infrastructure/Seed/specific-gravity.json");
         var specificGravities = JsonSerializer.Deserialize<List<SpecificGravity>>(json, _jsonOptions)
                                 ?? throw new JsonException("Specific Gravity seed data is malformed");
         return specificGravities;

@@ -1,4 +1,4 @@
-using Vulcan.Domain.Entities;
+using Vulcan.Domain.Validation;
 
 namespace Vulcan.Domain.Interfaces;
 

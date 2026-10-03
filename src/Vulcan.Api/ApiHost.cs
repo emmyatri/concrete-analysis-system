@@ -2,7 +2,10 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.FileProviders;
+using Vulcan.Domain.Interfaces;
+using Vulcan.Domain.Services;
 using Vulcan.Infrastructure;
+using Vulcan.Infrastructure.Services;
 
 namespace Vulcan.Api;
 
@@ -19,23 +22,30 @@ public static class ApiHost
     /// <param name="port">
     /// 0 (default) lets the OS choose. Only live-reload mode uses a fixed port.
     /// </param>
-    public static WebApplication Create(string[] args, string? webRootPath = null, int port = 0)
+    /// <param name="configureServices">
+    /// Optional override for builder service configuration.
+    /// </param>
+    public static WebApplication Create(
+        string[] args,
+        string? webRootPath = null,
+        int port = 0,
+        Action<IServiceCollection>? configureServices = null)
     {
         var builder = WebApplication.CreateBuilder(args);
 
         // Bind only to this computer and let the OS select an available port.
         builder.WebHost.UseUrls($"http://127.0.0.1:{port}");
         builder.Services.AddDatabase(builder.Configuration);
+        builder.Services
+            .AddScoped<ILimitProvider, LimitProvider>()
+            .AddScoped<LimitEvaluator>();
+
+        // use overrides if provided
+        configureServices?.Invoke(builder.Services);
 
         var app = builder.Build();
         app.EnsureMigrated();
-
-        // skip seed data in ApiHostTests.
-        // will fail due to migration connection not persisting to seeding
-        if (!builder.Environment.IsEnvironment("Testing"))
-        {
-            app.SeedData();
-        }
+        app.SeedData();
 
         // Angular files: index.html, scripts, styles, fonts and images.
         webRootPath ??= Path.Combine(AppContext.BaseDirectory, "wwwroot");

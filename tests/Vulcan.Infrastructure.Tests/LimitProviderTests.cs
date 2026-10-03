@@ -1,8 +1,8 @@
 using Microsoft.EntityFrameworkCore;
-using Vulcan.Domain.Constants;
 using Vulcan.Domain.Entities;
 using Vulcan.Domain.Enums;
 using Vulcan.Domain.Interfaces;
+using Vulcan.Domain.Validation;
 using Vulcan.Infrastructure.Services;
 
 namespace Vulcan.Infrastructure.Tests;
@@ -58,6 +58,6 @@ public class LimitProviderTests(DatabaseFixture dbFixture) : IClassFixture<Datab
         await db.Database.MigrateAsync();
 
         ILimitProvider limitProvider = new LimitProvider(db);
-        Should.Throw<InvalidOperationException>(() => limitProvider.Get("Unknown.Key"));
+        Should.Throw<KeyNotFoundException>(() => limitProvider.Get("Unknown.Key"));
     }
 }

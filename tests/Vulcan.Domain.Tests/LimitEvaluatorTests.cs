@@ -1,181 +1,95 @@
-using Microsoft.Data.Sqlite;
-using Microsoft.EntityFrameworkCore;
 using Vulcan.Domain.Constants;
 using Vulcan.Domain.Entities;
 using Vulcan.Domain.Enums;
+using Vulcan.Domain.Interfaces;
 using Vulcan.Domain.Services;
-using Vulcan.Infrastructure;
-using Vulcan.Infrastructure.Services;
+using Vulcan.Domain.Validation;
+using static Vulcan.Infrastructure.SetupUtils;
 
 namespace Vulcan.Domain.Tests;
 
-public sealed class LimitEvaluatorTests : IDisposable
+public sealed class LimitEvaluatorTests
 {
-    private readonly SqliteConnection _connection;
-    private readonly DbContextOptions<VulcanDbContext> _options;
-
-    // ensure each test has migrations set up
-    public LimitEvaluatorTests()
+    private sealed class FakeLimitProvider(params ValidationLimit[] limits) : ILimitProvider
     {
-        _connection = new SqliteConnection("Filename=:memory:");
-        _connection.Open();
-        _options = new DbContextOptionsBuilder<VulcanDbContext>()
-            .UseSqlite(_connection)
-            .Options;
-        var dbContext = new VulcanDbContext(_options);
-        dbContext.Database.Migrate();
-    }
-
-    public void Dispose()
-    {
-        _connection.Close();
-        _connection.Dispose();
-    }
-
-    [Fact]
-    public async Task Limit_evaluator_handles_ranges_properly()
-    {
-        await using (var db = new VulcanDbContext(_options))
+        public LimitSet Get(string key)
         {
-            db.ValidationLimit.AddRange(
-            [
-                new ValidationLimit
-                {
-                    Key = "Primary",
-                    Severity = Severity.Warn,
-                    Min = 30,
-                    Message = "Don't do that"
-                },
-                new ValidationLimit
-                {
-                    Key = "Primary",
-                    Severity = Severity.Reject,
-                    Min = 0,
-                    Max = 100,
-                    Message = "Really, don't"
-                }
-            ]);
-            await db.SaveChangesAsync();
-        }
+            var matches = limits.Where(l => l.Key == key).ToList();
+            if (matches.Count == 0)
+            {
+                throw new KeyNotFoundException(key);
+            }
 
-        await using (var db = new VulcanDbContext(_options))
-        {
-            var limitProvider = new LimitProvider(db);
-            var limitEvaluator = new LimitEvaluator(limitProvider);
-
-            limitEvaluator
-                .Check("Primary", 30)
-                .ShouldBeOfType<LimitResult.Ok>();
-            limitEvaluator
-                .Check("Primary", 29.99)
-                .ShouldBeOfType<LimitResult.Warn>()
-                .Message
-                .ShouldBe("Don't do that");
-            limitEvaluator
-                .Check("Primary", -0.01)
-                .ShouldBeOfType<LimitResult.Reject>()
-                .Message
-                .ShouldBe("Really, don't");
+            return new LimitSet
+            {
+                Warn = matches.FirstOrDefault(l => l.Severity == Severity.Warn),
+                Reject = matches.FirstOrDefault(l => l.Severity == Severity.Reject),
+            };
         }
     }
 
     [Fact]
-    public async Task Limit_evaluator_updates_from_db()
+    public void Limit_evaluator_handles_ranges_properly()
     {
-        var validationLimit = new ValidationLimit
-        {
-            Key = "Primary",
-            Severity = Severity.Warn,
-            Min = 30,
-            Message = "cool"
-        };
-        const int testValue = 50;
+        ValidationLimit[] validationLimits = [
+            new()
+            {
+                Key = "Primary",
+                Severity = Severity.Warn,
+                Min = 30,
+                Message = "Don't do that"
+            },
+            new()
+            {
+                Key = "Primary",
+                Severity = Severity.Reject,
+                Min = 0,
+                Max = 100,
+                Message = "Really, don't"
+            }
+        ];
+        var limitEvaluator = new LimitEvaluator(
+            new FakeLimitProvider(validationLimits));
 
-        await using (var db = new VulcanDbContext(_options))
-        {
-            db.ValidationLimit.Add(validationLimit);
-            await db.SaveChangesAsync();
-        }
-
-        await using (var db = new VulcanDbContext(_options))
-        {
-            var limitProvider = new LimitProvider(db);
-            var limitEvaluator = new LimitEvaluator(limitProvider);
-
-            limitEvaluator
-                .Check("Primary", testValue)
-                .ShouldBeOfType<LimitResult.Ok>();
-        }
-
-        // update limit
-        await using (var db = new VulcanDbContext(_options))
-        {
-            validationLimit.Max = 30;
-            db.Update(validationLimit);
-            await db.SaveChangesAsync();
-        }
-
-        // same value returns a warning now
-        await using (var db = new VulcanDbContext(_options))
-        {
-            var limitProvider = new LimitProvider(db);
-            var limitEvaluator = new LimitEvaluator(limitProvider);
-
-            limitEvaluator
-                .Check("Primary", testValue)
-                .ShouldBeOfType<LimitResult.Warn>()
-                .Message
-                .ShouldBe("cool");
-        }
-
-        // now switch it to reject and update the message
-        await using (var db = new VulcanDbContext(_options))
-        {
-            validationLimit.Severity = Severity.Reject;
-            validationLimit.Message = "really?";
-            db.Update(validationLimit);
-            await db.SaveChangesAsync();
-        }
-
-        await using (var db = new VulcanDbContext(_options))
-        {
-            var limitProvider = new LimitProvider(db);
-            var limitEvaluator = new LimitEvaluator(limitProvider);
-
-            limitEvaluator
-                .Check("Primary", testValue)
-                .ShouldBeOfType<LimitResult.Reject>()
-                .Message
-                .ShouldBe("really?");
-        }
+        limitEvaluator
+            .Check("Primary", 30)
+            .ShouldBeOfType<LimitResult.Ok>();
+        limitEvaluator
+            .Check("Primary", 29.99)
+            .ShouldBeOfType<LimitResult.Warn>()
+            .Message
+            .ShouldBe("Don't do that");
+        limitEvaluator
+            .Check("Primary", -0.01)
+            .ShouldBeOfType<LimitResult.Reject>()
+            .Message
+            .ShouldBe("Really, don't");
     }
 
     [Fact]
-    public async Task Limit_evaluator_break_seed_data_is_correct()
+    public void Every_seed_limit_is_inclusive_at_its_bounds()
     {
-        await using (var db = new VulcanDbContext(_options))
+        var evaluator = new LimitEvaluator(
+            new FakeLimitProvider([.. LoadValidationLimits()]));
+
+        foreach (var limit in LoadValidationLimits())
         {
-            db.SeedValidationLimits();
-            await db.SaveChangesAsync();
+            if (limit.Min is { } min)
+            {
+                evaluator.Check(limit.Key, min).ShouldNotBeOfType<LimitResult.Reject>(limit.Key);
+                evaluator.Check(limit.Key, min - 0.001m).ShouldNotBeOfType<LimitResult.Ok>(limit.Key);
+            }
+
+            if (limit.Max is { } max)
+            {
+                evaluator.Check(limit.Key, max).ShouldNotBeOfType<LimitResult.Reject>(limit.Key);
+                evaluator.Check(limit.Key, max + 0.001m).ShouldNotBeOfType<LimitResult.Ok>(limit.Key);
+            }
+
+            limit.Message.ShouldNotBeNullOrWhiteSpace(limit.Key);
         }
 
-        await using (var db = new VulcanDbContext(_options))
-        {
-            var limitProvider = new LimitProvider(db);
-            var limitEvaluator = new LimitEvaluator(limitProvider);
-
-            limitEvaluator
-                .Check(LimitKeys.StrengthPsi, 2950)
-                .ShouldBeOfType<LimitResult.Warn>();
-            limitEvaluator
-                .Check(LimitKeys.StrengthPsi, 3000)
-                .ShouldBeOfType<LimitResult.Ok>();
-            limitEvaluator
-                .Check(LimitKeys.StrengthPsi, 10000)
-                .ShouldBeOfType<LimitResult.Ok>();
-            limitEvaluator
-                .Check(LimitKeys.StrengthPsi, 10000.01)
-                .ShouldBeOfType<LimitResult.Reject>();
-        }
+        evaluator.Check(LimitKeys.SulfurTrioxidePct, 4.0m).ShouldBeOfType<LimitResult.Warn>();
+        evaluator.Check(LimitKeys.SulfurTrioxidePct, 4.6m).ShouldBeOfType<LimitResult.Reject>();
     }
 }

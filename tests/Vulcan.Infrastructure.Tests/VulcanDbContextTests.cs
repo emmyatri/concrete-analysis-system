@@ -4,6 +4,9 @@ using Microsoft.EntityFrameworkCore;
 using Vulcan.Domain.Constants;
 using Vulcan.Domain.Entities;
 using Vulcan.Domain.Enums;
+using Vulcan.Domain.Services;
+using Vulcan.Domain.Validation;
+using Vulcan.Infrastructure.Services;
 
 namespace Vulcan.Infrastructure.Tests;
 
@@ -363,4 +366,106 @@ public class VulcanDbContextTests(DatabaseFixture dbFixture) : IClassFixture<Dat
         gravities.ShouldContain(x =>
             x.Material != Material.Cement);
     }
+
+
+    [Fact]
+    public async Task Limit_evaluator_updates_from_db()
+    {
+        var validationLimit = new ValidationLimit
+        {
+            Key = "Primary",
+            Severity = Severity.Warn,
+            Min = 30,
+            Message = "cool"
+        };
+        const int testValue = 50;
+
+        await using (var db = _dbFixture.CreateDbContext())
+        {
+            db.ValidationLimit.Add(validationLimit);
+            await db.SaveChangesAsync();
+        }
+
+        await using (var db = _dbFixture.CreateDbContext())
+        {
+            var limitProvider = new LimitProvider(db);
+            var limitEvaluator = new LimitEvaluator(limitProvider);
+
+            limitEvaluator
+                .Check("Primary", testValue)
+                .ShouldBeOfType<LimitResult.Ok>();
+        }
+
+        // update limit
+        await using (var db = _dbFixture.CreateDbContext())
+        {
+            validationLimit.Max = 30;
+            db.Update(validationLimit);
+            await db.SaveChangesAsync();
+        }
+
+        // same value returns a warning now
+        await using (var db = _dbFixture.CreateDbContext())
+        {
+            var limitProvider = new LimitProvider(db);
+            var limitEvaluator = new LimitEvaluator(limitProvider);
+
+            limitEvaluator
+                .Check("Primary", testValue)
+                .ShouldBeOfType<LimitResult.Warn>()
+                .Message
+                .ShouldBe("cool");
+        }
+
+        // now switch it to reject and update the message
+        await using (var db = _dbFixture.CreateDbContext())
+        {
+            validationLimit.Severity = Severity.Reject;
+            validationLimit.Message = "really?";
+            db.Update(validationLimit);
+            await db.SaveChangesAsync();
+        }
+
+        await using (var db = _dbFixture.CreateDbContext())
+        {
+            var limitProvider = new LimitProvider(db);
+            var limitEvaluator = new LimitEvaluator(limitProvider);
+
+            limitEvaluator
+                .Check("Primary", testValue)
+                .ShouldBeOfType<LimitResult.Reject>()
+                .Message
+                .ShouldBe("really?");
+        }
+    }
+
+    [Fact]
+    public async Task Limit_evaluator_break_seed_data_is_correct()
+    {
+        await using (var db = _dbFixture.CreateDbContext())
+        {
+            db.SeedValidationLimits();
+            await db.SaveChangesAsync();
+        }
+
+        await using (var db = _dbFixture.CreateDbContext())
+        {
+            var limitProvider = new LimitProvider(db);
+            var limitEvaluator = new LimitEvaluator(limitProvider);
+
+            limitEvaluator
+                .Check(LimitKeys.StrengthPsi, 2950)
+                .ShouldBeOfType<LimitResult.Warn>();
+            limitEvaluator
+                .Check(LimitKeys.StrengthPsi, 3000)
+                .ShouldBeOfType<LimitResult.Ok>();
+            limitEvaluator
+                .Check(LimitKeys.StrengthPsi, 10000)
+                .ShouldBeOfType<LimitResult.Ok>();
+            limitEvaluator
+                .Check(LimitKeys.StrengthPsi, 10000.01)
+                .ShouldBeOfType<LimitResult.Reject>();
+        }
+    }
+
 }

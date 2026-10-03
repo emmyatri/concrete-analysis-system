@@ -203,7 +203,7 @@
         "Min": 3000,
         "Max": 10000,
         "Unit": "PSI",
-        "Message": "PSI is below expected value [3000]",
+        "Message": "Break strength is below 3,000 PSI. Saved and flagged for review.",
         "Source": "Client doc / FR-5"
     },
     {

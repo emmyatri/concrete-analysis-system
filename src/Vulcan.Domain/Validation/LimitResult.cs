@@ -1,4 +1,4 @@
-namespace Vulcan.Domain.Entities;
+namespace Vulcan.Domain.Validation;
 
 /// <summary>
 /// Represents the result of validating a value against saved rules.

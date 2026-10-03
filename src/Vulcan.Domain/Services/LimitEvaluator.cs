@@ -1,6 +1,7 @@
 using System.Numerics;
 using Vulcan.Domain.Entities;
 using Vulcan.Domain.Interfaces;
+using Vulcan.Domain.Validation;
 
 namespace Vulcan.Domain.Services;
 
@@ -20,27 +21,21 @@ public class LimitEvaluator(ILimitProvider limitProvider)
     public LimitResult Check<T>(string key, T value) where T : INumber<T>
     {
         var limits = limitProvider.Get(key);
+        var v = decimal.CreateChecked(value);
 
-        // first priority: reject
-        if (limits.Reject != null)
+        if (limits.Reject is { } reject && IsOutside(v, reject))
         {
-            if (limits.Reject.Min.HasValue && value < T.CreateChecked(limits.Reject.Min.Value) ||
-                limits.Reject.Max.HasValue && value > T.CreateChecked(limits.Reject.Max.Value))
-            {
-                return new LimitResult.Reject(limits.Reject.Message);
-            }
+            return new LimitResult.Reject(reject.Message);
         }
 
-        // then warn
-        if (limits.Warn != null)
+        if (limits.Warn is { } warn && IsOutside(v, warn))
         {
-            if (limits.Warn.Min.HasValue && value < T.CreateChecked(limits.Warn.Min.Value) ||
-                limits.Warn.Max.HasValue && value > T.CreateChecked(limits.Warn.Max.Value))
-            {
-                return new LimitResult.Warn(limits.Warn.Message);
-            }
+            return new LimitResult.Warn(warn.Message);
         }
 
         return new LimitResult.Ok();
     }
+
+    private static bool IsOutside(decimal value, ValidationLimit limit) =>
+        (limit.Min is { } min && value < min) || (limit.Max is { } max && value > max);
 }

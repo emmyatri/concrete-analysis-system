@@ -1,6 +1,6 @@
-using Vulcan.Domain.Entities;
 using Vulcan.Domain.Enums;
 using Vulcan.Domain.Interfaces;
+using Vulcan.Domain.Validation;
 
 namespace Vulcan.Infrastructure.Services;
 
@@ -15,7 +15,7 @@ public class LimitProvider(VulcanDbContext dbContext) : ILimitProvider
 
         if (limits.Count == 0)
         {
-            throw new InvalidOperationException(
+            throw new KeyNotFoundException(
                 $"No validation limits configured for key '{key}'.");
         }
 

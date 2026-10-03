@@ -1,8 +1,10 @@
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting.Server;
 using Microsoft.AspNetCore.Hosting.Server.Features;
+using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using Vulcan.Infrastructure;
 
 namespace Vulcan.Api.Tests;
@@ -13,13 +15,31 @@ namespace Vulcan.Api.Tests;
 /// </summary>
 public class ApiHostTests
 {
-    // Makes ApiHost use the in-memory test database (appsettings.Testing.json).
-    private readonly string[] _args = ["--environment=Testing"];
+    private Action<IServiceCollection> ConfigureServices()
+    {
+        // override VulcanDbContext
+        return services =>
+        {
+            services.RemoveAll<VulcanDbContext>();
+            // let DI manage the lifetime
+            services.AddSingleton<SqliteConnection>(_ =>
+            {
+                var connection = new SqliteConnection("Filename=:memory:");
+                connection.Open();
+                return connection;
+            });
+            services
+                .AddDbContext<VulcanDbContext>((provider, options) =>
+                    options.UseSqlite(
+                        provider.GetRequiredService<SqliteConnection>())
+                );
+        };
+    }
 
     [Fact]
     public async Task Database_is_not_real()
     {
-        await using var app = ApiHost.Create(_args);
+        await using var app = ApiHost.Create([], configureServices: ConfigureServices());
 
         using var scope = app.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<VulcanDbContext>();
@@ -30,7 +50,7 @@ public class ApiHostTests
     [Fact]
     public async Task StartAsync_AcceptsHttpRequests()
     {
-        await using var app = ApiHost.Create(_args);
+        await using var app = ApiHost.Create([], configureServices: ConfigureServices());
         await app.StartAsync();
 
         using var client = new HttpClient { BaseAddress = GetListeningAddress(app) };
@@ -46,7 +66,7 @@ public class ApiHostTests
     [Fact]
     public async Task StartAsync_BindsToLoopbackOnDynamicPort()
     {
-        await using var app = ApiHost.Create(_args);
+        await using var app = ApiHost.Create([], configureServices: ConfigureServices());
         await app.StartAsync();
 
         var address = GetListeningAddress(app);
@@ -63,7 +83,7 @@ public class ApiHostTests
     [Fact]
     public async Task StopAsync_StopsAcceptingHttpRequests()
     {
-        await using var app = ApiHost.Create(_args);
+        await using var app = ApiHost.Create([], configureServices: ConfigureServices());
         await app.StartAsync();
 
         using var client = new HttpClient { BaseAddress = GetListeningAddress(app) };
@@ -74,8 +94,7 @@ public class ApiHostTests
         await app.StopAsync();
 
         // ...and refuses connections after.
-        await Should.ThrowAsync<HttpRequestException>(
-            async () => await client.GetAsync("/api/health"));
+        await Should.ThrowAsync<HttpRequestException>(async () => await client.GetAsync("/api/health"));
     }
 
     /// <summary>
