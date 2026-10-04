@@ -23,7 +23,7 @@ public class WaterCementRatioCalculator(
             composition.CementPct *
             specificGravityProvider.Get(Material.Cement);
 
-        var scmWeight = composition.ScmPct == 0m
+        var scmWeight = composition.ScmPct == 0m || composition.ScmType == ScmType.None
             ? 0m
             : composition.ScmPct *
               specificGravityProvider.Get(GetScmMaterial(composition.ScmType));

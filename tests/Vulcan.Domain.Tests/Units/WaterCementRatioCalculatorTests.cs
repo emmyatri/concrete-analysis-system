@@ -62,6 +62,35 @@ public class WaterCementRatioCalculatorTests
             decimal.Parse(expectedRatio),
             decimal.Round(ratio.Value, 2));
     }
+    [Fact]
+    public void Calculate_WithScmNone_TreatsScmAsZero()
+    {
+        var composition = CreateComposition(
+            cementPct: 16m,
+            waterPct: 17m,
+            scmPct: 2m,
+            scmType: ScmType.None);
+
+        var ratio = _calculator.Calculate(composition);
+
+        Assert.NotNull(ratio);
+        Assert.Equal(0.34m, decimal.Round(ratio.Value, 2));
+    }
+
+    [Fact]
+    public void Calculate_MatchesNewBatchMockup()
+    {
+        var composition = CreateComposition(
+            cementPct: 16m,
+            waterPct: 17m,
+            scmPct: 2m,
+            scmType: ScmType.FlyAsh);
+
+        var ratio = _calculator.Calculate(composition);
+
+        Assert.NotNull(ratio);
+        Assert.Equal(0.31m, decimal.Round(ratio.Value, 2));
+    }
 
     [Fact]
     public void Calculate_WithZeroCementitiousWeight_ReturnsNull()
