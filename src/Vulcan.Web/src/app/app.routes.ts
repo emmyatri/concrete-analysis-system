@@ -17,8 +17,15 @@ export const routes: Routes = [
     children: [
       { path: '', pathMatch: 'full', component: PlaceholderPage, data: { heading: 'Home' } },
       { path: 'batches/new', component: BatchEntry },
-      { path: 'batches/:id', component: PlaceholderPage, data: { heading: 'Batch detail' } },
       { path: 'batches', component: PlaceholderPage, data: { heading: 'Search batches' } },
+      // After batches/new, so "new" isn't read as a batch number.
+      {
+        path: 'batches/:batchNumber',
+        // Loaded when first opened, so its tables and tabs don't slow down the app's start.
+        loadComponent: () => import('./pages/batch-detail/batch-detail').then((m) => m.BatchDetailPage),
+      },
+      { path: 'batches/:batchNumber/edit', component: PlaceholderPage, data: { heading: 'Edit batch' } },
+      { path: 'batches/:batchNumber/cylinders/new', component: PlaceholderPage, data: { heading: 'Add cylinder' } },
       { path: 'breaks', component: PlaceholderPage, data: { heading: 'Break results' } },
       { path: 'curing', component: PlaceholderPage, data: { heading: 'Curing readings' } },
     ],

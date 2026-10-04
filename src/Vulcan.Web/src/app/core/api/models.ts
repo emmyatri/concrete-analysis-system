@@ -59,3 +59,99 @@ export interface BatchQuery {
   /** Defaults to true. */
   includeSynthetic?: boolean;
 }
+
+
+export type ScmType = 'None' | 'FlyAsh' | 'Slag' | 'SilicaFume';
+export type TestAge = 'Day3' | 'Day7' | 'Day28';
+
+/** The mix recipe, % by absolute volume. The last three are calculated by the server, never stored. */
+export interface BatchComposition {
+  cementPct: number;
+  waterPct: number;
+  coarseAggregatePct: number;
+  fineAggregatePct: number;
+  scmType: ScmType;
+  scmPct: number;
+  totalPct: number;
+  airOtherPct: number;
+  /** Null when there's no cement or SCM. */
+  waterCementRatio: number | null;
+}
+
+/** Cement chemistry from the mill certificate, % of the cement. */
+export interface BatchOxides {
+  aluminaPct: number;
+  ironOxidePct: number;
+  magnesiumOxidePct: number;
+  sulfurTrioxidePct: number;
+}
+
+export interface CuringReading {
+  id: number;
+  /** ISO date-time, UTC. */
+  takenAt: string;
+  internalTempF: number;
+  ambientTempF: number;
+  moisturePct: number;
+  relativeHumidityPct: number;
+  resistivityOhmPerFt: number;
+  co2Ppm: number;
+}
+
+export interface BreakResult {
+  id: number;
+  /** ISO date-time, UTC. */
+  brokenAt: string;
+  strengthPsi: number;
+}
+
+/** One test cylinder. */
+export interface Specimen {
+  id: number;
+  label: string;
+  lengthIn: number;
+  widthIn: number;
+  testAgeDays: TestAge;
+  isSynthetic: boolean;
+  /** Null until it's broken. */
+  breakResult: BreakResult | null;
+  /** Oldest first. */
+  curingReadings: CuringReading[];
+}
+
+/** A value that saved but was flagged (RecordWarning table). entityType + entityId say which record. */
+export interface SavedWarning {
+  id: number;
+  entityType: 'Batch' | 'Composition' | 'CementOxideAnalysis' | 'Specimen' | 'BreakResult' | 'CuringReading';
+  entityId: number;
+  fieldName: string;
+  /** Matches ValidationLimit.key, e.g. "Break.StrengthPsi". */
+  limitKey: string;
+  value: number;
+  message: string;
+  /** ISO date-time, UTC. */
+  createdAtUtc: string;
+}
+
+/** GET /api/batches/{batchNumber}: everything about one batch (Batch Detail). */
+export interface BatchDetail {
+  id: number;
+  batchNumber: string;
+  /** ISO date-time, UTC. */
+  castAt: string;
+  finalWeightLb: number;
+  expectedFinalBreakPsi: number;
+  cementType: BatchSummary['cementType'];
+  mixWaterPh: number;
+  isSynthetic: boolean;
+  /** Audit fields (FR-22), ISO date-times in UTC. */
+  createdAtUtc: string;
+  createdBy: string;
+  modifiedAtUtc: string | null;
+  modifiedBy: string | null;
+  composition: BatchComposition;
+  oxides: BatchOxides;
+  specimens: Specimen[];
+  /** Every saved warning for this batch, its composition, oxides, cylinders, breaks and readings. */
+  warnings: SavedWarning[];
+}

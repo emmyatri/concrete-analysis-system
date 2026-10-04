@@ -4,6 +4,7 @@ import { Observable, of, throwError } from 'rxjs';
 
 import { BatchSummary, RecordWarning } from '../models';
 import { USE_MOCKS } from '../use-mocks';
+import { MOCK_BATCH_DETAILS } from './mock-batch-details';
 import { MOCK_BATCHES, MOCK_SPECIFIC_GRAVITIES, MOCK_VALIDATION_LIMITS } from './mock-data';
 
 /** Batches saved while the app is open, so a new batch shows up in the list until you reload. */
@@ -22,6 +23,7 @@ export const mockApiInterceptor: HttpInterceptorFn = (request, next) => {
   if (request.method === 'GET' && path === '/api/specific-gravities') return ok(MOCK_SPECIFIC_GRAVITIES);
   if (request.method === 'GET' && path === '/api/batches') return ok(findBatches(request));
   if (request.method === 'POST' && path === '/api/batches') return createBatch(request);
+  if (request.method === 'GET' && path.startsWith('/api/batches/')) return getBatch(request, path);
 
   return next(request);
 };
@@ -45,6 +47,23 @@ function findBatches(request: HttpRequest<unknown>): BatchSummary[] {
     .filter((batch) => !castFrom || batch.castAt.slice(0, 10) >= castFrom)
     .filter((batch) => !castTo || batch.castAt.slice(0, 10) <= castTo)
     .sort((a, b) => b.castAt.localeCompare(a.castAt));
+}
+
+/** One batch by number, ignoring upper/lowercase, or a 404 like the server's. */
+function getBatch(request: HttpRequest<unknown>, path: string) {
+  const batchNumber = decodeURIComponent(path.slice('/api/batches/'.length));
+  const batch = MOCK_BATCH_DETAILS.find((row) => row.batchNumber.toLowerCase() === batchNumber.toLowerCase());
+  if (batch) return ok(batch);
+
+  return throwError(
+    () =>
+      new HttpErrorResponse({
+        status: 404,
+        statusText: 'Not Found',
+        url: request.url,
+        error: { title: 'Not Found', status: 404, detail: `Batch ${batchNumber} was not found.` },
+      }),
+  );
 }
 
 /**
