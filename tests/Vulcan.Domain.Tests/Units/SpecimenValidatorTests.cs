@@ -10,6 +10,8 @@ namespace Vulcan.Domain.Tests;
 
 public class SpecimenValidatorTests
 {
+    private const string _testAgeDaysKey = "Specimen.TestAgeDays";
+
     private readonly SpecimenValidator _validator;
 
     public SpecimenValidatorTests()
@@ -86,9 +88,8 @@ public class SpecimenValidatorTests
                 decimal.Parse(value)));
     }
 
-    // Length Run
     [Fact]
-    public void Validate_WithExcessPrecision_ReturnsPrecisionMessage()
+    public void Validate_WithExcessLengthPrecision_ReturnsLengthError()
     {
         var specimen = CreateSpecimen(
             lengthIn: 4.005m,
@@ -98,13 +99,12 @@ public class SpecimenValidatorTests
         var errors = _validator.Validate(specimen);
 
         Assert.Contains(
-            "Specimen length cannot have more than two decimal places.",
-            errors);
+            errors,
+            error => error.Key == LimitKeys.LengthIn);
     }
 
-    // Width Run
     [Fact]
-    public void Validate_WithExcessWidthPrecision_ReturnsPrecisionMessage()
+    public void Validate_WithExcessWidthPrecision_ReturnsWidthError()
     {
         var specimen = CreateSpecimen(
             lengthIn: 4m,
@@ -114,8 +114,8 @@ public class SpecimenValidatorTests
         var errors = _validator.Validate(specimen);
 
         Assert.Contains(
-            "Specimen width cannot have more than two decimal places.",
-            errors);
+            errors,
+            error => error.Key == LimitKeys.WidthIn);
     }
 
     // -------------------------------------------------------------------------
@@ -139,6 +139,21 @@ public class SpecimenValidatorTests
     {
         Assert.False(
             SpecimenValidator.IsTestAgeValid((TestAgeDays)10));
+    }
+
+    [Fact]
+    public void Validate_WithUnsupportedTestAge_ReturnsTestAgeError()
+    {
+        var specimen = CreateSpecimen(
+            lengthIn: 4m,
+            widthIn: 4m,
+            testAgeDays: (TestAgeDays)10);
+
+        var errors = _validator.Validate(specimen);
+
+        Assert.Contains(
+            errors,
+            error => error.Key == _testAgeDaysKey);
     }
 
     // -------------------------------------------------------------------------
@@ -171,16 +186,16 @@ public class SpecimenValidatorTests
         var errors = _validator.Validate(specimen);
 
         Assert.Contains(
-            "Specimen length must be nonzero and in the range [0-12]",
-            errors);
+            errors,
+            error => error.Key == LimitKeys.LengthIn);
 
         Assert.Contains(
-            "Specimen width must be nonzero and in the range [0-6]",
-            errors);
+            errors,
+            error => error.Key == LimitKeys.WidthIn);
 
         Assert.Contains(
-            "Test age must be 3, 7, or 28 days.",
-            errors);
+            errors,
+            error => error.Key == _testAgeDaysKey);
     }
 
     // -------------------------------------------------------------------------

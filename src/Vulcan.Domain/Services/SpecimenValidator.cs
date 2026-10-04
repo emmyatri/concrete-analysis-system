@@ -7,6 +7,8 @@ namespace Vulcan.Domain.Services;
 
 public class SpecimenValidator(LimitEvaluator limitEvaluator)
 {
+    private const string _testAgeDaysKey = "Specimen.TestAgeDays";
+
     public bool IsLengthValid(decimal lengthIn)
     {
         return limitEvaluator.Check(
@@ -33,42 +35,47 @@ public class SpecimenValidator(LimitEvaluator limitEvaluator)
             or TestAgeDays.Day28;
     }
 
-    public IReadOnlyList<string> Validate(Specimen specimen)
+    public IReadOnlyList<ValidationError> Validate(Specimen specimen)
     {
-        var errors = new List<string>();
+        var errors = new List<ValidationError>();
 
         AddLimitError(errors, LimitKeys.LengthIn, specimen.LengthIn);
         AddLimitError(errors, LimitKeys.WidthIn, specimen.WidthIn);
 
         if (!HasAtMostTwoDecimalPlaces(specimen.LengthIn))
         {
-            errors.Add(
-                "Specimen length cannot have more than two decimal places.");
+            errors.Add(new ValidationError(
+                LimitKeys.LengthIn,
+                "Specimen length cannot have more than two decimal places."));
         }
 
         if (!HasAtMostTwoDecimalPlaces(specimen.WidthIn))
         {
-            errors.Add(
-                "Specimen width cannot have more than two decimal places.");
+            errors.Add(new ValidationError(
+                LimitKeys.WidthIn,
+                "Specimen width cannot have more than two decimal places."));
         }
 
         if (!IsTestAgeValid(specimen.TestAgeDays))
         {
-            errors.Add(
-                "Test age must be 3, 7, or 28 days.");
+            errors.Add(new ValidationError(
+                _testAgeDaysKey,
+                "Test age must be 3, 7, or 28 days."));
         }
 
         return errors;
     }
 
     private void AddLimitError(
-        List<string> errors,
+        List<ValidationError> errors,
         string key,
         decimal value)
     {
         if (limitEvaluator.Check(key, value) is LimitResult.Reject reject)
         {
-            errors.Add(reject.Message);
+            errors.Add(new ValidationError(
+                key,
+                reject.Message));
         }
     }
 }
