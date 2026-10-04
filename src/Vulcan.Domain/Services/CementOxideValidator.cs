@@ -5,33 +5,50 @@ namespace Vulcan.Domain.Services;
 
 public sealed class CementOxideValidator(LimitEvaluator limitEvaluator)
 {
-    public IReadOnlyDictionary<string, LimitResult> Validate(
+    public ValidationOutcome Validate(
         decimal? aluminaPct,
         decimal? ironOxidePct,
         decimal? magnesiumOxidePct,
         decimal? sulfurTrioxidePct)
     {
-        return new Dictionary<string, LimitResult>
-        {
-            [LimitKeys.AluminaPct] = Check(LimitKeys.AluminaPct, "Alumina", aluminaPct),
-            [LimitKeys.IronOxidePct] = Check(LimitKeys.IronOxidePct, "Iron oxide", ironOxidePct),
-            [LimitKeys.MagnesiumOxidePct] = Check(LimitKeys.MagnesiumOxidePct, "Magnesium oxide", magnesiumOxidePct),
-            [LimitKeys.SulfurTrioxidePct] = Check(LimitKeys.SulfurTrioxidePct, "Sulfur trioxide", sulfurTrioxidePct),
-        };
+        var errors = new List<ValidationError>();
+        var warnings = new List<ValidationError>();
+
+        Check(LimitKeys.AluminaPct, "Alumina", aluminaPct, errors, warnings);
+        Check(LimitKeys.IronOxidePct, "Iron oxide", ironOxidePct, errors, warnings);
+        Check(LimitKeys.MagnesiumOxidePct, "Magnesium oxide", magnesiumOxidePct, errors, warnings);
+        Check(LimitKeys.SulfurTrioxidePct, "Sulfur trioxide", sulfurTrioxidePct, errors, warnings);
+
+        return new ValidationOutcome(errors, warnings);
     }
 
-    private LimitResult Check(string key, string fieldName, decimal? value)
+    private void Check(
+        string key,
+        string fieldName,
+        decimal? value,
+        List<ValidationError> errors,
+        List<ValidationError> warnings)
     {
         if (value is not { } percentage)
         {
-            return new LimitResult.Reject($"{fieldName} percent is required");
+            errors.Add(new ValidationError(key, $"{fieldName} percent is required"));
+            return;
         }
 
         if (decimal.Round(percentage, 2) != percentage)
         {
-            return new LimitResult.Reject($"{fieldName} percent must have at most two decimal places");
+            errors.Add(new ValidationError(key, $"{fieldName} percent must have at most two decimal places"));
+            return;
         }
 
-        return limitEvaluator.Check(key, percentage);
+        switch (limitEvaluator.Check(key, percentage))
+        {
+            case LimitResult.Reject reject:
+                errors.Add(new ValidationError(key, reject.Message));
+                break;
+            case LimitResult.Warn warn:
+                warnings.Add(new ValidationError(key, warn.Message));
+                break;
+        }
     }
 }

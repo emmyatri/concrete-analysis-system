@@ -103,8 +103,9 @@ public sealed class CementOxideValidatorTests
     {
         var results = CreateValidator().Validate(5m, 2m, 2m, 3.2m);
 
-        results[LimitKeys.SulfurTrioxidePct].ShouldBeOfType<LimitResult.Warn>();
-        results.Values.ShouldNotContain(result => result is LimitResult.Reject);
+        results.IsValid.ShouldBeTrue();
+        results.Errors.ShouldBeEmpty();
+        results.Warnings.ShouldHaveSingleItem().Key.ShouldBe(LimitKeys.SulfurTrioxidePct);
     }
 
     [Fact]
@@ -112,11 +113,26 @@ public sealed class CementOxideValidatorTests
     {
         var results = CreateValidator().Validate(null, null, null, null);
 
-        results.Count.ShouldBe(4);
-        foreach (var result in results.Values)
+        results.IsValid.ShouldBeFalse();
+        results.Errors.Count.ShouldBe(4);
+        results.Errors.Select(error => error.Key).ShouldBe(new[]
         {
-            result.ShouldBeOfType<LimitResult.Reject>();
-        }
+            LimitKeys.AluminaPct,
+            LimitKeys.IronOxidePct,
+            LimitKeys.MagnesiumOxidePct,
+            LimitKeys.SulfurTrioxidePct,
+        }, ignoreOrder: true);
+        results.Warnings.ShouldBeEmpty();
+    }
+
+    [Fact]
+    public void Errors_and_warnings_for_different_fields_are_preserved_together()
+    {
+        var results = CreateValidator().Validate(null, 2m, 2m, 3.2m);
+
+        results.IsValid.ShouldBeFalse();
+        results.Errors.ShouldHaveSingleItem().Key.ShouldBe(LimitKeys.AluminaPct);
+        results.Warnings.ShouldHaveSingleItem().Key.ShouldBe(LimitKeys.SulfurTrioxidePct);
     }
 
     [Fact]
@@ -143,12 +159,18 @@ public sealed class CementOxideValidatorTests
 
         var validator = new CementOxideValidator(new LimitEvaluator(new TestLimitProvider([.. limits])));
 
-        validator.Validate(5m, 2m, 2m, 45m)[LimitKeys.SulfurTrioxidePct]
-            .ShouldBeOfType<LimitResult.Ok>();
-        validator.Validate(5m, 2m, 2m, 50m)[LimitKeys.SulfurTrioxidePct]
-            .ShouldBeOfType<LimitResult.Warn>();
-        validator.Validate(5m, 2m, 2m, 50.01m)[LimitKeys.SulfurTrioxidePct]
-            .ShouldBeOfType<LimitResult.Reject>();
+        var accepted = validator.Validate(5m, 2m, 2m, 45m);
+        accepted.IsValid.ShouldBeTrue();
+        accepted.Warnings.ShouldBeEmpty();
+
+        var warning = validator.Validate(5m, 2m, 2m, 50m);
+        warning.IsValid.ShouldBeTrue();
+        warning.Warnings.ShouldHaveSingleItem().Key.ShouldBe(LimitKeys.SulfurTrioxidePct);
+
+        var rejected = validator.Validate(5m, 2m, 2m, 50.01m);
+        rejected.IsValid.ShouldBeFalse();
+        rejected.Errors.ShouldHaveSingleItem().Key.ShouldBe(LimitKeys.SulfurTrioxidePct);
+        rejected.Warnings.ShouldBeEmpty();
     }
 
     [Fact]
@@ -156,8 +178,10 @@ public sealed class CementOxideValidatorTests
     {
         var results = CreateValidator().Validate(100m, 100m, 6m, 4.5m);
 
-        results.Values.ShouldNotContain(result => result is LimitResult.Reject);
-        results.Keys.ShouldAllBe(key => key.StartsWith("Oxide.", StringComparison.Ordinal));
+        results.IsValid.ShouldBeTrue();
+        results.Errors.ShouldBeEmpty();
+        results.Warnings.Count.ShouldBe(4);
+        results.Warnings.ShouldAllBe(warning => warning.Key.StartsWith("Oxide.", StringComparison.Ordinal));
         _provider.RequestedKeys.ShouldNotContain(LimitKeys.TotalPct);
     }
 
@@ -165,11 +189,26 @@ public sealed class CementOxideValidatorTests
 
     private LimitResult Check(string key, decimal? value)
     {
-        return CreateValidator().Validate(
+        var results = CreateValidator().Validate(
             key == LimitKeys.AluminaPct ? value : 5m,
             key == LimitKeys.IronOxidePct ? value : 2m,
             key == LimitKeys.MagnesiumOxidePct ? value : 2m,
-            key == LimitKeys.SulfurTrioxidePct ? value : 2m)[key];
+            key == LimitKeys.SulfurTrioxidePct ? value : 2m);
+
+        results.Errors.Count(error => error.Key == key).ShouldBeLessThanOrEqualTo(1);
+        results.Warnings.Count(warning => warning.Key == key).ShouldBeLessThanOrEqualTo(1);
+        if (results.Errors.SingleOrDefault(error => error.Key == key) is { } error)
+        {
+            results.Warnings.ShouldNotContain(warning => warning.Key == key);
+            return new LimitResult.Reject(error.Message);
+        }
+
+        if (results.Warnings.SingleOrDefault(warning => warning.Key == key) is { } warning)
+        {
+            return new LimitResult.Warn(warning.Message);
+        }
+
+        return new LimitResult.Ok();
     }
 
     private sealed class TestLimitProvider(params ValidationLimit[] limits) : ILimitProvider
