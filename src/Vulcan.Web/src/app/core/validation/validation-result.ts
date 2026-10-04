@@ -1,4 +1,4 @@
-import type { ValidationSeverity } from '../api/api-types';
+import type { ValidationSeverity } from '../api/models';
 
 // Type representing the result of a validation check.
 export type ValidationResult =

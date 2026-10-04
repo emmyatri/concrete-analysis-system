@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import type { ValidationResult } from './validation-result';
-import type { ValidationLimit } from '../api/api-types';
+import type { ValidationLimit } from '../api/models';
 
 @Injectable({
   providedIn: 'root',

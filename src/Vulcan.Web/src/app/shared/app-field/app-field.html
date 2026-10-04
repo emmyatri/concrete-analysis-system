@@ -1,11 +1,19 @@
-/**
-* AppField component template
-*/
+<!-- Template for the AppField component. -->
 
 <label [for]="inputId()">{{ label() }}</label>
 <div class="app-field-control">
     <ng-content></ng-content>
 </div>
-@if (hint()) {
-<small class="app-field-hint">{{ hint() }}</small>
+
+<!-- Display hint if available. -->
+@if (computedHint()) {
+<small class="app-field-hint">{{ computedHint() }}</small>
+}
+
+<!-- Display validation message if available. -->
+@if (message()) {
+<small class="app-field-message" [class.app-field-message--error]="state() === 'error'"
+    [class.app-field-message--warn]="state() === 'warn'">
+    {{ message() }}
+</small>
 }

@@ -1,11 +1,12 @@
 import { TestBed } from '@angular/core/testing';
 import { ValidationService } from './validation.service';
-import type { ValidationLimit } from '../api/api-types';
+import type { ValidationLimit } from '../api/models';
 
 // Unit tests for the ValidationService
 describe('ValidationService', () => {
   let service: ValidationService;
 
+  // Small scoped mock validation limits for testing purposes.
   const limits: ValidationLimit[] = [
     {
       key: 'Batch.ExpectedFinalBreakPsi',
@@ -36,12 +37,13 @@ describe('ValidationService', () => {
     },
   ];
 
+  // Setup the testing module and inject the ValidationService before each test.
   beforeEach(() => {
     TestBed.configureTestingModule({});
-
     service = TestBed.inject(ValidationService);
   });
 
+  // Should create the service successfully.
   it('should be created', () => {
     expect(service).toBeTruthy();
   });
