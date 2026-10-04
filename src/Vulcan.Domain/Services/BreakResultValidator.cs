@@ -9,7 +9,7 @@ public class BreakResultValidator(LimitEvaluator limitEvaluator)
     private const string _brokenAtKey = "Break.BrokenAt";
     private const string _specimenIdKey = "Break.SpecimenId";
 
-    public BreakValidationResult Validate(
+    public ValidationOutcome Validate(
         BreakResult breakResult,
         DateTime castAt,
         bool specimenAlreadyHasResult,
@@ -58,10 +58,6 @@ public class BreakResultValidator(LimitEvaluator limitEvaluator)
                 "Break time cannot be in the future."));
         }
 
-        return new BreakValidationResult
-        {
-            Errors = errors,
-            Warnings = warnings
-        };
+        return new ValidationOutcome(errors, warnings);
     }
 }
