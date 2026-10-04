@@ -207,8 +207,10 @@ public class CompositionValidatorTests
         var errors = _validator.Validate(composition);
 
         Assert.Contains(
-            "Mix percentages total 100.01%, which exceeds 100%.",
-            errors);
+            errors,
+            error =>
+                error.Key == LimitKeys.TotalPct &&
+                error.Message.Contains("100.01%"));
     }
 
     // -------------------------------------------------------------------------
@@ -310,21 +312,17 @@ public class CompositionValidatorTests
 
         var errors = _validator.Validate(composition);
 
-        Assert.Contains(
-            "Cement composition must be within the range [10-15]",
-            errors);
+        Assert.Equal(
+            2,
+            errors.Count(error => error.Key == LimitKeys.CementPct));
 
         Assert.Contains(
-            "Coarse aggregate composition must be within the range [40-55]",
-            errors);
+            errors,
+            error => error.Key == LimitKeys.CoarseAggregatePct);
 
         Assert.Contains(
-            "Cement percentage cannot have more than two decimal places.",
-            errors);
-
-        Assert.Contains(
-            "Mix percentages total 100.123%, which exceeds 100%.",
-            errors);
+            errors,
+            error => error.Key == LimitKeys.TotalPct);
     }
 
     // -------------------------------------------------------------------------
@@ -366,28 +364,7 @@ public class CompositionValidatorTests
 
         var errors = _validator.Validate(composition);
 
-        // The messages come from the same seeded validation limits used by
-        // the application. No range values are recreated in the validator.
-        return key switch
-        {
-            LimitKeys.CementPct =>
-                !errors.Contains(
-                    "Cement composition must be within the range [10-15]"),
-
-            LimitKeys.FineAggregatePct =>
-                !errors.Contains(
-                    "Fine aggregate composition must be within the range [25-30]"),
-
-            LimitKeys.CoarseAggregatePct =>
-                !errors.Contains(
-                    "Coarse aggregate composition must be within the range [40-55]"),
-
-            LimitKeys.WaterPct =>
-                !errors.Contains(
-                    "Water composition must be within the range [15-20]"),
-
-            _ => throw new ArgumentOutOfRangeException(nameof(key))
-        };
+        return !errors.Any(error => error.Key == key);
     }
 
     private static Composition CreateComposition(

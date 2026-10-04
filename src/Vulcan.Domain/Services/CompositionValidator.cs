@@ -51,9 +51,9 @@ public class CompositionValidator(LimitEvaluator limitEvaluator)
     }
 
     // Collect every composition error so all problems can be shown at once.
-    public IReadOnlyList<string> Validate(Composition composition)
+    public IReadOnlyList<ValidationError> Validate(Composition composition)
     {
-        var errors = new List<string>();
+        var errors = new List<ValidationError>();
 
         AddLimitError(errors, LimitKeys.CementPct, composition.CementPct);
         AddLimitError(errors, LimitKeys.FineAggregatePct, composition.FineAggregatePct);
@@ -62,40 +62,49 @@ public class CompositionValidator(LimitEvaluator limitEvaluator)
 
         if (!IsScmValid(composition.ScmPct, composition.ScmType))
         {
-            errors.Add("SCM percentage and type are inconsistent.");
+            errors.Add(new ValidationError(
+                LimitKeys.ScmPct,
+                "SCM percentage and type are inconsistent."));
         }
 
-        AddPrecisionError(errors, composition.CementPct, "Cement");
-        AddPrecisionError(errors, composition.ScmPct, "SCM");
-        AddPrecisionError(errors, composition.CoarseAggregatePct, "Coarse aggregate");
-        AddPrecisionError(errors, composition.FineAggregatePct, "Fine aggregate");
-        AddPrecisionError(errors, composition.WaterPct, "Water");
+        AddPrecisionError(errors, LimitKeys.CementPct, composition.CementPct, "Cement");
+        AddPrecisionError(errors, LimitKeys.ScmPct, composition.ScmPct, "SCM");
+        AddPrecisionError(errors, LimitKeys.CoarseAggregatePct, composition.CoarseAggregatePct, "Coarse aggregate");
+        AddPrecisionError(errors, LimitKeys.FineAggregatePct, composition.FineAggregatePct, "Fine aggregate");
+        AddPrecisionError(errors, LimitKeys.WaterPct, composition.WaterPct, "Water");
 
         var total = CalculateTotal(composition);
         if (limitEvaluator.Check(LimitKeys.TotalPct, total) is LimitResult.Reject)
         {
-            errors.Add($"Mix percentages total {total}%, which exceeds 100%.");
+            errors.Add(new ValidationError(
+                LimitKeys.TotalPct,
+                $"Mix percentages total {total}%, which exceeds 100%."));
         }
 
         return errors;
     }
 
-    private void AddLimitError(List<string> errors, string key, decimal value)
+    private void AddLimitError(List<ValidationError> errors, string key, decimal value)
     {
         if (limitEvaluator.Check(key, value) is LimitResult.Reject reject)
         {
-            errors.Add(reject.Message);
+            errors.Add(new ValidationError(
+                    key,
+                    reject.Message));
         }
     }
 
     private static void AddPrecisionError(
-        List<string> errors,
+        List<ValidationError> errors,
+        string key,
         decimal value,
         string fieldName)
     {
         if (!HasAtMostTwoDecimalPlaces(value))
         {
-            errors.Add($"{fieldName} percentage cannot have more than two decimal places.");
+            errors.Add(new ValidationError(
+                key,
+                $"{fieldName} percentage cannot have more than two decimal places."));
         }
     }
 }
