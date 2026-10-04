@@ -1,5 +1,4 @@
-﻿<!-- TODO(M1-45): each .field becomes <app-field> once the shared field lands. -->
-<form class="batch-entry" [formGroup]="form" novalidate>
+﻿<form class="batch-entry" [formGroup]="form" novalidate>
   <header class="page-header">
     <div>
       <nav class="breadcrumb" aria-label="Breadcrumb">
@@ -27,56 +26,37 @@
           <h2 id="batch-card-title">Batch</h2>
         </header>
         <div class="card-body fields">
-          <div class="field">
-            <label for="batchNumber">Batch number</label>
+          <app-field label="Batch number" inputId="batchNumber" [control]="form.controls.batch.controls.batchNumber"
+            [hint]="batchNumberHint">
             <input pInputText id="batchNumber" formControlName="batchNumber" autocomplete="off" maxlength="64" />
-            <small class="field-hint">{{ batchNumberHint }}</small>
-          </div>
+          </app-field>
 
-          <div class="field">
-            <label for="castAt">Cast date/time</label>
-            <p-datepicker
-              inputId="castAt"
-              formControlName="castAt"
-              [showTime]="true"
-              hourFormat="24"
-              dateFormat="mm/dd/yy"
-              [maxDate]="now"
-              [showIcon]="true"
-              iconDisplay="input"
-              appendTo="body"
-            />
-            <small class="field-hint">Not in the future</small>
-          </div>
+          <app-field label="Cast date/time" inputId="castAt" [control]="form.controls.batch.controls.castAt"
+            hint="Not in the future">
+            <p-datepicker inputId="castAt" formControlName="castAt" [showTime]="true" hourFormat="24"
+              dateFormat="mm/dd/yy" [maxDate]="now" [showIcon]="true" iconDisplay="input" appendTo="body" />
+          </app-field>
 
-          <div class="field">
-            <label for="finalWeightLb">Final weight (lb)</label>
+          <app-field label="Final weight (lb)" inputId="finalWeightLb"
+            [control]="form.controls.batch.controls.finalWeightLb" limitKey="Batch.FinalWeightLb">
             <input pInputText id="finalWeightLb" formControlName="finalWeightLb" inputmode="decimal" />
-          </div>
+          </app-field>
 
-          <div class="field">
-            <label for="expectedFinalBreakPsi">Expected final break (PSI)</label>
+          <app-field label="Expected final break (PSI)" inputId="expectedFinalBreakPsi"
+            [control]="form.controls.batch.controls.expectedFinalBreakPsi" limitKey="Batch.ExpectedFinalBreakPsi">
             <input pInputText id="expectedFinalBreakPsi" formControlName="expectedFinalBreakPsi" inputmode="numeric" />
-          </div>
+          </app-field>
 
-          <div class="field">
-            <label for="cementType">Cement type</label>
-            <p-select
-              inputId="cementType"
-              formControlName="cementType"
-              [options]="cementTypes"
-              optionLabel="label"
-              optionValue="value"
-              placeholder="Select"
-              appendTo="body"
-            />
-            <small class="field-hint">Type I, II or III</small>
-          </div>
+          <app-field label="Cement type" inputId="cementType" [control]="form.controls.batch.controls.cementType"
+            hint="Type I, II or III">
+            <p-select inputId="cementType" formControlName="cementType" [options]="cementTypes" optionLabel="label"
+              optionValue="value" placeholder="Select" appendTo="body" />
+          </app-field>
 
-          <div class="field">
-            <label for="mixWaterPh">Mix water pH</label>
+          <app-field label="Mix water pH" inputId="mixWaterPh" [control]="form.controls.batch.controls.mixWaterPh"
+            limitKey="Batch.MixWaterPh">
             <input pInputText id="mixWaterPh" formControlName="mixWaterPh" inputmode="decimal" />
-          </div>
+          </app-field>
         </div>
       </section>
 
@@ -88,22 +68,22 @@
           <span class="card-note">% of cement · mill certificate</span>
         </header>
         <div class="card-body fields">
-          <div class="field">
-            <label for="aluminaPct">Alumina Al₂O₃ (%)</label>
+          <app-field label="Alumina Al₂O₃ (%)" inputId="aluminaPct" [control]="form.controls.oxides.controls.aluminaPct"
+            limitKey="Oxide.AluminaPct">
             <input pInputText id="aluminaPct" formControlName="aluminaPct" inputmode="decimal" />
-          </div>
-          <div class="field">
-            <label for="ironOxidePct">Iron oxide Fe₂O₃ (%)</label>
+          </app-field>
+          <app-field label="Iron oxide Fe₂O₃ (%)" inputId="ironOxidePct"
+            [control]="form.controls.oxides.controls.ironOxidePct" limitKey="Oxide.IronOxidePct">
             <input pInputText id="ironOxidePct" formControlName="ironOxidePct" inputmode="decimal" />
-          </div>
-          <div class="field">
-            <label for="magnesiumOxidePct">Magnesium oxide MgO (%)</label>
+          </app-field>
+          <app-field label="Magnesium oxide MgO (%)" inputId="magnesiumOxidePct"
+            [control]="form.controls.oxides.controls.magnesiumOxidePct" limitKey="Oxide.MagnesiumOxidePct">
             <input pInputText id="magnesiumOxidePct" formControlName="magnesiumOxidePct" inputmode="decimal" />
-          </div>
-          <div class="field">
-            <label for="sulfurTrioxidePct">Sulfur trioxide SO₃ (%)</label>
+          </app-field>
+          <app-field label="Sulfur trioxide SO₃ (%)" inputId="sulfurTrioxidePct"
+            [control]="form.controls.oxides.controls.sulfurTrioxidePct" limitKey="Oxide.SulfurTrioxidePct">
             <input pInputText id="sulfurTrioxidePct" formControlName="sulfurTrioxidePct" inputmode="decimal" />
-          </div>
+          </app-field>
         </div>
       </section>
     </div>
@@ -118,38 +98,32 @@
         </header>
         <div class="card-body">
           <div class="fields">
-            <div class="field">
-              <label for="cementPct">Cement (%)</label>
+            <app-field label="Cement (%)" inputId="cementPct" [control]="form.controls.composition.controls.cementPct"
+              limitKey="Composition.CementPct">
               <input pInputText id="cementPct" formControlName="cementPct" inputmode="decimal" />
-            </div>
-            <div class="field">
-              <label for="waterPct">Water (%)</label>
+            </app-field>
+            <app-field label="Water (%)" inputId="waterPct" [control]="form.controls.composition.controls.waterPct"
+              limitKey="Composition.WaterPct">
               <input pInputText id="waterPct" formControlName="waterPct" inputmode="decimal" />
-            </div>
-            <div class="field">
-              <label for="coarseAggregatePct">Coarse aggregate (%)</label>
+            </app-field>
+            <app-field label="Coarse aggregate (%)" inputId="coarseAggregatePct"
+              [control]="form.controls.composition.controls.coarseAggregatePct"
+              limitKey="Composition.CoarseAggregatePct">
               <input pInputText id="coarseAggregatePct" formControlName="coarseAggregatePct" inputmode="decimal" />
-            </div>
-            <div class="field">
-              <label for="fineAggregatePct">Fine aggregate / sand (%)</label>
+            </app-field>
+            <app-field label="Fine aggregate / sand (%)" inputId="fineAggregatePct"
+              [control]="form.controls.composition.controls.fineAggregatePct" limitKey="Composition.FineAggregatePct">
               <input pInputText id="fineAggregatePct" formControlName="fineAggregatePct" inputmode="decimal" />
-            </div>
-            <div class="field">
-              <label for="scmType">SCM type</label>
-              <p-select
-                inputId="scmType"
-                formControlName="scmType"
-                [options]="scmTypes"
-                optionLabel="label"
-                optionValue="value"
-                appendTo="body"
-              />
-              <small class="field-hint">None when SCM is 0%</small>
-            </div>
-            <div class="field">
-              <label for="scmPct">SCM (%)</label>
+            </app-field>
+            <app-field label="SCM type" inputId="scmType" [control]="form.controls.composition.controls.scmType"
+              hint="None when SCM is 0%">
+              <p-select inputId="scmType" formControlName="scmType" [options]="scmTypes" optionLabel="label"
+                optionValue="value" appendTo="body" />
+            </app-field>
+            <app-field label="SCM (%)" inputId="scmPct" [control]="form.controls.composition.controls.scmPct"
+              limitKey="Composition.ScmPct">
               <input pInputText id="scmPct" formControlName="scmPct" inputmode="decimal" />
-            </div>
+            </app-field>
           </div>
 
           <!-- ---------- Calculated · not stored ---------- -->
@@ -173,17 +147,19 @@
 
             <div class="mix-bar" role="img" aria-label="Mix by volume">
               @for (part of mix(); track part.label) {
-                @if (part.pct > 0) {
-                  <span [class]="'mix-segment ' + part.cls" [style.flex-grow]="part.pct"></span>
-                }
+              @if (part.pct > 0) {
+              <span [class]="'mix-segment ' + part.cls" [style.flex-grow]="part.pct"></span>
+              }
               }
               @if (totals().airOtherPct > 0) {
-                <span class="mix-segment mix-air" [style.flex-grow]="totals().airOtherPct"></span>
+              <span class="mix-segment mix-air" [style.flex-grow]="totals().airOtherPct"></span>
               }
             </div>
             <ul class="mix-legend">
               @for (part of mix(); track part.label) {
-                <li><span [class]="'mix-swatch ' + part.cls"></span>{{ part.label }} {{ part.pct }}%</li>
+              <li>
+                <span [class]="'mix-swatch ' + part.cls"></span>{{ part.label }} {{ part.pct }}%
+              </li>
               }
             </ul>
           </div>

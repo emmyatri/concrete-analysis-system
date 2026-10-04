@@ -6,9 +6,16 @@ import { ButtonModule } from 'primeng/button';
 import { DatePickerModule } from 'primeng/datepicker';
 import { InputTextModule } from 'primeng/inputtext';
 import { SelectModule } from 'primeng/select';
+import { AppField } from '../../shared/app-field/app-field';
 
 import { ReferenceDataService } from '../../core/api/reference-data.service';
-import { BATCH_NUMBER_HINT, CEMENT_TYPES, SCM_TYPES, createBatchForm, toNumber } from './batch-form';
+import {
+  BATCH_NUMBER_HINT,
+  CEMENT_TYPES,
+  SCM_TYPES,
+  createBatchForm,
+  toNumber,
+} from './batch-form';
 import { calculateComposition } from './composition-calc';
 
 /**
@@ -17,7 +24,15 @@ import { calculateComposition } from './composition-calc';
  */
 @Component({
   selector: 'app-batch-entry',
-  imports: [ReactiveFormsModule, RouterLink, ButtonModule, DatePickerModule, InputTextModule, SelectModule],
+  imports: [
+    ReactiveFormsModule,
+    RouterLink,
+    ButtonModule,
+    DatePickerModule,
+    InputTextModule,
+    SelectModule,
+    AppField,
+  ],
   templateUrl: './batch-entry.html',
   styleUrl: './batch-entry.scss',
 })
@@ -56,7 +71,11 @@ export class BatchEntry {
   protected readonly mix = computed(() => {
     this.formChange();
     const v = this.form.controls.composition.getRawValue();
-    const part = (label: string, cls: string, text: string) => ({ label, cls, pct: Math.max(0, toNumber(text) ?? 0) });
+    const part = (label: string, cls: string, text: string) => ({
+      label,
+      cls,
+      pct: Math.max(0, toNumber(text) ?? 0),
+    });
     return [
       part('Cement', 'mix-cement', v.cementPct),
       part('Water', 'mix-water', v.waterPct),

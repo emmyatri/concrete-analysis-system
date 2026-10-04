@@ -9,7 +9,7 @@ import { signal } from '@angular/core';
 describe('AppField', () => {
   let fixture: ComponentFixture<AppField>;
   let component: AppField;
-  let control: FormControl<number>;
+  let control: FormControl<number | null>;
 
   beforeEach(() => {
     TestBed.configureTestingModule({
@@ -20,7 +20,7 @@ describe('AppField', () => {
     });
 
     // Create a new FormControl with an initial value of 3500.
-    control = new FormControl(7.2, { nonNullable: true });
+    control = new FormControl<number | null>(null);
     // Create the test component for the AppField component.
     fixture = TestBed.createComponent(AppField);
     // Assign input properties to the test component.
@@ -65,9 +65,17 @@ describe('AppField', () => {
     expect(component.message()).toBe('pH is outside the normal range [7.0-7.5]');
   });
 
-  // Test computed hint for the app-field component.
-  it('should return a hint', () => {
+  // Test for reject hint
+  it('returns the reject range hint when outside the allowed range', () => {
+    control.setValue(0);
+    control.markAsTouched();
+    fixture.detectChanges();
     expect(component.computedHint()).toBe('1-9');
+  });
+
+  // Test for normal/warn hint
+  it('uses the normal Warn range for the hint when both limits exist', () => {
+    expect(component.computedHint()).toBe('7-7.5');
   });
 
   // Test server error state even when the control has not been touched.
@@ -79,5 +87,19 @@ describe('AppField', () => {
 
     expect(component.state()).toBe('error');
     expect(component.message()).toBe(serverMessage);
+  });
+
+  // Test MgO range/max hint
+  it('should display the range and the maximum hint when applicable', () => {
+    fixture.componentRef.setInput('limitKey', 'Oxide.MagnesiumOxidePct');
+    fixture.detectChanges();
+    expect(component.computedHint()).toBe('0.1-4 · max 6 %');
+  });
+
+  // Test SO₃ range/max hint
+  it('should display the range and the maximum hint when applicable', () => {
+    fixture.componentRef.setInput('limitKey', 'Oxide.SulfurTrioxidePct');
+    fixture.detectChanges();
+    expect(component.computedHint()).toBe('1.3-3 · max 4.5 %');
   });
 });

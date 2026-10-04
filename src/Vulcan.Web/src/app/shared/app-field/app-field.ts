@@ -7,6 +7,9 @@ import { ReferenceDataService } from '../../core/api/reference-data.service';
 // Possible states for the app-field component.
 export type AppFieldState = 'error' | 'warn' | 'normal';
 
+// Keys for which the maximum value should be displayed in the hint.
+const KEYS_WITH_DISPLAYED_MAXIMUM = new Set(['Oxide.MagnesiumOxidePct', 'Oxide.SulfurTrioxidePct']);
+
 // Reusable wrapper for a form control with a label and optional hint.
 @Component({
   selector: 'app-field',
@@ -110,28 +113,43 @@ export class AppField {
     // Find the first validation limit with severity 'Warn'.
     const warnLimit = matchLimits.find((limit) => limit.severity === 'Warn');
 
-    // Select the most severe validation limit available, prioritizing 'Reject' over 'Warn'.
-    const selectedLimit = rejectLimit ?? warnLimit;
+    // Show the Reject range when the value is an error. Otherwise, prefer the normal Warn range.
+    const result = this.validationResult();
 
-    // Return the appropriate hint message based on the validation limits - start with the most
-    // severe (Reject) and then Warn.
+    const selectedLimit = result.severity === 'Reject' ? rejectLimit : (warnLimit ?? rejectLimit);
+
+    // Return the range hint from the selected limit.
     if (!selectedLimit) {
       return hint;
     }
-    return this.formatLimitHint(selectedLimit) ?? hint;
+
+    // Determine the maximum limit to display based on the severity and the keys that require a displayed maximum.
+    const maximumLimit =
+      result.severity === 'Reject'
+        ? undefined
+        : KEYS_WITH_DISPLAYED_MAXIMUM.has(limitKey)
+          ? rejectLimit
+          : undefined;
+
+    return this.formatLimitHint(selectedLimit, maximumLimit) ?? hint;
   });
 
   // Formats the minimum, maximum, and unit for the range hint.
-  private formatLimitHint(limit: ValidationLimit): string | null {
+  private formatLimitHint(
+    normalLimit: ValidationLimit,
+    maximumLimit?: ValidationLimit,
+  ): string | null {
+    const maximumText =
+      maximumLimit && maximumLimit.max !== null ? ` · max ${maximumLimit.max}` : '';
     // Conditional formatting of the limit.
-    if (limit.min !== null && limit.max !== null) {
-      const { min, max, unit } = limit;
-      return `${min}-${max}` + (unit ? ` ${unit}` : '');
-    } else if (limit.min !== null) {
-      const { min, unit } = limit;
+    if (normalLimit.min !== null && normalLimit.max !== null) {
+      const { min, max, unit } = normalLimit;
+      return `${min}-${max}${maximumText}` + (unit ? ` ${unit}` : '');
+    } else if (normalLimit.min !== null) {
+      const { min, unit } = normalLimit;
       return `≥ ${min}` + (unit ? ` ${unit}` : '');
-    } else if (limit.max !== null) {
-      const { max, unit } = limit;
+    } else if (normalLimit.max !== null) {
+      const { max, unit } = normalLimit;
       return `≤ ${max}` + (unit ? ` ${unit}` : '');
     }
 
