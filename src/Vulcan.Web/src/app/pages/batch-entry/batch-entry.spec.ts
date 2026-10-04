@@ -1,8 +1,12 @@
-﻿import { ComponentFixture, TestBed } from '@angular/core/testing';
+﻿import { provideHttpClient, withInterceptors } from '@angular/common/http';
+import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { NonNullableFormBuilder } from '@angular/forms';
 import { provideRouter } from '@angular/router';
 import { providePrimeNG } from 'primeng/config';
 
+import { mockApiInterceptor } from '../../core/api/mock/mock-api.interceptor';
+import { ReferenceDataService } from '../../core/api/reference-data.service';
+import { USE_MOCKS } from '../../core/api/use-mocks';
 import { VulcanPreset } from '../../theme/vulcan-preset';
 import { BatchEntry } from './batch-entry';
 import { createBatchForm, toCreateBatchRequest } from './batch-form';
@@ -13,8 +17,15 @@ describe('BatchEntry', () => {
   beforeEach(() => {
     TestBed.configureTestingModule({
       imports: [BatchEntry],
-      providers: [provideRouter([]), providePrimeNG({ theme: { preset: VulcanPreset } })],
+      providers: [
+        provideRouter([]),
+        providePrimeNG({ theme: { preset: VulcanPreset } }),
+        // Specific gravities come from the fake data, the same as `npm start`.
+        provideHttpClient(withInterceptors([mockApiInterceptor])),
+        { provide: USE_MOCKS, useValue: true },
+      ],
     });
+    TestBed.inject(ReferenceDataService).load();
     fixture = TestBed.createComponent(BatchEntry);
     fixture.detectChanges();
   });

@@ -7,20 +7,9 @@ import { DatePickerModule } from 'primeng/datepicker';
 import { InputTextModule } from 'primeng/inputtext';
 import { SelectModule } from 'primeng/select';
 
+import { ReferenceDataService } from '../../core/api/reference-data.service';
 import { BATCH_NUMBER_HINT, CEMENT_TYPES, SCM_TYPES, createBatchForm, toNumber } from './batch-form';
 import { calculateComposition } from './composition-calc';
-
-/**
- * TEMPORARY: same values as the SCRUM-96 seed (specific-gravity.json).
- * TODO(M1-45): read these from the reference-data service, then delete this. Must not merge as-is.
- */
-const TEMP_SPECIFIC_GRAVITIES = new Map<string, number>([
-  ['Cement', 3.15],
-  ['Water', 1.0],
-  ['FlyAsh', 2.35],
-  ['Slag', 2.9],
-  ['SilicaFume', 2.35],
-]);
 
 /**
  * "New batch" screen (M1-43, mockup "03 · Batch Entry"): batch details and mix recipe,
@@ -34,6 +23,7 @@ const TEMP_SPECIFIC_GRAVITIES = new Map<string, number>([
 })
 export class BatchEntry {
   private readonly router = inject(Router);
+  private readonly referenceData = inject(ReferenceDataService);
 
   protected readonly cementTypes = CEMENT_TYPES;
   protected readonly scmTypes = SCM_TYPES;
@@ -59,7 +49,7 @@ export class BatchEntry {
         scmPct: toNumber(v.scmPct),
         scmType: v.scmType,
       },
-      TEMP_SPECIFIC_GRAVITIES,
+      this.referenceData.specificGravities(),
     );
   });
 
