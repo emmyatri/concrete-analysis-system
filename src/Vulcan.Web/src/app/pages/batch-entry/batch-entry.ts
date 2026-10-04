@@ -12,7 +12,7 @@ import { BATCH_NUMBER_HINT, CEMENT_TYPES, SCM_TYPES, createBatchForm, toNumber }
 import { calculateComposition } from './composition-calc';
 
 /**
- * "New batch" screen (M1-43, mockup "03 · Batch Entry"): batch details and mix recipe,
+ * "New batch" screen (M1-43, mockup "03 · Batch Entry"): batch details, mix recipe and cement oxides,
  * with the composition totals calculated live.
  */
 @Component({

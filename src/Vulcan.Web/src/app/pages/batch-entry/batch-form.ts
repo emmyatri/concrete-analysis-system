@@ -82,13 +82,19 @@ export function createBatchForm(fb: NonNullableFormBuilder) {
       scmType: fb.control<ScmType>('None', [scmTypeMatchesPct]),
       scmPct: numeric(),
     }),
+    oxides: fb.group({
+      aluminaPct: numeric(),
+      ironOxidePct: numeric(),
+      magnesiumOxidePct: numeric(),
+      sulfurTrioxidePct: numeric(),
+    }),
   });
 }
 
 export type BatchForm = ReturnType<typeof createBatchForm>;
 
 export function toCreateBatchRequest(form: BatchForm): CreateBatchRequest {
-  const { batch, composition } = form.getRawValue();
+  const { batch, composition, oxides } = form.getRawValue();
   const num = (text: string) => toNumber(text) as number;
 
   return {
@@ -107,6 +113,12 @@ export function toCreateBatchRequest(form: BatchForm): CreateBatchRequest {
       fineAggregatePct: num(composition.fineAggregatePct),
       scmType: composition.scmType,
       scmPct: num(composition.scmPct),
+    },
+    oxides: {
+      aluminaPct: num(oxides.aluminaPct),
+      ironOxidePct: num(oxides.ironOxidePct),
+      magnesiumOxidePct: num(oxides.magnesiumOxidePct),
+      sulfurTrioxidePct: num(oxides.sulfurTrioxidePct),
     },
   };
 }
