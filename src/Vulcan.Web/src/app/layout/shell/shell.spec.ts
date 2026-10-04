@@ -52,7 +52,7 @@ describe('Shell', () => {
       harness.detectChanges();
 
       expect(TestBed.inject(Router).url).toBe(item.route);
-      expect(page().querySelector('.page-heading')?.textContent).toBe(item.label);
+      expect(page().querySelector('h1')?.textContent?.trim()).toBe(item.label);
 
       const active = page().querySelectorAll('.shell-menu-link.active');
       expect(active.length).toBe(1);

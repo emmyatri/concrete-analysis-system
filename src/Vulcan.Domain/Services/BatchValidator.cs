@@ -69,6 +69,15 @@ public partial class BatchValidator(LimitEvaluator limitEvaluator)
         return result is not LimitResult.Reject;
     }
 
+    /// <summary>
+    /// Mix water pH (FR-7): Reject outside 1–9, Warn outside the normal 7.0–7.5.
+    /// A Warn still saves and is flagged.
+    /// </summary>
+    public LimitResult CheckMixWaterPh(decimal mixWaterPh)
+    {
+        return limitEvaluator.Check(LimitKeys.MixWaterPh, mixWaterPh);
+    }
+
     [GeneratedRegex(@"^[A-Za-z0-9-]+$")]
     private static partial Regex BatchNumberPattern();
 }
