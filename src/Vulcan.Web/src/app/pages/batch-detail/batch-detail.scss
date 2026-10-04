@@ -1,0 +1,410 @@
+﻿// Batch Detail (hi-fi mockup "08 · Batch Detail"). Same cards as New batch. Colors from theme tokens only.
+
+.batch-detail {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+// The buttons are links (<a pButton>), so drop the link underline.
+a.p-button {
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+// ---------- Header ----------
+
+.breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--p-text-muted-color);
+
+  a {
+    color: inherit;
+    text-decoration: none;
+  }
+
+  .pi {
+    font-size: 10px;
+  }
+}
+
+.page-header {
+  display: flex;
+  flex-wrap: wrap; // on narrow windows the buttons drop under the title
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px 16px;
+  margin-top: -14px; // sits right under the breadcrumb
+}
+
+.page-title-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.page-title {
+  margin: 0 4px 0 0;
+  font-size: 22px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.badge {
+  padding: 2px 6px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.3;
+  white-space: nowrap;
+  color: var(--p-surface-0);
+}
+
+.badge-synthetic {
+  background: var(--p-blue-500);
+}
+
+.badge-warn {
+  background: var(--p-orange-400);
+}
+
+.page-actions {
+  display: flex;
+  gap: 12px;
+  margin-left: auto;
+
+  // Edit batch and Curing readings: lighter than the two entry buttons (mockup).
+  .quiet {
+    border-color: var(--p-content-border-color);
+    background: var(--p-surface-50);
+  }
+}
+
+// ---------- Cards ----------
+
+.card {
+  background: var(--p-surface-0);
+  border: 1px solid var(--p-content-border-color);
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.card-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  height: 48px;
+  padding: 0 17px;
+  background: var(--p-surface-100);
+  border-bottom: 1px solid var(--p-content-border-color);
+
+  h2 {
+    margin: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: 15px;
+    font-weight: 600;
+  }
+
+  .pi {
+    color: var(--p-surface-700);
+  }
+}
+
+.card-note {
+  margin-left: auto;
+  white-space: nowrap;
+  font-size: 12px;
+  color: var(--p-text-muted-color);
+}
+
+.card-body {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 14px 17px;
+}
+
+// ---------- Summary strip ----------
+
+.summary {
+  display: grid;
+  grid-template-columns: repeat(8, minmax(0, 1fr));
+  gap: 12px 16px;
+  margin: 0;
+  padding: 12px 19px;
+
+  // At the 1024px minimum window width, two rows of four.
+  @media (max-width: 1279px) {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+.summary-item {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+
+  dt {
+    font-size: 12px;
+    color: var(--p-text-muted-color);
+  }
+
+  dd {
+    margin: 0;
+    font-size: 16px;
+    font-weight: 600;
+    white-space: nowrap;
+  }
+
+  small {
+    display: block;
+    font-size: 11px;
+    font-weight: 400;
+    color: var(--p-text-muted-color);
+  }
+}
+
+// ---------- Chart + composition + oxides ----------
+
+.columns {
+  display: grid;
+  grid-template-columns: minmax(0, 1.7fr) minmax(0, 1fr);
+  gap: 16px;
+  align-items: stretch;
+
+  // Narrow windows: give the composition and oxides more room so labels and values don't collide.
+  @media (max-width: 1279px) {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  }
+}
+
+.side {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.chart-card {
+  display: flex;
+  flex-direction: column;
+}
+
+.chart-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 220px;
+  margin: 16px 17px;
+  border: 1px dashed var(--p-surface-300);
+  border-radius: 6px;
+  color: var(--p-text-muted-color);
+
+  .pi {
+    font-size: 28px;
+  }
+
+  p {
+    margin: 0;
+    font-size: 14px;
+  }
+}
+
+// Label on the left, value on the right, two to a row.
+.pairs {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 6px 20px;
+  margin: 0;
+  font-size: 13px;
+
+  div {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    min-width: 0;
+  }
+
+  dt {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    min-width: 0;
+    white-space: nowrap;
+    color: var(--p-text-muted-color);
+  }
+
+  dd {
+    margin: 0;
+    font-weight: 600;
+  }
+}
+
+.status {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 12px;
+  margin: 0;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.status-ok {
+  color: var(--p-green-700);
+}
+
+.status-warn {
+  color: var(--p-orange-700);
+}
+
+// ---------- Saved warnings: only the value is highlighted, with ⚠ after it ----------
+
+.flagged {
+  padding: 1px 6px;
+  border-radius: 4px;
+  background: var(--p-orange-100);
+  color: var(--p-orange-700);
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+// In the summary strip the mockup shows amber text without the box.
+.flagged-text {
+  color: var(--p-orange-600);
+  white-space: nowrap;
+}
+
+.muted {
+  color: var(--p-text-muted-color);
+}
+
+// ---------- Mix bar (same colors as New batch) ----------
+
+.mix-bar {
+  display: flex;
+  gap: 2px;
+  height: 12px;
+}
+
+.mix-segment {
+  flex-basis: 0;
+}
+
+.mix-swatch {
+  flex: none;
+  width: 8px;
+  height: 8px;
+}
+
+.mix-cement {
+  background: var(--p-primary-800);
+}
+.mix-water {
+  background: var(--p-primary-500);
+}
+.mix-coarse {
+  background: var(--p-primary-400);
+}
+.mix-fine {
+  background: var(--p-primary-200);
+}
+.mix-scm {
+  background: var(--p-orange-400);
+}
+.mix-air {
+  background: var(--p-surface-200);
+}
+
+// ---------- Tabs ----------
+
+.count {
+  margin-left: 6px;
+  padding: 1px 7px;
+  border-radius: 10px;
+  background: var(--p-surface-100);
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--p-surface-600);
+}
+
+.count-warn {
+  background: var(--p-orange-100);
+  color: var(--p-orange-700);
+}
+
+.tabs-card ::ng-deep {
+  .p-tab {
+    font-size: 14px;
+    padding-block: 12px;
+  }
+
+  .p-tabpanels {
+    padding: 0;
+  }
+
+  .p-datatable {
+    font-size: 13px;
+  }
+
+  .p-datatable-thead > tr > th {
+    background: var(--p-surface-100);
+    font-weight: 500;
+  }
+
+  .p-datatable-tbody > tr > td {
+    padding-block: 9px;
+  }
+}
+
+.group-row td {
+  background: var(--p-surface-50);
+  font-weight: 600;
+}
+
+.row-link {
+  color: var(--p-vulcan-link-color);
+  text-decoration: none;
+}
+
+.empty {
+  margin: 0;
+  padding: 24px 17px;
+  color: var(--p-text-muted-color);
+}
+
+// ---------- Loading, not found, failed ----------
+
+.message {
+  margin: 0;
+  color: var(--p-text-muted-color);
+}
+
+.message-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding: 40px 24px;
+  text-align: center;
+
+  h1 {
+    margin: 0;
+    font-size: 18px;
+    font-weight: 600;
+  }
+
+  p {
+    margin: 0 0 6px;
+    color: var(--p-text-muted-color);
+  }
+}
