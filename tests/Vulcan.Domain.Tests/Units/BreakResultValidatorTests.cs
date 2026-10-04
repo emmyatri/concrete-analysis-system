@@ -122,6 +122,23 @@ public class BreakResultValidatorTests
             result.Errors,
             error => error.Key == _brokenAtKey);
     }
+    [Fact]
+    public void Validate_WhenBrokenAtCastTime_IsValid()
+    {
+        var breakResult = CreateBreakResult(
+            3000,
+            _castAt);
+
+        var result = _validator.Validate(
+            breakResult,
+            _castAt,
+            false,
+            _now);
+
+        Assert.DoesNotContain(
+            result.Errors,
+            error => error.Key == _brokenAtKey);
+    }
 
     [Fact]
     public void Validate_WhenBrokenInFuture_ReturnsBrokenAtError()
@@ -137,6 +154,24 @@ public class BreakResultValidatorTests
             _now);
 
         Assert.Contains(
+            result.Errors,
+            error => error.Key == _brokenAtKey);
+    }
+
+    [Fact]
+    public void Validate_WhenBrokenAtCurrentTime_IsValid()
+    {
+        var breakResult = CreateBreakResult(
+            3000,
+            _now);
+
+        var result = _validator.Validate(
+            breakResult,
+            _castAt,
+            false,
+            _now);
+
+        Assert.DoesNotContain(
             result.Errors,
             error => error.Key == _brokenAtKey);
     }
