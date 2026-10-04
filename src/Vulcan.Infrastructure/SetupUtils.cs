@@ -51,7 +51,9 @@ public static class SetupUtils
         }
 
         services.AddScoped<ILimitProvider, LimitProvider>();
+        services.AddScoped<ISpecificGravityProvider, SpecificGravityProvider>();
         services.AddScoped<LimitEvaluator>();
+        services.AddScoped<WaterCementRatioCalculator>();
 
         return services;
     }

@@ -1,0 +1,194 @@
+﻿<!-- TODO(M1-45): each .field becomes <app-field> once the shared field lands. -->
+<form class="batch-entry" [formGroup]="form" novalidate>
+  <header class="page-header">
+    <div>
+      <nav class="breadcrumb" aria-label="Breadcrumb">
+        <a routerLink="/batches">Batches</a>
+        <i class="pi pi-angle-right" aria-hidden="true"></i>
+        <span aria-current="page">New</span>
+      </nav>
+      <h1 class="page-title">New batch</h1>
+    </div>
+
+    <div class="page-actions">
+      <p-button label="Cancel" [outlined]="true" (onClick)="cancel()" />
+      <!-- Saving comes in the next step. -->
+      <p-button label="Save & add cylinders" [disabled]="true" data-testid="save-add-cylinders" />
+      <p-button label="Save batch" [disabled]="true" data-testid="save-batch" />
+    </div>
+  </header>
+
+  <div class="columns">
+    <div class="column">
+      <!-- ---------- Batch ---------- -->
+      <section class="card" formGroupName="batch" aria-labelledby="batch-card-title">
+        <header class="card-header">
+          <i class="pi pi-box" aria-hidden="true"></i>
+          <h2 id="batch-card-title">Batch</h2>
+        </header>
+        <div class="card-body fields">
+          <div class="field">
+            <label for="batchNumber">Batch number</label>
+            <input pInputText id="batchNumber" formControlName="batchNumber" autocomplete="off" maxlength="64" />
+            <small class="field-hint">{{ batchNumberHint }}</small>
+          </div>
+
+          <div class="field">
+            <label for="castAt">Cast date/time</label>
+            <p-datepicker
+              inputId="castAt"
+              formControlName="castAt"
+              [showTime]="true"
+              hourFormat="24"
+              dateFormat="mm/dd/yy"
+              [maxDate]="now"
+              [showIcon]="true"
+              iconDisplay="input"
+              appendTo="body"
+            />
+            <small class="field-hint">Not in the future</small>
+          </div>
+
+          <div class="field">
+            <label for="finalWeightLb">Final weight (lb)</label>
+            <input pInputText id="finalWeightLb" formControlName="finalWeightLb" inputmode="decimal" />
+          </div>
+
+          <div class="field">
+            <label for="expectedFinalBreakPsi">Expected final break (PSI)</label>
+            <input pInputText id="expectedFinalBreakPsi" formControlName="expectedFinalBreakPsi" inputmode="numeric" />
+          </div>
+
+          <div class="field">
+            <label for="cementType">Cement type</label>
+            <p-select
+              inputId="cementType"
+              formControlName="cementType"
+              [options]="cementTypes"
+              optionLabel="label"
+              optionValue="value"
+              placeholder="Select"
+              appendTo="body"
+            />
+            <small class="field-hint">Type I, II or III</small>
+          </div>
+
+          <div class="field">
+            <label for="mixWaterPh">Mix water pH</label>
+            <input pInputText id="mixWaterPh" formControlName="mixWaterPh" inputmode="decimal" />
+          </div>
+        </div>
+      </section>
+
+      <!-- ---------- Cement oxides ---------- -->
+      <section class="card" formGroupName="oxides" aria-labelledby="oxides-card-title">
+        <header class="card-header">
+          <i class="pi pi-database" aria-hidden="true"></i>
+          <h2 id="oxides-card-title">Cement oxides</h2>
+          <span class="card-note">% of cement · mill certificate</span>
+        </header>
+        <div class="card-body fields">
+          <div class="field">
+            <label for="aluminaPct">Alumina Al₂O₃ (%)</label>
+            <input pInputText id="aluminaPct" formControlName="aluminaPct" inputmode="decimal" />
+          </div>
+          <div class="field">
+            <label for="ironOxidePct">Iron oxide Fe₂O₃ (%)</label>
+            <input pInputText id="ironOxidePct" formControlName="ironOxidePct" inputmode="decimal" />
+          </div>
+          <div class="field">
+            <label for="magnesiumOxidePct">Magnesium oxide MgO (%)</label>
+            <input pInputText id="magnesiumOxidePct" formControlName="magnesiumOxidePct" inputmode="decimal" />
+          </div>
+          <div class="field">
+            <label for="sulfurTrioxidePct">Sulfur trioxide SO₃ (%)</label>
+            <input pInputText id="sulfurTrioxidePct" formControlName="sulfurTrioxidePct" inputmode="decimal" />
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <div class="column">
+      <!-- ---------- Composition ---------- -->
+      <section class="card" formGroupName="composition" aria-labelledby="composition-card-title">
+        <header class="card-header">
+          <i class="pi pi-chart-pie" aria-hidden="true"></i>
+          <h2 id="composition-card-title">Composition</h2>
+          <span class="card-note">% by absolute volume</span>
+        </header>
+        <div class="card-body">
+          <div class="fields">
+            <div class="field">
+              <label for="cementPct">Cement (%)</label>
+              <input pInputText id="cementPct" formControlName="cementPct" inputmode="decimal" />
+            </div>
+            <div class="field">
+              <label for="waterPct">Water (%)</label>
+              <input pInputText id="waterPct" formControlName="waterPct" inputmode="decimal" />
+            </div>
+            <div class="field">
+              <label for="coarseAggregatePct">Coarse aggregate (%)</label>
+              <input pInputText id="coarseAggregatePct" formControlName="coarseAggregatePct" inputmode="decimal" />
+            </div>
+            <div class="field">
+              <label for="fineAggregatePct">Fine aggregate / sand (%)</label>
+              <input pInputText id="fineAggregatePct" formControlName="fineAggregatePct" inputmode="decimal" />
+            </div>
+            <div class="field">
+              <label for="scmType">SCM type</label>
+              <p-select
+                inputId="scmType"
+                formControlName="scmType"
+                [options]="scmTypes"
+                optionLabel="label"
+                optionValue="value"
+                appendTo="body"
+              />
+              <small class="field-hint">None when SCM is 0%</small>
+            </div>
+            <div class="field">
+              <label for="scmPct">SCM (%)</label>
+              <input pInputText id="scmPct" formControlName="scmPct" inputmode="decimal" />
+            </div>
+          </div>
+
+          <!-- ---------- Calculated · not stored ---------- -->
+          <div class="calculated" aria-live="polite">
+            <p class="calculated-label">Calculated live · not stored</p>
+            <div class="tiles">
+              <div class="tile" data-testid="total">
+                <span class="tile-label">Total</span>
+                <span class="tile-value">{{ totals().totalPct.toFixed(2) }}%</span>
+              </div>
+              <div class="tile" data-testid="air-other">
+                <span class="tile-label">Air / other</span>
+                <span class="tile-value">{{ totals().airOtherPct.toFixed(2) }}%</span>
+                <span class="tile-note">100 − total</span>
+              </div>
+              <div class="tile" data-testid="water-cement">
+                <span class="tile-label">Water / cementitious</span>
+                <span class="tile-value">{{ totals().waterCementRatio?.toFixed(2) ?? '—' }}</span>
+              </div>
+            </div>
+
+            <div class="mix-bar" role="img" aria-label="Mix by volume">
+              @for (part of mix(); track part.label) {
+                @if (part.pct > 0) {
+                  <span [class]="'mix-segment ' + part.cls" [style.flex-grow]="part.pct"></span>
+                }
+              }
+              @if (totals().airOtherPct > 0) {
+                <span class="mix-segment mix-air" [style.flex-grow]="totals().airOtherPct"></span>
+              }
+            </div>
+            <ul class="mix-legend">
+              @for (part of mix(); track part.label) {
+                <li><span [class]="'mix-swatch ' + part.cls"></span>{{ part.label }} {{ part.pct }}%</li>
+              }
+            </ul>
+          </div>
+        </div>
+      </section>
+    </div>
+  </div>
+</form>
