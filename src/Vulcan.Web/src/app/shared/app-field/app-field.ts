@@ -1,4 +1,4 @@
-import { AbstractControl } from '@angular/forms';
+import { AbstractControl, ValidationErrors } from '@angular/forms';
 import { Component, input, signal, effect, computed, inject } from '@angular/core';
 import { ValidationService } from '../../core/validation/validation.service';
 import type { ValidationLimit } from '../../core/api/models';
@@ -40,11 +40,21 @@ export class AppField {
     invalid: false,
     // Current value of the control.
     value: null,
+    // Current validation errors of the control.
+    errors: null as ValidationErrors | null,
   });
 
   // Computed state of the app-field based on the control snapshot.
   readonly state = computed<AppFieldState>(() => {
-    const { touched, invalid } = this.controlSnapshot();
+    const { touched, invalid, errors } = this.controlSnapshot();
+    const serverMessage = errors?.['server'];
+
+    // If there is a server-side validation message, the field is in an error state.
+    if (typeof serverMessage === 'string') {
+      return 'error';
+    }
+
+    // If there is no server-side validation message, proceed with local validation.
     const result = this.validationResult();
     if (!touched) {
       return 'normal';
@@ -69,8 +79,18 @@ export class AppField {
     return this.validationService.evaluate(limitKey, rawValue, limits);
   });
 
-  // Computed message based on the current validation result.
+  // Computed message based on errors or the current validation result.
   readonly message = computed(() => {
+    const { touched, errors } = this.controlSnapshot();
+    const serverMessage = errors?.['server'];
+    if (typeof serverMessage === 'string') {
+      return serverMessage;
+    }
+    // If the control has not been touched, do not show any message.
+    if (!touched) {
+      return '';
+    }
+    // If the user leaves the field, show the validation message if any.
     const result = this.validationResult();
     return result.message ?? '';
   });
@@ -128,6 +148,7 @@ export class AppField {
           touched: control.touched,
           invalid: control.invalid,
           value: control.value,
+          errors: control.errors,
         });
       };
       // Perform an initial update to set the state based on the current control status.

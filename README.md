@@ -163,6 +163,36 @@ The full look is in the Figma mockup. These are the rules people most often get 
 - **Synthetic data** shows a `SYNTHETIC` tag wherever a batch appears (SLA FR-20).
 
 ---
+#### Shared AppField Usage
+
+AppField wraps a PrimeNG form control and accepts five inputs:
+
+- label
+- inputId
+- control
+- limitKey
+- hint.
+
+It introduces field state and validation messaging (local and server derived) sourcing from shared contracts (ValidationLimit, ValidationSeverity) and services (ValidationService, ReferenceDataService). ValidationService feeds local messages; control.errors.server feeds server messages.
+
+The AppField component <app-field> can be reused across any form screen. How to use it:
+
+```ts
+import { FormControl } from '@angular/forms';
+
+readonly mixWaterPh = new FormControl<number | null>(null);
+```
+
+```html
+<app-field
+label="Mix Water pH"
+inputId="mixWaterPh"
+[control]="mixWaterPh"
+limitKey="Batch.MixWaterPh"
+>
+<p-inputnumber inputId="mixWaterPh" [formControl]="mixWaterPh" />
+</app-field>
+```
 
 ## Documentation
 

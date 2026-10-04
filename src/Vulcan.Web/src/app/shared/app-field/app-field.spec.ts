@@ -50,6 +50,7 @@ describe('AppField', () => {
     control.setValue(0);
     control.markAsTouched();
     fixture.detectChanges();
+
     expect(component.state()).toBe('error');
     expect(component.message()).toBe('pH must be within the range [1-9]');
   });
@@ -59,11 +60,24 @@ describe('AppField', () => {
     control.setValue(6);
     control.markAsTouched();
     fixture.detectChanges();
+
     expect(component.state()).toBe('warn');
     expect(component.message()).toBe('pH is outside the normal range [7.0-7.5]');
   });
 
+  // Test computed hint for the app-field component.
   it('should return a hint', () => {
     expect(component.computedHint()).toBe('1-9');
+  });
+
+  // Test server error state even when the control has not been touched.
+  it('should display a server error even when untouched', () => {
+    const serverMessage = 'Batch number already exists';
+
+    control.setErrors({ server: serverMessage });
+    fixture.detectChanges();
+
+    expect(component.state()).toBe('error');
+    expect(component.message()).toBe(serverMessage);
   });
 });
