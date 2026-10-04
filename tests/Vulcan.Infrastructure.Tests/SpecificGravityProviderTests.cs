@@ -20,6 +20,7 @@ public class SpecificGravityProviderTests(DatabaseFixture dbFixture)
         string expectedValue)
     {
         await using var db = dbFixture.CreateDbContext();
+        await db.Database.EnsureDeletedAsync();
         await db.Database.MigrateAsync();
 
         var expected = decimal.Parse(expectedValue);
