@@ -9,6 +9,7 @@ import {
   clearSavedMockBatches,
   mockApiInterceptor,
 } from '../../core/api/mock/mock-api.interceptor';
+import { MOCK_BATCHES } from '../../core/api/mock/mock-data';
 import { USE_MOCKS } from '../../core/api/use-mocks';
 import { SyntheticDataSetting } from '../../core/session/synthetic-data';
 import { TECHNICIAN_SETTINGS_URL, TechnicianSession } from '../../core/session/technician-session';
@@ -100,10 +101,37 @@ describe('HomePage', () => {
 
   it('opens Batch Detail when a row is clicked', async () => {
     await open();
-    root.querySelector<HTMLElement>('[data-testid="recent"] tbody tr')!.click();
+    root.querySelector<HTMLElement>('[data-testid="recent"] tbody tr.row-link')!.click();
     await harness.fixture.whenStable();
 
     expect(TestBed.inject(Router).url).toBe('/batches/VM-2026-0142');
+  });
+
+  it('groups the batches under date headings, newest first', async () => {
+    await open(false);
+    const batch = (batchNumber: string, castAt: Date) => ({
+      ...MOCK_BATCHES[0],
+      batchNumber,
+      castAt: castAt.toISOString(),
+    });
+    const now = new Date();
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 1);
+    const yesterday = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 1, 12, 0);
+    TestBed.inject(HttpTestingController)
+      .expectOne((r) => r.url === '/api/batches')
+      .flush([
+        batch('B-3', today),
+        batch('B-2', yesterday),
+        batch('B-1', new Date(2020, 0, 1)),
+        batch('B-0', new Date(2019, 5, 1)),
+      ]);
+    harness.detectChanges();
+
+    const headings = [...root.querySelectorAll('[data-testid="date-group"]')].map((el) =>
+      el.textContent?.trim(),
+    );
+    expect(headings).toEqual(['Today', 'Yesterday', 'Older']);
+    expect(batchNumbers()).toEqual(['B-3', 'B-2', 'B-1', 'B-0']);
   });
 
   it('says so when there are no batches yet', async () => {

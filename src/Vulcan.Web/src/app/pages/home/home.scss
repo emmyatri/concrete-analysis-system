@@ -72,6 +72,17 @@
   }
 }
 
+.group-row th {
+  padding: 8px 17px;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  text-align: start;
+  color: var(--p-text-muted-color);
+  background: var(--p-surface-50);
+}
+
 .batch-number {
   font-weight: 600;
   color: var(--p-vulcan-link-color);

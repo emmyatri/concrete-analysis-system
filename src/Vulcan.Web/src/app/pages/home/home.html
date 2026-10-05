@@ -26,12 +26,22 @@
     @if (message()) {
       <p class="message" data-testid="recent-message">{{ message() }}</p>
     } @else {
-      <p-table [value]="batches() ?? []" data-testid="recent">
+      <p-table
+        [value]="rows()"
+        rowGroupMode="subheader"
+        groupRowsBy="groupOrder"
+        data-testid="recent"
+      >
         <ng-template #header>
           <tr>
             <th>Batch number</th>
             <th>Cast</th>
             <th>Cement type</th>
+          </tr>
+        </ng-template>
+        <ng-template #groupheader let-batch>
+          <tr class="group-row" data-testid="date-group">
+            <th colspan="3" scope="colgroup">{{ batch.group }}</th>
           </tr>
         </ng-template>
         <ng-template #body let-batch>

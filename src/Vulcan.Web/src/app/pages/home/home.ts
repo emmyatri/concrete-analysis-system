@@ -11,10 +11,14 @@ import { CEMENT_LABELS } from '../../core/api/cement-labels';
 import { BatchSummary } from '../../core/api/models';
 import { VulcanApiService } from '../../core/api/vulcan-api.service';
 import { SyntheticDataSetting } from '../../core/session/synthetic-data';
+import { DATE_GROUPS, DateGroup, dateGroup } from '../../shared/date-group/date-group';
 import { TechnicianSession } from '../../core/session/technician-session';
 
 /** How many batches Home lists. Search finds the rest. */
 const RECENT_COUNT = 8;
+
+/** A recent batch with the date heading it sits under. */
+type RecentRow = BatchSummary & { group: DateGroup; groupOrder: number };
 
 type Recent =
   | { status: 'loading' }
@@ -64,9 +68,18 @@ export class HomePage {
     { initialValue: { status: 'loading' } as Recent },
   );
 
-  protected readonly batches = computed(() => {
+  /**
+   * Grouped by cast date under Today, Yesterday, Last week… like File Explorer. The table groups by
+   * groupOrder (not the heading text) so the headings stay newest first instead of alphabetical.
+   */
+  protected readonly rows = computed((): RecentRow[] => {
     const recent = this.recent();
-    return recent.status === 'loaded' ? recent.batches : null;
+    if (recent.status !== 'loaded') return [];
+    const now = new Date();
+    return recent.batches.map((batch) => {
+      const group = dateGroup(new Date(batch.castAt), now);
+      return { ...batch, group, groupOrder: DATE_GROUPS.indexOf(group) };
+    });
   });
 
   /** "Loading…" or the error, while there's no list to show. */
