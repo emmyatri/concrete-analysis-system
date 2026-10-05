@@ -9,7 +9,7 @@ import { signal } from '@angular/core';
 describe('AppField', () => {
   let fixture: ComponentFixture<AppField>;
   let component: AppField;
-  let control: FormControl<number | null>;
+  let control: FormControl<number | string | null>;
 
   beforeEach(() => {
     TestBed.configureTestingModule({
@@ -20,7 +20,7 @@ describe('AppField', () => {
     });
 
     // Create a new FormControl with an initial value of 3500.
-    control = new FormControl<number | null>(null);
+    control = new FormControl<number | string | null>(null);
     // Create the test component for the AppField component.
     fixture = TestBed.createComponent(AppField);
     // Assign input properties to the test component.
@@ -43,6 +43,16 @@ describe('AppField', () => {
   it('should return normal state', () => {
     expect(component.state()).toBe('normal');
     expect(component.message()).toBe('');
+  });
+
+  // Test string input value
+  it('should return error state for string input', () => {
+    control.setValue('0');
+    control.markAsTouched();
+    fixture.detectChanges();
+
+    expect(component.state()).toBe('error');
+    expect(component.message()).toBe('pH must be within the range [1-9]');
   });
 
   // Test error state
@@ -74,7 +84,7 @@ describe('AppField', () => {
   });
 
   // Test for normal/warn hint
-  it('uses the normal Warn range for the hint when both limits exist', () => {
+  it('uses the normal warn range for the hint when both limits exist', () => {
     expect(component.computedHint()).toBe('7-7.5');
   });
 
@@ -101,5 +111,19 @@ describe('AppField', () => {
     fixture.componentRef.setInput('limitKey', 'Oxide.SulfurTrioxidePct');
     fixture.detectChanges();
     expect(component.computedHint()).toBe('1.3-3 · max 4.5 %');
+  });
+
+  // Test for custom local validation message
+  it('should display a custom local validation message', () => {
+    control.setErrors({
+      batchNumber: {
+        message: 'Letters, digits and dashes only',
+      },
+    });
+    control.markAsTouched();
+    fixture.detectChanges();
+
+    expect(component.state()).toBe('error');
+    expect(component.message()).toBe('Letters, digits and dashes only');
   });
 });

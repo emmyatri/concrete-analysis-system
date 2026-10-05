@@ -42,7 +42,7 @@ export class AppField {
     // Control currently has no rejected validation error.
     invalid: false,
     // Current value of the control.
-    value: null,
+    value: null as unknown,
     // Current validation errors of the control.
     errors: null as ValidationErrors | null,
   });
@@ -73,13 +73,19 @@ export class AppField {
 
   // Computed validation result based on the current control value and validation limits.
   readonly validationResult = computed(() => {
-    const rawValue = this.controlSnapshot().value;
     const limits = this.referenceDataService.limits();
     const limitKey = this.limitKey();
-    if (!limitKey || typeof rawValue !== 'number' || !Number.isFinite(rawValue)) {
+    const rawValue = this.controlSnapshot().value;
+    const value =
+      typeof rawValue === 'number'
+        ? rawValue
+        : typeof rawValue === 'string' && rawValue.trim() !== ''
+          ? Number(rawValue)
+          : NaN;
+    if (!limitKey || !Number.isFinite(value)) {
       return { severity: null, message: null };
     }
-    return this.validationService.evaluate(limitKey, rawValue, limits);
+    return this.validationService.evaluate(limitKey, value, limits);
   });
 
   // Computed message based on errors or the current validation result.
@@ -93,8 +99,13 @@ export class AppField {
     if (!touched) {
       return '';
     }
+    const localMessage = this.getLocalErrorMessage(errors);
+    if (localMessage) {
+      return localMessage;
+    }
     // If the user leaves the field, show the validation message if any.
     const result = this.validationResult();
+
     return result.message ?? '';
   });
 
@@ -151,6 +162,31 @@ export class AppField {
     } else if (normalLimit.max !== null) {
       const { max, unit } = normalLimit;
       return `≤ ${max}` + (unit ? ` ${unit}` : '');
+    }
+
+    return null;
+  }
+
+  // Retrieves a local error message for the given validation errors, if available.
+  private getLocalErrorMessage(errors: ValidationErrors | null): string | null {
+    if (!errors) {
+      return null;
+    }
+
+    if (errors['required'] === true) {
+      return 'This field is required';
+    }
+
+    for (const error of Object.values(errors)) {
+      if (typeof error !== 'object' || error === null || !('message' in error)) {
+        continue;
+      }
+
+      const message = (error as { message?: unknown }).message;
+
+      if (typeof message === 'string') {
+        return message;
+      }
     }
 
     return null;
