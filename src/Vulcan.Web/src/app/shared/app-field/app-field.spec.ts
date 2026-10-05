@@ -126,4 +126,14 @@ describe('AppField', () => {
     expect(component.state()).toBe('error');
     expect(component.message()).toBe('Letters, digits and dashes only');
   });
+
+  // Test for required-field message
+  it('should display a required-field message', () => {
+    control.setErrors({ required: true });
+    control.markAsTouched();
+    fixture.detectChanges();
+
+    expect(component.state()).toBe('error');
+    expect(component.message()).toBe('This field is required');
+  });
 });
