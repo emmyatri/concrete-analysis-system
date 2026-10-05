@@ -7,7 +7,7 @@ import { providePrimeNG } from 'primeng/config';
 
 import { MOCK_BATCH_DETAILS } from '../../core/api/mock/mock-batch-details';
 import { MOCK_SPECIFIC_GRAVITIES, MOCK_VALIDATION_LIMITS } from '../../core/api/mock/mock-data';
-import { mockApiInterceptor } from '../../core/api/mock/mock-api.interceptor';
+import { clearSavedMockBatches, mockApiInterceptor } from '../../core/api/mock/mock-api.interceptor';
 import { BatchDetail } from '../../core/api/models';
 import { ReferenceDataService } from '../../core/api/reference-data.service';
 import { USE_MOCKS } from '../../core/api/use-mocks';
@@ -27,6 +27,7 @@ describe('BatchDetailPage', () => {
 
   /** useMocks true: answered by the fake data. False: answered by hand with HttpTestingController. */
   const open = async (batchNumber: string, useMocks = true) => {
+    clearSavedMockBatches();
     TestBed.configureTestingModule({
       providers: [
         provideRouter(
@@ -160,10 +161,46 @@ describe('BatchDetailPage', () => {
         ?.getAttribute('href');
     expect(href('Edit batch')).toBe('/batches/VM-SYN-006/edit');
     expect(href('Curing readings')).toBe('/curing?batch=VM-SYN-006');
-    expect(href('Add cylinder')).toBe('/batches/VM-SYN-006/cylinders/new');
     expect(href('Enter break')).toBe('/breaks?batch=VM-SYN-006');
     expect(href('View', '[data-testid="cylinders"]')).toBe(
       '/curing?batch=VM-SYN-006&cylinder=D3-1',
+    );
+  });
+
+  it('Add cylinder opens the popup, and a saved cylinder shows in the table once it closes', async () => {
+    await open('VM-2026-0142');
+    const dialog = () => document.body.querySelector('.p-dialog');
+    expect(dialog()).toBeNull();
+
+    (root.querySelector('[data-testid="add-cylinder"]') as HTMLButtonElement).click();
+    harness.detectChanges();
+    await harness.fixture.whenStable();
+    expect(dialog()?.textContent).toContain('Add cylinder · VM-2026-0142');
+
+    const form = harness.routeDebugElement!.query((el) => el.name === 'app-add-cylinder-dialog')
+      .componentInstance as { form: { patchValue(v: object): void } };
+    form.form.patchValue({ label: 'B1', lengthIn: '12', widthIn: '6', testAgeDays: 'Day28' });
+    harness.detectChanges();
+    await harness.fixture.whenStable();
+    (document.body.querySelector('[data-testid="save"] button') as HTMLButtonElement).click();
+    for (let i = 0; i < 3; i++) {
+      harness.detectChanges();
+      await harness.fixture.whenStable();
+    }
+    expect(document.body.querySelector('.p-dialog')).toBeNull();
+
+    expect(rows('cylinders').map((r) => cells(r)[0])).toContain('B1');
+    expect(text('h1')).toBe('VM-2026-0142');
+  });
+
+  it('opens Add cylinder straight away from ?addCylinder=1', async () => {
+    await open('VM-2026-0142');
+    await harness.navigateByUrl('/batches/VM-2026-0142?addCylinder=1');
+    harness.detectChanges();
+    await harness.fixture.whenStable();
+
+    expect(document.body.querySelector('.p-dialog')?.textContent).toContain(
+      'Add cylinder · VM-2026-0142',
     );
   });
 

@@ -217,16 +217,16 @@ describe('BatchEntry', () => {
 
     await click('save-batch');
 
-    expect(navigate).toHaveBeenCalledWith(['/batches', 'VM-SAVE-0001']);
+    expect(navigate).toHaveBeenCalledWith(['/batches', 'VM-SAVE-0001'], { queryParams: {} });
   });
 
-  it('Save & add cylinders opens Add cylinder for the new batch', async () => {
+  it('Save & add cylinders opens the new batch with Add cylinder open', async () => {
     const navigate = vi.spyOn(TestBed.inject(Router), 'navigate').mockResolvedValue(true);
     fillValidBatch('VM-SAVE-0002');
 
     await click('save-add-cylinders');
 
-    expect(navigate).toHaveBeenCalledWith(['/batches', 'VM-SAVE-0002', 'cylinders', 'new']);
+    expect(navigate).toHaveBeenCalledWith(['/batches', 'VM-SAVE-0002'], { queryParams: { addCylinder: '1' } });
   });
 
   it('shows a duplicate batch number from the server next to the Batch number field', async () => {

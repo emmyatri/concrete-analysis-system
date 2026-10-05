@@ -99,6 +99,17 @@ describe('mockApiInterceptor', () => {
     expect(batch.warnings.map((w) => w.limitKey)).toEqual(['Batch.MixWaterPh']);
   });
 
+  it('rejects a cylinder outside its size limits even when it skips the screen', async () => {
+    const api = setUp(true);
+
+    const error = await firstValueFrom(
+      api.createSpecimen('VM-2026-0142', { label: 'Z9', lengthIn: 12.01, widthIn: 0, testAgeDays: 'Day3' }),
+    ).catch((e: unknown) => e);
+
+    expect(error).toBeInstanceOf(HttpErrorResponse);
+    expect(Object.keys((error as HttpErrorResponse).error.errors)).toEqual(['Specimen.LengthIn', 'Specimen.WidthIn']);
+  });
+
   it('returns a whole batch from the synthetic dataset, with its saved warnings', async () => {
     const api = setUp(true);
 

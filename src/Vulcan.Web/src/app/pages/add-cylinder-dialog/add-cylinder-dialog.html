@@ -1,0 +1,61 @@
+﻿<p-dialog [visible]="visible()" (visibleChange)="visible.set($event)" (onHide)="reset()" [modal]="true"
+          [draggable]="false" [style]="{ width: '600px' }" [header]="'Add cylinder · ' + batchNumber()"
+          data-testid="add-cylinder-dialog">
+  <form class="add-cylinder" [formGroup]="form" novalidate>
+    @if (saveErrors().length > 0) {
+      <div class="save-banner" role="alert" data-testid="save-banner">
+        <i class="pi pi-exclamation-circle" aria-hidden="true"></i>
+        <div>
+          @for (message of saveErrors(); track message) {
+            <p>{{ message }}</p>
+          }
+        </div>
+      </div>
+    }
+
+    @if (added().length > 0) {
+      <p class="added" role="status" data-testid="added">
+        <i class="pi pi-check-circle" aria-hidden="true"></i>
+        Added {{ added().join(', ') }}. Enter the next cylinder, or Save to finish.
+      </p>
+    }
+
+    <div class="fields">
+      <app-field label="Label" inputId="cylinder-label" [control]="form.controls.label"
+                 hint="Up to 20 characters, e.g. A1">
+        <input pInputText id="cylinder-label" formControlName="label" autocomplete="off" maxlength="20" />
+      </app-field>
+
+      <app-field label="Test age" inputId="cylinder-test-age" [control]="form.controls.testAgeDays"
+                 hint="When it will be broken">
+        <p-select inputId="cylinder-test-age" formControlName="testAgeDays" [options]="testAges" optionLabel="label"
+                  optionValue="value" placeholder="Select" appendTo="body" />
+      </app-field>
+
+      <app-field label="Length (in)" inputId="cylinder-length" [control]="form.controls.lengthIn"
+                 limitKey="Specimen.LengthIn">
+        <input pInputText id="cylinder-length" formControlName="lengthIn" inputmode="decimal" />
+      </app-field>
+
+      <app-field label="Width (in)" inputId="cylinder-width" [control]="form.controls.widthIn"
+                 limitKey="Specimen.WidthIn">
+        <input pInputText id="cylinder-width" formControlName="widthIn" inputmode="decimal" />
+      </app-field>
+    </div>
+  </form>
+
+  <ng-template #footer>
+    <div class="footer">
+      @if (saveMessage()) {
+        <span class="save-summary" [class.save-summary--error]="issues.errors() > 0"
+              [class.save-summary--muted]="issues.errors() === 0 && !canSave()" data-testid="save-summary"
+              role="status">{{ saveMessage() }}</span>
+      }
+      <p-button label="Cancel" [outlined]="true" (onClick)="cancel()" data-testid="cancel" />
+      <p-button label="Save & add another" [outlined]="true" [disabled]="!canSave() || saving()"
+                (onClick)="save('another')" data-testid="save-another" />
+      <p-button label="Save" [disabled]="!canSave() || saving()" [loading]="saving()" (onClick)="save('close')"
+                data-testid="save" />
+    </div>
+  </ng-template>
+</p-dialog>

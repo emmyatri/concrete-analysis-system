@@ -2,7 +2,15 @@
 import { Injectable, inject } from '@angular/core';
 
 import { CreateBatchRequest, CreateBatchResponse } from './batches';
-import { BatchDetail, BatchQuery, BatchSummary, SpecificGravity, ValidationLimit } from './models';
+import {
+  BatchDetail,
+  BatchQuery,
+  BatchSummary,
+  CreateSpecimenRequest,
+  CreateSpecimenResponse,
+  SpecificGravity,
+  ValidationLimit,
+} from './models';
 
 /**
  * Every call the screens make to the local API (M1-60), one method per request. All paths are under /api.
@@ -37,5 +45,17 @@ export class VulcanApiService {
   /** Saves a new batch with its composition and oxides. A 400 lists the bad values by ValidationLimit key. */
   createBatch(request: CreateBatchRequest) {
     return this.http.post<CreateBatchResponse>('/api/batches', request);
+  }
+
+
+  /**
+   * Adds a cylinder to a batch. A 400 lists bad values by ValidationLimit key ("Specimen.Label" for a label
+   * already used on this batch); a 404 means there's no batch with that number.
+   */
+  createSpecimen(batchNumber: string, request: CreateSpecimenRequest) {
+    return this.http.post<CreateSpecimenResponse>(
+      `/api/batches/${encodeURIComponent(batchNumber)}/specimens`,
+      request,
+    );
   }
 }

@@ -1,8 +1,8 @@
 ﻿import { DatePipe, DecimalPipe, formatNumber } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
-import { Component, computed, inject, input, signal } from '@angular/core';
+import { Component, computed, effect, inject, input, signal, untracked } from '@angular/core';
 import { toObservable, toSignal } from '@angular/core/rxjs-interop';
-import { RouterLink } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
 import { TableModule } from 'primeng/table';
 import { TabsModule } from 'primeng/tabs';
@@ -12,6 +12,7 @@ import { describeApiError } from '../../core/api/api-errors';
 import { BatchDetail, SavedWarning, Specimen } from '../../core/api/models';
 import { ReferenceDataService } from '../../core/api/reference-data.service';
 import { VulcanApiService } from '../../core/api/vulcan-api.service';
+import { AddCylinderDialog } from '../add-cylinder-dialog/add-cylinder-dialog';
 
 type LoadState =
   | { status: 'loading' }
@@ -56,26 +57,39 @@ const FIELDS: Record<string, { label: string; short?: string; digits: string }> 
  */
 @Component({
   selector: 'app-batch-detail',
-  imports: [DatePipe, DecimalPipe, RouterLink, ButtonModule, TableModule, TabsModule],
+  imports: [DatePipe, DecimalPipe, RouterLink, ButtonModule, TableModule, TabsModule, AddCylinderDialog],
   templateUrl: './batch-detail.html',
   styleUrl: './batch-detail.scss',
 })
 export class BatchDetailPage {
   private readonly api = inject(VulcanApiService);
   private readonly referenceData = inject(ReferenceDataService);
+  private readonly router = inject(Router);
 
   /** From the route, /batches/:batchNumber. */
   readonly batchNumber = input.required<string>();
 
+  /** ?addCylinder=1 opens Add cylinder straight away (New batch's "Save & add cylinders"). */
+  readonly addCylinder = input<string>();
+
   /** Bumped by "Try again" to load the same batch again. */
   private readonly attempt = signal(0);
+
+  /** True for a reload after adding cylinders, so the page stays on screen instead of showing "Loading". */
+  private quietReload = false;
+
+  protected readonly addCylinderOpen = signal(false);
+  /** Set when a cylinder saves, so the batch reloads once the dialog closes. */
+  private cylindersAdded = false;
 
   protected readonly state = toSignal(
     toObservable(
       computed(() => ({ batchNumber: this.batchNumber(), attempt: this.attempt() })),
     ).pipe(
-      switchMap(({ batchNumber }) =>
-        this.api.getBatch(batchNumber).pipe(
+      switchMap(({ batchNumber }) => {
+        const quiet = this.quietReload;
+        this.quietReload = false;
+        const load = this.api.getBatch(batchNumber).pipe(
           map((batch): LoadState => ({ status: 'loaded', batch })),
           catchError((error: unknown) =>
             of<LoadState>(
@@ -84,9 +98,9 @@ export class BatchDetailPage {
                 : { status: 'failed', message: describeApiError(error).message },
             ),
           ),
-          startWith<LoadState>({ status: 'loading' }),
-        ),
-      ),
+        );
+        return quiet ? load : load.pipe(startWith<LoadState>({ status: 'loading' }));
+      }),
     ),
     { initialValue: { status: 'loading' } as LoadState },
   );
@@ -241,6 +255,32 @@ export class BatchDetailPage {
   }
 
   protected retry(): void {
+    this.attempt.update((n) => n + 1);
+  }
+
+
+  constructor() {
+    // Opened with ?addCylinder=1: show the dialog once the batch is on screen, then drop the flag from the
+    // address so going back or reloading doesn't open it again.
+    effect(() => {
+      if (this.addCylinder() !== '1' || !this.batch()) return;
+      untracked(() => {
+        this.addCylinderOpen.set(true);
+        this.router.navigate([], { queryParams: { addCylinder: null }, queryParamsHandling: 'merge', replaceUrl: true });
+      });
+    });
+  }
+
+  protected cylinderSaved(): void {
+    this.cylindersAdded = true;
+  }
+
+  /** The dialog closed: reload the batch if anything was added, so the new cylinders show. */
+  protected addCylinderClosed(open: boolean): void {
+    this.addCylinderOpen.set(open);
+    if (open || !this.cylindersAdded) return;
+    this.cylindersAdded = false;
+    this.quietReload = true;
     this.attempt.update((n) => n + 1);
   }
 }

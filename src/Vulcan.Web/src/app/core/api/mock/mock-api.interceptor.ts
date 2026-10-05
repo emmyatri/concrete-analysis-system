@@ -3,7 +3,7 @@ import { inject } from '@angular/core';
 import { Observable, of, throwError } from 'rxjs';
 
 import { CreateBatchRequest } from '../batches';
-import { BatchDetail, BatchSummary, RecordWarning } from '../models';
+import { BatchDetail, BatchSummary, CreateSpecimenRequest, RecordWarning } from '../models';
 import { TECHNICIAN_HEADER } from '../../session/technician.interceptor';
 import { USE_MOCKS } from '../use-mocks';
 import { MOCK_BATCH_DETAILS, mockBatchDetailFromRequest } from './mock-batch-details';
@@ -15,11 +15,20 @@ const savedBatches: BatchSummary[] = [];
 /** The same batches in full, so Batch Detail can open one right after it's saved. */
 const savedDetails: BatchDetail[] = [];
 let nextId = 1000;
+/** Cylinders added while the app is open, so tests can take them back off the fake batches. */
+const addedSpecimenIds = new Set<number>();
 
-/** Forgets the batches saved so far. Tests call this so one test's saves don't show up in another. */
+/** Forgets the batches and cylinders saved so far. Tests call this so one test's saves don't show up in another. */
 export function clearSavedMockBatches(): void {
   savedBatches.length = 0;
   savedDetails.length = 0;
+  for (const batch of MOCK_BATCH_DETAILS) {
+    const kept = batch.specimens.filter((s) => !addedSpecimenIds.has(s.id));
+    const summary = MOCK_BATCHES.find((row) => row.id === batch.id);
+    if (summary) summary.cylinderCount -= batch.specimens.length - kept.length;
+    batch.specimens = kept;
+  }
+  addedSpecimenIds.clear();
 }
 
 /**
@@ -34,6 +43,7 @@ export const mockApiInterceptor: HttpInterceptorFn = (request, next) => {
   if (request.method === 'GET' && path === '/api/specific-gravities') return ok(MOCK_SPECIFIC_GRAVITIES);
   if (request.method === 'GET' && path === '/api/batches') return ok(findBatches(request));
   if (request.method === 'POST' && path === '/api/batches') return createBatch(request);
+  if (request.method === 'POST' && /^\/api\/batches\/[^/]+\/specimens$/.test(path)) return createSpecimen(request, path);
   if (request.method === 'GET' && path.startsWith('/api/batches/')) return getBatch(request, path);
 
   return next(request);
@@ -66,7 +76,8 @@ function getBatch(request: HttpRequest<unknown>, path: string) {
   const batch = [...savedDetails, ...MOCK_BATCH_DETAILS].find(
     (row) => row.batchNumber.toLowerCase() === batchNumber.toLowerCase(),
   );
-  if (batch) return ok(batch);
+  // A copy, like a real response, so a screen that reloads sees a new object.
+  if (batch) return ok(structuredClone(batch));
 
   return throwError(
     () =>
@@ -143,4 +154,70 @@ function createBatch(request: HttpRequest<unknown>) {
     mockBatchDetailFromRequest(id, { ...saved, batch: { ...saved.batch, batchNumber } }, createdBy),
   );
   return ok({ id, batchNumber, warnings }, 201);
+}
+
+/**
+ * Adds a cylinder the way the server will: 404 for an unknown batch, 400 for a label already used on this
+ * batch or a size outside its Reject limits. The cylinder is synthetic only when its batch is (FR-20).
+ */
+function createSpecimen(request: HttpRequest<unknown>, path: string) {
+  const batchNumber = decodeURIComponent(path.split('/')[3]);
+  const batch = [...savedDetails, ...MOCK_BATCH_DETAILS].find(
+    (row) => row.batchNumber.toLowerCase() === batchNumber.toLowerCase(),
+  );
+  if (!batch) {
+    return throwError(
+      () =>
+        new HttpErrorResponse({
+          status: 404,
+          statusText: 'Not Found',
+          url: request.url,
+          error: { title: 'Not Found', status: 404, detail: `Batch ${batchNumber} was not found.` },
+        }),
+    );
+  }
+
+  const body = request.body as CreateSpecimenRequest;
+  const label = String(body.label ?? '').trim();
+  const errors: Record<string, string[]> = {};
+  if (batch.specimens.some((s) => s.label.toLowerCase() === label.toLowerCase())) {
+    errors['Specimen.Label'] = [`Cylinder ${label} already exists on this batch`];
+  }
+  for (const [key, value] of [
+    ['Specimen.LengthIn', body.lengthIn],
+    ['Specimen.WidthIn', body.widthIn],
+  ] as const) {
+    for (const limit of MOCK_VALIDATION_LIMITS.filter((row) => row.key === key && row.severity === 'Reject')) {
+      if ((limit.min !== null && value < limit.min) || (limit.max !== null && value > limit.max)) {
+        errors[key] = [...(errors[key] ?? []), limit.message];
+      }
+    }
+  }
+  if (Object.keys(errors).length > 0) {
+    return throwError(
+      () =>
+        new HttpErrorResponse({
+          status: 400,
+          statusText: 'Bad Request',
+          url: request.url,
+          error: { title: 'One or more validation errors occurred.', status: 400, errors },
+        }),
+    );
+  }
+
+  const id = nextId++;
+  batch.specimens.push({
+    id,
+    label,
+    lengthIn: body.lengthIn,
+    widthIn: body.widthIn,
+    testAgeDays: body.testAgeDays,
+    isSynthetic: batch.isSynthetic,
+    breakResult: null,
+    curingReadings: [],
+  });
+  addedSpecimenIds.add(id);
+  const summary = [...savedBatches, ...MOCK_BATCHES].find((row) => row.id === batch.id);
+  if (summary) summary.cylinderCount += 1;
+  return ok({ id, label }, 201);
 }
