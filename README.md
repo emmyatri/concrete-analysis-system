@@ -11,12 +11,12 @@ Vulcan Materials.
 
 ## Status
 
-| Milestone                               | Scope                                                        | Due                  |
-| --------------------------------------- | ------------------------------------------------------------ | -------------------- |
+| Milestone                               | Scope                                                                                    | Due                  |
+| --------------------------------------- | ---------------------------------------------------------------------------------------- | -------------------- |
 | **M1 — Batch Record & Data Validation** | Installable build, batch/cylinder/curing/break entry, validation, search by batch number | **Fri, Oct 9, 2026** |
-| M2 — Strength Charting & Prediction     | PSI-vs-time chart, 3/7/28-day predictions, early-warning flags | Fri, Oct 30, 2026    |
-| M3 — Calibration & Reporting            | Calibration against real breaks, printable/exportable reports | Fri, Nov 20, 2026    |
-| Final delivery                          | Signed installer, docs, training, source handoff             | Fri, Dec 4, 2026     |
+| M2 — Strength Charting & Prediction     | PSI-vs-time chart, 3/7/28-day predictions, early-warning flags                           | Fri, Oct 30, 2026    |
+| M3 — Calibration & Reporting            | Calibration against real breaks, printable/exportable reports                            | Fri, Nov 20, 2026    |
+| Final delivery                          | Signed installer, docs, training, source handoff                                         | Fri, Dec 4, 2026     |
 
 Current version: `0.1.0-m1` (pre-release)
 
@@ -24,17 +24,17 @@ Current version: `0.1.0-m1` (pre-release)
 
 ## Tech stack
 
-| Layer              | Choice                                                       |
-| ------------------ | ------------------------------------------------------------ |
-| Language / runtime | C# on .NET 10                                                |
-| Desktop UI         | **Angular + PrimeNG** in WebView2, hosted by WPF             |
-| Desktop host       | WPF window that starts the server and shows WebView2         |
+| Layer              | Choice                                                         |
+| ------------------ | -------------------------------------------------------------- |
+| Language / runtime | C# on .NET 10                                                  |
+| Desktop UI         | **Angular + PrimeNG** in WebView2, hosted by WPF               |
+| Desktop host       | WPF window that starts the server and shows WebView2           |
 | Server             | ASP.NET Core, hosted **inside** the desktop app on `127.0.0.1` |
-| Database           | SQLite via EF Core                                           |
-| Tests              | xUnit + Shouldly (.NET), `ng test` (Angular)                 |
-| Logging            | Serilog (rolling file)                                       |
-| Installer          | Inno Setup (bundles the WebView2 runtime)                    |
-| CI                 | GitHub Actions (`windows-latest`)                            |
+| Database           | SQLite via EF Core                                             |
+| Tests              | xUnit + Shouldly (.NET), `ng test` (Angular)                   |
+| Logging            | Serilog (rolling file)                                         |
+| Installer          | Inno Setup (bundles the WebView2 runtime)                      |
+| CI                 | GitHub Actions (`windows-latest`)                              |
 
 The reasons behind these choices are in [`docs/adr/`](docs/adr/).
 
@@ -50,7 +50,7 @@ route lives under `/api`. Nothing leaves the computer.
   machine to run the full app, but can work on the Angular screens on a Mac (see [UI work](#ui-work)).
 - **.NET 10 SDK**: https://dotnet.microsoft.com/download/dotnet/10.0
 - **Node.js LTS** (includes npm): https://nodejs.org
-- **Visual Studio 2026** (with the *.NET desktop development* and *ASP.NET and web development* workloads) or
+- **Visual Studio 2026** (with the _.NET desktop development_ and _ASP.NET and web development_ workloads) or
   **JetBrains Rider**
 - **WebView2 Runtime**: already installed on Windows 11 and most Windows 10 machines. If the app opens to a blank
   window, install it from https://developer.microsoft.com/microsoft-edge/webview2/
@@ -157,24 +157,69 @@ The full look is in the Figma mockup. These are the rules people most often get 
 - **Theme:** Vulcan navy `#263A78` as the primary color, **Inter** font, Vulcan logo top-left.
 - **No internet (SLA NFR-3):** fonts, icons and images are bundled in the app. No CDN links, no Google Fonts.
 - **Errors and warnings** use the shared field display (M1-45):
-  - **Reject** is red. It blocks Save.
-  - **Warn** is amber. It still saves.
-  - In tables, ⚠ goes **after** the number, and the highlight covers **only the number**.
+    - **Reject** is red. It blocks Save.
+    - **Warn** is amber. It still saves.
+    - In tables, ⚠ goes **after** the number, and the highlight covers **only the number**.
 - **Synthetic data** shows a `SYNTHETIC` tag wherever a batch appears (SLA FR-20).
 
 ---
 
+#### Shared AppField Usage
+
+AppField wraps a PrimeNG form control and accepts five inputs:
+
+- label
+- inputId
+- control
+- limitKey
+- hint
+
+It introduces field state and validation messaging (local and server derived) sourcing from shared contracts (ValidationLimit, ValidationSeverity) and services (ValidationService, ReferenceDataService). ValidationService feeds local messages; control.errors.server feeds server messages.
+
+The AppField component <app-field> can be reused across any form screen. How to use it:
+
+```ts
+import { FormControl } from '@angular/forms';
+
+readonly mixWaterPh = new FormControl<number | null>(null);
+```
+
+```html
+<app-field
+    label="Mix Water pH"
+    inputId="mixWaterPh"
+    [control]="mixWaterPh"
+    limitKey="Batch.MixWaterPh"
+>
+    <p-inputnumber inputId="mixWaterPh" [formControl]="mixWaterPh" />
+</app-field>
+```
+
+### AppField Behavior
+
+1. **Hint.** Provides guidance for expected or valid entry values. If `limitKey` matches a `ValidationLimit`, the hint comes from that data. If no match exists, AppField uses the explicit hint fallback.
+
+2. **Local validation messages.** Via Angular control validation errors, AppField displays custom validator or default required messages. `ValidationService` supplies messages for Warn and Reject results.
+
+    **Note:** AppField computes range errors internally, so `form.invalid` alone does not include out-of-range values. Parent Save wiring must use AppField state or add equivalent form-level validators.
+
+3. **Server errors.** If an error comes from the server, the parent places the message on the control, and AppField displays it through `control.errors.server`.
+
+    **Note:** The parent uses `matchFieldErrors()` to split API errors, calls `control.setErrors({ server: message })` for each matched field, and places unmatched messages in the page banner.
+
+4. **State and save behavior.** AppField exposes normal, warn, and error states. Parent forms own the Save buttons, Save blocking, and warning summaries, using AppField’s validation state when they integrate it.
+
 ## Documentation
 
-| File                                                     | What's in it                                                 |
-| -------------------------------------------------------- | ------------------------------------------------------------ |
-| [`docs/schema.md`](docs/schema.md)                       | Every field the app stores: name, type, unit, rules, plus the ERD diagram |
-| [`docs/validation-matrix.md`](docs/validation-matrix.md) | Every validation rule, its range, severity (Reject/Warn) and message |
-| [`docs/api.md`](docs/api.md)                             | Every server endpoint, request/response shape and status code |
-| [`docs/client-decisions.md`](docs/client-decisions.md)   | Decisions adopted from the client's Rev 1 spec and industry standards, with sources |
+| File                                                     | What's in it                                                                          |
+| -------------------------------------------------------- | ------------------------------------------------------------------------------------- |
+| [`docs/schema.md`](docs/schema.md)                       | Every field the app stores: name, type, unit, rules, plus the ERD diagram             |
+| [`docs/validation-matrix.md`](docs/validation-matrix.md) | Every validation rule, its range, severity (Reject/Warn) and message                  |
+| [`docs/api.md`](docs/api.md)                             | Every server endpoint, request/response shape and status code                         |
+| [`docs/client-decisions.md`](docs/client-decisions.md)   | Decisions adopted from the client's Rev 1 spec and industry standards, with sources   |
 | [`docs/adr/`](docs/adr/)                                 | Architecture decisions (SQLite, in-process API, canonical units, Angular in WebView2) |
-| [`docs/m1-acceptance.md`](docs/m1-acceptance.md)         | The Milestone 1 test script used for the bug bash and the demo |
-| [`CONTRIBUTING.md`](CONTRIBUTING.md)                     | Branching, PR rules and the Definition of Done. **Read before your first PR.** |
+| [`docs/m1-acceptance.md`](docs/m1-acceptance.md)         | The Milestone 1 test script used for the bug bash and the demo                        |
+| [`CONTRIBUTING.md`](CONTRIBUTING.md)                     | Branching, PR rules and the Definition of Done. **Read before your first PR.**        |
 
 ---
 
@@ -207,10 +252,10 @@ To start over with an empty database, close the app and delete `vulcan.db`. It's
 
 Settings live in `src/Vulcan.Api/appsettings.json`.
 
-| Setting             | Default | What it does                                                 |
-| ------------------- | ------- | ------------------------------------------------------------ |
+| Setting             | Default | What it does                                                                                                                                |
+| ------------------- | ------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
 | `UseMocks`          | `false` | `true` makes the screens use fake API responses inside the desktop app (for UI work before endpoints exist). `npm start` always uses mocks. |
-| `SeedSyntheticData` | `false` | `true` loads `data/synthetic/` into an empty database (turn on for demos) |
+| `SeedSyntheticData` | `false` | `true` loads `data/synthetic/` into an empty database (turn on for demos)                                                                   |
 
 For personal overrides, use `appsettings.Development.local.json`. It's git-ignored.
 
@@ -245,15 +290,15 @@ internet access. If the WebView2 runtime is missing, the installer installs it f
 
 ## Troubleshooting
 
-| Problem                                    | Fix                                                          |
-| ------------------------------------------ | ------------------------------------------------------------ |
-| `dotnet format` fails in CI                | Run `dotnet format` locally and commit the changes           |
-| App won't start / crashes                  | Check the latest file in `%LOCALAPPDATA%\VulcanCBAS\logs\`   |
+| Problem                                    | Fix                                                                           |
+| ------------------------------------------ | ----------------------------------------------------------------------------- |
+| `dotnet format` fails in CI                | Run `dotnet format` locally and commit the changes                            |
+| App won't start / crashes                  | Check the latest file in `%LOCALAPPDATA%\VulcanCBAS\logs\`                    |
 | App opens to a blank white window          | Install the WebView2 Runtime, or run `npm ci` in `src/Vulcan.Web` and rebuild |
-| Screen changes don't show in the app       | Rebuild: the app shows the last Angular build, not your live code |
-| `npm ci` fails                             | Check you're on Node LTS; delete `node_modules` and retry    |
-| Database looks wrong after a schema change | Delete `vulcan.db`; migrations recreate it                   |
-| Can't push to `dev` or `main`              | Expected: open a pull request instead                        |
+| Screen changes don't show in the app       | Rebuild: the app shows the last Angular build, not your live code             |
+| `npm ci` fails                             | Check you're on Node LTS; delete `node_modules` and retry                     |
+| Database looks wrong after a schema change | Delete `vulcan.db`; migrations recreate it                                    |
+| Can't push to `dev` or `main`              | Expected: open a pull request instead                                         |
 
 ---
 

@@ -1,5 +1,5 @@
 ﻿import { FormControl, NonNullableFormBuilder, ValidatorFn, Validators } from '@angular/forms';
-
+import { parseNumber } from '../../core/validation/parse-number';
 import { CementType, CreateBatchRequest, ScmType } from '../../core/api/batches';
 
 export const CEMENT_TYPES: { label: string; value: CementType }[] = [
@@ -19,37 +19,31 @@ export const SCM_TYPES: { label: string; value: ScmType }[] = [
 export const BATCH_NUMBER_HINT = 'Letters, digits, dashes · max 32';
 const BATCH_NUMBER_MAX = 32;
 
-/**
- * Typed text → number ("4,380.00" → 4380). Null if blank or not a number.
- * TODO(M1-45): replace with the shared parseNumber once it lands.
- */
-export function toNumber(text: unknown): number | null {
-  if (typeof text === 'number') return Number.isFinite(text) ? text : null;
-  if (typeof text !== 'string') return null;
-  const cleaned = text.trim().replace(/,/g, '');
-  if (!/^-?\d+(\.\d+)?$|^-?\.\d+$/.test(cleaned)) return null;
-  return Number(cleaned);
-}
-
 export const batchNumberField: ValidatorFn = (control) => {
   const value = String(control.value ?? '').trim();
   if (!value) return null;
-  if (value.length > BATCH_NUMBER_MAX) return { batchNumber: { message: `Max ${BATCH_NUMBER_MAX} characters` } };
-  if (!/^[A-Za-z0-9-]+$/.test(value)) return { batchNumber: { message: 'Letters, digits and dashes only' } };
+  if (value.length > BATCH_NUMBER_MAX)
+    return { batchNumber: { message: `Max ${BATCH_NUMBER_MAX} characters` } };
+  if (!/^[A-Za-z0-9-]+$/.test(value))
+    return { batchNumber: { message: 'Letters, digits and dashes only' } };
   return null;
 };
 
 export const notInFuture: ValidatorFn = (control) => {
   const value = control.value as Date | null;
-  return value && value.getTime() > Date.now() ? { future: { message: "Can't be in the future" } } : null;
+  return value && value.getTime() > Date.now()
+    ? { future: { message: "Can't be in the future" } }
+    : null;
 };
 
 /** SCM type must be None when SCM % is 0, and can't be None when SCM % is more than 0 (schema.md, Decision 1a). */
 export const scmTypeMatchesPct: ValidatorFn = (control) => {
-  const pct = toNumber(control.parent?.get('scmPct')?.value);
+  const pct = parseNumber(control.parent?.get('scmPct')?.value);
   if (pct === null) return null;
-  if (pct === 0 && control.value !== 'None') return { scmType: { message: 'Must be None when SCM is 0%' } };
-  if (pct > 0 && control.value === 'None') return { scmType: { message: 'Choose the SCM type when SCM is more than 0%' } };
+  if (pct === 0 && control.value !== 'None')
+    return { scmType: { message: 'Must be None when SCM is 0%' } };
+  if (pct > 0 && control.value === 'None')
+    return { scmType: { message: 'Choose the SCM type when SCM is more than 0%' } };
   return null;
 };
 
@@ -95,7 +89,7 @@ export type BatchForm = ReturnType<typeof createBatchForm>;
 
 export function toCreateBatchRequest(form: BatchForm): CreateBatchRequest {
   const { batch, composition, oxides } = form.getRawValue();
-  const num = (text: string) => toNumber(text) as number;
+  const num = (text: string) => parseNumber(text) as number;
 
   return {
     batch: {
