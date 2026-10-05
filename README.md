@@ -197,9 +197,18 @@ readonly mixWaterPh = new FormControl<number | null>(null);
 
 ### AppField Behavior
 
-1. **Hint.** Provides guidance for the user as to expected/valid entry values. If the limitKey matches to a validation data, the hint comes from ValidationLimit. If no match, there is an explicit hint fallback.
-2. **Local validation messages.** Via Angular control validation errors, displays custom validator or default required messages. ValidationService supplies messages for warn and reject results.
-3. **Server errors.** Should an error surface from the server, the parent passes the server message on the control which is then sourced by the AppField to display the message via `control.errors.server`.
+### AppField Behavior
+
+1. **Hint.** Provides guidance for expected or valid entry values. If `limitKey` matches a `ValidationLimit`, the hint comes from that data. If no match exists, AppField uses the explicit hint fallback.
+
+2. **Local validation messages.** Via Angular control validation errors, AppField displays custom validator or default required messages. `ValidationService` supplies messages for Warn and Reject results.
+
+    **Note:** AppField computes range errors internally, so `form.invalid` alone does not include out-of-range values. Parent Save wiring must use AppField state or add equivalent form-level validators.
+
+3. **Server errors.** If an error comes from the server, the parent places the message on the control, and AppField displays it through `control.errors.server`.
+
+    **Note:** The parent uses `matchFieldErrors()` to split API errors, calls `control.setErrors({ server: message })` for each matched field, and places unmatched messages in the page banner.
+
 4. **State and save behavior.** AppField exposes normal, warn, and error states. Parent forms own the Save buttons, Save blocking, and warning summaries, using AppField’s validation state when they integrate it.
 
 ## Documentation
