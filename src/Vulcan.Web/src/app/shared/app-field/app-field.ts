@@ -3,6 +3,7 @@ import { Component, input, signal, effect, computed, inject } from '@angular/cor
 import { ValidationService } from '../../core/validation/validation.service';
 import type { ValidationLimit } from '../../core/api/models';
 import { ReferenceDataService } from '../../core/api/reference-data.service';
+import { parseNumber } from '../../core/validation/parse-number';
 
 // Possible states for the app-field component.
 export type AppFieldState = 'error' | 'warn' | 'normal';
@@ -76,13 +77,8 @@ export class AppField {
     const limits = this.referenceDataService.limits();
     const limitKey = this.limitKey();
     const rawValue = this.controlSnapshot().value;
-    const value =
-      typeof rawValue === 'number'
-        ? rawValue
-        : typeof rawValue === 'string' && rawValue.trim() !== ''
-          ? Number(rawValue)
-          : NaN;
-    if (!limitKey || !Number.isFinite(value)) {
+    const value = parseNumber(rawValue);
+    if (!limitKey || value === null) {
       return { severity: null, message: null };
     }
     return this.validationService.evaluate(limitKey, value, limits);

@@ -7,15 +7,10 @@ import { DatePickerModule } from 'primeng/datepicker';
 import { InputTextModule } from 'primeng/inputtext';
 import { SelectModule } from 'primeng/select';
 import { AppField } from '../../shared/app-field/app-field';
+import { parseNumber } from '../../core/validation/parse-number';
 
 import { ReferenceDataService } from '../../core/api/reference-data.service';
-import {
-  BATCH_NUMBER_HINT,
-  CEMENT_TYPES,
-  SCM_TYPES,
-  createBatchForm,
-  toNumber,
-} from './batch-form';
+import { BATCH_NUMBER_HINT, CEMENT_TYPES, SCM_TYPES, createBatchForm } from './batch-form';
 import { calculateComposition } from './composition-calc';
 
 /**
@@ -57,11 +52,11 @@ export class BatchEntry {
     const v = this.form.controls.composition.getRawValue();
     return calculateComposition(
       {
-        cementPct: toNumber(v.cementPct),
-        waterPct: toNumber(v.waterPct),
-        coarseAggregatePct: toNumber(v.coarseAggregatePct),
-        fineAggregatePct: toNumber(v.fineAggregatePct),
-        scmPct: toNumber(v.scmPct),
+        cementPct: parseNumber(v.cementPct),
+        waterPct: parseNumber(v.waterPct),
+        coarseAggregatePct: parseNumber(v.coarseAggregatePct),
+        fineAggregatePct: parseNumber(v.fineAggregatePct),
+        scmPct: parseNumber(v.scmPct),
         scmType: v.scmType,
       },
       this.referenceData.specificGravities(),
@@ -74,7 +69,7 @@ export class BatchEntry {
     const part = (label: string, cls: string, text: string) => ({
       label,
       cls,
-      pct: Math.max(0, toNumber(text) ?? 0),
+      pct: Math.max(0, parseNumber(text) ?? 0),
     });
     return [
       part('Cement', 'mix-cement', v.cementPct),
