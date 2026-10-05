@@ -114,9 +114,14 @@ export class BatchSearchPage {
         return results.message;
       case 'loaded':
         if (results.batches.length > 0) return '';
-        return results.search
-          ? `No batches match '${results.search}'`
-          : 'No batches match these filters';
+        return (
+          (results.search
+            ? `No batches match '${results.search}'`
+            : 'No batches match these filters') +
+          (this.synthetic.show()
+            ? ''
+            : '. Synthetic data is hidden; turn it on in the top bar to include test batches.')
+        );
     }
   });
 
