@@ -197,8 +197,6 @@ readonly mixWaterPh = new FormControl<number | null>(null);
 
 ### AppField Behavior
 
-### AppField Behavior
-
 1. **Hint.** Provides guidance for expected or valid entry values. If `limitKey` matches a `ValidationLimit`, the hint comes from that data. If no match exists, AppField uses the explicit hint fallback.
 
 2. **Local validation messages.** Via Angular control validation errors, AppField displays custom validator or default required messages. `ValidationService` supplies messages for Warn and Reject results.

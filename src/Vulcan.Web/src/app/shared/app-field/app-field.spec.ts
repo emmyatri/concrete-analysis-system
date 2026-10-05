@@ -207,4 +207,48 @@ describe('AppField', () => {
     expect(component.state()).toBe('error');
     expect(component.message()).toBe('This field is required');
   });
+
+  // Test normal state at a minimum-only limit
+  it('should return normal state at a minimum-only limit', () => {
+    fixture.componentRef.setInput('limitKey', 'Batch.FinalWeightLb');
+    control.setValue(0.01);
+    control.markAsTouched();
+    fixture.detectChanges();
+
+    expect(component.state()).toBe('normal');
+    expect(component.message()).toBe('');
+  });
+
+  // Test reject state just below a minimum-only limit
+  it('should return reject state just below a minimum-only limit', () => {
+    fixture.componentRef.setInput('limitKey', 'Batch.FinalWeightLb');
+    control.setValue(0.009);
+    control.markAsTouched();
+    fixture.detectChanges();
+
+    expect(component.state()).toBe('error');
+    expect(component.message()).toBe('Weight must be greater than 0');
+  });
+
+  // Test normal state at a maximum-only limit
+  it('should return normal state at a maximum-only limit', () => {
+    fixture.componentRef.setInput('limitKey', 'Composition.TotalPct');
+    control.setValue(100);
+    control.markAsTouched();
+    fixture.detectChanges();
+
+    expect(component.state()).toBe('normal');
+    expect(component.message()).toBe('');
+  });
+
+  // Test reject state just above a maximum-only limit
+  it('should return reject state just above a maximum-only limit', () => {
+    fixture.componentRef.setInput('limitKey', 'Composition.TotalPct');
+    control.setValue(100.01);
+    control.markAsTouched();
+    fixture.detectChanges();
+
+    expect(component.state()).toBe('error');
+    expect(component.message()).toBe('Total composition must not exceed 100%');
+  });
 });
