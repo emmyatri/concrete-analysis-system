@@ -45,6 +45,26 @@ describe('AppField', () => {
     expect(component.message()).toBe('');
   });
 
+  // Test normal state
+  it('should return normal state with low edge case', () => {
+    control.setValue(7);
+    control.markAsTouched();
+    fixture.detectChanges();
+
+    expect(component.state()).toBe('normal');
+    expect(component.message()).toBe('');
+  });
+
+  // Test normal state
+  it('should return normal state with high edge case', () => {
+    control.setValue(7.5);
+    control.markAsTouched();
+    fixture.detectChanges();
+
+    expect(component.state()).toBe('normal');
+    expect(component.message()).toBe('');
+  });
+
   // Test string input value
   it('should return error state for string input', () => {
     control.setValue('0');
@@ -55,9 +75,19 @@ describe('AppField', () => {
     expect(component.message()).toBe('pH must be within the range [1-9]');
   });
 
-  // Test error state
+  // Test error state with low edge case
   it('should return error state', () => {
-    control.setValue(0);
+    control.setValue(0.99);
+    control.markAsTouched();
+    fixture.detectChanges();
+
+    expect(component.state()).toBe('error');
+    expect(component.message()).toBe('pH must be within the range [1-9]');
+  });
+
+  // Test error state with high edge case
+  it('should return error state with high edge case', () => {
+    control.setValue(9.01);
     control.markAsTouched();
     fixture.detectChanges();
 
@@ -75,6 +105,25 @@ describe('AppField', () => {
     expect(component.message()).toBe('pH is outside the normal range [7.0-7.5]');
   });
 
+  // Test warning state
+  it('should return warning state with low edge case', () => {
+    control.setValue(6.99);
+    control.markAsTouched();
+    fixture.detectChanges();
+
+    expect(component.state()).toBe('warn');
+    expect(component.message()).toBe('pH is outside the normal range [7.0-7.5]');
+  });
+
+  // Test warning state
+  it('should return warning state with high edge case', () => {
+    control.setValue(7.51);
+    control.markAsTouched();
+    fixture.detectChanges();
+
+    expect(component.state()).toBe('warn');
+    expect(component.message()).toBe('pH is outside the normal range [7.0-7.5]');
+  });
   // Test for reject hint
   it('returns the reject range hint when outside the allowed range', () => {
     control.setValue(0);
