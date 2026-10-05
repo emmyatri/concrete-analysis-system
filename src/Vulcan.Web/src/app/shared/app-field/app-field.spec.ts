@@ -45,8 +45,8 @@ describe('AppField', () => {
     expect(component.message()).toBe('');
   });
 
-  // Test normal state
-  it('should return normal state with low edge case', () => {
+  // Test normal state at the warn minimum
+  it('should return normal state at the warn minimum', () => {
     control.setValue(7);
     control.markAsTouched();
     fixture.detectChanges();
@@ -55,8 +55,8 @@ describe('AppField', () => {
     expect(component.message()).toBe('');
   });
 
-  // Test normal state
-  it('should return normal state with high edge case', () => {
+  // Test normal state at the warn maximum
+  it('should return normal state at the warn maximum', () => {
     control.setValue(7.5);
     control.markAsTouched();
     fixture.detectChanges();
@@ -66,7 +66,7 @@ describe('AppField', () => {
   });
 
   // Test string input value
-  it('should return error state for string input', () => {
+  it('should return reject state for string input', () => {
     control.setValue('0');
     control.markAsTouched();
     fixture.detectChanges();
@@ -75,8 +75,8 @@ describe('AppField', () => {
     expect(component.message()).toBe('pH must be within the range [1-9]');
   });
 
-  // Test error state with low edge case
-  it('should return error state', () => {
+  // Test reject state just below the reject minimum
+  it('should return reject state just below the reject minimum', () => {
     control.setValue(0.99);
     control.markAsTouched();
     fixture.detectChanges();
@@ -85,8 +85,8 @@ describe('AppField', () => {
     expect(component.message()).toBe('pH must be within the range [1-9]');
   });
 
-  // Test error state with high edge case
-  it('should return error state with high edge case', () => {
+  // Test reject state just above the reject maximum
+  it('should return reject state just above the reject maximum', () => {
     control.setValue(9.01);
     control.markAsTouched();
     fixture.detectChanges();
@@ -95,8 +95,28 @@ describe('AppField', () => {
     expect(component.message()).toBe('pH must be within the range [1-9]');
   });
 
+  // Test warn state at the reject minimum
+  it('should return warn state at the reject minimum', () => {
+    control.setValue(1);
+    control.markAsTouched();
+    fixture.detectChanges();
+
+    expect(component.state()).toBe('warn');
+    expect(component.message()).toBe('pH is outside the normal range [7.0-7.5]');
+  });
+
+  // Test warn state at the reject maximum
+  it('should return warn state at the reject maximum', () => {
+    control.setValue(9);
+    control.markAsTouched();
+    fixture.detectChanges();
+
+    expect(component.state()).toBe('warn');
+    expect(component.message()).toBe('pH is outside the normal range [7.0-7.5]');
+  });
+
   // Test warning state
-  it('should return warning state', () => {
+  it('should return warn state', () => {
     control.setValue(6);
     control.markAsTouched();
     fixture.detectChanges();
@@ -105,8 +125,8 @@ describe('AppField', () => {
     expect(component.message()).toBe('pH is outside the normal range [7.0-7.5]');
   });
 
-  // Test warning state
-  it('should return warning state with low edge case', () => {
+  // Test warn state just below the normal range
+  it('should return warn state just below the normal range', () => {
     control.setValue(6.99);
     control.markAsTouched();
     fixture.detectChanges();
@@ -115,8 +135,8 @@ describe('AppField', () => {
     expect(component.message()).toBe('pH is outside the normal range [7.0-7.5]');
   });
 
-  // Test warning state
-  it('should return warning state with high edge case', () => {
+  // Test warn state just above the normal range
+  it('should return warn state just above the normal range', () => {
     control.setValue(7.51);
     control.markAsTouched();
     fixture.detectChanges();
@@ -124,8 +144,9 @@ describe('AppField', () => {
     expect(component.state()).toBe('warn');
     expect(component.message()).toBe('pH is outside the normal range [7.0-7.5]');
   });
+
   // Test for reject hint
-  it('returns the reject range hint when outside the allowed range', () => {
+  it('should return the reject range hint when outside the allowed range', () => {
     control.setValue(0);
     control.markAsTouched();
     fixture.detectChanges();
@@ -133,7 +154,7 @@ describe('AppField', () => {
   });
 
   // Test for normal/warn hint
-  it('uses the normal warn range for the hint when both limits exist', () => {
+  it('should use the normal warn range for the hint when both limits exist', () => {
     expect(component.computedHint()).toBe('7-7.5');
   });
 
@@ -149,7 +170,7 @@ describe('AppField', () => {
   });
 
   // Test MgO range/max hint
-  it('should display the MgO  range and the maximum hint when applicable', () => {
+  it('should display the MgO range and the maximum hint when applicable', () => {
     fixture.componentRef.setInput('limitKey', 'Oxide.MagnesiumOxidePct');
     fixture.detectChanges();
     expect(component.computedHint()).toBe('0.1-4 · max 6 %');
