@@ -1,4 +1,4 @@
-﻿import { FormControl, NonNullableFormBuilder, ValidatorFn, Validators } from '@angular/forms';
+﻿import { AbstractControl, FormControl, NonNullableFormBuilder, ValidatorFn, Validators } from '@angular/forms';
 import { parseNumber } from '../../core/validation/parse-number';
 import { CementType, CreateBatchRequest, ScmType } from '../../core/api/batches';
 
@@ -108,6 +108,22 @@ export function createBatchForm(fb: NonNullableFormBuilder) {
 }
 
 export type BatchForm = ReturnType<typeof createBatchForm>;
+
+/**
+ * Each control under the key the server uses for it ("Batch.BatchNumber", "Composition.CementPct",
+ * "Oxide.AluminaPct"), so a 400 from the server can be shown next to the right field.
+ */
+export function controlsByKey(form: BatchForm): Map<string, AbstractControl> {
+  const prefixes = { batch: 'Batch', composition: 'Composition', oxides: 'Oxide' } as const;
+  const byKey = new Map<string, AbstractControl>();
+  for (const [group, prefix] of Object.entries(prefixes)) {
+    const controls = form.controls[group as keyof typeof prefixes].controls;
+    for (const [name, control] of Object.entries(controls)) {
+      byKey.set(`${prefix}.${name[0].toUpperCase()}${name.slice(1)}`, control as AbstractControl);
+    }
+  }
+  return byKey;
+}
 
 export function toCreateBatchRequest(form: BatchForm): CreateBatchRequest {
   const { batch, composition, oxides } = form.getRawValue();

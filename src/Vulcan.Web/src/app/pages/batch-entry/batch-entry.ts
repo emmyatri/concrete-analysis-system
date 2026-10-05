@@ -1,4 +1,4 @@
-﻿import { Component, computed, inject } from '@angular/core';
+﻿import { Component, computed, inject, signal } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { NonNullableFormBuilder, ReactiveFormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
@@ -12,8 +12,17 @@ import type { ValidationResult } from '../../core/validation/validation-result';
 import { ValidationService } from '../../core/validation/validation.service';
 import { parseNumber } from '../../core/validation/parse-number';
 
+import { ApiProblem, describeApiError, matchFieldErrors } from '../../core/api/api-errors';
 import { ReferenceDataService } from '../../core/api/reference-data.service';
-import { BATCH_NUMBER_HINT, CEMENT_TYPES, SCM_TYPES, createBatchForm } from './batch-form';
+import { VulcanApiService } from '../../core/api/vulcan-api.service';
+import {
+  BATCH_NUMBER_HINT,
+  CEMENT_TYPES,
+  SCM_TYPES,
+  controlsByKey,
+  createBatchForm,
+  toCreateBatchRequest,
+} from './batch-form';
 import { calculateComposition } from './composition-calc';
 
 /**
@@ -39,6 +48,7 @@ import { calculateComposition } from './composition-calc';
 export class BatchEntry {
   private readonly router = inject(Router);
   private readonly referenceData = inject(ReferenceDataService);
+  private readonly api = inject(VulcanApiService);
   private readonly validation = inject(ValidationService);
   protected readonly issues = inject(FieldIssues);
 
@@ -51,6 +61,12 @@ export class BatchEntry {
 
   /** Re-runs the calculated values below on any form change. */
   private readonly formChange = toSignal(this.form.events, { initialValue: null });
+
+  /** True while the batch is being sent, so Save can't be clicked twice. */
+  protected readonly saving = signal(false);
+
+  /** Problems that don't belong to one field (service down, or a server error with no matching field). */
+  protected readonly saveErrors = signal<string[]>([]);
 
   /** Save stays disabled until every field is filled in and nothing is red. Warnings still save. */
   protected readonly canSave = computed(() => {
@@ -130,6 +146,44 @@ export class BatchEntry {
       scmType.markAsTouched();
       scmType.updateValueAndValidity();
     });
+  }
+
+  /**
+   * Sends the batch. On success, opens it (Save batch) or its Add cylinder screen (Save & add cylinders).
+   * A 400 puts each message next to its field; anything else shows in the banner at the top.
+   */
+  protected save(then: 'batch' | 'cylinders'): void {
+    if (!this.canSave() || this.saving()) return;
+    this.saving.set(true);
+    this.saveErrors.set([]);
+
+    this.api.createBatch(toCreateBatchRequest(this.form)).subscribe({
+      next: ({ batchNumber }) => {
+        this.saving.set(false);
+        const route = then === 'cylinders' ? ['/batches', batchNumber, 'cylinders', 'new'] : ['/batches', batchNumber];
+        this.router.navigate(route);
+      },
+      error: (error: unknown) => {
+        this.saving.set(false);
+        this.showProblem(describeApiError(error));
+      },
+    });
+  }
+
+  private showProblem(problem: ApiProblem): void {
+    if (problem.kind !== 'validation') {
+      this.saveErrors.set([problem.message]);
+      return;
+    }
+    const controls = controlsByKey(this.form);
+    const { byKey, unmatched } = matchFieldErrors(problem.fieldErrors, controls.keys());
+    // Shown by AppField like any other error, and cleared as soon as the value is changed.
+    for (const [key, messages] of byKey) {
+      const control = controls.get(key)!;
+      control.setErrors({ ...control.errors, server: messages[0] });
+      control.markAsTouched();
+    }
+    this.saveErrors.set(unmatched.length > 0 || byKey.size > 0 ? unmatched : [problem.message]);
   }
 
   protected cancel(): void {

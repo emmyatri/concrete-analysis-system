@@ -5,9 +5,10 @@ import { firstValueFrom } from 'rxjs';
 
 import { USE_MOCKS } from '../use-mocks';
 import { VulcanApiService } from '../vulcan-api.service';
-import { mockApiInterceptor } from './mock-api.interceptor';
+import { clearSavedMockBatches, mockApiInterceptor } from './mock-api.interceptor';
 
 describe('mockApiInterceptor', () => {
+  beforeEach(() => clearSavedMockBatches());
   const setUp = (useMocks: boolean) => {
     TestBed.configureTestingModule({
       providers: [
@@ -78,6 +79,24 @@ describe('mockApiInterceptor', () => {
 
     expect(created.id).toBeGreaterThan(0);
     expect(created.warnings.map((w) => w.key)).toEqual(['Batch.MixWaterPh']);
+  });
+
+  it('opens a batch on Batch Detail right after it is saved', async () => {
+    const api = setUp(true);
+
+    await firstValueFrom(
+      api.createBatch({
+        batch: { batchNumber: 'VM-TEST-0002', castAt: '2026-10-05T14:00:00.000Z', finalWeightLb: 4380, expectedFinalBreakPsi: 6000, cementType: 'TypeI', mixWaterPh: 7.8 },
+        composition: { cementPct: 10, waterPct: 17, coarseAggregatePct: 45, fineAggregatePct: 26, scmType: 'FlyAsh', scmPct: 2 },
+        oxides: { aluminaPct: 4.8, ironOxidePct: 2.8, magnesiumOxidePct: 1.8, sulfurTrioxidePct: 2.2 },
+      }),
+    );
+    const batch = await firstValueFrom(api.getBatch('vm-test-0002'));
+
+    expect(batch.batchNumber).toBe('VM-TEST-0002');
+    expect(batch.composition.totalPct).toBe(100);
+    expect(batch.specimens).toEqual([]);
+    expect(batch.warnings.map((w) => w.limitKey)).toEqual(['Batch.MixWaterPh']);
   });
 
   it('returns a whole batch from the synthetic dataset, with its saved warnings', async () => {

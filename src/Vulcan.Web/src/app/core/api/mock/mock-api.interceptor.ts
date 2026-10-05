@@ -2,14 +2,25 @@
 import { inject } from '@angular/core';
 import { Observable, of, throwError } from 'rxjs';
 
-import { BatchSummary, RecordWarning } from '../models';
+import { CreateBatchRequest } from '../batches';
+import { BatchDetail, BatchSummary, RecordWarning } from '../models';
+import { TECHNICIAN_HEADER } from '../../session/technician.interceptor';
 import { USE_MOCKS } from '../use-mocks';
-import { MOCK_BATCH_DETAILS } from './mock-batch-details';
+import { MOCK_BATCH_DETAILS, mockBatchDetailFromRequest } from './mock-batch-details';
 import { MOCK_BATCHES, MOCK_SPECIFIC_GRAVITIES, MOCK_VALIDATION_LIMITS } from './mock-data';
+
 
 /** Batches saved while the app is open, so a new batch shows up in the list until you reload. */
 const savedBatches: BatchSummary[] = [];
+/** The same batches in full, so Batch Detail can open one right after it's saved. */
+const savedDetails: BatchDetail[] = [];
 let nextId = 1000;
+
+/** Forgets the batches saved so far. Tests call this so one test's saves don't show up in another. */
+export function clearSavedMockBatches(): void {
+  savedBatches.length = 0;
+  savedDetails.length = 0;
+}
 
 /**
  * Answers API calls with fake data (M1-60) when environment.useMocks is true. Development builds only.
@@ -52,7 +63,9 @@ function findBatches(request: HttpRequest<unknown>): BatchSummary[] {
 /** One batch by number, ignoring upper/lowercase, or a 404 like the server's. */
 function getBatch(request: HttpRequest<unknown>, path: string) {
   const batchNumber = decodeURIComponent(path.slice('/api/batches/'.length));
-  const batch = MOCK_BATCH_DETAILS.find((row) => row.batchNumber.toLowerCase() === batchNumber.toLowerCase());
+  const batch = [...savedDetails, ...MOCK_BATCH_DETAILS].find(
+    (row) => row.batchNumber.toLowerCase() === batchNumber.toLowerCase(),
+  );
   if (batch) return ok(batch);
 
   return throwError(
@@ -122,5 +135,12 @@ function createBatch(request: HttpRequest<unknown>) {
     warningCount: warnings.length,
     isSynthetic: false,
   });
+  // The full batch too, so Batch Detail can open it straight after saving.
+  const saved = request.body as CreateBatchRequest;
+  const technician = request.headers.get(TECHNICIAN_HEADER);
+  const createdBy = technician ? decodeURIComponent(technician) : 'Technician';
+  savedDetails.unshift(
+    mockBatchDetailFromRequest(id, { ...saved, batch: { ...saved.batch, batchNumber } }, createdBy),
+  );
   return ok({ id, batchNumber, warnings }, 201);
 }
