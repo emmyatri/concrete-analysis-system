@@ -59,9 +59,9 @@
           [queryParams]="{ batch: batch.batchNumber }"
         ><span pButtonLabel>Curing readings</span></a
         >
-        <a pButton [routerLink]="['/batches', batch.batchNumber, 'cylinders', 'new']"
-        ><span pButtonLabel>Add cylinder</span></a
-        >
+        <button pButton type="button" (click)="addCylinderOpen.set(true)" data-testid="add-cylinder">
+          <span pButtonLabel>Add cylinder</span>
+        </button>
         <a pButton routerLink="/breaks" [queryParams]="{ batch: batch.batchNumber }"
         ><span pButtonLabel>Enter break</span></a
         >
@@ -368,4 +368,7 @@
       </p-tabs>
     </section>
   }
+
+  <app-add-cylinder-dialog [batchNumber]="batchNumber()" [visible]="addCylinderOpen()"
+                           (visibleChange)="addCylinderClosed($event)" (saved)="cylinderSaved()" />
 </div>

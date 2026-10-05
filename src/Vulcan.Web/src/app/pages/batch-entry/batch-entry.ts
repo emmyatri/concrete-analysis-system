@@ -160,8 +160,8 @@ export class BatchEntry {
     this.api.createBatch(toCreateBatchRequest(this.form)).subscribe({
       next: ({ batchNumber }) => {
         this.saving.set(false);
-        const route = then === 'cylinders' ? ['/batches', batchNumber, 'cylinders', 'new'] : ['/batches', batchNumber];
-        this.router.navigate(route);
+        const queryParams = then === 'cylinders' ? { addCylinder: '1' } : {};
+        this.router.navigate(['/batches', batchNumber], { queryParams });
       },
       error: (error: unknown) => {
         this.saving.set(false);

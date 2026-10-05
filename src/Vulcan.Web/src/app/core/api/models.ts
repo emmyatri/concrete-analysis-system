@@ -155,3 +155,18 @@ export interface BatchDetail {
   /** Every saved warning for this batch, its composition, oxides, cylinders, breaks and readings. */
   warnings: SavedWarning[];
 }
+
+
+/** POST /api/batches/{batchNumber}/specimens: one new cylinder (M1-61). */
+export interface CreateSpecimenRequest {
+  label: string;
+  lengthIn: number;
+  widthIn: number;
+  testAgeDays: TestAge;
+}
+
+/** 201 response. */
+export interface CreateSpecimenResponse {
+  id: number;
+  label: string;
+}

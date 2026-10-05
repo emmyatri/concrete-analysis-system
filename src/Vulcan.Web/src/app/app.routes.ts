@@ -25,7 +25,11 @@ export const routes: Routes = [
         loadComponent: () => import('./pages/batch-detail/batch-detail').then((m) => m.BatchDetailPage),
       },
       { path: 'batches/:batchNumber/edit', component: PlaceholderPage, data: { heading: 'Edit batch' } },
-      { path: 'batches/:batchNumber/cylinders/new', component: PlaceholderPage, data: { heading: 'Add cylinder' } },
+      // Add cylinder is now a popup on Batch Detail.
+      {
+        path: 'batches/:batchNumber/cylinders/new',
+        redirectTo: ({ params }) => `/batches/${params['batchNumber']}?addCylinder=1`,
+      },
       { path: 'breaks', component: PlaceholderPage, data: { heading: 'Break results' } },
       { path: 'curing', component: PlaceholderPage, data: { heading: 'Curing readings' } },
     ],
