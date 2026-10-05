@@ -185,6 +185,32 @@ public sealed class CementOxideValidatorTests
         _provider.RequestedKeys.ShouldNotContain(LimitKeys.TotalPct);
     }
 
+    [Fact]
+    public void Chemistry_values_do_not_count_toward_mix_total()
+    {
+        var composition = new Composition
+        {
+            CementPct = 10m,
+            ScmPct = 5m,
+            ScmType = ScmType.FlyAsh,
+            CoarseAggregatePct = 40m,
+            FineAggregatePct = 25m,
+            WaterPct = 15m,
+        };
+
+        // Chemistry values are deliberately non-zero.
+        var chemistry = CreateValidator().Validate(
+            aluminaPct: 5m,
+            ironOxidePct: 2m,
+            magnesiumOxidePct: 2m,
+            sulfurTrioxidePct: 2m);
+
+        var total = CompositionValidator.CalculateTotal(composition);
+
+        chemistry.IsValid.ShouldBeTrue();
+        total.ShouldBe(95m);
+    }
+
     private CementOxideValidator CreateValidator() => new(new LimitEvaluator(_provider));
 
     private LimitResult Check(string key, decimal? value)
