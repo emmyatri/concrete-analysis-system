@@ -28,6 +28,19 @@ public sealed class BatchRepository(VulcanDbContext dbContext) : IBatchRepositor
         return await dbContext.Batch
             .AnyAsync(x => x.BatchNumber == batchNumber);
     }
+    
+    public async Task<IReadOnlyList<Batch>> SearchAsync(
+        string searchTerm,
+        int page,
+        int pageSize)
+    {
+        return await dbContext.Batch
+            .Where(x => x.BatchNumber.Contains(searchTerm))
+            .OrderByDescending(x => x.CreatedAtUtc)
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .ToListAsync();
+    }
 
     public async Task SaveChangesAsync()
     {

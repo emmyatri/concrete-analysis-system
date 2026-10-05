@@ -1,0 +1,291 @@
+﻿using Vulcan.Application.Interfaces;
+using Vulcan.Application.Services;
+using Vulcan.Domain.Entities;
+using Vulcan.Domain.Enums;
+using Vulcan.Domain.Services;
+using Vulcan.Infrastructure.Services;
+
+namespace Vulcan.Application.Tests;
+
+public class BatchServiceTests(DatabaseFixture fixture)
+    : IClassFixture<DatabaseFixture>
+{
+    private readonly DatabaseFixture _fixture = fixture;
+
+    [Fact]
+    public async Task CreateAsync_ValidCompleteBatch_SavesAndLoadsBatch()
+    {
+        await using var db = _fixture.CreateDbContext();
+
+        var limitProvider = new LimitProvider(db);
+        var limitEvaluator = new LimitEvaluator(limitProvider);
+
+        var repository = new BatchRepository(db);
+
+        var service = new BatchService(
+            repository,
+            new BatchValidator(limitEvaluator),
+            new CompositionValidator(limitEvaluator),
+            new CementOxideValidator(limitEvaluator),
+            new TestClock(new DateTime(2026, 10, 5, 18, 0, 0, DateTimeKind.Utc)));
+
+        var batch = CreateValidBatch();
+
+        var result = await service.CreateAsync(batch);
+
+        Assert.True(result.IsSuccess);
+        Assert.Empty(result.Errors);
+
+        var saved = await repository.GetByNumberAsync("VM-TEST-001");
+
+        Assert.NotNull(saved);
+        Assert.NotNull(saved.Composition);
+        Assert.NotNull(saved.CementOxideAnalysis);
+
+        Assert.Equal(12m, saved.Composition.CementPct);
+        Assert.Equal(5m, saved.CementOxideAnalysis.AluminaPct);
+    }
+    
+    [Fact]
+    public async Task CreateAsync_InvalidBatch_ReturnsFieldErrorsAndDoesNotSave()
+    {
+        await using var db = _fixture.CreateDbContext();
+
+        var limitProvider = new LimitProvider(db);
+        var limitEvaluator = new LimitEvaluator(limitProvider);
+
+        var repository = new BatchRepository(db);
+
+        var service = new BatchService(
+            repository,
+            new BatchValidator(limitEvaluator),
+            new CompositionValidator(limitEvaluator),
+            new CementOxideValidator(limitEvaluator),
+            new TestClock(new DateTime(2026, 10, 5, 18, 0, 0, DateTimeKind.Utc)));
+
+        var batch = CreateValidBatch();
+        batch.BatchNumber = "BAD BATCH!";
+        batch.FinalWeightLb = 0m;
+
+        var result = await service.CreateAsync(batch);
+
+        Assert.False(result.IsSuccess);
+        Assert.NotEmpty(result.Errors);
+
+        var saved = await repository.GetByNumberAsync("BADBATCH!");
+        Assert.Null(saved);
+    }
+    
+    [Fact]
+    public async Task GetByNumberAsync_ExistingBatch_LoadsCompleteBatch()
+    {
+        await using var db = _fixture.CreateDbContext();
+
+        var limitProvider = new LimitProvider(db);
+        var limitEvaluator = new LimitEvaluator(limitProvider);
+        var repository = new BatchRepository(db);
+
+        var service = new BatchService(
+            repository,
+            new BatchValidator(limitEvaluator),
+            new CompositionValidator(limitEvaluator),
+            new CementOxideValidator(limitEvaluator),
+            new TestClock(new DateTime(2026, 10, 5, 18, 0, 0, DateTimeKind.Utc)));
+
+        var batch = CreateValidBatch();
+        batch.BatchNumber = "VM-LOAD-001";
+
+        var createResult = await service.CreateAsync(batch);
+        Assert.True(createResult.IsSuccess);
+
+        var loaded = await service.GetByNumberAsync("VM-LOAD-001");
+
+        Assert.NotNull(loaded);
+        Assert.Equal("VM-LOAD-001", loaded.BatchNumber);
+        Assert.NotNull(loaded.Composition);
+        Assert.NotNull(loaded.CementOxideAnalysis);
+    }
+    
+    [Fact]
+    public async Task UpdateAsync_ValidBatch_PersistsChanges()
+    {
+        await using var db = _fixture.CreateDbContext();
+
+        var limitProvider = new LimitProvider(db);
+        var limitEvaluator = new LimitEvaluator(limitProvider);
+        var repository = new BatchRepository(db);
+
+        var service = new BatchService(
+            repository,
+            new BatchValidator(limitEvaluator),
+            new CompositionValidator(limitEvaluator),
+            new CementOxideValidator(limitEvaluator),
+            new TestClock(new DateTime(2026, 10, 5, 18, 0, 0, DateTimeKind.Utc)));
+
+        var batch = CreateValidBatch();
+        batch.BatchNumber = "VM-UPDATE-001";
+
+        var createResult = await service.CreateAsync(batch);
+        Assert.True(createResult.IsSuccess);
+
+        var updatedBatch = CreateValidBatch();
+        updatedBatch.BatchNumber = "VM-UPDATE-001";
+        updatedBatch.FinalWeightLb = 35m;
+        updatedBatch.ExpectedFinalBreakPsi = 6000;
+
+        updatedBatch.Composition!.CementPct = 13m;
+        updatedBatch.Composition.WaterPct = 16m;
+
+        updatedBatch.CementOxideAnalysis!.AluminaPct = 6m;
+        updatedBatch.CementOxideAnalysis.IronOxidePct = 4m;
+
+        var updateResult =
+            await service.UpdateAsync("VM-UPDATE-001", updatedBatch);
+
+        Assert.True(updateResult.IsSuccess);
+        Assert.Empty(updateResult.Errors);
+
+        var loaded =
+            await service.GetByNumberAsync("VM-UPDATE-001");
+
+        Assert.NotNull(loaded);
+
+        Assert.Equal(35m, loaded.FinalWeightLb);
+        Assert.Equal(6000, loaded.ExpectedFinalBreakPsi);
+
+        Assert.NotNull(loaded.Composition);
+        Assert.Equal(13m, loaded.Composition.CementPct);
+        Assert.Equal(16m, loaded.Composition.WaterPct);
+
+        Assert.NotNull(loaded.CementOxideAnalysis);
+        Assert.Equal(6m, loaded.CementOxideAnalysis.AluminaPct);
+        Assert.Equal(4m, loaded.CementOxideAnalysis.IronOxidePct);
+    }
+    
+    [Fact]
+    public async Task UpdateAsync_InvalidBatch_ReturnsFieldErrorsAndDoesNotPersistChanges()
+    {
+        await using var db = _fixture.CreateDbContext();
+
+        var limitProvider = new LimitProvider(db);
+        var limitEvaluator = new LimitEvaluator(limitProvider);
+        var repository = new BatchRepository(db);
+
+        var service = new BatchService(
+            repository,
+            new BatchValidator(limitEvaluator),
+            new CompositionValidator(limitEvaluator),
+            new CementOxideValidator(limitEvaluator),
+            new TestClock(new DateTime(2026, 10, 5, 18, 0, 0, DateTimeKind.Utc)));
+
+        var batch = CreateValidBatch();
+        batch.BatchNumber = "VM-UPDATE-INVALID";
+
+        var createResult = await service.CreateAsync(batch);
+        Assert.True(createResult.IsSuccess);
+
+        var updatedBatch = CreateValidBatch();
+        updatedBatch.BatchNumber = "VM-UPDATE-INVALID";
+        updatedBatch.FinalWeightLb = 0m;
+
+        var updateResult =
+            await service.UpdateAsync("VM-UPDATE-INVALID", updatedBatch);
+
+        Assert.False(updateResult.IsSuccess);
+        Assert.NotEmpty(updateResult.Errors);
+
+        var loaded =
+            await service.GetByNumberAsync("VM-UPDATE-INVALID");
+
+        Assert.NotNull(loaded);
+        Assert.Equal(30m, loaded.FinalWeightLb);
+    }
+    
+    [Fact]
+    public async Task SearchAsync_PartialMatch_ReturnsNewestFirstAndFiftyPerPage()
+    {
+        await using var db = _fixture.CreateDbContext();
+
+        var limitProvider = new LimitProvider(db);
+        var limitEvaluator = new LimitEvaluator(limitProvider);
+        var repository = new BatchRepository(db);
+
+        var service = new BatchService(
+            repository,
+            new BatchValidator(limitEvaluator),
+            new CompositionValidator(limitEvaluator),
+            new CementOxideValidator(limitEvaluator),
+            new TestClock(new DateTime(2026, 10, 5, 18, 0, 0, DateTimeKind.Utc)));
+
+        for (var i = 1; i <= 55; i++)
+        {
+            db.Batch.Add(new Batch
+            {
+                BatchNumber = $"VM-SEARCH-{i:D3}",
+                CreatedAtUtc = new DateTime(
+                    2026, 10, 5, 0, 0, 0, DateTimeKind.Utc).AddMinutes(i)
+            });
+        }
+
+        db.Batch.Add(new Batch
+        {
+            BatchNumber = "UNRELATED-001",
+            CreatedAtUtc = new DateTime(
+                2026, 10, 5, 23, 0, 0, DateTimeKind.Utc)
+        });
+
+        await db.SaveChangesAsync();
+
+        var firstPage = await service.SearchAsync("VM-SEARCH", 1);
+        var secondPage = await service.SearchAsync("VM-SEARCH", 2);
+
+        Assert.Equal(50, firstPage.Count);
+        Assert.Equal(5, secondPage.Count);
+
+        Assert.Equal("VM-SEARCH-055", firstPage[0].BatchNumber);
+        Assert.Equal("VM-SEARCH-006", firstPage[^1].BatchNumber);
+
+        Assert.Equal("VM-SEARCH-005", secondPage[0].BatchNumber);
+        Assert.Equal("VM-SEARCH-001", secondPage[^1].BatchNumber);
+
+        Assert.DoesNotContain(
+            firstPage,
+            batch => batch.BatchNumber == "UNRELATED-001");
+    }
+
+    private static Batch CreateValidBatch()
+    {
+        return new Batch
+        {
+            BatchNumber = "VM-TEST-001",
+            CastAt = new DateTime(2026, 10, 5, 17, 0, 0, DateTimeKind.Utc),
+            FinalWeightLb = 30m,
+            ExpectedFinalBreakPsi = 5000,
+            CementType = CementType.TypeI,
+            MixWaterPh = 7.2m,
+
+            Composition = new Composition
+            {
+                CementPct = 12m,
+                ScmPct = 0m,
+                ScmType = ScmType.None,
+                CoarseAggregatePct = 40m,
+                FineAggregatePct = 25m,
+                WaterPct = 15m
+            },
+
+            CementOxideAnalysis = new CementOxideAnalysis
+            {
+                AluminaPct = 5m,
+                IronOxidePct = 3m,
+                MagnesiumOxidePct = 2m,
+                SulfurTrioxidePct = 2m
+            }
+        };
+    }
+
+    private sealed class TestClock(DateTime utcNow) : IClock
+    {
+        public DateTime UtcNow { get; } = utcNow;
+    }
+}
