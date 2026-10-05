@@ -10,10 +10,15 @@
     </div>
 
     <div class="page-actions">
+      @if (saveMessage()) {
+        <span class="save-summary" [class.save-summary--error]="issues.errors() > 0"
+              [class.save-summary--muted]="issues.errors() === 0 && !canSave()" data-testid="save-summary"
+              role="status">{{ saveMessage() }}</span>
+      }
       <p-button label="Cancel" [outlined]="true" (onClick)="cancel()" />
-      <!-- Saving comes in the next step. -->
-      <p-button label="Save & add cylinders" [disabled]="true" data-testid="save-add-cylinders" />
-      <p-button label="Save batch" [disabled]="true" data-testid="save-batch" />
+      <!-- Disabled while anything is red or missing. Sending the batch to the server comes next. -->
+      <p-button label="Save & add cylinders" [disabled]="!canSave()" data-testid="save-add-cylinders" />
+      <p-button label="Save batch" [disabled]="!canSave()" data-testid="save-batch" />
     </div>
   </header>
 
@@ -27,34 +32,34 @@
         </header>
         <div class="card-body fields">
           <app-field label="Batch number" inputId="batchNumber" [control]="form.controls.batch.controls.batchNumber"
-            [hint]="batchNumberHint">
-            <input pInputText id="batchNumber" formControlName="batchNumber" autocomplete="off" maxlength="64" />
+                     [hint]="batchNumberHint">
+            <input pInputText id="batchNumber" formControlName="batchNumber" autocomplete="off" maxlength="32" />
           </app-field>
 
           <app-field label="Cast date/time" inputId="castAt" [control]="form.controls.batch.controls.castAt"
-            hint="Not in the future">
+                     hint="Not in the future">
             <p-datepicker inputId="castAt" formControlName="castAt" [showTime]="true" hourFormat="24"
-              dateFormat="mm/dd/yy" [maxDate]="now" [showIcon]="true" iconDisplay="input" appendTo="body" />
+                          dateFormat="mm/dd/yy" [maxDate]="now" [showIcon]="true" iconDisplay="input" appendTo="body" />
           </app-field>
 
           <app-field label="Final weight (lb)" inputId="finalWeightLb"
-            [control]="form.controls.batch.controls.finalWeightLb" limitKey="Batch.FinalWeightLb">
+                     [control]="form.controls.batch.controls.finalWeightLb" limitKey="Batch.FinalWeightLb">
             <input pInputText id="finalWeightLb" formControlName="finalWeightLb" inputmode="decimal" />
           </app-field>
 
           <app-field label="Expected final break (PSI)" inputId="expectedFinalBreakPsi"
-            [control]="form.controls.batch.controls.expectedFinalBreakPsi" limitKey="Batch.ExpectedFinalBreakPsi">
+                     [control]="form.controls.batch.controls.expectedFinalBreakPsi" limitKey="Batch.ExpectedFinalBreakPsi">
             <input pInputText id="expectedFinalBreakPsi" formControlName="expectedFinalBreakPsi" inputmode="numeric" />
           </app-field>
 
           <app-field label="Cement type" inputId="cementType" [control]="form.controls.batch.controls.cementType"
-            hint="Type I, II or III">
+                     hint="Type I, II or III">
             <p-select inputId="cementType" formControlName="cementType" [options]="cementTypes" optionLabel="label"
-              optionValue="value" placeholder="Select" appendTo="body" />
+                      optionValue="value" placeholder="Select" appendTo="body" />
           </app-field>
 
           <app-field label="Mix water pH" inputId="mixWaterPh" [control]="form.controls.batch.controls.mixWaterPh"
-            limitKey="Batch.MixWaterPh">
+                     limitKey="Batch.MixWaterPh">
             <input pInputText id="mixWaterPh" formControlName="mixWaterPh" inputmode="decimal" />
           </app-field>
         </div>
@@ -69,19 +74,19 @@
         </header>
         <div class="card-body fields">
           <app-field label="Alumina Al₂O₃ (%)" inputId="aluminaPct" [control]="form.controls.oxides.controls.aluminaPct"
-            limitKey="Oxide.AluminaPct">
+                     limitKey="Oxide.AluminaPct">
             <input pInputText id="aluminaPct" formControlName="aluminaPct" inputmode="decimal" />
           </app-field>
           <app-field label="Iron oxide Fe₂O₃ (%)" inputId="ironOxidePct"
-            [control]="form.controls.oxides.controls.ironOxidePct" limitKey="Oxide.IronOxidePct">
+                     [control]="form.controls.oxides.controls.ironOxidePct" limitKey="Oxide.IronOxidePct">
             <input pInputText id="ironOxidePct" formControlName="ironOxidePct" inputmode="decimal" />
           </app-field>
           <app-field label="Magnesium oxide MgO (%)" inputId="magnesiumOxidePct"
-            [control]="form.controls.oxides.controls.magnesiumOxidePct" limitKey="Oxide.MagnesiumOxidePct">
+                     [control]="form.controls.oxides.controls.magnesiumOxidePct" limitKey="Oxide.MagnesiumOxidePct">
             <input pInputText id="magnesiumOxidePct" formControlName="magnesiumOxidePct" inputmode="decimal" />
           </app-field>
           <app-field label="Sulfur trioxide SO₃ (%)" inputId="sulfurTrioxidePct"
-            [control]="form.controls.oxides.controls.sulfurTrioxidePct" limitKey="Oxide.SulfurTrioxidePct">
+                     [control]="form.controls.oxides.controls.sulfurTrioxidePct" limitKey="Oxide.SulfurTrioxidePct">
             <input pInputText id="sulfurTrioxidePct" formControlName="sulfurTrioxidePct" inputmode="decimal" />
           </app-field>
         </div>
@@ -99,29 +104,29 @@
         <div class="card-body">
           <div class="fields">
             <app-field label="Cement (%)" inputId="cementPct" [control]="form.controls.composition.controls.cementPct"
-              limitKey="Composition.CementPct">
+                       limitKey="Composition.CementPct">
               <input pInputText id="cementPct" formControlName="cementPct" inputmode="decimal" />
             </app-field>
             <app-field label="Water (%)" inputId="waterPct" [control]="form.controls.composition.controls.waterPct"
-              limitKey="Composition.WaterPct">
+                       limitKey="Composition.WaterPct">
               <input pInputText id="waterPct" formControlName="waterPct" inputmode="decimal" />
             </app-field>
             <app-field label="Coarse aggregate (%)" inputId="coarseAggregatePct"
-              [control]="form.controls.composition.controls.coarseAggregatePct"
-              limitKey="Composition.CoarseAggregatePct">
+                       [control]="form.controls.composition.controls.coarseAggregatePct"
+                       limitKey="Composition.CoarseAggregatePct">
               <input pInputText id="coarseAggregatePct" formControlName="coarseAggregatePct" inputmode="decimal" />
             </app-field>
             <app-field label="Fine aggregate / sand (%)" inputId="fineAggregatePct"
-              [control]="form.controls.composition.controls.fineAggregatePct" limitKey="Composition.FineAggregatePct">
+                       [control]="form.controls.composition.controls.fineAggregatePct" limitKey="Composition.FineAggregatePct">
               <input pInputText id="fineAggregatePct" formControlName="fineAggregatePct" inputmode="decimal" />
             </app-field>
             <app-field label="SCM type" inputId="scmType" [control]="form.controls.composition.controls.scmType"
-              hint="None when SCM is 0%">
+                       hint="None when SCM is 0%">
               <p-select inputId="scmType" formControlName="scmType" [options]="scmTypes" optionLabel="label"
-                optionValue="value" appendTo="body" />
+                        optionValue="value" appendTo="body" />
             </app-field>
             <app-field label="SCM (%)" inputId="scmPct" [control]="form.controls.composition.controls.scmPct"
-              limitKey="Composition.ScmPct">
+                       limitKey="Composition.ScmPct">
               <input pInputText id="scmPct" formControlName="scmPct" inputmode="decimal" />
             </app-field>
           </div>
@@ -130,36 +135,42 @@
           <div class="calculated" aria-live="polite">
             <p class="calculated-label">Calculated live · not stored</p>
             <div class="tiles">
-              <div class="tile" data-testid="total">
+              <div class="tile" data-testid="total" [class.tile--error]="totalCheck().severity === 'Reject'">
                 <span class="tile-label">Total</span>
                 <span class="tile-value">{{ totals().totalPct.toFixed(2) }}%</span>
+                @if (totalCheck().message) {
+                  <span class="tile-message" data-testid="total-message">{{ totalCheck().message }}</span>
+                }
               </div>
               <div class="tile" data-testid="air-other">
                 <span class="tile-label">Air / other</span>
                 <span class="tile-value">{{ totals().airOtherPct.toFixed(2) }}%</span>
                 <span class="tile-note">100 − total</span>
               </div>
-              <div class="tile" data-testid="water-cement">
+              <div class="tile" data-testid="water-cement" [class.tile--warn]="ratioCheck().severity === 'Warn'">
                 <span class="tile-label">Water / cementitious</span>
                 <span class="tile-value">{{ totals().waterCementRatio?.toFixed(2) ?? '—' }}</span>
+                @if (ratioCheck().message) {
+                  <span class="tile-message" data-testid="water-cement-message">{{ ratioCheck().message }}</span>
+                }
               </div>
             </div>
 
             <div class="mix-bar" role="img" aria-label="Mix by volume">
               @for (part of mix(); track part.label) {
-              @if (part.pct > 0) {
-              <span [class]="'mix-segment ' + part.cls" [style.flex-grow]="part.pct"></span>
-              }
+                @if (part.pct > 0) {
+                  <span [class]="'mix-segment ' + part.cls" [style.flex-grow]="part.pct"></span>
+                }
               }
               @if (totals().airOtherPct > 0) {
-              <span class="mix-segment mix-air" [style.flex-grow]="totals().airOtherPct"></span>
+                <span class="mix-segment mix-air" [style.flex-grow]="totals().airOtherPct"></span>
               }
             </div>
             <ul class="mix-legend">
               @for (part of mix(); track part.label) {
-              <li>
-                <span [class]="'mix-swatch ' + part.cls"></span>{{ part.label }} {{ part.pct }}%
-              </li>
+                <li>
+                  <span [class]="'mix-swatch ' + part.cls"></span>{{ part.label }} {{ part.pct }}%
+                </li>
               }
             </ul>
           </div>

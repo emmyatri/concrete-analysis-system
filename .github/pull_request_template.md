@@ -32,6 +32,6 @@ SCRUM-
 - [ ] Every validation rule I touched has edge tests (min, max, just below, just above)
 - [ ] Requirement numbers are listed above
 - [ ] Screenshots are included for screen changes
-- [ ] No hard-coded limits, and validation is only in `Vulcan.Domain`
+- [ ] No hard-coded limits; rules come only from `Vulcan.Domain` and `ValidationLimit` data
 - [ ] No real Vulcan data, `.db` files, `bin/` or `obj/` in this PR
 - [ ] I re-read the ticket's "Done when" and it's met

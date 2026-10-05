@@ -1,9 +1,20 @@
-import { AbstractControl, ValidationErrors } from '@angular/forms';
-import { Component, input, signal, effect, computed, inject } from '@angular/core';
+import { formatNumber } from '@angular/common';
+import { AbstractControl, ValidationErrors, ValidatorFn } from '@angular/forms';
+import {
+  Component,
+  DestroyRef,
+  input,
+  signal,
+  effect,
+  computed,
+  inject,
+  untracked,
+} from '@angular/core';
 import { ValidationService } from '../../core/validation/validation.service';
 import type { ValidationLimit } from '../../core/api/models';
 import { ReferenceDataService } from '../../core/api/reference-data.service';
 import { parseNumber } from '../../core/validation/parse-number';
+import { FieldIssues } from '../../core/validation/field-issues';
 
 // Possible states for the app-field component.
 export type AppFieldState = 'error' | 'warn' | 'normal';
@@ -141,23 +152,23 @@ export class AppField {
     return this.formatLimitHint(selectedLimit, maximumLimit) ?? hint;
   });
 
-  // Formats the minimum, maximum, and unit for the range hint.
+  // Formats the range hint like the mockup: "10–15%", "3,000–10,000 PSI", "0.1–4% · max 6%".
   private formatLimitHint(
     normalLimit: ValidationLimit,
     maximumLimit?: ValidationLimit,
   ): string | null {
+    const withUnit = (text: string) => withLimitUnit(text, normalLimit.unit);
     const maximumText =
-      maximumLimit && maximumLimit.max !== null ? ` · max ${maximumLimit.max}` : '';
-    // Conditional formatting of the limit.
-    if (normalLimit.min !== null && normalLimit.max !== null) {
-      const { min, max, unit } = normalLimit;
-      return `${min}-${max}${maximumText}` + (unit ? ` ${unit}` : '');
-    } else if (normalLimit.min !== null) {
-      const { min, unit } = normalLimit;
-      return `≥ ${min}` + (unit ? ` ${unit}` : '');
-    } else if (normalLimit.max !== null) {
-      const { max, unit } = normalLimit;
-      return `≤ ${max}` + (unit ? ` ${unit}` : '');
+      maximumLimit && maximumLimit.max !== null
+        ? ` · max ${withLimitUnit(formatLimitNumber(maximumLimit.max), maximumLimit.unit)}`
+        : '';
+    const { min, max } = normalLimit;
+    if (min !== null && max !== null) {
+      return withUnit(`${formatLimitNumber(min)}–${formatLimitNumber(max)}`) + maximumText;
+    } else if (min !== null) {
+      return withUnit(`≥ ${formatLimitNumber(min)}`);
+    } else if (max !== null) {
+      return withUnit(`≤ ${formatLimitNumber(max)}`);
     }
 
     return null;
@@ -192,6 +203,7 @@ export class AppField {
   constructor() {
     effect((onCleanup) => {
       const control = this.control();
+
       // Update the control state based on the current control status.
       const updateState = () => {
         this.controlSnapshot.set({
@@ -208,5 +220,48 @@ export class AppField {
       // Cleanup subscription when the effect is disposed.
       onCleanup(() => subscription.unsubscribe());
     });
+
+    // A value outside the Reject range makes the control itself invalid, so the form's own
+    // validity blocks Save. Warned values still save.
+    effect((onCleanup) => {
+      const control = this.control();
+      const limitKey = this.limitKey();
+
+      // Read so the check runs again once the limits have loaded.
+      this.referenceDataService.limits();
+      if (!limitKey) return;
+
+      const rejectCheck: ValidatorFn = (c) => {
+        const value = parseNumber(c.value);
+        if (value === null) return null;
+        const limits = untracked(() => this.referenceDataService.limits());
+        const result = this.validationService.evaluate(limitKey, value, limits);
+        return result.severity === 'Reject' ? { limit: { message: result.message } } : null;
+      };
+      control.addValidators(rejectCheck);
+      untracked(() => control.updateValueAndValidity());
+      onCleanup(() => {
+        control.removeValidators(rejectCheck);
+        untracked(() => control.updateValueAndValidity());
+      });
+    });
+
+    // Counted in the page's "1 error blocks saving · 2 warnings" summary, when the page has one.
+    const issues = inject(FieldIssues, { optional: true });
+    if (issues) {
+      const unregister = issues.register(this.state);
+      inject(DestroyRef).onDestroy(unregister);
+    }
   }
+}
+
+/** "3000" → "3,000", "7.50" → "7.5". */
+function formatLimitNumber(value: number): string {
+  return formatNumber(value, 'en-US', '1.0-2');
+}
+
+/** "%" sits right after the number; other units get a space; "ratio" and blank show nothing. */
+function withLimitUnit(text: string, unit: string): string {
+  if (!unit || unit === 'ratio') return text;
+  return unit === '%' ? `${text}%` : `${text} ${unit}`;
 }

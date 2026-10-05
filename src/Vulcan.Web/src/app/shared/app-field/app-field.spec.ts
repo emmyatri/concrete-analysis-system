@@ -150,12 +150,12 @@ describe('AppField', () => {
     control.setValue(0);
     control.markAsTouched();
     fixture.detectChanges();
-    expect(component.computedHint()).toBe('1-9');
+    expect(component.computedHint()).toBe('1–9');
   });
 
   // Test for normal/warn hint
   it('should use the normal warn range for the hint when both limits exist', () => {
-    expect(component.computedHint()).toBe('7-7.5');
+    expect(component.computedHint()).toBe('7–7.5');
   });
 
   // Test server error state even when the control has not been touched.
@@ -173,14 +173,14 @@ describe('AppField', () => {
   it('should display the MgO range and the maximum hint when applicable', () => {
     fixture.componentRef.setInput('limitKey', 'Oxide.MagnesiumOxidePct');
     fixture.detectChanges();
-    expect(component.computedHint()).toBe('0.1-4 · max 6 %');
+    expect(component.computedHint()).toBe('0.1–4% · max 6%');
   });
 
   // Test SO₃ range/max hint
   it('should display the SO₃ range and the maximum hint when applicable', () => {
     fixture.componentRef.setInput('limitKey', 'Oxide.SulfurTrioxidePct');
     fixture.detectChanges();
-    expect(component.computedHint()).toBe('1.3-3 · max 4.5 %');
+    expect(component.computedHint()).toBe('1.3–3% · max 4.5%');
   });
 
   // Test for custom local validation message
@@ -250,5 +250,28 @@ describe('AppField', () => {
 
     expect(component.state()).toBe('error');
     expect(component.message()).toBe('Total composition must not exceed 100%');
+  });
+
+  // A red value makes the control itself invalid, so the form blocks Save.
+  it('should make the control invalid for a Reject value but not for a Warn value', () => {
+    control.setValue(0);
+    fixture.detectChanges();
+    expect(control.hasError('limit')).toBe(true);
+    expect(control.valid).toBe(false);
+
+    control.setValue(6);
+    fixture.detectChanges();
+    expect(control.valid).toBe(true);
+  });
+
+  // Mockup format: en dash, thousands separator, unit straight after %.
+  it('should format the hint like the mockup', () => {
+    fixture.componentRef.setInput('limitKey', 'Batch.ExpectedFinalBreakPsi');
+    fixture.detectChanges();
+    expect(component.computedHint()).toBe('3,000–10,000 PSI');
+
+    fixture.componentRef.setInput('limitKey', 'Composition.CementPct');
+    fixture.detectChanges();
+    expect(component.computedHint()).toBe('10–15%');
   });
 });

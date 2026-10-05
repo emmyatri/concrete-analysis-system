@@ -44,7 +44,23 @@
 
 .page-actions {
   display: flex;
+  align-items: center;
   gap: 12px;
+}
+
+// "1 error blocks saving · 2 warnings", next to the buttons.
+.save-summary {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--p-orange-700);
+}
+
+.save-summary--error {
+  color: var(--p-red-600);
+}
+
+.save-summary--muted {
+  color: var(--p-text-muted-color);
 }
 
 // ---------- Cards ----------
@@ -191,6 +207,30 @@
 .tile-value {
   font-size: 22px;
   font-weight: 600;
+}
+
+
+// Same colors as a red or amber field (M1-45).
+.tile-message {
+  font-size: 11px;
+}
+
+.tile--error {
+  border-color: var(--p-red-400);
+
+  .tile-value,
+  .tile-message {
+    color: var(--p-red-600);
+  }
+}
+
+.tile--warn {
+  border-color: var(--p-orange-400);
+  background: var(--p-orange-50);
+
+  .tile-message {
+    color: var(--p-orange-600);
+  }
 }
 
 .mix-bar {
