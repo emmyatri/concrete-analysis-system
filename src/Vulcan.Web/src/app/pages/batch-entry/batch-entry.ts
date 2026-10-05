@@ -6,8 +6,10 @@ import { ButtonModule } from 'primeng/button';
 import { DatePickerModule } from 'primeng/datepicker';
 import { InputTextModule } from 'primeng/inputtext';
 import { SelectModule } from 'primeng/select';
-import { AppField } from '../../shared/app-field/app-field';
+import { AppField, AppFieldState } from '../../shared/app-field/app-field';
 import { FieldIssues } from '../../core/validation/field-issues';
+import type { ValidationResult } from '../../core/validation/validation-result';
+import { ValidationService } from '../../core/validation/validation.service';
 import { parseNumber } from '../../core/validation/parse-number';
 
 import { ReferenceDataService } from '../../core/api/reference-data.service';
@@ -37,6 +39,7 @@ import { calculateComposition } from './composition-calc';
 export class BatchEntry {
   private readonly router = inject(Router);
   private readonly referenceData = inject(ReferenceDataService);
+  private readonly validation = inject(ValidationService);
   protected readonly issues = inject(FieldIssues);
 
   protected readonly cementTypes = CEMENT_TYPES;
@@ -52,7 +55,17 @@ export class BatchEntry {
   /** Save stays disabled until every field is filled in and nothing is red. Warnings still save. */
   protected readonly canSave = computed(() => {
     this.formChange();
-    return this.form.valid;
+    return this.form.valid && this.totalCheck().severity !== 'Reject';
+  });
+
+  /**
+   * The line next to Save: what blocks it. When nothing is red yet but fields are still empty,
+   * say so instead of leaving Save disabled with no reason.
+   */
+  protected readonly saveMessage = computed(() => {
+    const summary = this.issues.summary();
+    if (this.issues.errors() > 0 || this.canSave()) return summary;
+    return summary ? `Fill in every field to save · ${summary}` : 'Fill in every field to save';
   });
 
   // ---------- Calculated · not stored ----------
@@ -73,6 +86,21 @@ export class BatchEntry {
     );
   });
 
+  /** Total over 100% is an error, like a red field: it blocks Save. */
+  protected readonly totalCheck = computed(() =>
+    this.check('Composition.TotalPct', this.totals().totalPct),
+  );
+
+  /** Water / cementitious outside the normal range is a warning; it still saves. */
+  protected readonly ratioCheck = computed(() => {
+    const ratio = this.totals().waterCementRatio;
+    return ratio === null ? NO_ISSUE : this.check('Composition.WaterCementRatio', ratio);
+  });
+
+  private check(limitKey: string, value: number): ValidationResult {
+    return this.validation.evaluate(limitKey, value, this.referenceData.limits());
+  }
+
   protected readonly mix = computed(() => {
     this.formChange();
     const v = this.form.controls.composition.getRawValue();
@@ -91,12 +119,28 @@ export class BatchEntry {
   });
 
   constructor() {
-    // The SCM type rule depends on SCM %, so re-check it when SCM % changes.
+    // The calculated tiles count toward "1 error blocks saving · 2 warnings" like any field.
+    this.issues.register(computed(() => toState(this.totalCheck())));
+    this.issues.register(computed(() => toState(this.ratioCheck())));
+
+    // The SCM type rule depends on SCM %, so re-check it when SCM % changes, and show the result
+    // on SCM type right away (it may never have been clicked).
     const { scmPct, scmType } = this.form.controls.composition.controls;
-    scmPct.valueChanges.subscribe(() => scmType.updateValueAndValidity());
+    scmPct.valueChanges.subscribe(() => {
+      scmType.markAsTouched();
+      scmType.updateValueAndValidity();
+    });
   }
 
   protected cancel(): void {
     this.router.navigate(['/']);
   }
+}
+
+const NO_ISSUE: ValidationResult = { severity: null, message: null };
+
+function toState(result: ValidationResult): AppFieldState {
+  if (result.severity === 'Reject') return 'error';
+  if (result.severity === 'Warn') return 'warn';
+  return 'normal';
 }

@@ -104,10 +104,10 @@ describe('BatchEntry', () => {
     await fixture.whenStable();
     expect(save().disabled).toBe(false);
 
-    // Cement 20% is outside 10–15%: red, and Save is blocked. pH 7.8 is only a warning.
-    const { cementPct } = form().controls.composition.controls;
-    cementPct.setValue('20');
-    cementPct.markAsTouched();
+    // 2,000 PSI is outside 3,000–10,000: red, and Save is blocked. pH 7.8 is only a warning.
+    const { expectedFinalBreakPsi } = form().controls.batch.controls;
+    expectedFinalBreakPsi.setValue('2000');
+    expectedFinalBreakPsi.markAsTouched();
     const { mixWaterPh } = form().controls.batch.controls;
     mixWaterPh.setValue('7.8');
     mixWaterPh.markAsTouched();
@@ -118,6 +118,76 @@ describe('BatchEntry', () => {
     expect(el().querySelector('[data-testid="save-summary"]')?.textContent?.trim()).toBe(
       '1 error blocks saving · 1 warning',
     );
+  });
+
+  it('blocks Save when the total is over 100%, and warns on the water / cementitious ratio', async () => {
+    const save = () => el().querySelector('[data-testid="save-batch"] button') as HTMLButtonElement;
+    form().patchValue({
+      batch: { batchNumber: 'VSN-003', castAt: new Date(2026, 8, 29, 11, 40), finalWeightLb: '10000', expectedFinalBreakPsi: '3000', cementType: 'TypeII', mixWaterPh: '7.2' },
+      // 14 + 17 + 40 + 29 + 2 = 102%
+      composition: { cementPct: '14', waterPct: '17', coarseAggregatePct: '40', fineAggregatePct: '29', scmType: 'FlyAsh', scmPct: '2' },
+      oxides: { aluminaPct: '4.8', ironOxidePct: '2.8', magnesiumOxidePct: '1.8', sulfurTrioxidePct: '2.2' },
+    });
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    expect(form().valid).toBe(true);
+    expect(save().disabled).toBe(true);
+    expect(el().querySelector('[data-testid="total"]')?.classList).toContain('tile--error');
+    expect(el().querySelector('[data-testid="total-message"]')?.textContent?.trim()).toBe(
+      'Total composition must not exceed 100%',
+    );
+    expect(el().querySelector('[data-testid="water-cement"]')?.classList).toContain('tile--warn');
+    expect(el().querySelector('[data-testid="save-summary"]')?.textContent?.trim()).toBe(
+      '1 error blocks saving · 1 warning',
+    );
+
+    // Back to 100%: Save enables. The ratio warning alone doesn't block it.
+    form().controls.composition.controls.fineAggregatePct.setValue('27');
+    fixture.detectChanges();
+    await fixture.whenStable();
+    expect(save().disabled).toBe(false);
+  });
+
+  it('treats text and blanks as missing numbers, not valid ones', () => {
+    const { finalWeightLb, mixWaterPh } = form().controls.batch.controls;
+
+    finalWeightLb.setValue('abc');
+    expect(finalWeightLb.errors?.['number']?.message).toBe('Enter a number');
+    finalWeightLb.setValue('1e3');
+    expect(finalWeightLb.errors?.['number']?.message).toBe('Enter a number');
+    mixWaterPh.setValue('   ');
+    expect(mixWaterPh.errors?.['required']).toBe(true);
+    finalWeightLb.setValue('4,380.00');
+    expect(finalWeightLb.valid).toBe(true);
+  });
+
+  it('takes whole numbers for expected break and at most 2 decimals for weight', () => {
+    const { expectedFinalBreakPsi, finalWeightLb } = form().controls.batch.controls;
+
+    expectedFinalBreakPsi.setValue('6000.5');
+    expect(expectedFinalBreakPsi.errors?.['decimals']?.message).toBe('Whole numbers only');
+    expectedFinalBreakPsi.setValue('6000');
+    expect(expectedFinalBreakPsi.valid).toBe(true);
+
+    finalWeightLb.setValue('4380.123');
+    expect(finalWeightLb.errors?.['decimals']?.message).toBe('Max 2 decimal places');
+    finalWeightLb.setValue('4380.12');
+    expect(finalWeightLb.valid).toBe(true);
+  });
+
+  it('says why Save is off when nothing is red yet, and shows the SCM type error right away', async () => {
+    const message = () => el().querySelector('[data-testid="save-summary"]')?.textContent?.trim();
+    expect(message()).toBe('Fill in every field to save');
+
+    const { scmType, scmPct } = form().controls.composition.controls;
+    scmType.setValue('FlyAsh');
+    scmPct.setValue('0');
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    expect(scmType.touched).toBe(true);
+    expect(message()).toBe('1 error blocks saving');
   });
 
 });

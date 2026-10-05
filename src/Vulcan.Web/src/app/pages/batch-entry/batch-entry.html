@@ -10,9 +10,10 @@
     </div>
 
     <div class="page-actions">
-      @if (issues.summary()) {
-        <span class="save-summary" [class.save-summary--error]="issues.errors() > 0" data-testid="save-summary"
-              role="status">{{ issues.summary() }}</span>
+      @if (saveMessage()) {
+        <span class="save-summary" [class.save-summary--error]="issues.errors() > 0"
+              [class.save-summary--muted]="issues.errors() === 0 && !canSave()" data-testid="save-summary"
+              role="status">{{ saveMessage() }}</span>
       }
       <p-button label="Cancel" [outlined]="true" (onClick)="cancel()" />
       <!-- Disabled while anything is red or missing. Sending the batch to the server comes next. -->
@@ -134,18 +135,24 @@
           <div class="calculated" aria-live="polite">
             <p class="calculated-label">Calculated live · not stored</p>
             <div class="tiles">
-              <div class="tile" data-testid="total">
+              <div class="tile" data-testid="total" [class.tile--error]="totalCheck().severity === 'Reject'">
                 <span class="tile-label">Total</span>
                 <span class="tile-value">{{ totals().totalPct.toFixed(2) }}%</span>
+                @if (totalCheck().message) {
+                  <span class="tile-message" data-testid="total-message">{{ totalCheck().message }}</span>
+                }
               </div>
               <div class="tile" data-testid="air-other">
                 <span class="tile-label">Air / other</span>
                 <span class="tile-value">{{ totals().airOtherPct.toFixed(2) }}%</span>
                 <span class="tile-note">100 − total</span>
               </div>
-              <div class="tile" data-testid="water-cement">
+              <div class="tile" data-testid="water-cement" [class.tile--warn]="ratioCheck().severity === 'Warn'">
                 <span class="tile-label">Water / cementitious</span>
                 <span class="tile-value">{{ totals().waterCementRatio?.toFixed(2) ?? '—' }}</span>
+                @if (ratioCheck().message) {
+                  <span class="tile-message" data-testid="water-cement-message">{{ ratioCheck().message }}</span>
+                }
               </div>
             </div>
 
