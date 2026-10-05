@@ -19,7 +19,7 @@ describe('AppField', () => {
       ],
     });
 
-    // Create a new FormControl with an initial value of 3500.
+    // Create an initially empty control so each test can set its own value.
     control = new FormControl<number | string | null>(null);
     // Create the test component for the AppField component.
     fixture = TestBed.createComponent(AppField);
@@ -100,20 +100,21 @@ describe('AppField', () => {
   });
 
   // Test MgO range/max hint
-  it('should display the range and the maximum hint when applicable', () => {
+  it('should display the MgO  range and the maximum hint when applicable', () => {
     fixture.componentRef.setInput('limitKey', 'Oxide.MagnesiumOxidePct');
     fixture.detectChanges();
     expect(component.computedHint()).toBe('0.1-4 · max 6 %');
   });
 
   // Test SO₃ range/max hint
-  it('should display the range and the maximum hint when applicable', () => {
+  it('should display the SO₃ range and the maximum hint when applicable', () => {
     fixture.componentRef.setInput('limitKey', 'Oxide.SulfurTrioxidePct');
     fixture.detectChanges();
     expect(component.computedHint()).toBe('1.3-3 · max 4.5 %');
   });
 
   // Test for custom local validation message
+  // The helper reads nested messages without knowing the validator key
   it('should display a custom local validation message', () => {
     control.setErrors({
       batchNumber: {
