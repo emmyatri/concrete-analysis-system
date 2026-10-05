@@ -115,7 +115,7 @@ A ticket is **Done** only when all of these are true:
 
 These are the ones reviewers will send PRs back for.
 
-- **All validation lives in `Vulcan.Domain`.** Not in the screens, not in the API.
+- **Validation rules live in `Vulcan.Domain` and the `ValidationLimit` data.** Screens may read `ValidationLimit` for instant feedback, but never hard-code a range. The server always checks again.
 - **Never hard-code a limit.** Ranges come from the `ValidationLimit` table. If you type `15` or `3000` in a rule, it's
   wrong.
 - **The schema is locked.** Need a new or renamed field? Open a PR that changes `docs/schema.md` first, and write the

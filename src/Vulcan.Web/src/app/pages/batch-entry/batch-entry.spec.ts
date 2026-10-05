@@ -90,6 +90,36 @@ describe('BatchEntry', () => {
     batchNumber.setValue('VM-2026-0142');
     expect(batchNumber.valid).toBe(true);
   });
+
+  it('keeps Save disabled until the form is valid, and shows what blocks it', async () => {
+    const save = () => el().querySelector('[data-testid="save-batch"] button') as HTMLButtonElement;
+    expect(save().disabled).toBe(true);
+
+    form().patchValue({
+      batch: { batchNumber: 'VM-2026-0142', castAt: new Date(2026, 8, 29, 11, 40), finalWeightLb: '4380', expectedFinalBreakPsi: '6000', cementType: 'TypeIII', mixWaterPh: '7.2' },
+      composition: { cementPct: '12', waterPct: '17', coarseAggregatePct: '44', fineAggregatePct: '25', scmType: 'FlyAsh', scmPct: '2' },
+      oxides: { aluminaPct: '4.8', ironOxidePct: '2.8', magnesiumOxidePct: '1.8', sulfurTrioxidePct: '2.2' },
+    });
+    fixture.detectChanges();
+    await fixture.whenStable();
+    expect(save().disabled).toBe(false);
+
+    // Cement 20% is outside 10–15%: red, and Save is blocked. pH 7.8 is only a warning.
+    const { cementPct } = form().controls.composition.controls;
+    cementPct.setValue('20');
+    cementPct.markAsTouched();
+    const { mixWaterPh } = form().controls.batch.controls;
+    mixWaterPh.setValue('7.8');
+    mixWaterPh.markAsTouched();
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    expect(save().disabled).toBe(true);
+    expect(el().querySelector('[data-testid="save-summary"]')?.textContent?.trim()).toBe(
+      '1 error blocks saving · 1 warning',
+    );
+  });
+
 });
 
 describe('toCreateBatchRequest', () => {

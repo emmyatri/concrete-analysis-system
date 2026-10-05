@@ -195,8 +195,8 @@ and are never added to the composition total (FR-3).
 |---------------------|---------|-------------|------|--------------------------------------|------------------|
 | `Id`                | int     | —           | auto | Primary key                          | —                |
 | `BatchId`           | int     | —           | Yes  | FK → Batch; unique                   | FR-3             |
-| `AluminaPct`        | decimal | % of cement | Yes  | Warn: `Oxide.AluminaPct` (3.0–7.5)   | FR-3             |
-| `IronOxidePct`      | decimal | % of cement | Yes  | Warn: `Oxide.IronOxidePct` (0.5–6.0) | FR-3             |
+| `AluminaPct`        | decimal | % of cement | Yes  | Warn 3.0–7.5; Reject 0–100           | FR-3             |
+| `IronOxidePct`      | decimal | % of cement | Yes  | Warn 0.5–6.0; Reject 0–100           | FR-3             |
 | `MagnesiumOxidePct` | decimal | % of cement | Yes  | Warn 0.1–4.0; **Reject > 6.0**       | FR-3             |
 | `SulfurTrioxidePct` | decimal | % of cement | Yes  | Warn 1.3–3.0; **Reject > 4.5**       | FR-3, Decision 7 |
 

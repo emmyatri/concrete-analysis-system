@@ -44,7 +44,19 @@
 
 .page-actions {
   display: flex;
+  align-items: center;
   gap: 12px;
+}
+
+// "1 error blocks saving · 2 warnings", next to the buttons.
+.save-summary {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--p-orange-700);
+}
+
+.save-summary--error {
+  color: var(--p-red-600);
 }
 
 // ---------- Cards ----------

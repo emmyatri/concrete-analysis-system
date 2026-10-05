@@ -7,6 +7,7 @@ import { DatePickerModule } from 'primeng/datepicker';
 import { InputTextModule } from 'primeng/inputtext';
 import { SelectModule } from 'primeng/select';
 import { AppField } from '../../shared/app-field/app-field';
+import { FieldIssues } from '../../core/validation/field-issues';
 import { parseNumber } from '../../core/validation/parse-number';
 
 import { ReferenceDataService } from '../../core/api/reference-data.service';
@@ -30,10 +31,13 @@ import { calculateComposition } from './composition-calc';
   ],
   templateUrl: './batch-entry.html',
   styleUrl: './batch-entry.scss',
+  // Every AppField on the page reports to this, for the summary next to Save.
+  providers: [FieldIssues],
 })
 export class BatchEntry {
   private readonly router = inject(Router);
   private readonly referenceData = inject(ReferenceDataService);
+  protected readonly issues = inject(FieldIssues);
 
   protected readonly cementTypes = CEMENT_TYPES;
   protected readonly scmTypes = SCM_TYPES;
@@ -44,6 +48,12 @@ export class BatchEntry {
 
   /** Re-runs the calculated values below on any form change. */
   private readonly formChange = toSignal(this.form.events, { initialValue: null });
+
+  /** Save stays disabled until every field is filled in and nothing is red. Warnings still save. */
+  protected readonly canSave = computed(() => {
+    this.formChange();
+    return this.form.valid;
+  });
 
   // ---------- Calculated · not stored ----------
 
