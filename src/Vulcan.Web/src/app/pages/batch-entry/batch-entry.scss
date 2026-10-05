@@ -63,6 +63,27 @@
   color: var(--p-text-muted-color);
 }
 
+// Problems that don't belong to one field.
+.save-banner {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 10px 14px;
+  border: 1px solid var(--p-red-300);
+  border-radius: 6px;
+  background: var(--p-red-50);
+  color: var(--p-red-700);
+  font-size: 14px;
+
+  p {
+    margin: 0;
+  }
+
+  .pi {
+    margin-top: 2px;
+  }
+}
+
 // ---------- Cards ----------
 
 .columns {

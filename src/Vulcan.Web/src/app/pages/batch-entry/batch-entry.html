@@ -16,11 +16,24 @@
               role="status">{{ saveMessage() }}</span>
       }
       <p-button label="Cancel" [outlined]="true" (onClick)="cancel()" />
-      <!-- Disabled while anything is red or missing. Sending the batch to the server comes next. -->
-      <p-button label="Save & add cylinders" [disabled]="!canSave()" data-testid="save-add-cylinders" />
-      <p-button label="Save batch" [disabled]="!canSave()" data-testid="save-batch" />
+      <!-- Disabled while anything is red or missing, and while saving. -->
+      <p-button label="Save & add cylinders" [disabled]="!canSave() || saving()" (onClick)="save('cylinders')"
+                data-testid="save-add-cylinders" />
+      <p-button label="Save batch" [disabled]="!canSave() || saving()" [loading]="saving()" (onClick)="save('batch')"
+                data-testid="save-batch" />
     </div>
   </header>
+
+  @if (saveErrors().length > 0) {
+    <div class="save-banner" role="alert" data-testid="save-banner">
+      <i class="pi pi-exclamation-circle" aria-hidden="true"></i>
+      <div>
+        @for (message of saveErrors(); track message) {
+          <p>{{ message }}</p>
+        }
+      </div>
+    </div>
+  }
 
   <div class="columns">
     <div class="column">

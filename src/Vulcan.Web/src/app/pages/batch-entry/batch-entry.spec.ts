@@ -1,12 +1,14 @@
-﻿import { provideHttpClient, withInterceptors } from '@angular/common/http';
+﻿import { HttpErrorResponse, provideHttpClient, withInterceptors } from '@angular/common/http';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { NonNullableFormBuilder } from '@angular/forms';
-import { provideRouter } from '@angular/router';
+import { Router, provideRouter } from '@angular/router';
 import { providePrimeNG } from 'primeng/config';
+import { throwError } from 'rxjs';
 
-import { mockApiInterceptor } from '../../core/api/mock/mock-api.interceptor';
+import { clearSavedMockBatches, mockApiInterceptor } from '../../core/api/mock/mock-api.interceptor';
 import { ReferenceDataService } from '../../core/api/reference-data.service';
 import { USE_MOCKS } from '../../core/api/use-mocks';
+import { VulcanApiService } from '../../core/api/vulcan-api.service';
 import { VulcanPreset } from '../../theme/vulcan-preset';
 import { BatchEntry } from './batch-entry';
 import { createBatchForm, toCreateBatchRequest } from './batch-form';
@@ -15,6 +17,7 @@ describe('BatchEntry', () => {
   let fixture: ComponentFixture<BatchEntry>;
 
   beforeEach(() => {
+    clearSavedMockBatches();
     TestBed.configureTestingModule({
       imports: [BatchEntry],
       providers: [
@@ -188,6 +191,70 @@ describe('BatchEntry', () => {
 
     expect(scmType.touched).toBe(true);
     expect(message()).toBe('1 error blocks saving');
+  });
+
+
+  // ---------- Saving ----------
+
+  /** A batch that passes every check, with a batch number that isn't taken yet. */
+  const fillValidBatch = (batchNumber: string) =>
+    form().patchValue({
+      batch: { batchNumber, castAt: new Date(2026, 9, 5, 14, 0), finalWeightLb: '4380', expectedFinalBreakPsi: '6000', cementType: 'TypeI', mixWaterPh: '7.2' },
+      composition: { cementPct: '10', waterPct: '17', coarseAggregatePct: '45', fineAggregatePct: '26', scmType: 'FlyAsh', scmPct: '2' },
+      oxides: { aluminaPct: '4.8', ironOxidePct: '2.8', magnesiumOxidePct: '1.8', sulfurTrioxidePct: '2.2' },
+    });
+  const click = async (testId: string) => {
+    fixture.detectChanges();
+    await fixture.whenStable();
+    (el().querySelector(`[data-testid="${testId}"] button`) as HTMLButtonElement).click();
+    await fixture.whenStable();
+    fixture.detectChanges();
+  };
+
+  it('saves the batch and opens it', async () => {
+    const navigate = vi.spyOn(TestBed.inject(Router), 'navigate').mockResolvedValue(true);
+    fillValidBatch('VM-SAVE-0001');
+
+    await click('save-batch');
+
+    expect(navigate).toHaveBeenCalledWith(['/batches', 'VM-SAVE-0001']);
+  });
+
+  it('Save & add cylinders opens Add cylinder for the new batch', async () => {
+    const navigate = vi.spyOn(TestBed.inject(Router), 'navigate').mockResolvedValue(true);
+    fillValidBatch('VM-SAVE-0002');
+
+    await click('save-add-cylinders');
+
+    expect(navigate).toHaveBeenCalledWith(['/batches', 'VM-SAVE-0002', 'cylinders', 'new']);
+  });
+
+  it('shows a duplicate batch number from the server next to the Batch number field', async () => {
+    const navigate = vi.spyOn(TestBed.inject(Router), 'navigate').mockResolvedValue(true);
+    fillValidBatch('VM-2026-0142');
+
+    await click('save-batch');
+
+    const batchNumber = form().controls.batch.controls.batchNumber;
+    expect(navigate).not.toHaveBeenCalled();
+    expect(batchNumber.errors?.['server']).toBe('Batch number VM-2026-0142 already exists');
+    expect(el().querySelector('[data-testid="save-banner"]')).toBeNull();
+
+    // Changing the value clears the server's message.
+    batchNumber.setValue('VM-SAVE-0003');
+    expect(batchNumber.errors).toBeNull();
+  });
+
+  it("shows a banner when the local service can't be reached, and keeps the form", async () => {
+    vi.spyOn(TestBed.inject(VulcanApiService), 'createBatch').mockReturnValue(
+      throwError(() => new HttpErrorResponse({ status: 0 })),
+    );
+    fillValidBatch('VM-SAVE-0004');
+
+    await click('save-batch');
+
+    expect(el().querySelector('[data-testid="save-banner"]')?.textContent).toContain("Can't reach the local service");
+    expect(form().controls.batch.controls.batchNumber.value).toBe('VM-SAVE-0004');
   });
 
 });

@@ -1,4 +1,5 @@
 ﻿import synthetic from '../../../../../../../data/synthetic/batches.json';
+import { CreateBatchRequest } from '../batches';
 import { BatchComposition, BatchDetail, SavedWarning, ScmType, Specimen, TestAge } from '../models';
 import { MOCK_BATCHES, MOCK_SPECIFIC_GRAVITIES, MOCK_VALIDATION_LIMITS } from './mock-data';
 
@@ -202,3 +203,30 @@ export const MOCK_BATCH_DETAILS: BatchDetail[] = [
   mockupBatch(),
   ...synthetic.Batches.map(fromSynthetic),
 ];
+
+
+/** A batch saved from New batch while the app is open, in the same shape as the fake ones. */
+export function mockBatchDetailFromRequest(
+  id: number,
+  request: CreateBatchRequest,
+  createdBy: string,
+): BatchDetail {
+  const batch = {
+    id,
+    batchNumber: request.batch.batchNumber,
+    castAt: request.batch.castAt,
+    finalWeightLb: request.batch.finalWeightLb,
+    expectedFinalBreakPsi: request.batch.expectedFinalBreakPsi,
+    cementType: request.batch.cementType,
+    mixWaterPh: request.batch.mixWaterPh,
+    isSynthetic: false,
+    createdAtUtc: new Date().toISOString(),
+    createdBy,
+    modifiedAtUtc: null,
+    modifiedBy: null,
+    composition: calculate({ ...request.composition }),
+    oxides: { ...request.oxides },
+    specimens: [],
+  };
+  return { ...batch, warnings: warningsFor(batch) };
+}

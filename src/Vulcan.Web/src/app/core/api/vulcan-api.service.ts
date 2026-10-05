@@ -1,6 +1,7 @@
 ﻿import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 
+import { CreateBatchRequest, CreateBatchResponse } from './batches';
 import { BatchDetail, BatchQuery, BatchSummary, SpecificGravity, ValidationLimit } from './models';
 
 /**
@@ -31,5 +32,10 @@ export class VulcanApiService {
   /** Everything about one batch. Fails with a 404 if there's no batch with that number. */
   getBatch(batchNumber: string) {
     return this.http.get<BatchDetail>(`/api/batches/${encodeURIComponent(batchNumber)}`);
+  }
+
+  /** Saves a new batch with its composition and oxides. A 400 lists the bad values by ValidationLimit key. */
+  createBatch(request: CreateBatchRequest) {
+    return this.http.post<CreateBatchResponse>('/api/batches', request);
   }
 }
