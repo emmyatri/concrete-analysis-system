@@ -55,21 +55,34 @@ public class ApiHostTests
     }
 
     // M1-24 requires the approved synthetic dataset to be loaded on startup
-    // when SeedSyntheticData is explicitly enabled and the database is empty.
+    // when SeedSyntheticData is enabled and the database is empty.
+    // The demo machine enables this setting through an environment variable.
     [Fact]
-    public async Task Synthetic_seed_data_loads_when_enabled()
+    public async Task Synthetic_seed_data_loads_when_environment_variable_is_enabled()
     {
-        string[] args = ["--environment=Testing", "--SeedSyntheticData=true"];
+        const string settingName = "SeedSyntheticData";
+        var originalValue = Environment.GetEnvironmentVariable(settingName);
 
-        await using var app = ApiHost.Create(args);
+        try
+        {
+            Environment.SetEnvironmentVariable(settingName, "true");
 
-        using var scope = app.Services.CreateScope();
-        var db = scope.ServiceProvider.GetRequiredService<VulcanDbContext>();
+            await using var app = ApiHost.Create(_args);
 
-        var batches = await db.Batch.ToListAsync();
+            using var scope = app.Services.CreateScope();
+            var db = scope.ServiceProvider.GetRequiredService<VulcanDbContext>();
 
-        batches.Count.ShouldBe(9);
-        batches.ShouldAllBe(batch => batch.IsSynthetic);
+            var batches = await db.Batch.ToListAsync();
+
+            batches.Count.ShouldBe(9);
+            batches.ShouldAllBe(batch => batch.IsSynthetic);
+        }
+        finally
+        {
+            // Restore the original process environment so this test cannot
+            // affect other API tests running in the same test process.
+            Environment.SetEnvironmentVariable(settingName, originalValue);
+        }
     }
 
     // M1-24 requires synthetic data to load only into an empty database.

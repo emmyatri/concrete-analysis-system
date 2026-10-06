@@ -32,8 +32,7 @@ public class SyntheticDataLoaderTests(DatabaseFixture dbFixture)
     [Fact]
     public async Task Seed_EmptyDatabase_LoadsSyntheticBatches()
     {
-        await using var db = _dbFixture.CreateDbContext();
-        await db.Database.MigrateAsync();
+        await using var db = await CreateEmptyDatabaseAsync();
 
         SyntheticDataSeeder.Seed(db);
 
@@ -48,6 +47,14 @@ public class SyntheticDataLoaderTests(DatabaseFixture dbFixture)
         Assert.All(
             await db.Batch.ToListAsync(),
             batch => Assert.True(batch.IsSynthetic));
+
+        Assert.All(
+            await db.Batch.ToListAsync(),
+            batch => Assert.True(batch.IsSynthetic));
+
+        Assert.All(
+            await db.Specimen.ToListAsync(),
+            specimen => Assert.True(specimen.IsSynthetic));
     }
 
     // M1-24 requires seeding to be idempotent. Once batches exist,
@@ -55,12 +62,21 @@ public class SyntheticDataLoaderTests(DatabaseFixture dbFixture)
     [Fact]
     public async Task Seed_CalledTwice_DoesNotCreateDuplicates()
     {
-        await using var db = _dbFixture.CreateDbContext();
-        await db.Database.MigrateAsync();
+        await using var db = await CreateEmptyDatabaseAsync();
 
         SyntheticDataSeeder.Seed(db);
         SyntheticDataSeeder.Seed(db);
 
         Assert.Equal(9, await db.Batch.CountAsync());
+    }
+
+    private async Task<VulcanDbContext> CreateEmptyDatabaseAsync()
+    {
+        var db = _dbFixture.CreateDbContext();
+
+        await db.Database.EnsureDeletedAsync();
+        await db.Database.MigrateAsync();
+
+        return db;
     }
 }
