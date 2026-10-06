@@ -2,9 +2,9 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.FileProviders;
+using Microsoft.OpenApi;
 using Vulcan.Api.Technicians;
 using Vulcan.Infrastructure;
-using Microsoft.OpenApi;
 
 namespace Vulcan.Api;
 
