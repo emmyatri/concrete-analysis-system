@@ -38,7 +38,10 @@ export const routes: Routes = [
         path: 'batches/:batchNumber/cylinders/new',
         redirectTo: ({ params }) => `/batches/${params['batchNumber']}?addCylinder=1`,
       },
-      { path: 'breaks', component: PlaceholderPage, data: { heading: 'Break results' } },
+      {
+        path: 'breaks',
+        loadComponent: () => import('./pages/break-results/break-results').then((m) => m.BreakResultsPage),
+      },
       { path: 'curing', component: PlaceholderPage, data: { heading: 'Curing readings' } },
     ],
   },

@@ -147,7 +147,10 @@ describe('BatchDetailPage', () => {
     await open('VM-2026-0142');
 
     expect(root.querySelector('[data-testid="synthetic-tag"]')).toBeNull();
-    expect(rows('cylinders').map((r) => cells(r)[5])).toEqual(Array(6).fill('Not broken'));
+    expect(rows('cylinders').map((r) => cells(r)[5])).toEqual(Array(6).fill('Record break'));
+    expect(root.querySelector('[data-testid="record-break"]')?.getAttribute('href')).toBe(
+      '/breaks?batch=VM-2026-0142&cylinder=A1',
+    );
     expect(text('[data-testid="audit"]')).toContain('Changed by J. Rivera');
     expect(text('.tabs-card')).toContain('No curing readings yet.');
   });

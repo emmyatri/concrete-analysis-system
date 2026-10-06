@@ -170,3 +170,29 @@ export interface CreateSpecimenResponse {
   id: number;
   label: string;
 }
+
+
+/** GET /api/breaks/pending: a cylinder that hasn't been broken yet (M1-62, Break results). */
+export interface PendingBreak {
+  specimenId: number;
+  batchNumber: string;
+  label: string;
+  testAgeDays: TestAge;
+  /** The batch's cast date, ISO date-time, UTC. */
+  castAt: string;
+  isSynthetic: boolean;
+}
+
+/** POST /api/specimens/{specimenId}/break: the strength from crushing one cylinder (M1-62). */
+export interface CreateBreakResultRequest {
+  /** ISO date-time, UTC. Not before the batch's cast date and not in the future. */
+  brokenAt: string;
+  /** Whole PSI. */
+  strengthPsi: number;
+}
+
+/** 201 response. A strength below 3,000 PSI saves and comes back as a warning. */
+export interface CreateBreakResultResponse {
+  id: number;
+  warnings: RecordWarning[];
+}
