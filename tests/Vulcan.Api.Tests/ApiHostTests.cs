@@ -14,6 +14,7 @@ namespace Vulcan.Api.Tests;
 /// Checks how the in-process API starts, where it listens and how it shuts down.
 /// UI serving is covered in <see cref="ApiHostUiTests"/>.
 /// </summary>
+[Collection("NonParallel")]
 public class ApiHostTests
 {
     private readonly string[] _args = ["--environment=Testing"];
