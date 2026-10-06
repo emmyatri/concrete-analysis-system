@@ -67,7 +67,7 @@ public sealed class BatchService(
 
         return ServiceResult<Batch>.Success(batch);
     }
-    
+
     public async Task<Batch?> GetByNumberAsync(string batchNumber)
     {
         var normalizedBatchNumber =
@@ -75,7 +75,7 @@ public sealed class BatchService(
 
         return await batchRepository.GetByNumberAsync(normalizedBatchNumber);
     }
-    
+
     public async Task<IReadOnlyList<Batch>> SearchAsync(
         string searchTerm,
         int page = 1)
@@ -94,17 +94,17 @@ public sealed class BatchService(
             page,
             PageSize);
     }
-    
+
     public async Task<ServiceResult<Batch>> UpdateAsync(
     string batchNumber,
     Batch updatedBatch)
     {
         var normalizedBatchNumber =
             BatchValidator.NormalizeBatchNumber(batchNumber);
-    
+
         var existingBatch =
             await batchRepository.GetByNumberAsync(normalizedBatchNumber);
-    
+
         if (existingBatch is null)
         {
             return ServiceResult<Batch>.Failure(
@@ -114,14 +114,14 @@ public sealed class BatchService(
                     "Batch was not found.")
             ]);
         }
-    
+
         var errors = new List<ValidationError>();
-    
+
         updatedBatch.BatchNumber =
             BatchValidator.NormalizeBatchNumber(updatedBatch.BatchNumber);
-    
+
         ValidateBatch(updatedBatch, errors);
-    
+
         if (updatedBatch.Composition is null)
         {
             errors.Add(new ValidationError(
@@ -133,7 +133,7 @@ public sealed class BatchService(
             errors.AddRange(
                 compositionValidator.Validate(updatedBatch.Composition));
         }
-    
+
         if (updatedBatch.CementOxideAnalysis is null)
         {
             errors.Add(new ValidationError(
@@ -147,21 +147,21 @@ public sealed class BatchService(
                 updatedBatch.CementOxideAnalysis.IronOxidePct,
                 updatedBatch.CementOxideAnalysis.MagnesiumOxidePct,
                 updatedBatch.CementOxideAnalysis.SulfurTrioxidePct);
-    
+
             errors.AddRange(oxideResult.Errors);
         }
-    
+
         if (errors.Count > 0)
         {
             return ServiceResult<Batch>.Failure(errors);
         }
-    
+
         existingBatch.CastAt = updatedBatch.CastAt;
         existingBatch.FinalWeightLb = updatedBatch.FinalWeightLb;
         existingBatch.ExpectedFinalBreakPsi = updatedBatch.ExpectedFinalBreakPsi;
         existingBatch.CementType = updatedBatch.CementType;
         existingBatch.MixWaterPh = updatedBatch.MixWaterPh;
-    
+
         existingBatch.Composition!.CementPct =
             updatedBatch.Composition!.CementPct;
         existingBatch.Composition.ScmPct =
@@ -174,7 +174,7 @@ public sealed class BatchService(
             updatedBatch.Composition.FineAggregatePct;
         existingBatch.Composition.WaterPct =
             updatedBatch.Composition.WaterPct;
-    
+
         existingBatch.CementOxideAnalysis!.AluminaPct =
             updatedBatch.CementOxideAnalysis!.AluminaPct;
         existingBatch.CementOxideAnalysis.IronOxidePct =
@@ -183,9 +183,9 @@ public sealed class BatchService(
             updatedBatch.CementOxideAnalysis.MagnesiumOxidePct;
         existingBatch.CementOxideAnalysis.SulfurTrioxidePct =
             updatedBatch.CementOxideAnalysis.SulfurTrioxidePct;
-    
+
         await batchRepository.SaveChangesAsync();
-    
+
         return ServiceResult<Batch>.Success(existingBatch);
     }
 

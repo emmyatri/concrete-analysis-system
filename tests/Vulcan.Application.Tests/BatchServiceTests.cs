@@ -1,4 +1,3 @@
-﻿using Vulcan.Application.Interfaces;
 using Vulcan.Application.Services;
 using Vulcan.Domain.Entities;
 using Vulcan.Domain.Enums;
@@ -45,7 +44,7 @@ public class BatchServiceTests(DatabaseFixture fixture)
         Assert.Equal(12m, saved.Composition.CementPct);
         Assert.Equal(5m, saved.CementOxideAnalysis.AluminaPct);
     }
-    
+
     [Fact]
     public async Task CreateAsync_InvalidBatch_ReturnsFieldErrorsAndDoesNotSave()
     {
@@ -75,7 +74,7 @@ public class BatchServiceTests(DatabaseFixture fixture)
         var saved = await repository.GetByNumberAsync("BADBATCH!");
         Assert.Null(saved);
     }
-    
+
     [Fact]
     public async Task GetByNumberAsync_ExistingBatch_LoadsCompleteBatch()
     {
@@ -105,7 +104,7 @@ public class BatchServiceTests(DatabaseFixture fixture)
         Assert.NotNull(loaded.Composition);
         Assert.NotNull(loaded.CementOxideAnalysis);
     }
-    
+
     [Fact]
     public async Task UpdateAsync_ValidBatch_PersistsChanges()
     {
@@ -161,7 +160,7 @@ public class BatchServiceTests(DatabaseFixture fixture)
         Assert.Equal(6m, loaded.CementOxideAnalysis.AluminaPct);
         Assert.Equal(4m, loaded.CementOxideAnalysis.IronOxidePct);
     }
-    
+
     [Fact]
     public async Task UpdateAsync_InvalidBatch_ReturnsFieldErrorsAndDoesNotPersistChanges()
     {
@@ -200,7 +199,7 @@ public class BatchServiceTests(DatabaseFixture fixture)
         Assert.NotNull(loaded);
         Assert.Equal(30m, loaded.FinalWeightLb);
     }
-    
+
     [Fact]
     public async Task SearchAsync_PartialMatch_ReturnsNewestFirstAndFiftyPerPage()
     {
@@ -284,8 +283,4 @@ public class BatchServiceTests(DatabaseFixture fixture)
         };
     }
 
-    private sealed class TestClock(DateTime utcNow) : IClock
-    {
-        public DateTime UtcNow { get; } = utcNow;
-    }
 }

@@ -28,7 +28,7 @@ public sealed class BatchRepository(VulcanDbContext dbContext) : IBatchRepositor
         return await dbContext.Batch
             .AnyAsync(x => x.BatchNumber == batchNumber);
     }
-    
+
     public async Task<IReadOnlyList<Batch>> SearchAsync(
         string searchTerm,
         int page,

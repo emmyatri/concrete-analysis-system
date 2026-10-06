@@ -1,0 +1,146 @@
+using Microsoft.EntityFrameworkCore;
+using Vulcan.Application.Services;
+using Vulcan.Domain.Entities;
+using Vulcan.Domain.Services;
+using Vulcan.Infrastructure.Services;
+
+namespace Vulcan.Application.Tests;
+
+public class CuringServiceTests(DatabaseFixture dbFixture)
+    : IClassFixture<DatabaseFixture>
+{
+    private readonly DatabaseFixture _dbFixture = dbFixture;
+
+    [Fact]
+    public async Task AddReadingAsync_ValidReading_SavesReading()
+    {
+        await using var db = _dbFixture.CreateDbContext();
+
+        var limitProvider = new LimitProvider(db);
+        var limitEvaluator = new LimitEvaluator(limitProvider);
+        var repository = new CuringRepository(db);
+
+        var clock = new TestClock(
+            new DateTime(2026, 10, 5, 18, 0, 0, DateTimeKind.Utc));
+
+        var service = new CuringService(
+            repository,
+            new CuringReadingValidator(limitEvaluator),
+            clock);
+
+        var batch = new Batch
+        {
+            BatchNumber = "VM-CURING-001",
+            CastAt = new DateTime(
+                2026, 10, 1, 12, 0, 0, DateTimeKind.Utc)
+        };
+
+        db.Batch.Add(batch);
+        await db.SaveChangesAsync();
+
+        var specimen = new Specimen
+        {
+            BatchId = batch.Id,
+            Label = "C1",
+            LengthIn = 12m,
+            WidthIn = 6m
+        };
+
+        db.Specimen.Add(specimen);
+        await db.SaveChangesAsync();
+
+        var reading = new CuringReading
+        {
+            TakenAt = new DateTime(
+                2026, 10, 2, 12, 0, 0, DateTimeKind.Utc),
+            InternalTempF = 75m,
+            AmbientTempF = 72m,
+            MoisturePct = 5m,
+            RelativeHumidityPct = 50m,
+            ResistivityOhmPerFt = 1000m,
+            Co2Ppm = 400m
+        };
+
+        var result =
+            await service.AddReadingAsync(specimen.Id, reading);
+
+        Assert.True(result.IsSuccess);
+        Assert.Empty(result.Errors);
+
+        var saved = await db.CuringReading
+            .SingleOrDefaultAsync(
+                x => x.SpecimenId == specimen.Id);
+
+        Assert.NotNull(saved);
+        Assert.Equal(reading.TakenAt, saved.TakenAt);
+        Assert.Equal(75m, saved.InternalTempF);
+        Assert.Equal(72m, saved.AmbientTempF);
+    }
+
+    [Fact]
+    public async Task AddReadingAsync_InvalidReading_ReturnsFieldErrorsAndDoesNotSave()
+    {
+        await using var db = _dbFixture.CreateDbContext();
+
+        var limitProvider = new LimitProvider(db);
+        var limitEvaluator = new LimitEvaluator(limitProvider);
+        var repository = new CuringRepository(db);
+
+        var clock = new TestClock(
+            new DateTime(2026, 10, 5, 18, 0, 0, DateTimeKind.Utc));
+
+        var service = new CuringService(
+            repository,
+            new CuringReadingValidator(limitEvaluator),
+            clock);
+
+        var batch = new Batch
+        {
+            BatchNumber = "VM-CURING-002",
+            CastAt = new DateTime(
+                2026, 10, 1, 12, 0, 0, DateTimeKind.Utc)
+        };
+
+        db.Batch.Add(batch);
+        await db.SaveChangesAsync();
+
+        var specimen = new Specimen
+        {
+            BatchId = batch.Id,
+            Label = "C1",
+            LengthIn = 12m,
+            WidthIn = 6m
+        };
+
+        db.Specimen.Add(specimen);
+        await db.SaveChangesAsync();
+
+        var reading = new CuringReading
+        {
+            // Invalid: reading occurred before the batch was cast.
+            TakenAt = new DateTime(
+                2026, 9, 30, 12, 0, 0, DateTimeKind.Utc),
+
+            // Invalid reject-level value.
+            MoisturePct = -1m
+        };
+
+        var result =
+            await service.AddReadingAsync(specimen.Id, reading);
+
+        Assert.False(result.IsSuccess);
+        Assert.NotEmpty(result.Errors);
+
+        Assert.Contains(
+            result.Errors,
+            x => x.Key == "Curing.TakenAt");
+
+        Assert.Contains(
+            result.Errors,
+            x => x.Key == "Curing.MoisturePct");
+
+        Assert.False(
+            db.CuringReading.Any(
+                x => x.SpecimenId == specimen.Id));
+    }
+}
