@@ -42,7 +42,11 @@ export const routes: Routes = [
         path: 'breaks',
         loadComponent: () => import('./pages/break-results/break-results').then((m) => m.BreakResultsPage),
       },
-      { path: 'curing', component: PlaceholderPage, data: { heading: 'Curing readings' } },
+      {
+        path: 'curing',
+        loadComponent: () =>
+          import('./pages/curing-readings/curing-readings').then((m) => m.CuringReadingsPage),
+      },
     ],
   },
   { path: '**', redirectTo: '' },

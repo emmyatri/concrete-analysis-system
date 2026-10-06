@@ -7,6 +7,7 @@ import {
   BatchDetail,
   BatchSummary,
   CreateBreakResultRequest,
+  CreateCuringReadingRequest,
   CreateSpecimenRequest,
   PendingBreak,
   RecordWarning,
@@ -54,6 +55,7 @@ export const mockApiInterceptor: HttpInterceptorFn = (request, next) => {
   if (request.method === 'GET' && path.startsWith('/api/batches/')) return getBatch(request, path);
   if (request.method === 'GET' && path === '/api/breaks/pending') return ok(pendingBreaks(request));
   if (request.method === 'POST' && /^\/api\/specimens\/\d+\/break$/.test(path)) return createBreak(request, path);
+  if (request.method === 'POST' && /^\/api\/specimens\/\d+\/readings$/.test(path)) return createReading(request, path);
 
   return next(request);
 };
@@ -331,4 +333,85 @@ function problem(request: HttpRequest<unknown>, status: number, statusText: stri
         error: { title: statusText, status, ...body },
       }),
   );
+}
+
+
+/** Each reading field and the ValidationLimit key that checks it. */
+const READING_FIELDS = [
+  ['internalTempF', 'Curing.InternalTempF'],
+  ['ambientTempF', 'Curing.AmbientTempF'],
+  ['moisturePct', 'Curing.MoisturePct'],
+  ['relativeHumidityPct', 'Curing.RelativeHumidityPct'],
+  ['resistivityOhmPerFt', 'Curing.ResistivityOhmPerFt'],
+  ['co2Ppm', 'Curing.Co2Ppm'],
+] as const;
+
+/**
+ * Adds a curing reading the way the server will: 404 for an unknown cylinder, 400 for a value outside its
+ * Reject limits or a time before the cast date or in the future. Warn limits (ambient 60–80 °F) save and
+ * come back as warnings.
+ */
+function createReading(request: HttpRequest<unknown>, path: string) {
+  const specimenId = Number(path.split('/')[3]);
+  const batch = [...savedDetails, ...MOCK_BATCH_DETAILS].find((row) =>
+    row.specimens.some((s) => s.id === specimenId),
+  );
+  const specimen = batch?.specimens.find((s) => s.id === specimenId);
+  if (!batch || !specimen) {
+    return problem(request, 404, 'Not Found', { detail: `Cylinder ${specimenId} was not found.` });
+  }
+
+  const body = request.body as CreateCuringReadingRequest;
+  const errors: Record<string, string[]> = {};
+  const warnings: RecordWarning[] = [];
+  for (const [field, key] of READING_FIELDS) {
+    const value = body[field];
+    if (typeof value !== 'number' || !Number.isFinite(value)) {
+      errors[key] = ['A number is required'];
+      continue;
+    }
+    for (const limit of MOCK_VALIDATION_LIMITS.filter((row) => row.key === key)) {
+      const outside = (limit.min !== null && value < limit.min) || (limit.max !== null && value > limit.max);
+      if (!outside) continue;
+      if (limit.severity === 'Reject') errors[key] = [...(errors[key] ?? []), limit.message];
+      else warnings.push({ key, message: limit.message });
+    }
+  }
+  const takenAt = new Date(body.takenAt);
+  if (Number.isNaN(takenAt.getTime())) errors['Curing.TakenAt'] = ['Enter when the reading was taken'];
+  else if (takenAt < new Date(batch.castAt)) errors['Curing.TakenAt'] = ["Reading time can't be before the batch was cast"];
+  else if (takenAt > new Date()) errors['Curing.TakenAt'] = ["Reading time can't be in the future"];
+
+  if (Object.keys(errors).length > 0) {
+    return problem(request, 400, 'Bad Request', { title: 'One or more validation errors occurred.', errors });
+  }
+
+  const id = nextId++;
+  specimen.curingReadings.push({
+    id,
+    takenAt: takenAt.toISOString(),
+    internalTempF: body.internalTempF,
+    ambientTempF: body.ambientTempF,
+    moisturePct: body.moisturePct,
+    relativeHumidityPct: body.relativeHumidityPct,
+    resistivityOhmPerFt: body.resistivityOhmPerFt,
+    co2Ppm: body.co2Ppm,
+  });
+  specimen.curingReadings.sort((a, b) => a.takenAt.localeCompare(b.takenAt));
+  for (const warning of warnings) {
+    const field = READING_FIELDS.find(([, key]) => key === warning.key)![0];
+    batch.warnings.push({
+      id: nextId++,
+      entityType: 'CuringReading',
+      entityId: id,
+      fieldName: warning.key.split('.')[1],
+      limitKey: warning.key,
+      value: body[field],
+      message: warning.message,
+      createdAtUtc: new Date().toISOString(),
+    });
+  }
+  const summary = [...savedBatches, ...MOCK_BATCHES].find((row) => row.id === batch.id);
+  if (summary) summary.warningCount += warnings.length;
+  return ok({ id, warnings }, 201);
 }
