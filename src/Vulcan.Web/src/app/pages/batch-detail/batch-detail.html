@@ -269,7 +269,13 @@
                           {{ result.strengthPsi | number }}
                         }
                       } @else {
-                        <span class="muted">Not broken</span>
+                        <a
+                          class="row-link"
+                          routerLink="/breaks"
+                          [queryParams]="{ batch: batch.batchNumber, cylinder: row.specimen.label }"
+                          data-testid="record-break"
+                        >Record break</a
+                        >
                       }
                     </td>
                     <td>{{ row.specimen.curingReadings.length }}</td>
