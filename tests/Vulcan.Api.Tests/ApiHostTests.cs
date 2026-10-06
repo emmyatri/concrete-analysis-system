@@ -6,6 +6,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Vulcan.Infrastructure;
+using Vulcan.Infrastructure.Seed;
 
 namespace Vulcan.Api.Tests;
 
@@ -38,6 +39,74 @@ public class ApiHostTests
 
         db.ValidationLimit.ShouldNotBeEmpty();
         db.SpecificGravity.ShouldNotBeEmpty();
+    }
+
+    // Synthetic data is disabled by default. Starting the API without
+    // SeedSyntheticData enabled must leave the Batch table empty.
+    [Fact]
+    public async Task Synthetic_seed_data_is_disabled_by_default()
+    {
+        await using var app = ApiHost.Create(_args);
+
+        using var scope = app.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<VulcanDbContext>();
+
+        db.Batch.ShouldBeEmpty();
+    }
+
+    // M1-24 requires the approved synthetic dataset to be loaded on startup
+    // when SeedSyntheticData is explicitly enabled and the database is empty.
+    [Fact]
+    public async Task Synthetic_seed_data_loads_when_enabled()
+    {
+        string[] args = ["--environment=Testing", "--SeedSyntheticData=true"];
+
+        await using var app = ApiHost.Create(args);
+
+        using var scope = app.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<VulcanDbContext>();
+
+        var batches = await db.Batch.ToListAsync();
+
+        batches.Count.ShouldBe(9);
+        batches.ShouldAllBe(batch => batch.IsSynthetic);
+    }
+
+    // M1-24 requires synthetic data to load only into an empty database.
+    // If any batch already exists, enabling SeedSyntheticData must not
+    // insert the demo dataset or modify the existing batch data.
+    [Fact]
+    public async Task Synthetic_seed_data_does_not_load_when_database_has_batches()
+    {
+        await using var app = ApiHost.Create(_args);
+
+        using (var scope = app.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<VulcanDbContext>();
+
+            db.Batch.Add(new Domain.Entities.Batch
+            {
+                BatchNumber = "REAL-001",
+                CastAt = DateTime.UtcNow,
+                FinalWeightLb = 100m,
+                ExpectedFinalBreakPsi = 4000,
+                CementType = Domain.Enums.CementType.TypeI,
+                MixWaterPh = 7.2m,
+                IsSynthetic = false
+            });
+
+            await db.SaveChangesAsync();
+
+            // Call the seeder directly with the setting conceptually enabled.
+            // Because a batch already exists, it must leave the database unchanged.
+            SyntheticDataSeeder.Seed(db);
+
+            (await db.Batch.CountAsync()).ShouldBe(1);
+
+            var batch = await db.Batch.SingleAsync();
+            batch.BatchNumber.ShouldBe("REAL-001");
+            batch.IsSynthetic.ShouldBeFalse();
+        }
     }
 
     [Fact]

@@ -8,5 +8,7 @@
   <ItemGroup>
     <!-- ensure seed data is available at runtime -->
     <EmbeddedResource Include="Seed\*.json" />
+    <EmbeddedResource Include="..\..\data\synthetic\batches.json"
+                      Link="Seed\synthetic-batches.json" />
   </ItemGroup>
 </Project>

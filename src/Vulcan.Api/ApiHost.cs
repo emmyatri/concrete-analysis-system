@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.FileProviders;
 using Vulcan.Api.Technicians;
 using Vulcan.Infrastructure;
+using Vulcan.Infrastructure.Seed;
 
 namespace Vulcan.Api;
 
@@ -85,5 +86,12 @@ public static class ApiHost
 
         db.SeedValidationLimits();
         db.SeedSpecificGravities();
+
+        // Synthetic demo data is opt-in and remains disabled by default.
+        // The seeder itself also verifies that the batch database is empty.
+        if (app.Configuration.GetValue<bool>("SeedSyntheticData"))
+        {
+            SyntheticDataSeeder.Seed(db);
+        }
     }
 }
