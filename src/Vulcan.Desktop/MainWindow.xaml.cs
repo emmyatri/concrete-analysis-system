@@ -47,7 +47,7 @@ public partial class MainWindow : Window
                 MessageBoxButton.OK,
                 MessageBoxImage.Error);
 
-            Application.Current.Shutdown();
+            System.Windows.Application.Current.Shutdown();
         }
     }
 
