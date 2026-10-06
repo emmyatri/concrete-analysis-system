@@ -8,8 +8,9 @@
 
 .cylinder {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 12px;
+  grid-template-columns: repeat(4, auto);
+  justify-content: space-between;
+  gap: 12px 20px;
   margin: 0;
   padding: 12px 14px;
   border: 1px solid var(--p-content-border-color);
@@ -24,6 +25,7 @@
   dd {
     margin: 2px 0 0;
     font-weight: 600;
+    white-space: nowrap;
   }
 }
 

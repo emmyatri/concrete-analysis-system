@@ -99,6 +99,11 @@ describe('BreakDialog', () => {
       `${ageInDays(A1.castAt)} days`,
     ]);
     expect(brokenAt().value?.toDateString()).toBe(new Date().toDateString());
+    const today = new Date();
+    const shownDate = [today.getMonth() + 1, today.getDate(), today.getFullYear()]
+      .map((n) => String(n).padStart(2, '0'))
+      .join('/');
+    expect(document.body.querySelector<HTMLInputElement>('#break-date')!.value).toBe(shownDate);
     expect(saveDisabled()).toBe(true);
   });
 

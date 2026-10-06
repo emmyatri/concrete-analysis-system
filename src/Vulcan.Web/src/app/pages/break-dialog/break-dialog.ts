@@ -95,7 +95,7 @@ export class BreakDialog {
 
   protected readonly form = inject(NonNullableFormBuilder).group({
     strengthPsi: ['', [numberField(0)]],
-    brokenAt: new FormControl<Date | null>(new Date(), [
+    brokenAt: new FormControl<Date | null>(startOfDay(new Date()), [
       breakDateField(() => this.cylinder()?.castAt),
     ]),
   });
@@ -205,7 +205,7 @@ export class BreakDialog {
 
   /** Starts fresh each time it opens: no strength, broken today. */
   protected reset(): void {
-    this.form.reset({ strengthPsi: '', brokenAt: new Date() });
+    this.form.reset({ strengthPsi: '', brokenAt: startOfDay(new Date()) });
     this.saveErrors.set([]);
     this.alreadyBroken.set(false);
   }
