@@ -1,7 +1,9 @@
 using Vulcan.Application.Services;
+using Vulcan.Domain.Constants;
 using Vulcan.Domain.Entities;
 using Vulcan.Domain.Enums;
 using Vulcan.Domain.Services;
+using Vulcan.Infrastructure;
 using Vulcan.Infrastructure.Services;
 
 namespace Vulcan.Application.Tests;
@@ -23,12 +25,10 @@ public class BatchServiceTests(DatabaseFixture fixture)
 
         var repository = new BatchRepository(db);
 
-        var service = new BatchService(
+        var service = CreateService(
+            db,
             repository,
-            new BatchValidator(limitEvaluator),
-            new CompositionValidator(limitEvaluator),
-            new CementOxideValidator(limitEvaluator),
-            new TestClock(new DateTime(2026, 10, 5, 18, 0, 0, DateTimeKind.Utc)));
+            limitEvaluator);
 
         var batch = CreateValidBatch();
 
@@ -59,12 +59,10 @@ public class BatchServiceTests(DatabaseFixture fixture)
 
         var repository = new BatchRepository(db);
 
-        var service = new BatchService(
+        var service = CreateService(
+            db,
             repository,
-            new BatchValidator(limitEvaluator),
-            new CompositionValidator(limitEvaluator),
-            new CementOxideValidator(limitEvaluator),
-            new TestClock(new DateTime(2026, 10, 5, 18, 0, 0, DateTimeKind.Utc)));
+            limitEvaluator);
 
         var batch = CreateValidBatch();
         batch.BatchNumber = "BAD BATCH!";
@@ -90,12 +88,10 @@ public class BatchServiceTests(DatabaseFixture fixture)
         var limitEvaluator = new LimitEvaluator(limitProvider);
         var repository = new BatchRepository(db);
 
-        var service = new BatchService(
+        var service = CreateService(
+            db,
             repository,
-            new BatchValidator(limitEvaluator),
-            new CompositionValidator(limitEvaluator),
-            new CementOxideValidator(limitEvaluator),
-            new TestClock(new DateTime(2026, 10, 5, 18, 0, 0, DateTimeKind.Utc)));
+            limitEvaluator);
 
         var batch = CreateValidBatch();
         batch.BatchNumber = "VM-LOAD-001";
@@ -122,12 +118,10 @@ public class BatchServiceTests(DatabaseFixture fixture)
         var limitEvaluator = new LimitEvaluator(limitProvider);
         var repository = new BatchRepository(db);
 
-        var service = new BatchService(
+        var service = CreateService(
+            db,
             repository,
-            new BatchValidator(limitEvaluator),
-            new CompositionValidator(limitEvaluator),
-            new CementOxideValidator(limitEvaluator),
-            new TestClock(new DateTime(2026, 10, 5, 18, 0, 0, DateTimeKind.Utc)));
+            limitEvaluator);
 
         var batch = CreateValidBatch();
         batch.BatchNumber = "VM-UPDATE-001";
@@ -180,12 +174,10 @@ public class BatchServiceTests(DatabaseFixture fixture)
         var limitEvaluator = new LimitEvaluator(limitProvider);
         var repository = new BatchRepository(db);
 
-        var service = new BatchService(
+        var service = CreateService(
+            db,
             repository,
-            new BatchValidator(limitEvaluator),
-            new CompositionValidator(limitEvaluator),
-            new CementOxideValidator(limitEvaluator),
-            new TestClock(new DateTime(2026, 10, 5, 18, 0, 0, DateTimeKind.Utc)));
+            limitEvaluator);
 
         var batch = CreateValidBatch();
         batch.BatchNumber = "VM-UPDATE-INVALID";
@@ -221,19 +213,17 @@ public class BatchServiceTests(DatabaseFixture fixture)
         var limitEvaluator = new LimitEvaluator(limitProvider);
         var repository = new BatchRepository(db);
 
-        var service = new BatchService(
+        var service = CreateService(
+            db,
             repository,
-            new BatchValidator(limitEvaluator),
-            new CompositionValidator(limitEvaluator),
-            new CementOxideValidator(limitEvaluator),
-            new TestClock(new DateTime(2026, 10, 5, 18, 0, 0, DateTimeKind.Utc)));
+            limitEvaluator);
 
         for (var i = 1; i <= 55; i++)
         {
             db.Batch.Add(new Batch
             {
                 BatchNumber = $"VM-SEARCH-{i:D3}",
-                CreatedAtUtc = new DateTime(
+                CastAt = new DateTime(
                     2026, 10, 5, 0, 0, 0, DateTimeKind.Utc).AddMinutes(i)
             });
         }
@@ -241,14 +231,14 @@ public class BatchServiceTests(DatabaseFixture fixture)
         db.Batch.Add(new Batch
         {
             BatchNumber = "UNRELATED-001",
-            CreatedAtUtc = new DateTime(
-                2026, 10, 5, 23, 0, 0, DateTimeKind.Utc)
+            CastAt = new DateTime(
+                2026, 10, 5, 0, 0, 0, DateTimeKind.Utc)
         });
 
         await db.SaveChangesAsync();
 
-        var firstPage = await service.SearchAsync("VM-SEARCH", 1);
-        var secondPage = await service.SearchAsync("VM-SEARCH", 2);
+        var firstPage = await service.SearchAsync("vm-search", 1);
+        var secondPage = await service.SearchAsync("vm-search", 2);
 
         Assert.Equal(50, firstPage.Count);
         Assert.Equal(5, secondPage.Count);
@@ -275,13 +265,10 @@ public class BatchServiceTests(DatabaseFixture fixture)
         var limitEvaluator = new LimitEvaluator(limitProvider);
         var repository = new BatchRepository(db);
 
-        var service = new BatchService(
+        var service = CreateService(
+            db,
             repository,
-            new BatchValidator(limitEvaluator),
-            new CompositionValidator(limitEvaluator),
-            new CementOxideValidator(limitEvaluator),
-            new TestClock(
-                new DateTime(2026, 10, 5, 18, 0, 0, DateTimeKind.Utc)));
+            limitEvaluator);
 
         var batch = CreateValidBatch();
         batch.BatchNumber = "VM-AGGREGATE-001";
@@ -345,12 +332,100 @@ public class BatchServiceTests(DatabaseFixture fixture)
         Assert.Equal(400m, loadedReading.Co2Ppm);
     }
 
+    // Verifies that an update cannot silently change the batch number used
+    // to identify the existing persisted batch.
+    [Fact]
+    public async Task UpdateAsync_ChangedBatchNumber_ReturnsFieldError()
+    {
+        await using var db = _fixture.CreateDbContext();
+
+        var limitProvider = new LimitProvider(db);
+        var limitEvaluator = new LimitEvaluator(limitProvider);
+        var repository = new BatchRepository(db);
+
+        var service = CreateService(
+            db,
+            repository,
+            limitEvaluator);
+
+        var batch = CreateValidBatch();
+        batch.BatchNumber = "VM-UPDATE-NUMBER";
+
+        var createResult = await service.CreateAsync(batch);
+        Assert.True(createResult.IsSuccess);
+
+        var updatedBatch = CreateValidBatch();
+        updatedBatch.BatchNumber = "VM-DIFFERENT-NUMBER";
+
+        var result = await service.UpdateAsync(
+            "VM-UPDATE-NUMBER",
+            updatedBatch);
+
+        Assert.False(result.IsSuccess);
+
+        Assert.Contains(
+            result.Errors,
+            x => x.Key == "Batch.BatchNumber");
+
+        var original =
+            await service.GetByNumberAsync("VM-UPDATE-NUMBER");
+
+        Assert.NotNull(original);
+
+        var renamed =
+            await service.GetByNumberAsync("VM-DIFFERENT-NUMBER");
+
+        Assert.Null(renamed);
+    }
+
+    // Verifies that a warning does not block batch creation, is returned to the
+    // caller, and is persisted against the generated batch ID.
+    [Fact]
+    public async Task CreateAsync_Warning_SavesBatchAndPersistsWarning()
+    {
+        await using var db = _fixture.CreateDbContext();
+
+        var limitProvider = new LimitProvider(db);
+        var limitEvaluator = new LimitEvaluator(limitProvider);
+        var repository = new BatchRepository(db);
+
+        var service = CreateService(
+            db,
+            repository,
+            limitEvaluator);
+
+        var batch = CreateValidBatch();
+        batch.BatchNumber = "VM-WARN-001";
+        batch.MixWaterPh = 6.5m;
+
+        var result = await service.CreateAsync(batch);
+
+        Assert.True(result.IsSuccess);
+        Assert.Empty(result.Errors);
+
+        Assert.Contains(
+            result.Warnings,
+            warning => warning.Key == LimitKeys.MixWaterPh);
+
+        Assert.True(batch.Id > 0);
+
+        var warningRecord = Assert.Single(
+            db.RecordWarning.Where(
+                warning =>
+                    warning.EntityType == nameof(Batch) &&
+                    warning.EntityId == batch.Id &&
+                    warning.LimitKey == LimitKeys.MixWaterPh));
+
+        Assert.Equal(6.5m, warningRecord.Value);
+    }
+
     private static Batch CreateValidBatch()
     {
         return new Batch
         {
             BatchNumber = "VM-TEST-001",
-            CastAt = new DateTime(2026, 10, 5, 17, 0, 0, DateTimeKind.Utc),
+            CastAt = new DateTime(
+                2026, 10, 5, 17, 0, 0, DateTimeKind.Utc),
             FinalWeightLb = 30m,
             ExpectedFinalBreakPsi = 5000,
             CementType = CementType.TypeI,
@@ -374,5 +449,24 @@ public class BatchServiceTests(DatabaseFixture fixture)
                 SulfurTrioxidePct = 2m
             }
         };
+    }
+
+    private static BatchService CreateService(
+        VulcanDbContext db,
+        BatchRepository repository,
+        LimitEvaluator limitEvaluator)
+    {
+        return new BatchService(
+            repository,
+            new RecordWarningRepository(db),
+            new BatchValidator(limitEvaluator),
+            new CompositionValidator(limitEvaluator),
+            new CementOxideValidator(limitEvaluator),
+            new WaterCementRatioCalculator(
+                new SpecificGravityProvider(db),
+                limitEvaluator),
+            new TestClock(
+                new DateTime(
+                    2026, 10, 5, 18, 0, 0, DateTimeKind.Utc)));
     }
 }

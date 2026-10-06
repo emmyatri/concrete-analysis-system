@@ -1,4 +1,5 @@
 using Vulcan.Application.Interfaces;
+using Vulcan.Domain.Constants;
 using Vulcan.Domain.Entities;
 using Vulcan.Domain.Services;
 using Vulcan.Domain.Validation;
@@ -15,18 +16,21 @@ public sealed class SpecimenService(
         int batchId,
         Specimen specimen)
     {
-        var errors = new List<ValidationError>();
-
         var batch = await specimenRepository.GetBatchAsync(batchId);
 
         if (batch is null)
         {
-            errors.Add(new ValidationError(
-                "Specimen.BatchId",
-                "Batch was not found."));
-
-            return ServiceResult<Specimen>.Failure(errors);
+            return ServiceResult<Specimen>.NotFound(
+            [
+                new ValidationError(
+                    "Specimen.BatchId",
+                    "Batch was not found.")
+            ]);
         }
+
+        var errors = new List<ValidationError>();
+
+        specimen.Label = specimen.Label.Trim();
 
         errors.AddRange(specimenValidator.Validate(specimen));
 
@@ -42,18 +46,22 @@ public sealed class SpecimenService(
                 "Specimen.Label",
                 "Specimen label cannot exceed 20 characters."));
         }
-        else if (await specimenRepository.LabelExistsAsync(
-                     batchId,
-                     specimen.Label))
-        {
-            errors.Add(new ValidationError(
-                "Specimen.Label",
-                "Specimen label already exists for this batch."));
-        }
 
         if (errors.Count > 0)
         {
-            return ServiceResult<Specimen>.Failure(errors);
+            return ServiceResult<Specimen>.Invalid(errors);
+        }
+
+        if (await specimenRepository.LabelExistsAsync(
+                batchId,
+                specimen.Label))
+        {
+            return ServiceResult<Specimen>.Conflict(
+            [
+                new ValidationError(
+                    "Specimen.Label",
+                    "Specimen label already exists for this batch.")
+            ]);
         }
 
         specimen.BatchId = batchId;
@@ -73,7 +81,7 @@ public sealed class SpecimenService(
 
         if (specimen is null)
         {
-            return ServiceResult<BreakResult>.Failure(
+            return ServiceResult<BreakResult>.NotFound(
             [
                 new ValidationError(
                     "Break.SpecimenId",
@@ -81,23 +89,45 @@ public sealed class SpecimenService(
             ]);
         }
 
+        if (specimen.BreakResult is not null)
+        {
+            return ServiceResult<BreakResult>.Conflict(
+            [
+                new ValidationError(
+                    "Break.SpecimenId",
+                    "This specimen already has a break result.")
+            ]);
+        }
+
         var validation = breakResultValidator.Validate(
             breakResult,
             specimen.Batch.CastAt,
-            specimen.BreakResult is not null,
+            false,
             clock.UtcNow);
 
         if (validation.Errors.Count > 0)
         {
-            return ServiceResult<BreakResult>.Failure(
+            return ServiceResult<BreakResult>.Invalid(
                 validation.Errors);
         }
 
         breakResult.SpecimenId = specimenId;
 
-        await specimenRepository.AddBreakResultAsync(breakResult);
-        await specimenRepository.SaveChangesAsync();
+        await specimenRepository.AddBreakResultWithWarningsAsync(
+            breakResult,
+            breakResultId =>
+                validation.Warnings.Select(warning => new RecordWarning
+                {
+                    EntityType = nameof(BreakResult),
+                    EntityId = breakResultId,
+                    FieldName = warning.Key,
+                    LimitKey = warning.Key,
+                    Value = breakResult.StrengthPsi,
+                    Message = warning.Message
+                }).ToList());
 
-        return ServiceResult<BreakResult>.Success(breakResult);
+        return ServiceResult<BreakResult>.Success(
+            breakResult,
+            validation.Warnings);
     }
 }

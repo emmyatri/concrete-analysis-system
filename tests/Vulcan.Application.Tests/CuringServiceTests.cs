@@ -79,6 +79,86 @@ public class CuringServiceTests(DatabaseFixture dbFixture)
         Assert.Equal(72m, saved.AmbientTempF);
     }
 
+    // Verifies that a warning-level curing value still saves, returns the
+    // warning to the caller, and persists it against the generated reading ID.
+    [Fact]
+    public async Task AddReadingAsync_Warning_SavesAndPersistsWarning()
+    {
+        await using var db = _dbFixture.CreateDbContext();
+
+        var limitProvider = new LimitProvider(db);
+        var limitEvaluator = new LimitEvaluator(limitProvider);
+        var repository = new CuringRepository(db);
+
+        var clock = new TestClock(
+            new DateTime(2026, 10, 5, 18, 0, 0, DateTimeKind.Utc));
+
+        var service = new CuringService(
+            repository,
+            new CuringReadingValidator(limitEvaluator),
+            clock);
+
+        var batch = new Batch
+        {
+            BatchNumber = "VM-CURING-WARN-001",
+            CastAt = new DateTime(
+                2026, 10, 1, 12, 0, 0, DateTimeKind.Utc)
+        };
+
+        db.Batch.Add(batch);
+        await db.SaveChangesAsync();
+
+        var specimen = new Specimen
+        {
+            BatchId = batch.Id,
+            Label = "C1",
+            LengthIn = 12m,
+            WidthIn = 6m
+        };
+
+        db.Specimen.Add(specimen);
+        await db.SaveChangesAsync();
+
+        var reading = new CuringReading
+        {
+            TakenAt = new DateTime(
+                2026, 10, 2, 12, 0, 0, DateTimeKind.Utc),
+            InternalTempF = 75m,
+            AmbientTempF = 59m,
+            MoisturePct = 5m,
+            RelativeHumidityPct = 50m,
+            ResistivityOhmPerFt = 1000m,
+            Co2Ppm = 400m
+        };
+
+        var result =
+            await service.AddReadingAsync(specimen.Id, reading);
+
+        Assert.True(result.IsSuccess);
+        Assert.Empty(result.Errors);
+
+        Assert.Contains(
+            result.Warnings,
+            warning => warning.Key == "Curing.AmbientTempF");
+
+        Assert.True(reading.Id > 0);
+
+        var saved = await db.CuringReading
+            .SingleOrDefaultAsync(x => x.Id == reading.Id);
+
+        Assert.NotNull(saved);
+        Assert.Equal(59m, saved.AmbientTempF);
+
+        var warningRecord = Assert.Single(
+            db.RecordWarning.Where(
+                warning =>
+                    warning.EntityType == nameof(CuringReading) &&
+                    warning.EntityId == reading.Id &&
+                    warning.LimitKey == "Curing.AmbientTempF"));
+
+        Assert.Equal(59m, warningRecord.Value);
+    }
+
     // Verifies that all applicable curing validation errors are returned
     // together and that an invalid reading is not persisted.
     [Fact]

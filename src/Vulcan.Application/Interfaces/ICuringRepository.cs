@@ -8,5 +8,9 @@ public interface ICuringRepository
 
     Task AddAsync(CuringReading reading);
 
+    Task AddWithWarningsAsync(
+        CuringReading reading,
+        Func<int, IReadOnlyList<RecordWarning>> warningFactory);
+
     Task SaveChangesAsync();
 }

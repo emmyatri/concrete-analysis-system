@@ -1,3 +1,4 @@
+using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using Vulcan.Domain.Entities;
 using Vulcan.Domain.Enums;
@@ -19,7 +20,8 @@ public class SpecimenConfiguration : AuditableEntityConfiguration<Specimen>
                 x => x.ToString(),
                 x => Enum.Parse<TestAgeDays>(x));
         builder.Property(x => x.Label)
-            .HasMaxLength(20);
+            .HasMaxLength(20)
+            .UseCollation("NOCASE");
         // label cannot be reused within a batch
         builder.HasIndex(x => new { x.BatchId, x.Label })
             .IsUnique();

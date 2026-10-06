@@ -16,5 +16,9 @@ public interface ISpecimenRepository
 
     Task AddBreakResultAsync(BreakResult breakResult);
 
+    Task AddBreakResultWithWarningsAsync(
+        BreakResult breakResult,
+        Func<int, IReadOnlyList<RecordWarning>> warningFactory);
+
     Task SaveChangesAsync();
 }

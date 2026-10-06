@@ -19,6 +19,37 @@ public sealed class CuringRepository(VulcanDbContext dbContext)
         await dbContext.CuringReading.AddAsync(reading);
     }
 
+    public async Task AddWithWarningsAsync(
+        CuringReading reading,
+        Func<int, IReadOnlyList<RecordWarning>> warningFactory)
+    {
+        await using var transaction =
+            await dbContext.Database.BeginTransactionAsync();
+
+        try
+        {
+            await dbContext.CuringReading.AddAsync(reading);
+
+            // The first save generates the database ID for the new curing reading.
+            await dbContext.SaveChangesAsync();
+
+            var warnings = warningFactory(reading.Id);
+
+            if (warnings.Count > 0)
+            {
+                await dbContext.RecordWarning.AddRangeAsync(warnings);
+                await dbContext.SaveChangesAsync();
+            }
+
+            await transaction.CommitAsync();
+        }
+        catch
+        {
+            await transaction.RollbackAsync();
+            throw;
+        }
+    }
+
     public async Task SaveChangesAsync()
     {
         await dbContext.SaveChangesAsync();

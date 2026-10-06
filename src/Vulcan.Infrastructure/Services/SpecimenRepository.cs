@@ -40,6 +40,37 @@ public sealed class SpecimenRepository(VulcanDbContext dbContext) : ISpecimenRep
         await dbContext.BreakResult.AddAsync(breakResult);
     }
 
+    public async Task AddBreakResultWithWarningsAsync(
+        BreakResult breakResult,
+        Func<int, IReadOnlyList<RecordWarning>> warningFactory)
+    {
+        await using var transaction =
+            await dbContext.Database.BeginTransactionAsync();
+
+        try
+        {
+            await dbContext.BreakResult.AddAsync(breakResult);
+
+            // The first save generates the database ID for the break result.
+            await dbContext.SaveChangesAsync();
+
+            var warnings = warningFactory(breakResult.Id);
+
+            if (warnings.Count > 0)
+            {
+                await dbContext.RecordWarning.AddRangeAsync(warnings);
+                await dbContext.SaveChangesAsync();
+            }
+
+            await transaction.CommitAsync();
+        }
+        catch
+        {
+            await transaction.RollbackAsync();
+            throw;
+        }
+    }
+
     public async Task SaveChangesAsync()
     {
         await dbContext.SaveChangesAsync();

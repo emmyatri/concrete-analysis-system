@@ -11,6 +11,37 @@ public sealed class BatchRepository(VulcanDbContext dbContext) : IBatchRepositor
         await dbContext.Batch.AddAsync(batch);
     }
 
+    public async Task AddWithWarningsAsync(
+        Batch batch,
+        Func<int, IReadOnlyList<RecordWarning>> warningFactory)
+    {
+        await using var transaction =
+            await dbContext.Database.BeginTransactionAsync();
+
+        try
+        {
+            await dbContext.Batch.AddAsync(batch);
+
+            // The first save generates the database ID for the new batch.
+            await dbContext.SaveChangesAsync();
+
+            var warnings = warningFactory(batch.Id);
+
+            if (warnings.Count > 0)
+            {
+                await dbContext.RecordWarning.AddRangeAsync(warnings);
+                await dbContext.SaveChangesAsync();
+            }
+
+            await transaction.CommitAsync();
+        }
+        catch
+        {
+            await transaction.RollbackAsync();
+            throw;
+        }
+    }
+
     public async Task<Batch?> GetByNumberAsync(string batchNumber)
     {
         return await dbContext.Batch
@@ -34,9 +65,14 @@ public sealed class BatchRepository(VulcanDbContext dbContext) : IBatchRepositor
         int page,
         int pageSize)
     {
+        var escapedSearchTerm = EscapeLikePattern(searchTerm);
+
         return await dbContext.Batch
-            .Where(x => x.BatchNumber.Contains(searchTerm))
-            .OrderByDescending(x => x.CreatedAtUtc)
+            .Where(x => EF.Functions.Like(
+                x.BatchNumber,
+                $"%{escapedSearchTerm}%",
+                @"\"))
+            .OrderByDescending(x => x.CastAt)
             .Skip((page - 1) * pageSize)
             .Take(pageSize)
             .ToListAsync();
@@ -45,5 +81,13 @@ public sealed class BatchRepository(VulcanDbContext dbContext) : IBatchRepositor
     public async Task SaveChangesAsync()
     {
         await dbContext.SaveChangesAsync();
+    }
+
+    private static string EscapeLikePattern(string value)
+    {
+        return value
+            .Replace(@"\", @"\\")
+            .Replace("%", @"\%")
+            .Replace("_", @"\_");
     }
 }

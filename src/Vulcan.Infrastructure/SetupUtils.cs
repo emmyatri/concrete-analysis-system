@@ -64,6 +64,7 @@ public static class SetupUtils
         services.AddScoped<IBatchRepository, BatchRepository>();
         services.AddScoped<ISpecimenRepository, SpecimenRepository>();
         services.AddScoped<ICuringRepository, CuringRepository>();
+        services.AddScoped<IRecordWarningRepository, RecordWarningRepository>();
 
         services.AddScoped<BatchValidator>();
         services.AddScoped<CompositionValidator>();
