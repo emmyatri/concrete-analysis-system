@@ -480,10 +480,8 @@ Returns a paged list of batches.
 
 **Request Parameters:**
 
-* `q`: from query. The number of batches to fetch.
+* `q`: from query. The batch search query.
 * `page`: from query. The page of data to fetch on. Starts from 1.
-
-\*together these will fetch a range from ((page-1) * q) to ((page-1) * q + q) so that `page` can start at one.
 
 **Response Status Codes:**
 
