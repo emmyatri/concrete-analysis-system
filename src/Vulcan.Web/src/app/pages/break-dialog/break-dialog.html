@@ -1,0 +1,107 @@
+﻿<p-dialog
+  [visible]="visible()"
+  (visibleChange)="visible.set($event)"
+  (onHide)="reset()"
+  [modal]="true"
+  [draggable]="false"
+  [style]="{ width: '520px' }"
+  header="Record break"
+  data-testid="break-dialog"
+>
+  @if (cylinder(); as cylinder) {
+    <form class="break" [formGroup]="form" novalidate>
+      @if (saveErrors().length > 0) {
+        <div class="save-banner" role="alert" data-testid="save-banner">
+          <i class="pi pi-exclamation-circle" aria-hidden="true"></i>
+          <div>
+            @for (message of saveErrors(); track message) {
+              <p>{{ message }}</p>
+            }
+          </div>
+        </div>
+      }
+
+      <dl class="cylinder" data-testid="cylinder">
+        <div>
+          <dt>Batch</dt>
+          <dd>{{ cylinder.batchNumber }}</dd>
+        </div>
+        <div>
+          <dt>Cylinder</dt>
+          <dd>{{ cylinder.label }} · {{ testAge() }}-day</dd>
+        </div>
+        <div>
+          <dt>Cast</dt>
+          <dd>{{ cylinder.castAt | date: 'MM/dd/yy' }}</dd>
+        </div>
+        <div>
+          <dt>Age today</dt>
+          <dd>{{ age() }} {{ age() === 1 ? 'day' : 'days' }}</dd>
+        </div>
+      </dl>
+
+      <div class="fields">
+        <app-field
+          label="Strength (PSI)"
+          inputId="break-strength"
+          [control]="form.controls.strengthPsi"
+          limitKey="Break.StrengthPsi"
+        >
+          <input
+            pInputText
+            id="break-strength"
+            formControlName="strengthPsi"
+            inputmode="numeric"
+            autocomplete="off"
+          />
+        </app-field>
+
+        <app-field
+          label="Break date"
+          inputId="break-date"
+          [control]="form.controls.brokenAt"
+          hint="Today unless it was broken earlier"
+        >
+          <p-datepicker
+            inputId="break-date"
+            formControlName="brokenAt"
+            dateFormat="mm/dd/yy"
+            [minDate]="castDate()"
+            [maxDate]="today"
+            [showIcon]="true"
+            iconDisplay="input"
+            appendTo="body"
+          />
+        </app-field>
+      </div>
+    </form>
+  }
+
+  <ng-template #footer>
+    <div class="footer">
+      @if (saveMessage()) {
+        <span
+          class="save-summary"
+          [class.save-summary--error]="issues.errors() > 0"
+          [class.save-summary--muted]="issues.errors() === 0 && !canSave()"
+          data-testid="save-summary"
+          role="status"
+        >{{ saveMessage() }}</span
+        >
+      }
+      <p-button
+        [label]="alreadyBroken() ? 'Close' : 'Cancel'"
+        [outlined]="true"
+        (onClick)="cancel()"
+        data-testid="cancel"
+      />
+      <p-button
+        label="Save"
+        [disabled]="!canSave() || saving()"
+        [loading]="saving()"
+        (onClick)="save()"
+        data-testid="save"
+      />
+    </div>
+  </ng-template>
+</p-dialog>
