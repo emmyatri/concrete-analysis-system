@@ -44,19 +44,46 @@ public class SyntheticDataLoaderTests(DatabaseFixture dbFixture)
         Assert.Equal(81, await db.BreakResult.CountAsync());
         Assert.Equal(567, await db.CuringReading.CountAsync());
 
-        Assert.All(
-            await db.Batch.ToListAsync(),
-            batch => Assert.True(batch.IsSynthetic));
+        var batches = await db.Batch
+            .Include(batch => batch.Composition)
+            .Include(batch => batch.CementOxideAnalysis)
+            .Include(batch => batch.Specimens)
+                .ThenInclude(specimen => specimen.BreakResult)
+            .Include(batch => batch.Specimens)
+                .ThenInclude(specimen => specimen.CuringReadings)
+            .ToListAsync();
 
-        Assert.All(
-            await db.Batch.ToListAsync(),
-            batch => Assert.True(batch.IsSynthetic));
+        Assert.All(batches, batch =>
+        {
+            Assert.True(batch.IsSynthetic);
+            Assert.Equal("Synthetic data", batch.CreatedBy);
+            Assert.Equal(batch.CastAt, batch.CreatedAtUtc);
 
-        Assert.All(
-            await db.Specimen.ToListAsync(),
-            specimen => Assert.True(specimen.IsSynthetic));
+            Assert.Equal("Synthetic data", batch.Composition!.CreatedBy);
+            Assert.Equal(batch.CastAt, batch.Composition.CreatedAtUtc);
+
+            Assert.Equal("Synthetic data", batch.CementOxideAnalysis!.CreatedBy);
+            Assert.Equal(batch.CastAt, batch.CementOxideAnalysis.CreatedAtUtc);
+
+            Assert.All(batch.Specimens, specimen =>
+            {
+                Assert.True(specimen.IsSynthetic);
+                Assert.Equal("Synthetic data", specimen.CreatedBy);
+                Assert.Equal(batch.CastAt, specimen.CreatedAtUtc);
+
+                Assert.Equal("Synthetic data", specimen.BreakResult!.CreatedBy);
+                Assert.Equal(
+                    specimen.BreakResult.BrokenAt,
+                    specimen.BreakResult.CreatedAtUtc);
+
+                Assert.All(specimen.CuringReadings, reading =>
+                {
+                    Assert.Equal("Synthetic data", reading.CreatedBy);
+                    Assert.Equal(reading.TakenAt, reading.CreatedAtUtc);
+                });
+            });
+        });
     }
-
     // M1-24 requires seeding to be idempotent. Once batches exist,
     // running the seeder again must not insert a second copy.
     [Fact]
