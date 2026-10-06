@@ -1,0 +1,62 @@
+﻿<div class="home">
+  <h1 class="page-title" data-testid="greeting">{{ greeting() }}</h1>
+
+  <nav class="actions" aria-label="Quick actions">
+    <a pButton routerLink="/batches/new" data-testid="action-new">
+      <i class="pi pi-plus-circle" pButtonIcon aria-hidden="true"></i>
+      <span pButtonLabel>New batch</span>
+    </a>
+    <a pButton [outlined]="true" routerLink="/batches" data-testid="action-find">
+      <i class="pi pi-search" pButtonIcon aria-hidden="true"></i>
+      <span pButtonLabel>Find a batch</span>
+    </a>
+    <a pButton [outlined]="true" routerLink="/breaks" data-testid="action-breaks">
+      <i class="pi pi-chart-bar" pButtonIcon aria-hidden="true"></i>
+      <span pButtonLabel>Enter break results</span>
+    </a>
+  </nav>
+
+  <section class="card" aria-labelledby="recent-title">
+    <header class="card-header">
+      <i class="pi pi-clock" aria-hidden="true"></i>
+      <h2 id="recent-title">Recent batches</h2>
+      <a class="card-link" routerLink="/batches">See all</a>
+    </header>
+
+    @if (message()) {
+      <p class="message" data-testid="recent-message">{{ message() }}</p>
+    } @else {
+      <p-table
+        [value]="rows()"
+        rowGroupMode="subheader"
+        groupRowsBy="groupOrder"
+        data-testid="recent"
+      >
+        <ng-template #header>
+          <tr>
+            <th>Batch number</th>
+            <th>Cast</th>
+            <th>Cement type</th>
+          </tr>
+        </ng-template>
+        <ng-template #groupheader let-batch>
+          <tr class="group-row" data-testid="date-group">
+            <th colspan="3" scope="colgroup">{{ batch.group }}</th>
+          </tr>
+        </ng-template>
+        <ng-template #body let-batch>
+          <tr class="row-link" tabindex="0" (click)="open(batch)" (keydown.enter)="open(batch)">
+            <td>
+              <span class="batch-number">{{ batch.batchNumber }}</span>
+              @if (batch.isSynthetic) {
+                <span class="badge-synthetic">SYNTHETIC</span>
+              }
+            </td>
+            <td>{{ batch.castAt | date: 'MM/dd/yy HH:mm' }}</td>
+            <td>{{ cementLabel(batch.cementType) }}</td>
+          </tr>
+        </ng-template>
+      </p-table>
+    }
+  </section>
+</div>

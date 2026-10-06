@@ -1,0 +1,99 @@
+﻿// Mockup "02 · Home". Colors from theme tokens only.
+
+.home {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  max-width: 960px;
+}
+
+.page-title {
+  margin: 0;
+  font-size: 22px;
+  font-weight: 600;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+
+  a {
+    text-decoration: none;
+  }
+}
+
+.card {
+  background: var(--p-surface-0);
+  border: 1px solid var(--p-content-border-color);
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.card-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  height: 50px;
+  padding: 0 17px;
+  background: var(--p-surface-100);
+  border-bottom: 1px solid var(--p-content-border-color);
+
+  h2 {
+    margin: 0;
+    font-size: 15px;
+    font-weight: 600;
+  }
+
+  .pi {
+    color: var(--p-surface-700);
+  }
+}
+
+.card-link {
+  margin-left: auto;
+  font-size: 13px;
+  color: var(--p-vulcan-link-color);
+  text-decoration: none;
+}
+
+.message {
+  margin: 0;
+  padding: 24px 17px;
+  color: var(--p-text-muted-color);
+}
+
+.row-link {
+  cursor: pointer;
+
+  &:hover td,
+  &:focus-visible td {
+    background: var(--p-surface-50);
+  }
+}
+
+.group-row th {
+  padding: 8px 17px;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  text-align: start;
+  color: var(--p-text-muted-color);
+  background: var(--p-surface-50);
+}
+
+.batch-number {
+  font-weight: 600;
+  color: var(--p-vulcan-link-color);
+}
+
+.badge-synthetic {
+  margin-left: 8px;
+  padding: 1px 6px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--p-surface-0);
+  background: var(--p-blue-500);
+}

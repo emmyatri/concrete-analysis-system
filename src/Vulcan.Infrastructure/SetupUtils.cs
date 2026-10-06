@@ -1,9 +1,13 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
+
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+
+using Vulcan.Application.Interfaces;
+using Vulcan.Application.Services;
 using Vulcan.Domain.Entities;
 using Vulcan.Domain.Interfaces;
 using Vulcan.Domain.Services;
@@ -54,6 +58,24 @@ public static class SetupUtils
         services.AddScoped<ISpecificGravityProvider, SpecificGravityProvider>();
         services.AddScoped<LimitEvaluator>();
         services.AddScoped<WaterCementRatioCalculator>();
+
+        services.AddScoped<IClock, SystemClock>();
+
+        services.AddScoped<IBatchRepository, BatchRepository>();
+        services.AddScoped<ISpecimenRepository, SpecimenRepository>();
+        services.AddScoped<ICuringRepository, CuringRepository>();
+        services.AddScoped<IRecordWarningRepository, RecordWarningRepository>();
+
+        services.AddScoped<BatchValidator>();
+        services.AddScoped<CompositionValidator>();
+        services.AddScoped<CementOxideValidator>();
+        services.AddScoped<SpecimenValidator>();
+        services.AddScoped<BreakResultValidator>();
+        services.AddScoped<CuringReadingValidator>();
+
+        services.AddScoped<BatchService>();
+        services.AddScoped<SpecimenService>();
+        services.AddScoped<CuringService>();
 
         return services;
     }

@@ -1,4 +1,4 @@
-﻿import { Component, computed, inject, signal } from '@angular/core';
+﻿import { Component, computed, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { MenuItem } from 'primeng/api';
@@ -9,6 +9,7 @@ import { ToggleSwitchModule } from 'primeng/toggleswitch';
 
 import { API_STATUS_DISPLAY, ApiStatusService } from '../../core/api-status.service';
 import { APP_INFO } from '../../core/app-info';
+import { SyntheticDataSetting } from '../../core/session/synthetic-data';
 import { TechnicianSession } from '../../core/session/technician-session';
 import { SHELL_MENU } from './menu-items';
 
@@ -40,8 +41,8 @@ export class Shell {
 
   protected readonly apiDisplay = computed(() => API_STATUS_DISPLAY[this.apiStatus.status()]);
 
-  /** Not wired to data yet: a later ticket filters screens by this. */
-  protected readonly showSynthetic = signal(true);
+  /** Shared with Home and Search, which hide synthetic batches when it's off. */
+  protected readonly showSynthetic = inject(SyntheticDataSetting).show;
 
   protected readonly technicianName = computed(() => this.session.name() ?? '');
   protected readonly technicianInitials = computed(() =>

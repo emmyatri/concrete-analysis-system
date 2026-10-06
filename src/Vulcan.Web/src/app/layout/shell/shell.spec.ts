@@ -52,7 +52,10 @@ describe('Shell', () => {
       harness.detectChanges();
 
       expect(TestBed.inject(Router).url).toBe(item.route);
-      expect(page().querySelector('h1')?.textContent?.trim()).toBe(item.label);
+
+      // Home's heading is the greeting; every other page is titled after its menu item.
+      const heading = page().querySelector('h1')?.textContent?.trim();
+      expect(heading).toMatch(item.route === '/' ? /, J\. Rivera$/ : item.label);
 
       const active = page().querySelectorAll('.shell-menu-link.active');
       expect(active.length).toBe(1);
@@ -92,7 +95,7 @@ describe('Shell', () => {
 
     expect(TestBed.inject(Router).url).toBe('/start?returnUrl=%2Fbatches');
   });
-  
+
   it('shows "Starting local service…" while waiting for the API', () => {
     expect(page().querySelector('[data-testid="api-status"]')?.textContent).toContain('Starting local service');
   });

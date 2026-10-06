@@ -339,7 +339,8 @@ namespace Vulcan.Infrastructure.Migrations
                     b.Property<string>("Label")
                         .IsRequired()
                         .HasMaxLength(20)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("TEXT")
+                        .UseCollation("NOCASE");
 
                     b.Property<decimal>("LengthIn")
                         .HasColumnType("TEXT");
