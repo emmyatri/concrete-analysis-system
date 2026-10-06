@@ -11,6 +11,8 @@ public class BatchServiceTests(DatabaseFixture fixture)
 {
     private readonly DatabaseFixture _fixture = fixture;
 
+    // Verifies that a complete valid batch passes all batch, composition, and
+    // chemistry validation and persists the batch with its related data.
     [Fact]
     public async Task CreateAsync_ValidCompleteBatch_SavesAndLoadsBatch()
     {
@@ -45,6 +47,8 @@ public class BatchServiceTests(DatabaseFixture fixture)
         Assert.Equal(5m, saved.CementOxideAnalysis.AluminaPct);
     }
 
+    // Verifies that invalid batch fields are returned as validation errors
+    // and that the rejected batch is not persisted.
     [Fact]
     public async Task CreateAsync_InvalidBatch_ReturnsFieldErrorsAndDoesNotSave()
     {
@@ -75,6 +79,8 @@ public class BatchServiceTests(DatabaseFixture fixture)
         Assert.Null(saved);
     }
 
+    // Verifies that a batch can be retrieved by batch number with its
+    // composition and cement oxide analysis included.
     [Fact]
     public async Task GetByNumberAsync_ExistingBatch_LoadsCompleteBatch()
     {
@@ -105,6 +111,8 @@ public class BatchServiceTests(DatabaseFixture fixture)
         Assert.NotNull(loaded.CementOxideAnalysis);
     }
 
+    // Verifies that valid changes to batch, composition, and chemistry data
+    // are validated and persisted when an existing batch is updated.
     [Fact]
     public async Task UpdateAsync_ValidBatch_PersistsChanges()
     {
@@ -161,6 +169,8 @@ public class BatchServiceTests(DatabaseFixture fixture)
         Assert.Equal(4m, loaded.CementOxideAnalysis.IronOxidePct);
     }
 
+    // Verifies that an invalid update is rejected before persistence and
+    // leaves the previously stored batch data unchanged.
     [Fact]
     public async Task UpdateAsync_InvalidBatch_ReturnsFieldErrorsAndDoesNotPersistChanges()
     {
@@ -200,6 +210,8 @@ public class BatchServiceTests(DatabaseFixture fixture)
         Assert.Equal(30m, loaded.FinalWeightLb);
     }
 
+    // Verifies that search uses partial batch-number matching, excludes
+    // nonmatching batches, returns newest results first, and limits pages to 50.
     [Fact]
     public async Task SearchAsync_PartialMatch_ReturnsNewestFirstAndFiftyPerPage()
     {
@@ -252,6 +264,87 @@ public class BatchServiceTests(DatabaseFixture fixture)
             batch => batch.BatchNumber == "UNRELATED-001");
     }
 
+    // Verifies that loading a batch returns the full persisted aggregate,
+    // including its specimens, break results, and curing readings.
+    [Fact]
+    public async Task GetByNumberAsync_ExistingBatch_LoadsSpecimensBreaksAndReadings()
+    {
+        await using var db = _fixture.CreateDbContext();
+
+        var limitProvider = new LimitProvider(db);
+        var limitEvaluator = new LimitEvaluator(limitProvider);
+        var repository = new BatchRepository(db);
+
+        var service = new BatchService(
+            repository,
+            new BatchValidator(limitEvaluator),
+            new CompositionValidator(limitEvaluator),
+            new CementOxideValidator(limitEvaluator),
+            new TestClock(
+                new DateTime(2026, 10, 5, 18, 0, 0, DateTimeKind.Utc)));
+
+        var batch = CreateValidBatch();
+        batch.BatchNumber = "VM-AGGREGATE-001";
+
+        var createResult = await service.CreateAsync(batch);
+        Assert.True(createResult.IsSuccess);
+
+        var specimen = new Specimen
+        {
+            BatchId = batch.Id,
+            Label = "C1",
+            LengthIn = 12m,
+            WidthIn = 6m,
+            TestAgeDays = TestAgeDays.Day3
+        };
+
+        db.Specimen.Add(specimen);
+        await db.SaveChangesAsync();
+
+        db.BreakResult.Add(new BreakResult
+        {
+            SpecimenId = specimen.Id,
+            BrokenAt = new DateTime(
+                2026, 10, 5, 12, 0, 0, DateTimeKind.Utc),
+            StrengthPsi = 5000
+        });
+
+        db.CuringReading.Add(new CuringReading
+        {
+            SpecimenId = specimen.Id,
+            TakenAt = new DateTime(
+                2026, 10, 5, 10, 0, 0, DateTimeKind.Utc),
+            InternalTempF = 75m,
+            AmbientTempF = 72m,
+            MoisturePct = 5m,
+            RelativeHumidityPct = 50m,
+            ResistivityOhmPerFt = 1000m,
+            Co2Ppm = 400m
+        });
+
+        await db.SaveChangesAsync();
+
+        var loaded =
+            await service.GetByNumberAsync("VM-AGGREGATE-001");
+
+        Assert.NotNull(loaded);
+
+        var loadedSpecimen = Assert.Single(loaded.Specimens);
+
+        Assert.Equal("C1", loadedSpecimen.Label);
+
+        Assert.NotNull(loadedSpecimen.BreakResult);
+        Assert.Equal(
+            5000,
+            loadedSpecimen.BreakResult.StrengthPsi);
+
+        var loadedReading =
+            Assert.Single(loadedSpecimen.CuringReadings);
+
+        Assert.Equal(75m, loadedReading.InternalTempF);
+        Assert.Equal(400m, loadedReading.Co2Ppm);
+    }
+
     private static Batch CreateValidBatch()
     {
         return new Batch
@@ -282,5 +375,4 @@ public class BatchServiceTests(DatabaseFixture fixture)
             }
         };
     }
-
 }

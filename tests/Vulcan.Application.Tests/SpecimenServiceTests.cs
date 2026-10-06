@@ -14,6 +14,8 @@ public class SpecimenServiceTests(DatabaseFixture dbFixture)
 {
     private readonly DatabaseFixture _dbFixture = dbFixture;
 
+    // Verifies that a valid specimen passes validation, is associated with the
+    // requested batch, and is persisted with its identifying specimen data.
     [Fact]
     public async Task AddAsync_ValidSpecimen_SavesSpecimen()
     {
@@ -67,6 +69,8 @@ public class SpecimenServiceTests(DatabaseFixture dbFixture)
         Assert.Equal(TestAgeDays.Day3, saved.TestAgeDays);
     }
 
+    // Verifies that specimen validation returns field-specific errors for all
+    // invalid inputs and prevents the invalid specimen from being persisted.
     [Fact]
     public async Task AddAsync_InvalidSpecimen_ReturnsFieldErrorsAndDoesNotSave()
     {
@@ -120,6 +124,8 @@ public class SpecimenServiceTests(DatabaseFixture dbFixture)
             db.Specimen.Any(x => x.BatchId == batch.Id));
     }
 
+    // Verifies that specimen labels must be unique within a batch and that a
+    // duplicate is rejected before a second specimen can be persisted.
     [Fact]
     public async Task AddAsync_DuplicateLabel_ReturnsFieldErrorAndDoesNotSave()
     {
@@ -183,6 +189,8 @@ public class SpecimenServiceTests(DatabaseFixture dbFixture)
             db.Specimen.Count(x => x.BatchId == batch.Id));
     }
 
+    // Verifies that a valid concrete break result is associated with the
+    // requested specimen and persisted with its strength and break timestamp.
     [Fact]
     public async Task RecordBreakAsync_ValidBreak_SavesBreakResult()
     {
@@ -244,6 +252,8 @@ public class SpecimenServiceTests(DatabaseFixture dbFixture)
         Assert.Equal(breakResult.BrokenAt, saved.BrokenAt);
     }
 
+    // Verifies that all applicable break validation errors are returned together
+    // and that an invalid break result is not persisted.
     [Fact]
     public async Task RecordBreakAsync_InvalidBreak_ReturnsFieldErrorsAndDoesNotSave()
     {
@@ -310,6 +320,8 @@ public class SpecimenServiceTests(DatabaseFixture dbFixture)
             db.BreakResult.Any(x => x.SpecimenId == specimen.Id));
     }
 
+    // Verifies the one-break-per-specimen rule by rejecting a second break result
+    // and leaving the specimen with only its original persisted result.
     [Fact]
     public async Task RecordBreakAsync_SecondBreak_ReturnsFieldErrorAndDoesNotSave()
     {
@@ -379,5 +391,77 @@ public class SpecimenServiceTests(DatabaseFixture dbFixture)
         Assert.Equal(
             1,
             db.BreakResult.Count(x => x.SpecimenId == specimen.Id));
+    }
+
+    // Verifies that recording a break for a nonexistent specimen returns a
+    // field-specific validation error instead of attempting to persist the result.
+    [Fact]
+    public async Task RecordBreakAsync_MissingSpecimen_ReturnsFieldError()
+    {
+        await using var db = _dbFixture.CreateDbContext();
+
+        var limitProvider = new LimitProvider(db);
+        var limitEvaluator = new LimitEvaluator(limitProvider);
+        var repository = new SpecimenRepository(db);
+
+        var service = new SpecimenService(
+            repository,
+            new SpecimenValidator(limitEvaluator),
+            new BreakResultValidator(limitEvaluator),
+            new TestClock(
+                new DateTime(2026, 10, 5, 18, 0, 0, DateTimeKind.Utc)));
+
+        var result = await service.RecordBreakAsync(
+            999999,
+            new BreakResult
+            {
+                BrokenAt = new DateTime(
+                    2026, 10, 5, 12, 0, 0, DateTimeKind.Utc),
+                StrengthPsi = 5000
+            });
+
+        Assert.False(result.IsSuccess);
+
+        Assert.Contains(
+            result.Errors,
+            x => x.Key == "Break.SpecimenId");
+    }
+
+    // Verifies that adding a specimen to a nonexistent batch returns a
+    // field-specific validation error and does not create an orphaned specimen.
+    [Fact]
+    public async Task AddAsync_MissingBatch_ReturnsFieldErrorAndDoesNotSave()
+    {
+        await using var db = _dbFixture.CreateDbContext();
+
+        var limitProvider = new LimitProvider(db);
+        var limitEvaluator = new LimitEvaluator(limitProvider);
+        var repository = new SpecimenRepository(db);
+
+        var service = new SpecimenService(
+            repository,
+            new SpecimenValidator(limitEvaluator),
+            new BreakResultValidator(limitEvaluator),
+            new TestClock(
+                new DateTime(2026, 10, 5, 18, 0, 0, DateTimeKind.Utc)));
+
+        var specimen = new Specimen
+        {
+            Label = "C1",
+            LengthIn = 12m,
+            WidthIn = 6m,
+            TestAgeDays = TestAgeDays.Day3
+        };
+
+        var result = await service.AddAsync(999999, specimen);
+
+        Assert.False(result.IsSuccess);
+
+        Assert.Contains(
+            result.Errors,
+            x => x.Key == "Specimen.BatchId");
+
+        Assert.False(
+            db.Specimen.Any(x => x.BatchId == 999999));
     }
 }

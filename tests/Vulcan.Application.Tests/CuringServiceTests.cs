@@ -11,6 +11,8 @@ public class CuringServiceTests(DatabaseFixture dbFixture)
 {
     private readonly DatabaseFixture _dbFixture = dbFixture;
 
+    // Verifies that a valid curing reading passes validation, is associated
+    // with the requested specimen, and is persisted with its recorded values.
     [Fact]
     public async Task AddReadingAsync_ValidReading_SavesReading()
     {
@@ -77,6 +79,8 @@ public class CuringServiceTests(DatabaseFixture dbFixture)
         Assert.Equal(72m, saved.AmbientTempF);
     }
 
+    // Verifies that all applicable curing validation errors are returned
+    // together and that an invalid reading is not persisted.
     [Fact]
     public async Task AddReadingAsync_InvalidReading_ReturnsFieldErrorsAndDoesNotSave()
     {
@@ -142,5 +146,33 @@ public class CuringServiceTests(DatabaseFixture dbFixture)
         Assert.False(
             db.CuringReading.Any(
                 x => x.SpecimenId == specimen.Id));
+    }
+
+    // Verifies that adding a curing reading to a nonexistent specimen returns
+    // a field-specific validation error instead of attempting to persist it.
+    [Fact]
+    public async Task AddReadingAsync_MissingSpecimen_ReturnsFieldError()
+    {
+        await using var db = _dbFixture.CreateDbContext();
+
+        var limitProvider = new LimitProvider(db);
+        var limitEvaluator = new LimitEvaluator(limitProvider);
+        var repository = new CuringRepository(db);
+
+        var service = new CuringService(
+            repository,
+            new CuringReadingValidator(limitEvaluator),
+            new TestClock(
+                new DateTime(2026, 10, 5, 18, 0, 0, DateTimeKind.Utc)));
+
+        var result = await service.AddReadingAsync(
+            999999,
+            new CuringReading());
+
+        Assert.False(result.IsSuccess);
+
+        Assert.Contains(
+            result.Errors,
+            x => x.Key == "Curing.SpecimenId");
     }
 }
