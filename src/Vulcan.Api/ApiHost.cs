@@ -3,7 +3,9 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.FileProviders;
 using Vulcan.Api.Technicians;
+using Vulcan.Domain.Interfaces;
 using Vulcan.Infrastructure;
+
 
 namespace Vulcan.Api;
 
@@ -35,6 +37,8 @@ public static class ApiHost
         builder.WebHost.UseUrls($"http://127.0.0.1:{port}");
         builder.Services.AddDatabase(builder.Configuration);
         builder.Services.AddSingleton<TechnicianSettings>();
+        builder.Services.AddHttpContextAccessor();
+        builder.Services.AddScoped<ICurrentTechnician, CurrentTechnician>();
 
         // use overrides if provided
         configureServices?.Invoke(builder.Services);
