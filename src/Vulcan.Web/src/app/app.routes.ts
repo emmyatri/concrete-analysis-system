@@ -15,9 +15,17 @@ export const routes: Routes = [
     component: Shell,
     canActivate: [technicianGuard],
     children: [
-      { path: '', pathMatch: 'full', component: PlaceholderPage, data: { heading: 'Home' } },
+      {
+        path: '',
+        pathMatch: 'full',
+        // Loaded on demand, like the other pages, to keep the app's start under its size budget.
+        loadComponent: () => import('./pages/home/home').then((m) => m.HomePage),
+      },
       { path: 'batches/new', component: BatchEntry },
-      { path: 'batches', component: PlaceholderPage, data: { heading: 'Search batches' } },
+      {
+        path: 'batches',
+        loadComponent: () => import('./pages/batch-search/batch-search').then((m) => m.BatchSearchPage),
+      },
       // After batches/new, so "new" isn't read as a batch number.
       {
         path: 'batches/:batchNumber',

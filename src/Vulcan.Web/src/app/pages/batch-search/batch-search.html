@@ -1,0 +1,122 @@
+﻿<div class="batch-search">
+  <h1 class="page-title">Search batches</h1>
+
+  <form class="card filters" [formGroup]="form" (ngSubmit)="run()" novalidate>
+    <div class="search-row">
+      <span class="search-box">
+        <i class="pi pi-search" aria-hidden="true"></i>
+        <input
+          pInputText
+          formControlName="search"
+          placeholder="Batch number, e.g. VM-2026"
+          aria-label="Batch number"
+          autocomplete="off"
+          data-testid="search-input"
+        />
+      </span>
+      <p-button type="submit" label="Search" data-testid="search-button" />
+      <p-button type="button" label="Clear" [text]="true" (onClick)="clear()" />
+    </div>
+
+    <div class="filter-row">
+      <div class="filter">
+        <label for="cast-range">Cast between</label>
+        <p-datepicker
+          inputId="cast-range"
+          formControlName="castRange"
+          selectionMode="range"
+          dateFormat="mm/dd/yy"
+          [showIcon]="true"
+          iconDisplay="input"
+          placeholder="Any date"
+          appendTo="body"
+        />
+      </div>
+      <div class="filter">
+        <label for="cement-type">Cement type</label>
+        <p-select
+          inputId="cement-type"
+          formControlName="cementType"
+          [options]="cementOptions"
+          optionLabel="label"
+          optionValue="value"
+          placeholder="Any"
+          [showClear]="true"
+          appendTo="body"
+        />
+      </div>
+      <div class="filter filter-check">
+        <p-checkbox formControlName="hasWarnings" [binary]="true" inputId="has-warnings" />
+        <label for="has-warnings">Has warnings only</label>
+      </div>
+    </div>
+  </form>
+
+  <section class="card" aria-label="Results">
+    @if (message()) {
+      <p class="message" data-testid="search-message">{{ message() }}</p>
+    } @else {
+      <p-table [value]="batches()" data-testid="results">
+        <ng-template #header>
+          <tr>
+            <th>Batch number</th>
+            <th>Cast</th>
+            <th>Cement type</th>
+            <th class="num">Expected final (PSI)</th>
+            <th class="num">w/c ratio</th>
+            <th class="num">28-day avg (PSI)</th>
+            <th class="num">Breaks</th>
+            <th>Warnings</th>
+          </tr>
+        </ng-template>
+        <ng-template #body let-batch>
+          <tr class="row-link" tabindex="0" (click)="open(batch)" (keydown.enter)="open(batch)">
+            <td>
+              <a
+                class="batch-number"
+                [routerLink]="['/batches', batch.batchNumber]"
+                (click)="$event.stopPropagation()"
+              >{{ batch.batchNumber }}</a
+              >
+              @if (batch.isSynthetic) {
+                <span class="badge-synthetic">SYNTHETIC</span>
+              }
+            </td>
+            <td>{{ batch.castAt | date: 'MM/dd/yy' }}</td>
+            <td>{{ cementLabel(batch.cementType) }}</td>
+            <td class="num">{{ batch.expectedFinalBreakPsi | number }}</td>
+            <td class="num">
+              @if (batch.waterCementRatio === null) {
+                <span class="muted">—</span>
+              } @else if (isFlagged('Composition.WaterCementRatio', batch.waterCementRatio)) {
+                <span class="flagged">{{ batch.waterCementRatio | number: '1.2-3' }} ⚠</span>
+              } @else {
+                {{ batch.waterCementRatio | number: '1.2-3' }}
+              }
+            </td>
+            <td class="num">
+              @if (batch.average28DayPsi === null) {
+                <span class="muted">—</span>
+              } @else if (batch.average28DayPsi < batch.expectedFinalBreakPsi) {
+                <span class="flagged">{{ batch.average28DayPsi | number }} ⚠</span>
+              } @else {
+                {{ batch.average28DayPsi | number }}
+              }
+            </td>
+            <td class="num">{{ batch.breaksRecorded }} / {{ batch.cylinderCount }}</td>
+            <td>
+              @if (batch.warningCount > 0) {
+                <span class="warning-tag"
+                >{{ batch.warningCount }}
+                  {{ batch.warningCount === 1 ? 'warning' : 'warnings' }}</span
+                >
+              } @else {
+                <span class="muted">None</span>
+              }
+            </td>
+          </tr>
+        </ng-template>
+      </p-table>
+    }
+  </section>
+</div>
