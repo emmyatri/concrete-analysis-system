@@ -257,6 +257,9 @@ Settings live in `src/Vulcan.Api/appsettings.json`.
 | `UseMocks`          | `false` | `true` makes the screens use fake API responses inside the desktop app (for UI work before endpoints exist). `npm start` always uses mocks. |
 | `SeedSyntheticData` | `false` | `true` loads `data/synthetic/` into an empty database (turn on for demos)                                                                   |
 
+For the demo machine, keep `SeedSyntheticData` set to `false` in the repository and enable it with the `SeedSyntheticData=true` environment variable before starting the application.
+Synthetic data is loaded only when the batch database is empty, so restarting the application will not create duplicate demo data.
+
 For personal overrides, use `appsettings.Development.local.json`. It's git-ignored.
 
 ---
