@@ -1,0 +1,25 @@
+using System.ComponentModel.DataAnnotations;
+using Vulcan.Domain.Enums;
+
+namespace Vulcan.Application.Contracts;
+
+public class UpdateBatchRequest
+{
+    [Required]
+    public required DateTime CastAt { get; init; }
+
+    [Required]
+    public required double FinalWeightLb { get; init; }
+
+    [Required]
+    public required CementType CementType { get; init; }
+
+    [Required]
+    public required double MixWaterPh { get; init; }
+
+    public bool IsSynthetic { get; init; } = false;
+
+    public CompositionDto? Composition { get; init; }
+
+    public OxidesDto? Oxides { get; init; }
+}

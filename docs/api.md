@@ -25,11 +25,11 @@ A `400` status code represents a malformed request or one or more fields that fa
                     "key": {
                         "type": "string"
                     },
-                    "value": {
+                    "message": {
                         "type": "string"
                     }
                 },
-                "required": ["key", "value"]
+                "required": ["key", "message"]
             }
         }
     },
@@ -94,22 +94,39 @@ Use to create a batch.
                 "scmPct": {
                     "type": "number"
                 },
-            }
+            },
+            "required": [
+                "cementPct",
+                "waterPct",
+                "coarseAggregatePct",
+                "fineAggregatePct",
+                "scmType",
+                "scmPct"
+            ]
         },
         "oxides": {
-            "aluminaPct": {
-                "type": "number"
+            "type": "object",
+            "properties": {
+                "aluminaPct": {
+                    "type": "number"
+                },
+                "ironOxidePct": {
+                    "type": "number"
+                },
+                "magnesiumOxidePct": {
+                    "type": "number"
+                },
+                "sulfurTrioxidePct": {
+                    "type": "number"
+                },
             },
-            "ironOxidePct": {
-                "type": "number"
-            },
-            "magnesiumOxidePct": {
-                "type": "number"
-            },
-            "sulfurTrioxidePct": {
-                "type": "number"
-            }
-        }
+            "required": [
+                "aluminaPct",
+                "ironOxidePct",
+                "magnesiumOxidePct",
+                "sulfurTrioxidePct"
+            ]
+        },
     },
     "required": [
         "batchNumber",
@@ -150,11 +167,11 @@ Sent with the `201` response.
                     "key": {
                         "type": "string"
                     },
-                    "value": {
+                    "message": {
                         "type": "string"
                     }
                 },
-                "required": ["key", "value"]
+                "required": ["key", "message"]
             }
         }
     },
@@ -194,6 +211,7 @@ Updates the batch by batch number.
         },
         "isSynthetic": {
             "type": "boolean",
+            "default": false
         },
         "composition": {
             "type": "object",
@@ -216,7 +234,15 @@ Updates the batch by batch number.
                 "scmPct": {
                     "type": "number"
                 },
-            }
+            },
+            "required": [
+                "cementPct",
+                "waterPct",
+                "coarseAggregatePct",
+                "fineAggregatePct",
+                "scmType",
+                "scmPct"
+            ]
         },
         "oxides": {
             "type": "object",
@@ -233,9 +259,22 @@ Updates the batch by batch number.
                 "sulfurTrioxidePct": {
                     "type": "number"
                 },
-            }
+            },
+            "required": [
+                "aluminaPct",
+                "ironOxidePct",
+                "magnesiumOxidePct",
+                "sulfurTrioxidePct"
+            ]
         },
-    }
+    },
+    "required": [
+        "castAt",
+        "finalWeightLb",
+        "cementType",
+        "mixWaterPh",
+        "isSynthetic"
+    ]
 }
 ```
 
@@ -268,10 +307,11 @@ Sent with the `200` response.
                     "key": {
                         "type": "string"
                     },
-                    "value": {
+                    "message": {
                         "type": "string"
                     }
-                }
+                },
+                "required": ["key", "value"]
             }
         }
     },
@@ -466,7 +506,8 @@ Sent with the `200` response.
         "castAt",
         "finalWeightLb",
         "cementType",
-        "mixWaterPh"
+        "mixWaterPh",
+        "isSynthetic"
     ]
 }
 ```
@@ -516,7 +557,7 @@ Send with the `200` response.
                 "type": "number"
             },
             "isSynthetic": {
-                "type": "boolean",
+                "type": "boolean"
             },
             "specimens": {
                 "type": "array",
@@ -607,6 +648,7 @@ Send with the `200` response.
             "finalWeightLb",
             "cementType",
             "mixWaterPh",
+            "isSynthetic"
         ]
     }
 }
@@ -690,11 +732,11 @@ Sent with the `201` response.
                     "key": {
                         "type": "string"
                     },
-                    "value": {
+                    "message": {
                         "type": "string"
                     }
                 },
-                "required": ["key", "value"]
+                "required": ["key", "message"]
             }
         }
     },
@@ -748,11 +790,11 @@ Sent with the `201` response.
     "type": "object",
     "properties": {
         "id": {
-            "type": "number",
+            "type": "integer",
             "description": "Break result id"
         },
-        "specimen_id": {
-            "type": "number",
+        "specimenId": {
+            "type": "integer",
         },
         "warnings": {
             "type": "array",
@@ -762,15 +804,15 @@ Sent with the `201` response.
                     "key": {
                         "type": "string"
                     },
-                    "value": {
+                    "message": {
                         "type": "string"
                     }
                 },
-                "required": ["key", "value"]
+                "required": ["key", "message"]
             }
         }
     },
-    "required": ["id", "specimen_id"]
+    "required": ["id", "specimenId"]
 }
 ```
 
@@ -842,11 +884,11 @@ Sent with the `201` response.
     "type": "object",
     "properties": {
         "id": {
-            "type": "number",
+            "type": "integer",
             "description": "Curing reading id"
         },
-        "specimen_id": {
-            "type": "number"
+        "specimenId": {
+            "type": "integer"
         },
         "warnings": {
             "type": "array",
@@ -856,14 +898,14 @@ Sent with the `201` response.
                     "key": {
                         "type": "string"
                     },
-                    "value": {
+                    "message": {
                         "type": "string"
                     }
                 },
-                "required": ["key", "value"]
+                "required": ["key", "message"]
             }
         }
     },
-    "required": ["id", "specimen_id"]
+    "required": ["id", "specimenId"]
 }
 ```
