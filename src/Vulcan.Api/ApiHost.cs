@@ -5,7 +5,8 @@ using Microsoft.Extensions.FileProviders;
 using Vulcan.Api.Technicians;
 using Vulcan.Domain.Interfaces;
 using Vulcan.Infrastructure;
-
+using Vulcan.Infrastructure.Interceptors;
+using Vulcan.Infrastructure.Services;
 
 namespace Vulcan.Api;
 
@@ -87,7 +88,15 @@ public static class ApiHost
         using var scope = app.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<VulcanDbContext>();
 
-        db.SeedValidationLimits();
-        db.SeedSpecificGravities();
+        var options = new DbContextOptionsBuilder<VulcanDbContext>()
+            .UseSqlite(db.Database.GetDbConnection())
+            .AddInterceptors(
+                new AuditSaveChangesInterceptor(new SystemTechnician()))
+            .Options;
+
+        using var seedDb = new VulcanDbContext(options);
+
+        seedDb.SeedValidationLimits();
+        seedDb.SeedSpecificGravities();
     }
 }
