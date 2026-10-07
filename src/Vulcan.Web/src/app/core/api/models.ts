@@ -196,3 +196,22 @@ export interface CreateBreakResultResponse {
   id: number;
   warnings: RecordWarning[];
 }
+
+
+/** POST /api/specimens/{specimenId}/readings: one curing reading for one cylinder (M1-63). */
+export interface CreateCuringReadingRequest {
+  /** ISO date-time, UTC. Not before the batch's cast date and not in the future. */
+  takenAt: string;
+  internalTempF: number;
+  ambientTempF: number;
+  moisturePct: number;
+  relativeHumidityPct: number;
+  resistivityOhmPerFt: number;
+  co2Ppm: number;
+}
+
+/** 201 response. Ambient outside 60–80 °F saves and comes back as a warning. */
+export interface CreateCuringReadingResponse {
+  id: number;
+  warnings: RecordWarning[];
+}

@@ -8,6 +8,8 @@ import {
   BatchSummary,
   CreateBreakResultRequest,
   CreateBreakResultResponse,
+  CreateCuringReadingRequest,
+  CreateCuringReadingResponse,
   CreateSpecimenRequest,
   CreateSpecimenResponse,
   PendingBreak,
@@ -63,6 +65,18 @@ export class VulcanApiService {
    */
   createBreakResult(specimenId: number, request: CreateBreakResultRequest) {
     return this.http.post<CreateBreakResultResponse>(`/api/specimens/${specimenId}/break`, request);
+  }
+
+
+  /**
+   * Adds one curing reading to a cylinder. A 400 lists bad values by key ("Curing.AmbientTempF",
+   * "Curing.TakenAt", …); a 404 means there's no such cylinder.
+   */
+  createCuringReading(specimenId: number, request: CreateCuringReadingRequest) {
+    return this.http.post<CreateCuringReadingResponse>(
+      `/api/specimens/${specimenId}/readings`,
+      request,
+    );
   }
 
 
