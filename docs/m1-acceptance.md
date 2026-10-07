@@ -224,7 +224,7 @@
 >
 > | Step | Action / What to Type | Expected Result | Req ID | Pass / Fail |
 > |---|---|---|---|:---:|
-> | 4.8 | In **Strength (PSI)**, enter `2,500`. | Input turns amber with warning icon (⚠); helper text reads "PSI is below expected value [3000]". Save remains enabled. | FR-5 | ☐ |
+> | 4.8 | In **Strength (PSI)**, enter `2,500`. | Input turns amber with warning icon (⚠); helper text reads "Break strength is below 3,000 PSI. Saved and flagged for review.". Save remains enabled. | FR-5 | ☐ |
 >
 > #### Valid save – break for C1
 >
@@ -236,63 +236,63 @@
 >
 > | Step | Action / What to Type | Expected Result | Req ID | Pass / Fail |
 > |---|---|---|---|:---:|
-> | 4.10 | On the C2 row in **Waiting to be broken**, click **Record break** *(C2 is not yet due; the app still allows an early break)*. Enter:<br>• Strength (PSI): `2,500`<br>• Break date: **T** (today, the default)<br>Click **Save**. | Strength turns amber with warning icon (⚠) and "PSI is below expected value [3000]" before saving; **Save** stays enabled. After saving, the dialog closes and the confirmation shows a warning icon: "Saved VM-2026-M1-001 · C2: 2,500 PSI. PSI is below expected value [3000]". C2 is removed from **Waiting to be broken**, leaving no cylinders for this batch. | FR-5 | ☐ |
+> | 4.10 | On the C2 row in **Waiting to be broken**, click **Record break** *(C2 is not yet due; the app still allows an early break)*. Enter:<br>• Strength (PSI): `2,500`<br>• Break date: **T** (today, the default)<br>Click **Save**. | Strength turns amber with warning icon (⚠) and "Break strength is below 3,000 PSI. Saved and flagged for review." before saving; **Save** stays enabled. After saving, the dialog closes and the confirmation shows a warning icon: "Saved VM-2026-M1-001 · C2: 2,500 PSI. Break strength is below 3,000 PSI. Saved and flagged for review.". C2 is removed from **Waiting to be broken**, leaving no cylinders for this batch. | FR-5 | ☐ |
 ---
 
 ### Section 5: Curing Readings
 
-> *Verify curing reading guidance, required fields, rejections and warnings, then save a valid reading for cylinder C1.*
+> *Verify the curing grid's guidance, required cells, rejections and warnings, then save a valid reading for cylinder C1.*
 >
-> **Starting point:** After the first step, click **Add reading** and use that new row for every step. Select batch `VM-2026-M1-001` and cylinder `C1` for every step except the Cylinder blank check. Don't save until the valid save step.
+> **Starting point:** Batch Detail for `VM-2026-M1-001`. Readings are typed into a grid, one row per reading. Each row has its own **Save** (or press **Enter**). Cells with a bad value turn red as you type; the row's messages appear below the grid when you try to save. Don't save a valid row until the valid save step, or the reading count in Section 7 will be off.
 >
 > #### Open & helper text
 >
 > | Step | Action / What to Type | Expected Result | Req ID | Pass / Fail |
 > |---|---|---|---|:---:|
-> | 5.1 | Click **Curing readings** in the side navigation menu. | Curing readings screen opens with a table of existing curing readings. Side navigation shows Curing readings as the active tab. | FR-6 | ☐ |
-> | 5.2 | Click **Add reading** and verify each field shows its label, unit, and helper text before entry, and check the input controls. | Helper text appears beneath each field in soft gray, showing allowed ranges for Internal (°F), Ambient (°F), Moisture (%), RH (%), Resistivity (Ω/ft) and CO₂ (ppm). **Batch** and **Cylinder** are dropdowns and **Taken at** is a date/time picker. | FR-6; Supporting UI behavior (SCRUM-123) | ☐ |
+> | 5.1 | On Batch Detail, click **Curing readings**. | **Curing readings** screen opens with **Batch** `VM-2026-M1-001` selected and **Cylinder** defaulting to `C1`. Shows "Cast **T−3** 08:00 · View batch". A **C1 · readings** grid shows one empty new row (Row 1) with **Time taken** defaulted to now. | FR-6 | ☐ |
+> | 5.2 | Check the grid's guidance and controls. | Grid header shows the allowed ranges: "Internal 0–200 °F · Ambient 0–150 °F (normal 60–80) · Moisture 0–100% · RH 0–100% · Resistivity ≥ 0.01 ohms/ft · CO₂ ≥ 0 ppm". **Batch** and **Cylinder** are dropdowns; **Time taken** is a date/time field. Footer hint reads "Tab moves across · Enter saves the row". | FR-6; Supporting UI behavior (SCRUM-123) | ☐ |
 >
-> #### Blank, whitespace, tab away (red errors)
+> #### Blank cells (red errors)
 >
-> **Expected for every step in this table:** Field displays inline red error: "This field is required". **Save rows** is disabled.
+> **Action for this table:** Clear **Time taken**, leave all six readings blank, and click the row's **Save**. **Expected:** Row status shows **Not saved**, every blank cell turns red, and each message below appears under the grid.
 >
-> | Step | Field (leave blank or enter whitespace, then tab away) | Req ID | Pass / Fail |
-> |---|---|---|:---:|
-> | 5.3 | **Cylinder** *(select batch `VM-2026-M1-001`, leave cylinder unselected)* | FR-6 | ☐ |
-> | 5.4 | **Taken at** | FR-6 | ☐ |
-> | 5.5 | **Internal (°F)** | FR-6 | ☐ |
-> | 5.6 | **Ambient (°F)** | FR-6 | ☐ |
-> | 5.7 | **Moisture (%)** | FR-6 | ☐ |
-> | 5.8 | **RH (%)** | FR-6 | ☐ |
-> | 5.9 | **Resistivity (Ω/ft)** | FR-6 | ☐ |
-> | 5.10 | **CO₂ (ppm)** | FR-6 | ☐ |
+> | Step | Cell | Expected Message | Req ID | Pass / Fail |
+> |---|---|---|---|:---:|
+> | 5.3 | **Time taken** | "Row 1 · Time taken — required." | FR-6 | ☐ |
+> | 5.4 | **Internal (°F)** | "Row 1 · Internal — required." | FR-6 | ☐ |
+> | 5.5 | **Ambient (°F)** | "Row 1 · Ambient — required." | FR-6 | ☐ |
+> | 5.6 | **Moisture (%)** | "Row 1 · Moisture — required." | FR-6 | ☐ |
+> | 5.7 | **RH (%)** | "Row 1 · RH — required." | FR-6 | ☐ |
+> | 5.8 | **Resistivity (Ω/ft)** | "Row 1 · Resistivity — required." | FR-6 | ☐ |
+> | 5.9 | **CO₂ (ppm)** | "Row 1 · CO₂ — required." | FR-6 | ☐ |
 >
 > #### Invalid values (red errors)
 >
-> | Step | Action / What to Type | Expected Result | Req ID | Pass / Fail |
+> **For each step:** enter the value in Row 1, then click the row's **Save**. **Expected:** the cell turns red, the row stays **Not saved**, and the message shown appears under the grid (messages for other blank cells may also show).
+>
+> | Step | Action / What to Type | Expected Message | Req ID | Pass / Fail |
 > |---|---|---|---|:---:|
-> | 5.11 | Open the **Taken at** date picker and attempt to select a future date. | Future dates are disabled on the date picker and cannot be selected. | FR-6, NFR-6 | ☐ |
-> | 5.12 | In **Taken at**, enter a date before the batch was cast: **T−4** at `8:00 AM`. | ⚠️ **TO CONFIRM:** Red error: "Reading time can't be before the batch was cast." Save remains disabled. | FR-6, NFR-6 | ☐ |
-> | 5.13 | In **Internal (°F)**, enter `201`. | Red boundary error: "Internal temperature must be within the range [0-200]". Save remains disabled. | FR-6, NFR-6 | ☐ |
-> | 5.14 | In **Internal (°F)**, enter `72.12`. | Red boundary error: "Internal temperature must be within one decimal". Save remains disabled. | FR-6, NFR-6 | ☐ |
-> | 5.15 | In **Ambient (°F)**, enter `151`. | Red boundary error: "Ambient temperature must be within the range [0-150]". Save remains disabled. | FR-6, NFR-6 | ☐ |
-> | 5.16 | In **Moisture (%)**, enter `101`. | Red boundary error: "Moisture percent must be a valid percentage [0-100]". Save remains disabled. | FR-6, NFR-6 | ☐ |
-> | 5.17 | In **RH (%)**, enter `101`. | Red boundary error: "Relative humidity percent must be a valid percentage [0-100]". Save remains disabled. | FR-6, NFR-6 | ☐ |
-> | 5.18 | In **Resistivity (Ω/ft)**, enter `-1`. | Red boundary error: "Resistivity must be a positive number." Save remains disabled. | FR-6, NFR-6 | ☐ |
-> | 5.19 | In **CO₂ (ppm)**, enter `-1`. | Red boundary error: "CO2 ppm must be non-negative". Save remains disabled. | FR-6, NFR-6 | ☐ |
+> | 5.10 | In **Time taken**, enter a future date and time: **T+1** at `10:00 AM`. | "Row 1 · Time taken — can't be in the future." | FR-6, NFR-6 | ☐ |
+> | 5.11 | In **Time taken**, enter a time before the batch was cast: **T−4** at `8:00 AM`. | "Row 1 · Time taken — can't be before the batch was cast." | FR-6, NFR-6 | ☐ |
+> | 5.12 | In **Internal (°F)**, enter `201`. | "Row 1 · Internal 201 °F — must be 0–200 °F." | FR-6, NFR-6 | ☐ |
+> | 5.13 | In **Internal (°F)**, enter `72.12`. **Don't click Save for this step;** just check the cell. | ⚠️ **FAIL / TO CONFIRM:** Cell turns red: "Internal temperature must be within one decimal". | FR-6, NFR-6 | ☐ |
+> | 5.14 | In **Ambient (°F)**, enter `151`. | "Row 1 · Ambient 151 °F — must be 0–150 °F." | FR-6, NFR-6 | ☐ |
+> | 5.15 | In **Moisture (%)**, enter `101`. | "Row 1 · Moisture 101% — must be 0–100%." | FR-6, NFR-6 | ☐ |
+> | 5.16 | In **RH (%)**, enter `101`. | "Row 1 · RH 101% — must be 0–100%." | FR-6, NFR-6 | ☐ |
+> | 5.17 | In **Resistivity (Ω/ft)**, enter `-1`. | "Row 1 · Resistivity -1 ohms/ft — must be ≥ 0.01 ohms/ft." | FR-6, NFR-6 | ☐ |
+> | 5.18 | In **CO₂ (ppm)**, enter `-1`. | "Row 1 · CO₂ -1 ppm — must be ≥ 0 ppm." | FR-6, NFR-6 | ☐ |
 >
 > #### Warnings on unusual values (amber)
 >
 > | Step | Action / What to Type | Expected Result | Req ID | Pass / Fail |
 > |---|---|---|---|:---:|
-> | 5.20 | In **Ambient (°F)**, enter `59`. | Input turns amber with warning icon (⚠); helper text reads "Ambient temperature is outside the normal range [60-80]". Save remains enabled. | FR-6 | ☐ |
+> | 5.19 | In **Ambient (°F)**, enter `59`. **Don't save.** | Cell turns amber; hovering shows "Ambient 59 °F — outside the normal 60–80 °F. Saved and flagged." | FR-6 | ☐ |
 >
 > #### Valid save – reading for C1
 >
 > | Step | Action / What to Type | Expected Result | Req ID | Pass / Fail |
 > |---|---|---|---|:---:|
-> | 5.21 | Clear the previous values and enter valid curing reading metadata:<br>• Batch: `VM-2026-M1-001`<br>• Cylinder: `C1`<br>• Taken at: **T−2** at `10:00 AM`<br>• Internal (°F): `72.5`<br>• Ambient (°F): `72`<br>• Moisture (%): `65`<br>• RH (%): `55`<br>• Resistivity (Ω/ft): `12.50`<br>• CO₂ (ppm): `450`<br>Click **Save rows**. | All fields accept input with neutral valid styling. Reading saves and appears in the curing readings table. | FR-6 | ☐ |
-
+> | 5.20 | Clear the previous values and enter in Row 1:<br>• Time taken: **T−2** at `10:00 AM`<br>• Internal (°F): `72.5`<br>• Ambient (°F): `72`<br>• Moisture (%): `65`<br>• RH (%): `55`<br>• Resistivity (Ω/ft): `12.50`<br>• CO₂ (ppm): `450`<br>Click the row's **Save** (or press **Enter**). | Row 1 locks and reads `72.5 °F`, `72.0 °F`, `65.0%`, `55.0%`, `12.50 Ω/ft`, `450.0 ppm` with status **Saved** (no warnings). A new empty Row 2 appears below. | FR-6 | ☐ |
 ---
 
 ### Section 6: Search & Retrieval by Batch Number
@@ -318,8 +318,8 @@
 > | 7.1 | Inspect the Batch Detail summary strip. | Displays correct:<br>• Batch number: `VM-2026-M1-001`<br>• Cast date/time: **T−3** `08:00`<br>• Cement type: `Type I`<br>• Final weight (lb): `4,050`<br>• Expected final break (PSI): `6,200`<br>• Mix water pH: `7.2`<br>• Water/Cementitious ratio: `0.46` *(no warning)*<br>• Air/Other (%): `0.0` | FR-10 | ☐ |
 > | 7.2 | Verify audit trail metadata on the summary strip. | Clearly shows creator audit information: "Created by [Operator Name] on [Date/Time]". | FR-22 | ☐ |
 > | 7.3 | Inspect the **Composition & Oxides** cards. | All saved composition percentages and cement oxide values match original inputs exactly, displayed to two decimal places:<br>• Cement (%): `10.00`<br>• Water (%): `20.00`<br>• Coarse aggregate (%): `40.00`<br>• Fine aggregate / sand (%): `25.00`<br>• SCM type: `Fly Ash`<br>• SCM (%): `5.00`<br>• Alumina Al₂O₃ (%): `5.10`<br>• Iron oxide Fe₂O₃ (%): `3.20`<br>• Magnesium oxide MgO (%): `2.10`<br>• Sulfur trioxide SO₃ (%): `2.40` | FR-22 | ☐ |
-> | 7.4 | Select the **Cylinders & breaks** tab. | Table lists both cylinders:<br>**C1** — Age `Day 3` · Length `12.00` · Width `6.00` · Broken at **T** + time it was saved · Strength `3,710` (no warning) · Readings `1`<br>**C2** — Age `Day 7` · Length `12.00` · Width `6.00` · Broken at **T** + time it was saved · Strength `2,500 ⚠` (hover shows "PSI is below expected value [3000]") · Readings `0` | FR-5, FR-22 | ☐ |
-> | 7.5 | Select the **Curing readings** tab. | Lists curing readings with correct dates and details:<br>• Taken at: **T−2** `10:00`<br>• Internal (°F): `72.5`<br>• Ambient (°F): `72.0`<br>• Moisture (%): `65.0`<br>• RH (%): `55.0`<br>• Resistivity (Ω/ft): `12.50`<br>• CO₂ (ppm): `450.0` | FR-6, FR-10 | ☐ |
+> | 7.4 | Select the **Cylinders & breaks** tab. | Table lists both cylinders:<br>**C1** — Age `Day 3` · Length `12.00 in` · Width `6.00 in` · Broken at **T** `@` time it was saved (`MM/dd @ HH:mm`) · Strength `3,710 PSI` (no warning) · Readings `1`<br>**C2** — Age `Day 7` · Length `12.00 in` · Width `6.00 in` · Broken at **T** `@` time it was saved · Strength `2,500 PSI ⚠` (hover shows "Break strength is below 3,000 PSI. Saved and flagged for review.") · Readings `0` | FR-5, FR-22 | ☐ |
+> | 7.5 | Select the **Curing readings** tab. | Readings are grouped under **Cylinder C1 · 1 reading**, with correct date and values:<br>• Taken at: **T−2** `10:00`<br>• Internal (°F): `72.5 °F`<br>• Ambient (°F): `72.0 °F`<br>• Moisture (%): `65.0%`<br>• RH (%): `55.0%`<br>• Resistivity (Ω/ft): `12.50 Ω/ft`<br>• CO₂ (ppm): `450.0 ppm` | FR-6, FR-10 | ☐ |
 > | 7.6 | In **Search batches**, open a known batch seeded with warning values. | Batch detail displays total warning count in the list of tabs. Save remains enabled. | Supporting UI behavior (SCRUM-123) | ☐ |
 
 ---
@@ -351,7 +351,7 @@
 
 | Metric | Value |
 |---|---|
-| **Total Test Steps** | 110 |
+| **Total Test Steps** | 109 |
 | **Steps Passed** | _____ |
 | **Steps Failed** | _____ |
 | **Total Elapsed Time** | _____ min *(pass criterion: ≤ 20 min)* |
@@ -363,6 +363,7 @@
 | Step # | Error / Observation | Jira Key |
 |---|---|---|
 | 3.6 | Cylinder label character restriction (letters, digits and dashes only) not enforced as expected. | |
+| 5.13 | Curing Internal (°F) accepts more than one decimal place (`72.12`); no "within one decimal" check in the app. | |
 | | | |
 | | | |
 
