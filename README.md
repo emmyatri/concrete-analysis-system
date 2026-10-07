@@ -279,7 +279,7 @@ For Vulcan and anyone using the app. No .NET, Node or internet connection needed
 
 1. **Download the installer:**
    **[VulcanCBAS-Setup.exe](https://github.com/emmyatri/concrete-analysis-system/releases/latest/download/VulcanCBAS-Setup.exe)**
-   (about 200 MB, always the latest release). Older versions are on the
+   (about 265 MB, always the latest release). Older versions are on the
    [Releases page](https://github.com/emmyatri/concrete-analysis-system/releases).
 2. **Double-click it.** Windows may say **"Windows protected your PC"** because the installer isn't signed yet. Click
    **More info → Run anyway**.
@@ -308,7 +308,7 @@ For reviewers checking a PR before it's released. Pick **one** way to get the in
 1. On GitHub, open **Actions → CI → Run workflow**, pick the PR's branch, and click **Run workflow**.
 2. Wait for the run to go green (about 10 minutes), open it, and download **vulcan-cbas-installer** under
    **Artifacts**.
-3. It downloads as a `.zip`. **Unzip it first**, then run `VulcanCBAS-Setup-0.1.0-m1.exe` from the unzipped folder.
+3. It downloads as a `.zip`. **Unzip it first**, then run `VulcanCBAS-Setup.exe` from the unzipped folder.
 
 **B. On your own computer (one command)**
 
@@ -337,7 +337,7 @@ The installed app talks to the real local server, not fake data. If a screen sho
 service", the server endpoints for that screen haven't been merged yet. That's not an installer problem.
 
 To see exactly what an install did, run it with a log:
-`.\VulcanCBAS-Setup-0.1.0-m1.exe /LOG="$env:TEMP\vulcan-setup.log"`
+`.\VulcanCBAS-Setup.exe /LOG="$env:TEMP\vulcan-setup.log"` (use whichever name your copy has)
 
 ---
 
@@ -353,7 +353,7 @@ is what the download link in [Installing Vulcan CBAS](#installing-vulcan-cbas) p
 powershell -ExecutionPolicy Bypass -File installer\build.ps1
 ```
 
-It writes `installer\output\VulcanCBAS-Setup-0.1.0-m1.exe`. You need Node.js and the .NET 10 SDK from
+It writes `installer\output\VulcanCBAS-Setup-<version>.exe`. You need Node.js and the .NET 10 SDK from
 [Prerequisites](#prerequisites); the script installs Inno Setup if you don't have it. The first run takes a few
 minutes because it downloads the WebView2 runtime (about 200 MB, once).
 
@@ -374,7 +374,7 @@ minutes because it downloads the WebView2 runtime (about 200 MB, once).
 to it. Share the installer instead.
 
 **New version:** bump `<Version>` in `Directory.Build.props`, `version` in `src/Vulcan.Web/src/app/core/app-info.ts`
-and `AppVersion` in `installer/vulcan.iss`, merge to `main`, then tag it:
+`AppVersion` in `installer/vulcan.iss`, and "Current version" at the top of this README. Merge to `main`, then tag it:
 
 ```powershell
 git switch main; git pull
