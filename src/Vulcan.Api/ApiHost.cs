@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.OpenApi;
+using Vulcan.Api.Controllers;
 using Vulcan.Api.Technicians;
 using Vulcan.Infrastructure;
 using Vulcan.Infrastructure.Seed;
@@ -35,6 +36,7 @@ public static class ApiHost
         var builder = WebApplication.CreateBuilder(args);
 
         // Bind only to this computer and let the OS select an available port.
+        // FIXME
         builder.WebHost.UseUrls($"http://127.0.0.1:{port}");
 
         builder.Services
@@ -51,6 +53,10 @@ public static class ApiHost
                 });
             })
             .AddControllers()
+            // was needed to resolve the validation endpoints.
+            // also fixes the specific gravity endpoint not resolving (because they are in the same namespace?).
+            .AddApplicationPart(
+                typeof(ValidationLimitController).Assembly)
             .AddJsonOptions(o => o.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter()));
 
         // use overrides if provided
