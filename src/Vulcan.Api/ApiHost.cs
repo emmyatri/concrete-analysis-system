@@ -49,7 +49,8 @@ public static class ApiHost
                     Version = "v1",
                 });
             })
-            .AddControllers();
+            .AddControllers()
+            .AddJsonOptions(o => o.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter()));
 
         // use overrides if provided
         configureServices?.Invoke(builder.Services);
