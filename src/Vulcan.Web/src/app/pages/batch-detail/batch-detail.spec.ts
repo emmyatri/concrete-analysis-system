@@ -67,7 +67,7 @@ describe('BatchDetailPage', () => {
     const cylinders = rows('cylinders');
     expect(cylinders).toHaveLength(9);
     expect(cells(cylinders[0])).toEqual(
-      expect.arrayContaining(['D3-1', 'Day 3', '11.93', '5.99', '2,950 ⚠', '7', 'View']),
+      expect.arrayContaining(['D3-1', 'Day 3', '11.93 in', '5.99 in', '2,950 PSI ⚠', '7', 'View']),
     );
     // Broken at reads "06/24 @ 12:05".
     expect(cells(cylinders[0])[4]).toMatch(/^\d\d\/\d\d @ \d\d:\d\d$/);

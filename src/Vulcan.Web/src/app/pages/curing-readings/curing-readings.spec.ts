@@ -147,10 +147,8 @@ describe('CuringReadingsPage', () => {
 
     await pressEnter(newRows()[0]);
 
+    expect(status(newRows()[0])).toBe('Saved · flagged');
     expect(newRows()[0].querySelector('.flagged')?.textContent?.trim()).toBe('84.2 °F ⚠');
-    expect(messages()).toEqual([
-      'Row 8 · Ambient 84.2 °F — outside the normal 60–80 °F. Saved and flagged.',
-    ]);
     const batch = await firstValueFrom(TestBed.inject(VulcanApiService).getBatch('VM-SYN-006'));
     expect(batch.warnings.some((w) => w.entityType === 'CuringReading' && w.value === 84.2)).toBe(
       true,
