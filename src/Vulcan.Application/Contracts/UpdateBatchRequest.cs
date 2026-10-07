@@ -19,6 +19,9 @@ public class UpdateBatchRequest
 
     public bool IsSynthetic { get; init; } = false;
 
+    [Required]
+    public required int ExpectedFinalBreakPsi { get; init; }
+
     public CompositionDto? Composition { get; init; }
 
     public OxidesDto? Oxides { get; init; }

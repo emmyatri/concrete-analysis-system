@@ -10,5 +10,6 @@ public class CreateCuringReadingResponse
     [Required]
     public required int SpecimenId { get; init; }
 
-    public List<WarningDTO>? Warnings { get; init; }
+    [Required]
+    public required List<WarningDTO> Warnings { get; init; } = [];
 }

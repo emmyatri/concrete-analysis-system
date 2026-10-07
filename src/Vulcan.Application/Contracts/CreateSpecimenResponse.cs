@@ -5,7 +5,7 @@ namespace Vulcan.Application.Contracts;
 public class CreateSpecimenResponse
 {
     [Required]
-    public required double Id { get; init; }
+    public required int Id { get; init; }
 
     [Required]
     public required string Label { get; init; }
@@ -13,5 +13,6 @@ public class CreateSpecimenResponse
     [Required]
     public required string batchNumber { get; init; }
 
-    public List<WarningDTO>? Warnings { get; init; }
+    [Required]
+    public required List<WarningDTO> Warnings { get; init; } = [];
 }

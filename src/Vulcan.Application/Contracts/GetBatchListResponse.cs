@@ -1,12 +1,12 @@
 namespace Vulcan.Application.Contracts;
 
-public class GetBatchListResponse : List<GetBatchResponse>
+public class GetBatchListResponse : List<BatchSummaryDTO>
 {
     public GetBatchListResponse()
     {
     }
 
-    public GetBatchListResponse(IEnumerable<GetBatchResponse> items)
+    public GetBatchListResponse(IEnumerable<BatchSummaryDTO> items)
         : base(items)
     {
     }

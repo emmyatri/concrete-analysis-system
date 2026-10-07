@@ -22,4 +22,6 @@ public class CompositionDto
 
     [Required]
     public required double ScmPct { get; init; }
+
+    // no derived attributes
 }

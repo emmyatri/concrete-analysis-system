@@ -6,7 +6,19 @@ namespace Vulcan.Application.Contracts;
 public class CreateBatchRequest
 {
     [Required]
-    [RegularExpression(@"^[A-Za-z0-9-]+$")]
+    public required BatchWrapper Batch { get; init; }
+
+    public CompositionDto? Composition { get; init; }
+
+    public OxidesDto? Oxides { get; init; }
+}
+
+/// <summary>
+/// Wrapper around batch's non-nested fields
+/// </summary>
+public class BatchWrapper
+{
+    [Required]
     public required string BatchNumber { get; init; }
 
     [Required]
@@ -21,9 +33,8 @@ public class CreateBatchRequest
     [Required]
     public required double MixWaterPh { get; init; }
 
+    [Required]
+    public required int ExpectedFinalBreakPsi { get; init; }
+
     public bool IsSynthetic { get; init; } = false;
-
-    public CompositionDto? Composition { get; init; }
-
-    public OxidesDto? Oxides { get; init; }
 }

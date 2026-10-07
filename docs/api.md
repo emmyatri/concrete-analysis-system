@@ -18,18 +18,12 @@ A `400` status code represents a malformed request or one or more fields that fa
             "type": "number"
         },
         "errors": {
-            "type": "array",
-            "items": {
-                "type": "object",
-                "properties": {
-                    "key": {
-                        "type": "string"
-                    },
-                    "message": {
-                        "type": "string"
-                    }
-                },
-                "required": ["key", "message"]
+            "type": "object",
+            "additionalProperties": {
+                "type": "array",
+                "items": {
+                    "type": "string"
+                }
             }
         }
     },
@@ -52,26 +46,41 @@ Use to create a batch.
     "title": "CreateBatchRequest",
     "type": "object",
     "properties": {
-        "batchNumber": {
-            "type": "string",
-            "pattern": "^[A-Za-z0-9-]+$"
-        },
-        "castAt": {
-            "type": "string",
-            "format": "date-time"
-        },
-        "finalWeightLb": {
-            "type": "number"
-        },
-        "cementType": {
-            "enum": ["TypeI", "TypeII", "TypeIII"]
-        },
-        "mixWaterPh": {
-            "type": "number"
-        },
-        "isSynthetic": {
-            "type": "boolean",
-            "default": false
+        "batch": {
+            "type": "object",
+            "properties": {
+                "batchNumber": {
+                    "type": "string"
+                },
+                "castAt": {
+                    "type": "string",
+                    "format": "date-time"
+                },
+                "finalWeightLb": {
+                    "type": "number"
+                },
+                "cementType": {
+                    "enum": ["TypeI", "TypeII", "TypeIII"]
+                },
+                "mixWaterPh": {
+                    "type": "number"
+                },
+                "isSynthetic": {
+                    "type": "boolean",
+                    "default": false
+                },
+                "expectedFinalBreakPsi": {
+                    "type": "integer",
+                }
+            },
+            "required": [
+                "batchNumber",
+                "castAt",
+                "finalWeightLb",
+                "cementType",
+                "mixWaterPh",
+                "expectedFinalBreakResultPsi"
+            ]
         },
         "composition": {
             "type": "object",
@@ -128,13 +137,7 @@ Use to create a batch.
             ]
         },
     },
-    "required": [
-        "batchNumber",
-        "castAt",
-        "finalWeightLb",
-        "cementType",
-        "mixWaterPh"
-    ]
+    "required": ["batch"]
 }
 ```
 
@@ -161,6 +164,7 @@ Sent with the `201` response.
         },
         "warnings": {
             "type": "array",
+            "default": [],
             "items": {
                 "type": "object",
                 "properties": {
@@ -175,7 +179,7 @@ Sent with the `201` response.
             }
         }
     },
-    "required": ["id", "batchNumber"]
+    "required": ["id", "batchNumber", "warnings"]
 }
 ```
 
@@ -196,22 +200,41 @@ Updates the batch by batch number.
     "title": "UpdateBatchRequest",
     "type": "object",
     "properties": {
-        "castAt": {
-            "type": "string",
-            "format": "date-time"
-        },
-        "finalWeightLb": {
-            "type": "number"
-        },
-        "cementType": {
-            "enum": ["TypeI", "TypeII", "TypeIII"]
-        },
-        "mixWaterPh": {
-            "type": "number"
-        },
-        "isSynthetic": {
-            "type": "boolean",
-            "default": false
+        "batch": {
+            "type": "object",
+            "properties": {
+                "batchNumber": {
+                    "type": "string"
+                },
+                "castAt": {
+                    "type": "string",
+                    "format": "date-time"
+                },
+                "finalWeightLb": {
+                    "type": "number"
+                },
+                "cementType": {
+                    "enum": ["TypeI", "TypeII", "TypeIII"]
+                },
+                "mixWaterPh": {
+                    "type": "number"
+                },
+                "isSynthetic": {
+                    "type": "boolean",
+                    "default": false
+                },
+                "expectedFinalBreakPsi": {
+                    "type": "integer",
+                }
+            },
+            "required": [
+                "batchNumber",
+                "castAt",
+                "finalWeightLb",
+                "cementType",
+                "mixWaterPh",
+                "expectedFinalBreakResultPsi"
+            ]
         },
         "composition": {
             "type": "object",
@@ -268,13 +291,7 @@ Updates the batch by batch number.
             ]
         },
     },
-    "required": [
-        "castAt",
-        "finalWeightLb",
-        "cementType",
-        "mixWaterPh",
-        "isSynthetic"
-    ]
+    "required": ["batch"]
 }
 ```
 
@@ -301,6 +318,7 @@ Sent with the `200` response.
         },
         "warnings": {
             "type": "array",
+            "default": [],
             "items": {
                 "type": "object",
                 "properties": {
@@ -315,7 +333,7 @@ Sent with the `200` response.
             }
         }
     },
-    "required": ["id", "batchNumber"]
+    "required": ["id", "batchNumber", "warnings"]
 }
 ```
 
@@ -343,9 +361,11 @@ Sent with the `200` response.
     "title": "GetBatchResponse",
     "type": "object",
     "properties": {
+        "id": {
+            "type": "integer"
+        },
         "batchNumber": {
-            "type": "string",
-            "pattern": "^[A-Za-z0-9-]+$" 
+            "type": "string"
         },
         "castAt": {
             "type": "string",
@@ -362,6 +382,71 @@ Sent with the `200` response.
         },
         "isSynthetic": {
             "type": "boolean",
+        },
+        "createdAtUtc": {
+            "type": "string",
+            "format": "date-time"
+        },
+        "createdBy": {
+            "type": "string"
+        },
+        "modifiedAtUtc": {
+            "type": "string",
+            "format": "date-time"
+        },
+        "modifiedBy": {
+            "type": "string",
+        },
+        "warnings": {
+            "type": "array",
+            "default": [],
+            "items": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "integer"
+                    },
+                    "entityType": {
+                        "enum": [
+                            "Batch",
+                            "Composition",
+                            "CementOxideAnalysis",
+                            "Specimen",
+                            "BreakResult",
+                            "CuringReading"
+                        ]
+                    },
+                    "entityId": {
+                        "type": "integer"
+                    },
+                    "fieldName": {
+                        "type": "string"
+                    },
+                    "limitKey": {
+                        "type": "string"
+                    },
+                    "value": {
+                        "type": "number"
+                    },
+                    "message": {
+                        "type": "string"
+                    },
+                    "createdAtUtc": {
+                        "type": "string",
+                        "format": "date-time"
+                    }
+                },
+                "required": [
+                    "id",
+                    "entityType",
+                    "entityId",
+                    "fieldName",
+                    "limitKey",
+                    "value"
+                    "message",
+                    "createdAtUtc"
+                ]
+            }
         },
         "composition": {
             "type": "object",
@@ -384,6 +469,15 @@ Sent with the `200` response.
                 "scmPct": {
                     "type": "number"
                 },
+                "totalPct": {
+                    "type": "number"
+                },
+                "airOtherPct": {
+                    "type": "number"
+                },
+                "waterCementRatio": {
+                    "type": "number"
+                }
             },
             "required": [
                 "cementPct",
@@ -391,7 +485,9 @@ Sent with the `200` response.
                 "coarseAggregatePct",
                 "fineAggregatePct",
                 "scmType",
-                "scmPct"
+                "scmPct",
+                "totalPct",
+                "airOtherPct"
             ]
         },
         "oxides": {
@@ -441,6 +537,9 @@ Sent with the `200` response.
                     "breakResult": {
                         "type": "object",
                         "properties": {
+                            "id": {
+                                "type": "integer"
+                            },
                             "brokenAt": {
                                 "type": "string",
                                 "format": "date-time"
@@ -456,6 +555,9 @@ Sent with the `200` response.
                         "items": {
                             "type": "object",
                             "properties": {
+                                "id": {
+                                    "type": "integer",
+                                },
                                 "takenAt": {
                                     "type": "string",
                                     "format": "date-time",
@@ -480,6 +582,7 @@ Sent with the `200` response.
                                 }
                             },
                             "required": [
+                                "id",
                                 "takenAt",
                                 "internalTempF",
                                 "ambientTempF",
@@ -502,12 +605,16 @@ Sent with the `200` response.
         }
     },
     "required": [
+        "id",
         "batchNumber",
         "castAt",
         "finalWeightLb",
         "cementType",
         "mixWaterPh",
-        "isSynthetic"
+        "isSynthetic",
+        "createdAtUtc",
+        "createdBy",
+        "warnings"
     ]
 }
 ```
@@ -521,8 +628,12 @@ Returns a paged list of batches.
 
 **Request Parameters:**
 
-* `q`: from query. The batch search query.
-* `page`: from query. The page of data to fetch on. Starts from 1.
+* `search`: (optional) from query. The batch search query.
+* `castFrom`: (optional) from query. Beginning of range to filter by each batch's castAt field.
+* `castTo`: (optional) from query. End of range to filter by each batch's castAt field.
+* `cementType`: (optional) from query. Filters by batches that have the same cement type.
+* `hasWarnings`: (optional) from query. Filters by batches that have or don't wave warnings.
+* `includeSynthetic`: (optional) from query. Whether to include synthetic batches or not.
 
 **Response Status Codes:**
 
@@ -539,9 +650,11 @@ Send with the `200` response.
     "items": {
         "type": "object",
         "properties": {
+            "id": {
+                "type": "integer"
+            },
             "batchNumber": {
-                "type": "string",
-                "pattern": "^[A-Za-z0-9-]+$" 
+                "type": "string"
             },
             "castAt": {
                 "type": "string",
@@ -559,87 +672,20 @@ Send with the `200` response.
             "isSynthetic": {
                 "type": "boolean"
             },
-            "specimens": {
-                "type": "array",
-                "items": {
-                    "type": "object",
-                    "properties": {
-                        "label": {
-                            "type": "string"
-                        },
-                        "lengthIn": {
-                            "type": "number"
-                        },
-                        "widthIn": {
-                            "type": "number"
-                        },
-                        "testAgeDays": {
-                            "enum": ["Day3", "Day7", "Day28"]
-                        },
-                        "isSynthetic": {
-                            "type": "boolean"
-                        },
-                        "breakResult": {
-                            "type": "object",
-                            "properties": {
-                                "brokenAt": {
-                                    "type": "string",
-                                    "format": "date-time"
-                                },
-                                "strengthPsi": {
-                                    "type": "integer"
-                                }
-                            },
-                            "required": ["brokenAt", "strengthPsi"]
-                        },
-                        "curingReadings": {
-                            "type": "array",
-                            "items": {
-                                "type": "object",
-                                "properties": {
-                                    "takenAt": {
-                                        "type": "string",
-                                        "format": "date-time",
-                                    },
-                                    "internalTempF": {
-                                        "type": "number"
-                                    },
-                                    "ambientTempF": {
-                                        "type": "number"
-                                    },
-                                    "moisturePct": {
-                                        "type": "number"
-                                    },
-                                    "relativeHumidityPct": {
-                                        "type": "number"
-                                    },
-                                    "resistivityOhmPerFt": {
-                                        "type": "number"
-                                    },
-                                    "co2Ppm": {
-                                        "type": "number"
-                                    }
-                                },
-                                "required": [
-                                    "takenAt",
-                                    "internalTempF",
-                                    "ambientTempF",
-                                    "moisturePct",
-                                    "relativeHumidityPct",
-                                    "resistivityOhmPerFt",
-                                    "co2Ppm"
-                                ]
-                            }
-                        }
-                    },
-                    "required": [
-                        "label",
-                        "lengthIn",
-                        "widthIn",
-                        "testAgeDays",
-                        "isSynthetic"
-                    ]
-                }
+            "expectedFinalBreakPsi": {
+                "type": "integer"
+            },
+            "cylinderCount": {
+                "type": "integer"
+            },
+            "breaksRecorded": {
+                "type": "integer"
+            },
+            "average28DayPsi": {
+                "type": "number"
+            },
+            "warningCount": {
+                "type": "integer"
             }
         },
         "required": [
@@ -648,7 +694,11 @@ Send with the `200` response.
             "finalWeightLb",
             "cementType",
             "mixWaterPh",
-            "isSynthetic"
+            "isSynthetic",
+            "expectedFinalBreakPsi",
+            "cylinderCount",
+            "breaksRecorded",
+            "warningCount"
         ]
     }
 }
@@ -726,6 +776,7 @@ Sent with the `201` response.
         },
         "warnings": {
             "type": "array",
+            "default": [],
             "items": {
                 "type": "object",
                 "properties": {
@@ -740,7 +791,7 @@ Sent with the `201` response.
             }
         }
     },
-    "required": ["id", "label", "batchNumber"]
+    "required": ["id", "label", "batchNumber", "warnings"]
 }
 ```
 
@@ -798,6 +849,7 @@ Sent with the `201` response.
         },
         "warnings": {
             "type": "array",
+            "default": [],
             "items": {
                 "type": "object",
                 "properties": {
@@ -812,7 +864,7 @@ Sent with the `201` response.
             }
         }
     },
-    "required": ["id", "specimenId"]
+    "required": ["id", "specimenId", "warnings"]
 }
 ```
 
@@ -894,6 +946,7 @@ Sent with the `201` response.
             "type": "array",
             "items": {
                 "type": "object",
+                "default": [],
                 "properties": {
                     "key": {
                         "type": "string"
@@ -906,6 +959,6 @@ Sent with the `201` response.
             }
         }
     },
-    "required": ["id", "specimenId"]
+    "required": ["id", "specimenId", "warnings"]
 }
 ```

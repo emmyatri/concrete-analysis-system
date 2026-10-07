@@ -10,5 +10,6 @@ public class UpdateBatchResponse
     [Required]
     public required string BatchNumber { get; init; }
 
-    public List<WarningDTO>? Warnings { get; init; }
+    [Required]
+    public required List<WarningDTO> Warnings { get; init; } = [];
 }

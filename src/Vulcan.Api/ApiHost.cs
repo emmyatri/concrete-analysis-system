@@ -1,3 +1,4 @@
+using System.Text.Json.Serialization;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
@@ -38,6 +39,7 @@ public static class ApiHost
         builder.Services
             .AddDatabase(builder.Configuration)
             .AddSingleton<TechnicianSettings>()
+            .ConfigureHttpJsonOptions(o => o.SerializerOptions.Converters.Add(new JsonStringEnumConverter()))
             .AddEndpointsApiExplorer()
             .AddSwaggerGen(o =>
             {
@@ -46,7 +48,8 @@ public static class ApiHost
                     Title = "Vulcan API",
                     Version = "v1",
                 });
-            });
+            })
+            .AddControllers();
 
         // use overrides if provided
         configureServices?.Invoke(builder.Services);
@@ -63,13 +66,6 @@ public static class ApiHost
         app.UseDefaultFiles(new DefaultFilesOptions { FileProvider = uiFiles });
         app.UseStaticFiles(new StaticFileOptions { FileProvider = uiFiles });
 
-        // Saves without a technician name are rejected before they reach an endpoint.
-        app.RequireTechnicianOnSaves();
-
-        // Every API endpoint lives under /api.
-        var api = app.MapGroup("/api");
-        api.MapGet("/health", () => Results.Ok(new { status = "ok" }));
-
         if (app.Environment.IsDevelopment())
         {
             app.UseSwagger();
@@ -80,8 +76,15 @@ public static class ApiHost
                 o.RoutePrefix = "api/v1/docs";
             });
         }
+        // Saves without a technician name are rejected before they reach an endpoint.
+        app.RequireTechnicianOnSaves();
+
+        // Every API endpoint lives under /api.
+        var api = app.MapGroup("/api");
+        api.MapGet("/health", () => Results.Ok(new { status = "ok" }));
 
         api.MapTechnicianEndpoints();
+        app.MapControllers();
 
         // Unknown /api routes return a JSON 404, never the Angular page.
         api.Map("/{**path}", () => Results.Problem(
