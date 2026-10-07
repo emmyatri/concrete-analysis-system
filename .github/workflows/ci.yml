@@ -89,6 +89,27 @@ jobs:
       - name: Test
         run: dotnet test --no-build --configuration Release --logger trx --results-directory TestResults
 
+      # ---------- Self-contained build (SCRUM-108) ----------
+
+      - name: Publish (self-contained, win-x64)
+        run: dotnet publish src/Vulcan.Desktop -p:PublishProfile=win-x64-selfcontained
+
+      # Proves the build runs without .NET installed: the runtime, the UI, SQLite and WebView2 are all inside.
+      - name: Check the self-contained build
+        shell: pwsh
+        run: |
+          $dir = "src/Vulcan.Desktop/bin/publish/win-x64"
+          foreach ($file in "Vulcan.Desktop.exe", "coreclr.dll", "e_sqlite3.dll", "WebView2Loader.dll", "wwwroot/index.html") {
+            if (-not (Test-Path "$dir/$file")) { throw "Missing from the self-contained build: $file" }
+          }
+          Write-Host "Self-contained build OK"
+
+      - name: Upload the self-contained build
+        uses: actions/upload-artifact@v4
+        with:
+          name: vulcan-cbas-win-x64
+          path: src/Vulcan.Desktop/bin/publish/win-x64/
+
       - name: Upload test results
         if: always()
         uses: actions/upload-artifact@v4
