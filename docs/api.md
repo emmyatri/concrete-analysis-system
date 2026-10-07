@@ -519,6 +519,9 @@ Sent with the `200` response.
             "items": {
                 "type": "object",
                 "properties": {
+                    "id": {
+                        "type": "string"
+                    },
                     "label": {
                         "type": "string"
                     },
@@ -548,7 +551,7 @@ Sent with the `200` response.
                                 "type": "integer"
                             }
                         },
-                        "required": ["brokenAt", "strengthPsi"]
+                        "required": ["id", "brokenAt", "strengthPsi"]
                     },
                     "curingReadings": {
                         "type": "array",
@@ -595,6 +598,7 @@ Sent with the `200` response.
                     }
                 },
                 "required": [
+                    "id",
                     "label",
                     "lengthIn",
                     "widthIn",
