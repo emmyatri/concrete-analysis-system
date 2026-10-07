@@ -47,5 +47,5 @@ public class GetBatchResponse
 
     public OxidesDto? Oxides { get; init; }
 
-    public List<Specimen> Specimens { get; init; } = [];
+    public List<SpecimenDTO> Specimens { get; init; } = [];
 }
