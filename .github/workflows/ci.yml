@@ -143,7 +143,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: vulcan-cbas-installer
-          path: installer/output/*.exe
+          path: installer/output/VulcanCBAS-Setup.exe
 
       # On a version tag (e.g. v0.1.0-m1), publish a GitHub Release with the installer attached.
       - name: Publish the release
