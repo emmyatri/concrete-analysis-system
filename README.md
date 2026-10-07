@@ -286,8 +286,12 @@ dotnet publish src/Vulcan.Desktop -p:PublishProfile=win-x64-selfcontained
 # then compile installer/vulcan.iss with Inno Setup
 ```
 
-The installer is self-contained and works offline (SLA NFR-1, NFR-3). The target computer does not need .NET, Node or
-internet access. If the WebView2 runtime is missing, the installer installs it from the copy bundled inside.
+The publish step writes a self-contained folder to `src/Vulcan.Desktop/bin/publish/win-x64/` (about 150 MB): the app,
+its own .NET runtime, the UI, SQLite and the WebView2 loader. Run the Angular build first (`npm run build` in
+`src/Vulcan.Web`) so the UI is included. CI also uploads this folder as the **vulcan-cbas-win-x64** artifact, so you can
+unzip and run it without installing anything.
+
+The app uses the WebView2 runtime that comes with Windows 11.
 
 ---
 
