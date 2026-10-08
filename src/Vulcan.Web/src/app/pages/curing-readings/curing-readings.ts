@@ -41,6 +41,7 @@ export const COLUMNS: {
   name: string;
   digits: string;
   unit: string;
+  maxDecimals?: number;
 }[] = [
   {
     field: 'internalTempF',
@@ -49,6 +50,7 @@ export const COLUMNS: {
     name: 'Internal',
     digits: '1.1-1',
     unit: ' °F',
+    maxDecimals: 1,
   },
   {
     field: 'ambientTempF',
@@ -345,13 +347,17 @@ export class CuringReadingsPage {
         });
         continue;
       }
-      if (column.field === 'internalTempF' && !/^-?\d+(?:\.\d{1})?$/.test(raw)) {
-        issues.push({
-          field: column.field,
-          severity: 'error',
-          text: 'Max 1 decimal place',
-        });
-        continue;
+      if (column.maxDecimals !== undefined) {
+        const decimalPart = raw.split('.')[1];
+
+        if (decimalPart !== undefined && decimalPart.length > column.maxDecimals) {
+          issues.push({
+            field: column.field,
+            severity: 'error',
+            text: `${column.name} — max ${column.maxDecimals} decimal place${column.maxDecimals === 1 ? '' : 's'}.`,
+          });
+          continue;
+        }
       }
       const { reject, warn } = this.limitsFor(column.key);
       const result = this.validation.evaluate(column.key, value, this.referenceData.limits());
