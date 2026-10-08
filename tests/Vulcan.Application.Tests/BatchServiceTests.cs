@@ -36,6 +36,7 @@ public class BatchServiceTests(DatabaseFixture fixture)
 
         Assert.True(result.IsSuccess);
         Assert.Empty(result.Errors);
+        Assert.Empty(result.Warnings);
 
         var saved = await repository.GetByNumberAsync("VM-TEST-001");
 
@@ -406,9 +407,8 @@ public class BatchServiceTests(DatabaseFixture fixture)
         Assert.True(result.IsSuccess);
         Assert.Empty(result.Errors);
 
-        Assert.Contains(
-            result.Warnings,
-            warning => warning.Key == LimitKeys.MixWaterPh);
+        var warning = Assert.Single(result.Warnings);
+        Assert.Equal(LimitKeys.MixWaterPh, warning.Key);
 
         Assert.True(batch.Id > 0);
 
@@ -420,6 +420,105 @@ public class BatchServiceTests(DatabaseFixture fixture)
                     warning.LimitKey == LimitKeys.MixWaterPh));
 
         Assert.Equal(6.5m, warningRecord.Value);
+    }
+
+    [Theory]
+    [InlineData(LimitKeys.AluminaPct, 2.5)]
+    [InlineData(LimitKeys.IronOxidePct, 0.4)]
+    [InlineData(LimitKeys.MagnesiumOxidePct, 4.1)]
+    [InlineData(LimitKeys.SulfurTrioxidePct, 3.2)]
+    public async Task CreateAsync_ChemistryWarning_SavesAndPersistsWarning(
+        string limitKey,
+        double warningValue)
+    {
+        await using var db = _fixture.CreateDbContext();
+
+        var limitProvider = new LimitProvider(db);
+        var limitEvaluator = new LimitEvaluator(limitProvider);
+        var repository = new BatchRepository(db);
+
+        var service = CreateService(
+            db,
+            repository,
+            limitEvaluator);
+
+        var batch = CreateValidBatch();
+        batch.BatchNumber = $"VM-CHEM-{warningValue.ToString().Replace(".", "")}";
+
+        var value = (decimal)warningValue;
+
+        switch (limitKey)
+        {
+            case LimitKeys.AluminaPct:
+                batch.CementOxideAnalysis!.AluminaPct = value;
+                break;
+
+            case LimitKeys.IronOxidePct:
+                batch.CementOxideAnalysis!.IronOxidePct = value;
+                break;
+
+            case LimitKeys.MagnesiumOxidePct:
+                batch.CementOxideAnalysis!.MagnesiumOxidePct = value;
+                break;
+
+            case LimitKeys.SulfurTrioxidePct:
+                batch.CementOxideAnalysis!.SulfurTrioxidePct = value;
+                break;
+        }
+
+        var result = await service.CreateAsync(batch);
+
+        Assert.True(result.IsSuccess);
+        Assert.Empty(result.Errors);
+
+        var warning = Assert.Single(result.Warnings);
+        Assert.Equal(limitKey, warning.Key);
+
+        var warningRecord = Assert.Single(
+            db.RecordWarning.Where(
+                record =>
+                    record.EntityType == nameof(Batch) &&
+                    record.EntityId == batch.Id &&
+                    record.LimitKey == limitKey));
+
+        Assert.Equal(value, warningRecord.Value);
+    }
+
+    [Fact]
+    public async Task CreateAsync_WaterCementRatioWarning_SavesAndPersistsWarning()
+    {
+        await using var db = _fixture.CreateDbContext();
+
+        var limitProvider = new LimitProvider(db);
+        var limitEvaluator = new LimitEvaluator(limitProvider);
+        var repository = new BatchRepository(db);
+
+        var service = CreateService(
+            db,
+            repository,
+            limitEvaluator);
+
+        var batch = CreateValidBatch();
+        batch.BatchNumber = "VM-WC-WARN-001";
+        batch.Composition!.CementPct = 15m;
+        batch.Composition.WaterPct = 15m;
+
+        var result = await service.CreateAsync(batch);
+
+        Assert.True(result.IsSuccess);
+        Assert.Empty(result.Errors);
+
+        var warning = Assert.Single(result.Warnings);
+        Assert.Equal(LimitKeys.WaterCementRatio, warning.Key);
+
+        var warningRecord = Assert.Single(
+            db.RecordWarning.Where(
+                record =>
+                    record.EntityType == nameof(Batch) &&
+                    record.EntityId == batch.Id &&
+                    record.LimitKey == LimitKeys.WaterCementRatio));
+
+        Assert.Equal(15m / (15m * 3.15m), warningRecord.Value);
     }
 
     private static Batch CreateValidBatch()
@@ -441,7 +540,7 @@ public class BatchServiceTests(DatabaseFixture fixture)
                 ScmType = ScmType.None,
                 CoarseAggregatePct = 40m,
                 FineAggregatePct = 25m,
-                WaterPct = 15m
+                WaterPct = 16m
             },
 
             CementOxideAnalysis = new CementOxideAnalysis

@@ -6,24 +6,24 @@ namespace Vulcan.Application.Contracts;
 public class OxidesDto
 {
     [Required]
-    public double AluminaPct { get; init; }
+    public double? AluminaPct { get; init; }
 
     [Required]
-    public double IronOxidePct { get; init; }
+    public double? IronOxidePct { get; init; }
 
     [Required]
-    public double MagnesiumOxidePct { get; init; }
+    public double? MagnesiumOxidePct { get; init; }
 
     [Required]
-    public double SulfurTrioxidePct { get; init; }
+    public double? SulfurTrioxidePct { get; init; }
 
     public CementOxideAnalysis ToDomain()
         => new()
         {
-            AluminaPct = (decimal)AluminaPct,
-            IronOxidePct = (decimal)IronOxidePct,
-            MagnesiumOxidePct = (decimal)MagnesiumOxidePct,
-            SulfurTrioxidePct = (decimal)SulfurTrioxidePct,
+            AluminaPct = (decimal)AluminaPct!.Value,
+            IronOxidePct = (decimal)IronOxidePct!.Value,
+            MagnesiumOxidePct = (decimal)MagnesiumOxidePct!.Value,
+            SulfurTrioxidePct = (decimal)SulfurTrioxidePct!.Value,
         };
 
     public static OxidesDto FromDomain(CementOxideAnalysis c)
