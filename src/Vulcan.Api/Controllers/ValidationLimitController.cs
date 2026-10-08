@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using Vulcan.Application.Contracts;
 using Vulcan.Application.Services;
 
 namespace Vulcan.Api.Controllers;
@@ -10,6 +11,17 @@ public class ValidationLimitController(ValidationLimitService validationLimitSer
     [HttpGet]
     public async Task<IResult> GetValidationLimits()
     {
-        return Results.Json(await validationLimitService.GetValidationLimitsAsync());
+        var limits = await validationLimitService.GetValidationLimitsAsync();
+        return Results.Json(limits.Select(l =>
+            new ValidationLimitDTO
+            {
+                Key = l.Key,
+                Severity = l.Severity.ToString(),
+                Unit = l.Unit,
+                Message = l.Message,
+                Source = l.Source,
+                Min = (double?)(l?.Min),
+                Max = (double?)(l?.Max),
+            }));
     }
 }

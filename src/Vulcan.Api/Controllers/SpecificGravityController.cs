@@ -1,5 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
+using Vulcan.Application.Contracts;
 using Vulcan.Application.Services;
+using Vulcan.Domain.Entities;
 
 namespace Vulcan.Api.Controllers;
 
@@ -10,7 +12,11 @@ public class SpecificGravityController(SpecificGravityService specificGravitySer
     [HttpGet]
     public async Task<IResult> GetSpecificGravities()
     {
-        return Results.Json(
-            await specificGravityService.GetSpecificGravitiesAsync());
+        var gravities = await specificGravityService.GetSpecificGravitiesAsync();
+        return Results.Json(gravities.Select(g => new SpecificGravityDTO
+        {
+            Material = g.Material,
+            Value = (double)g.Value
+        }));
     }
 }

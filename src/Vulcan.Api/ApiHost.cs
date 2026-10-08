@@ -52,8 +52,7 @@ public static class ApiHost
                 });
             })
             .AddControllers()
-            // was needed to resolve the validation endpoints.
-            // also fixes the specific gravity endpoint not resolving (because they are in the same namespace?).
+            // IMPORTANT: required so the desktop can discover the controllers
             .AddApplicationPart(
                 typeof(ValidationLimitController).Assembly)
             .AddJsonOptions(o => o.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter()));

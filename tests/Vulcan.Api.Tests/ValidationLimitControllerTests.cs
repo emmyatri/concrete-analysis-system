@@ -8,12 +8,11 @@ using Vulcan.Api;
 using Vulcan.Application.Contracts;
 using Vulcan.Domain.Constants;
 
-public class ValidationLimitControllerTests : IDisposable
-{
-    public void Dispose()
-    {
-    }
+namespace Vulcan.Api.Tests;
 
+[Collection("NonParallel")]
+public class ValidationLimitControllerTests
+{
     [Fact]
     public async Task Get_validation_limits_returns_seed_data()
     {

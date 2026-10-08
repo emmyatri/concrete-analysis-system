@@ -10,7 +10,8 @@ using Vulcan.Application.Contracts;
 
 namespace Vulcan.Api.Tests;
 
-public class SpecificGravityControllerTests : IDisposable
+[Collection("NonParallel")]
+public class SpecificGravityControllerTests
 {
     private static readonly JsonSerializerOptions _jsonOptions = new(JsonSerializerDefaults.Web)
     {
@@ -19,10 +20,6 @@ public class SpecificGravityControllerTests : IDisposable
             new JsonStringEnumConverter()
         }
     };
-
-    public void Dispose()
-    {
-    }
 
     [Fact]
     public async Task Get_specific_gravities_returns_seed_data()
