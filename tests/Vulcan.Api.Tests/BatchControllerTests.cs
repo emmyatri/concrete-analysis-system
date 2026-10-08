@@ -775,6 +775,45 @@ public class BatchControllerTests()
         withoutWarnings.ShouldBeEmpty();
     }
 
+    [Fact]
+    public async Task Get_batch_returns_composition_oxides_specimens_and_warnings()
+    {
+        await using var app = await StartAsync();
+        var client = ClientFor(app);
+
+        var create = await client.PostAsJsonAsync("/api/batches", new
+        {
+            Batch = new
+            {
+                BatchNumber = "VM-DETAIL-001",
+                CastAt = DateTime.UtcNow.AddDays(-4),
+                FinalWeightLb = 30,
+                CementType = "TypeII",
+                MixWaterPh = 7.0,
+                ExpectedFinalBreakPsi = 3600,
+            },
+            // Alumina 13.53 is outside the normal 3.0–7.5, so it saves with a warning.
+            Oxides = new { IronOxidePct = 3.5, AluminaPct = 13.53, MagnesiumOxidePct = 2.0, SulfurTrioxidePct = 2.0 },
+            Composition = new { CementPct = 10, WaterPct = 15, CoarseAggregatePct = 40, FineAggregatePct = 25, ScmType = "FlyAsh", ScmPct = 10 },
+        });
+        create.StatusCode.ShouldBe(System.Net.HttpStatusCode.Created);
+
+        var cylinder = await client.PostAsJsonAsync("/api/batches/VM-DETAIL-001/specimens",
+            new { label = "C1", lengthIn = 12.0, widthIn = 6.0, testAgeDays = "Day28" });
+        cylinder.StatusCode.ShouldBe(System.Net.HttpStatusCode.Created);
+
+        using var doc = JsonDocument.Parse(await client.GetStringAsync("/api/batches/VM-DETAIL-001"));
+        var root = doc.RootElement;
+
+        root.GetProperty("composition").ValueKind.ShouldBe(JsonValueKind.Object);
+        root.GetProperty("oxides").ValueKind.ShouldBe(JsonValueKind.Object);
+        root.GetProperty("specimens").GetArrayLength().ShouldBe(1);
+
+        var warning = root.GetProperty("warnings").EnumerateArray()
+            .Single(w => w.GetProperty("limitKey").GetString() == "Oxide.AluminaPct");
+        warning.GetProperty("message").GetString().ShouldNotBeNullOrWhiteSpace();
+    }
+
     private async Task<WebApplication> StartAsync()
     {
         var app = ApiHost.Create(["--environment=Testing"]);

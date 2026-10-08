@@ -69,6 +69,14 @@ public class GetBatchResponse
             ModifiedAtUtc = batch.ModifiedAtUtc,
             ModifiedBy = batch.ModifiedBy,
 
+            Composition = batch.Composition != null
+                ? CompositionDtoResponse.FromDomain(batch.Composition, waterCementRatio)
+                : null,
+            Oxides = batch.CementOxideAnalysis != null
+                ? OxidesDto.FromDomain(batch.CementOxideAnalysis)
+                : null,
+            Specimens = [.. batch.Specimens.Select(SpecimenDTO.FromDomain)],
+
             Warnings = warnings.Select(w => new SavedWarningDTO
             {
                 Id = w.Id,
