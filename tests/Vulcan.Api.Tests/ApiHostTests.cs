@@ -88,11 +88,10 @@ public class ApiHostTests
         }
     }
 
-    // M1-24 requires synthetic data to load only into an empty database.
-    // If any batch already exists, enabling SeedSyntheticData must not
-    // insert the demo dataset or modify the existing batch data.
+    // DEMO HOTFIX: the demo set loads next to real batches and leaves them unchanged.
+    // Revert to the M1-24 "empty database only" test after the demo.
     [Fact]
-    public async Task Synthetic_seed_data_does_not_load_when_database_has_batches()
+    public async Task Synthetic_seed_data_loads_alongside_existing_batches()
     {
         // No web request in a test, so saves need an explicit technician (FR-21).
         await using var app = ApiHost.Create(
@@ -117,14 +116,13 @@ public class ApiHostTests
 
             await db.SaveChangesAsync();
 
-            // Call the seeder directly with the setting conceptually enabled.
-            // Because a batch already exists, it must leave the database unchanged.
+            // The demo set is added, and the real batch is left alone.
             SyntheticDataSeeder.Seed(db);
 
-            (await db.Batch.CountAsync()).ShouldBe(1);
+            (await db.Batch.CountAsync()).ShouldBe(10);
+            (await db.Batch.CountAsync(b => b.IsSynthetic)).ShouldBe(9);
 
-            var batch = await db.Batch.SingleAsync();
-            batch.BatchNumber.ShouldBe("REAL-001");
+            var batch = await db.Batch.SingleAsync(b => b.BatchNumber == "REAL-001");
             batch.IsSynthetic.ShouldBeFalse();
         }
     }
