@@ -12,22 +12,28 @@ public sealed class RecordWarningRepository(VulcanDbContext dbContext)
         await dbContext.RecordWarning.AddRangeAsync(warnings);
     }
 
-    // Retrieves persisted warning counts for multiple batches in one query,
-    // avoiding a separate database lookup for each batch in the list.
-    public async Task<IReadOnlyDictionary<int, int>> GetBatchWarningCountsAsync(
-        IReadOnlyCollection<int> batchIds)
+    public async Task<IReadOnlyList<RecordWarning>> GetForBatchesAsync(
+        IReadOnlyCollection<Batch> batches)
     {
-        if (batchIds.Count == 0)
-        {
-            return new Dictionary<int, int>();
-        }
+        var batchIds = batches.Select(b => b.Id).ToList();
+
+        var breakIds = batches.SelectMany(b => b.Specimens)
+            .Where(s => s.BreakResult != null)
+            .Select(s => s.BreakResult!.Id)
+            .ToList();
+
+        var readingIds = batches.SelectMany(b => b.Specimens)
+            .SelectMany(s => s.CuringReadings)
+            .Select(r => r.Id)
+            .ToList();
 
         return await dbContext.RecordWarning
             .AsNoTracking()
-            .Where(w => w.EntityType == nameof(Batch) &&
-                        batchIds.Contains(w.EntityId))
-            .GroupBy(w => w.EntityId)
-            .Select(g => new { BatchId = g.Key, Count = g.Count() })
-            .ToDictionaryAsync(x => x.BatchId, x => x.Count);
+            .Where(w =>
+                (w.EntityType == nameof(Batch) && batchIds.Contains(w.EntityId)) ||
+                (w.EntityType == nameof(BreakResult) && breakIds.Contains(w.EntityId)) ||
+                (w.EntityType == nameof(CuringReading) && readingIds.Contains(w.EntityId)))
+            .OrderBy(w => w.CreatedAtUtc)
+            .ToListAsync();
     }
 }

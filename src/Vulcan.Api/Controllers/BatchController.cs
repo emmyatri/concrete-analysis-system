@@ -46,9 +46,19 @@ public class BatchController(
             page
         );
 
-        // Retrieve warning counts for the current page in a single database query.
-        var warningCounts = await recordWarningRepository.GetBatchWarningCountsAsync(
-            batches.Select(b => b.Id).ToArray());
+        var warnings = await recordWarningRepository.GetForBatchesAsync(batches);
+
+        var warningCounts = batches.ToDictionary(
+            b => b.Id,
+            b => warnings.Count(w =>
+                (w.EntityType == nameof(Batch) && w.EntityId == b.Id) ||
+                (w.EntityType == nameof(BreakResult) &&
+                 b.Specimens.Any(s =>
+                     s.BreakResult != null &&
+                     s.BreakResult.Id == w.EntityId)) ||
+                (w.EntityType == nameof(CuringReading) &&
+                 b.Specimens.Any(s =>
+                     s.CuringReadings.Any(r => r.Id == w.EntityId)))));
 
         GetBatchListResponse result = [..batches.Select(b =>
         {
@@ -76,14 +86,22 @@ public class BatchController(
     public async Task<IResult> GetBatch([FromRoute] string batchNumber)
     {
         var result = await batchService.GetByNumberAsync(batchNumber);
+
+        if (result == null)
+            return Results.NotFound();
+
         double? waterCementRatio = null;
+
         if (result is { Composition: { } composition })
         {
-            waterCementRatio = (double?)waterCementRatioCalculator.Calculate(composition);
+            waterCementRatio =
+                (double?)waterCementRatioCalculator.Calculate(composition);
         }
-        return result == null
-            ? Results.NotFound()
-            : Results.Json(GetBatchResponse.FromDomain(result, waterCementRatio));
+
+        var warnings = await recordWarningRepository.GetForBatchesAsync([result]);
+
+        return Results.Json(
+            GetBatchResponse.FromDomain(result, waterCementRatio, warnings));
     }
 
     [HttpPut("{batchNumber}")]

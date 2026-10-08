@@ -6,6 +6,6 @@ public interface IRecordWarningRepository
 {
     Task AddRangeAsync(IEnumerable<RecordWarning> warnings);
 
-    Task<IReadOnlyDictionary<int, int>> GetBatchWarningCountsAsync(
-        IReadOnlyCollection<int> batchIds);
+    Task<IReadOnlyList<RecordWarning>> GetForBatchesAsync(
+        IReadOnlyCollection<Batch> batches);
 }

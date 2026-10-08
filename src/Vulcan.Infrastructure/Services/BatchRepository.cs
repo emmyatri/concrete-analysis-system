@@ -95,7 +95,8 @@ public sealed class BatchRepository(VulcanDbContext dbContext) : IBatchRepositor
 
         if (castTo.HasValue)
         {
-            query = query.Where(b => b.CastAt <= castTo);
+            var endExclusive = castTo.Value.Date.AddDays(1);
+            query = query.Where(b => b.CastAt < endExclusive);
         }
 
         if (cementType.HasValue)
@@ -107,9 +108,15 @@ public sealed class BatchRepository(VulcanDbContext dbContext) : IBatchRepositor
         {
             query = query.Where(b =>
                 dbContext.RecordWarning.Any(w =>
-                    w.EntityType == "Batch" &&
-                    w.EntityId == b.Id
-                ) == hasWarnings);
+                    (w.EntityType == nameof(Batch) && w.EntityId == b.Id) ||
+                    (w.EntityType == nameof(BreakResult) &&
+                     b.Specimens.Any(s =>
+                         s.BreakResult != null &&
+                         s.BreakResult.Id == w.EntityId)) ||
+                    (w.EntityType == nameof(CuringReading) &&
+                     b.Specimens.Any(s =>
+                         s.CuringReadings.Any(r => r.Id == w.EntityId))))
+                == hasWarnings.Value);
         }
 
         if (!includeSyntheticResults)
