@@ -67,13 +67,21 @@ public sealed class BatchRepository(VulcanDbContext dbContext) : IBatchRepositor
         DateTime? castTo,
         CementType? cementType,
         bool? hasWarnings,
-        bool? includeSynthetic
+        bool? includeSynthetic,
+        int page
     )
     {
-        bool includeSyntheticResults = includeSynthetic ??= false;
+        bool includeSyntheticResults = includeSynthetic ??= true;
         var escapedSearchTerm = EscapeLikePattern(search);
 
         var query = dbContext.Batch
+            .AsNoTracking()
+            .AsSplitQuery()
+            .Include(b => b.Composition)
+            .Include(b => b.Specimens)
+            .ThenInclude(s => s.BreakResult)
+            .Include(b => b.Specimens)
+            .ThenInclude(s => s.CuringReadings)
             .Where(x => EF.Functions.Like(
                 x.BatchNumber,
                 $"%{escapedSearchTerm}%",
@@ -109,7 +117,12 @@ public sealed class BatchRepository(VulcanDbContext dbContext) : IBatchRepositor
             query = query.Where(b => b.IsSynthetic == false);
         }
 
-        return await query.ToListAsync();
+        return await query
+            .OrderByDescending(b => b.CastAt)
+            .ThenByDescending(b => b.Id)
+            .Skip((page - 1) * 50)
+            .Take(50)
+            .ToListAsync();
     }
 
     public async Task SaveChangesAsync()

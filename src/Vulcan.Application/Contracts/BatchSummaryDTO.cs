@@ -37,7 +37,10 @@ public class BatchSummaryDTO
     [Required]
     public required bool IsSynthetic { get; init; }
 
-    public static BatchSummaryDTO FromDomain(Batch b, double? waterCementRatio)
+    public static BatchSummaryDTO FromDomain(
+        Batch b,
+        double? waterCementRatio,
+        int warningCount)
         => new()
         {
             Id = b.Id,
@@ -47,9 +50,7 @@ public class BatchSummaryDTO
             ExpectedFinalBreakPsi = b.ExpectedFinalBreakPsi,
             WaterCementRatio = waterCementRatio,
             CylinderCount = b.Specimens.Count,
-            BreaksRecorded = b
-                .Specimens
-                .Sum(s => s.CuringReadings.Count),
+            BreaksRecorded = b.Specimens.Count(s => s.BreakResult != null),
             Average28DayPsi = b
                 .Specimens
                 .Any(s => s.TestAgeDays == TestAgeDays.Day28 && s.BreakResult != null)
@@ -59,6 +60,6 @@ public class BatchSummaryDTO
                         .Average(s => s.BreakResult!.StrengthPsi)
                     : null,
             IsSynthetic = b.IsSynthetic,
-            WarningCount = 0, // TODO
+            WarningCount = warningCount,
         };
 }

@@ -1,6 +1,7 @@
 using System.Runtime.CompilerServices;
 using Microsoft.AspNetCore.Mvc;
 using Vulcan.Application.Contracts;
+using Vulcan.Application.Interfaces;
 using Vulcan.Application.Services;
 using Vulcan.Domain.Entities;
 using Vulcan.Domain.Enums;
@@ -14,6 +15,7 @@ namespace Vulcan.Api.Controllers;
 public class BatchController(
     BatchService batchService,
     WaterCementRatioCalculator waterCementRatioCalculator,
+    IRecordWarningRepository recordWarningRepository,
     ILogger<BatchController> logger
 ) : ControllerBase
 {
@@ -24,17 +26,30 @@ public class BatchController(
         [FromQuery] DateTime? castTo,
         [FromQuery] CementType? cementType,
         [FromQuery] bool? hasWarnings,
-        [FromQuery] bool? includeSynthetic
+        [FromQuery] bool? includeSynthetic,
+        [FromQuery] int page = 1
     )
     {
+        if (page < 1)
+        {
+            ModelState.AddModelError("page", "Page must be greater than or equal to 1.");
+            return ValidationProblem(ModelState);
+        }
+
         var batches = await batchService.SearchAsync(
             search,
             castFrom,
             castTo,
             cementType,
             hasWarnings,
-            includeSynthetic
+            includeSynthetic,
+            page
         );
+
+        // Retrieve warning counts for the current page in a single database query.
+        var warningCounts = await recordWarningRepository.GetBatchWarningCountsAsync(
+            batches.Select(b => b.Id).ToArray());
+
         GetBatchListResponse result = [..batches.Select(b =>
         {
             double? waterCementRatio = null;
@@ -42,7 +57,10 @@ public class BatchController(
             {
                 waterCementRatio = (double?)waterCementRatioCalculator.Calculate(composition);
             }
-            return BatchSummaryDTO.FromDomain(b, waterCementRatio);
+            return BatchSummaryDTO.FromDomain(
+                b,
+                waterCementRatio,
+                warningCounts.GetValueOrDefault(b.Id));
         })];
         return Ok(result);
     }

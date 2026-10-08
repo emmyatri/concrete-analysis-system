@@ -18,7 +18,8 @@ public interface IBatchRepository
         DateTime? castTo,
         CementType? cementType,
         bool? hasWarnings,
-        bool? includeSynthetic);
+        bool? includeSynthetic,
+        int page);
 
     Task SaveChangesAsync();
 }

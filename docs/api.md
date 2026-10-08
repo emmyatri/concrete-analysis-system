@@ -635,9 +635,10 @@ Returns a paged list of batches.
 * `search`: (optional) from query. The batch search query.
 * `castFrom`: (optional) from query. Beginning of range to filter by each batch's castAt field.
 * `castTo`: (optional) from query. End of range to filter by each batch's castAt field.
-* `cementType`: (optional) from query. Filters by batches that have the same cement type.
-* `hasWarnings`: (optional) from query. Filters by batches that have or don't wave warnings.
-* `includeSynthetic`: (optional) from query. Whether to include synthetic batches or not.
+* `cementType`: (optional) from query. Filters by cement type.
+* `hasWarnings`: (optional) from query. Filters batches by whether they have warnings.
+* `includeSynthetic`: (optional) from query. Whether to include synthetic batches. Defaults to true.
+* `page`: (optional) from query. Page number, starting at 1. Defaults to 1. Each page contains up to 50 batches.
 
 **Response Status Codes:**
 

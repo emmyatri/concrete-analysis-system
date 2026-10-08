@@ -67,8 +67,8 @@ public sealed class BatchService(
         DateTime? castTo,
         CementType? cementType,
         bool? hasWarnings,
-        bool? includeSynthetic
-    )
+        bool? includeSynthetic,
+        int page = 1)
     {
         var searchTerm = BatchValidator.NormalizeBatchNumber(search);
 
@@ -78,7 +78,8 @@ public sealed class BatchService(
             castTo,
             cementType,
             hasWarnings,
-            includeSynthetic);
+            includeSynthetic,
+            page);
     }
 
     public async Task<ServiceResult<Batch>> UpdateAsync(

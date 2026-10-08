@@ -10,6 +10,8 @@ using Microsoft.Extensions.DependencyInjection;
 using Vulcan.Api.Technicians;
 using Vulcan.Application.Contracts;
 using Vulcan.Domain.Entities;
+using Vulcan.Domain.Enums;
+using Vulcan.Infrastructure;
 
 namespace Vulcan.Api.Tests;
 
@@ -441,6 +443,212 @@ public class BatchControllerTests()
             .ShouldNotBeNull()
             .Count
             .ShouldBe(3);
+    }
+
+    [Fact]
+    public async Task Get_batch_list_includes_synthetic_by_default()
+    {
+        await using var app = await StartAsync();
+        using var client = ClientFor(app);
+
+        const string batchNumber = "VM-SYN-DEFAULT-001";
+
+        using (var scope = app.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<VulcanDbContext>();
+
+            db.Batch.Add(new Batch
+            {
+                BatchNumber = batchNumber,
+                CastAt = DateTime.UtcNow.AddDays(-1),
+                FinalWeightLb = 100m,
+                ExpectedFinalBreakPsi = 4500,
+                CementType = CementType.TypeI,
+                MixWaterPh = 7.2m,
+                IsSynthetic = true
+            });
+
+            await db.SaveChangesAsync();
+        }
+
+        async Task<GetBatchListResponse> SearchAsync(string query)
+        {
+            var response = await client.GetAsync(query);
+            response.StatusCode.ShouldBe(System.Net.HttpStatusCode.OK);
+
+            var batches = await response.Content
+                .ReadFromJsonAsync<GetBatchListResponse>(_jsonOptions);
+
+            batches.ShouldNotBeNull();
+            return batches;
+        }
+
+        var defaultResults = await SearchAsync(
+            $"/api/batches?search={batchNumber}");
+
+        defaultResults.Count.ShouldBe(1);
+        defaultResults.Single().IsSynthetic.ShouldBeTrue();
+
+        var excludedResults = await SearchAsync(
+            $"/api/batches?search={batchNumber}&includeSynthetic=false");
+
+        excludedResults.ShouldBeEmpty();
+
+        var includedResults = await SearchAsync(
+            $"/api/batches?search={batchNumber}&includeSynthetic=true");
+
+        includedResults.Count.ShouldBe(1);
+    }
+
+    // Verifies that the batch list endpoint rejects page numbers below 1
+    // with HTTP 400 and a validation error identifying the page parameter.
+    [Fact]
+    public async Task Get_batch_list_invalid_page_returns_bad_request()
+    {
+        await using var app = await StartAsync();
+        using var client = ClientFor(app);
+
+        var response = await client.GetAsync("/api/batches?page=0");
+
+        response.StatusCode.ShouldBe(System.Net.HttpStatusCode.BadRequest);
+
+        var content = await response.Content
+            .ReadFromJsonAsync<ValidationProblemDetails>(_jsonOptions);
+
+        content.ShouldNotBeNull();
+        content.Errors.ShouldContainKey("page");
+    }
+
+    [Fact]
+    public async Task Get_batch_list_returns_correct_summary_statistics()
+    {
+        await using var app = await StartAsync();
+        using var client = ClientFor(app);
+
+        const string batchNumber = "VM-SUMMARY-001";
+
+        // Arrange: create a batch with three cylinders.
+        using (var scope = app.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<VulcanDbContext>();
+
+            var batch = new Batch
+            {
+                BatchNumber = batchNumber,
+                CastAt = DateTime.UtcNow.AddDays(-28),
+                FinalWeightLb = 100m,
+                ExpectedFinalBreakPsi = 4500,
+                CementType = CementType.TypeI,
+                MixWaterPh = 7.2m,
+                IsSynthetic = false,
+                Specimens =
+                [
+                    new Specimen
+                {
+                    Label = "28-A",
+                    LengthIn = 12m,
+                    WidthIn = 6m,
+                    TestAgeDays = TestAgeDays.Day28,
+                    BreakResult = new BreakResult
+                    {
+                        BrokenAt = DateTime.UtcNow,
+                        StrengthPsi = 4000
+                    }
+                },
+                new Specimen
+                {
+                    Label = "28-B",
+                    LengthIn = 12m,
+                    WidthIn = 6m,
+                    TestAgeDays = TestAgeDays.Day28,
+                    BreakResult = new BreakResult
+                    {
+                        BrokenAt = DateTime.UtcNow,
+                        StrengthPsi = 5000
+                    }
+                },
+                new Specimen
+                {
+                    Label = "28-C",
+                    LengthIn = 12m,
+                    WidthIn = 6m,
+                    TestAgeDays = TestAgeDays.Day28
+                }
+                ]
+            };
+
+            db.Batch.Add(batch);
+            await db.SaveChangesAsync();
+
+            // Persist two warnings associated with this batch.
+            db.RecordWarning.AddRange(
+                new RecordWarning
+                {
+                    EntityType = nameof(Batch),
+                    EntityId = batch.Id,
+                    FieldName = "MixWaterPh",
+                    LimitKey = "Batch.MixWaterPh",
+                    Value = 8m,
+                    Message = "Test warning 1"
+                },
+                new RecordWarning
+                {
+                    EntityType = nameof(Batch),
+                    EntityId = batch.Id,
+                    FieldName = "MixWaterPh",
+                    LimitKey = "Batch.MixWaterPh",
+                    Value = 8.5m,
+                    Message = "Test warning 2"
+                }
+            );
+
+            await db.SaveChangesAsync();
+        }
+
+        // Act: retrieve the summary through the actual HTTP endpoint.
+        var response = await client.GetAsync(
+            $"/api/batches?search={batchNumber}");
+
+        response.StatusCode.ShouldBe(System.Net.HttpStatusCode.OK);
+
+        var summaries = await response.Content
+            .ReadFromJsonAsync<GetBatchListResponse>(_jsonOptions);
+
+        summaries.ShouldNotBeNull();
+        summaries.Count.ShouldBe(1);
+
+        var summary = summaries.Single();
+
+        // Assert: values must reflect persisted database records.
+        summary.BatchNumber.ShouldBe(batchNumber);
+        summary.CylinderCount.ShouldBe(3);
+        summary.BreaksRecorded.ShouldBe(2);
+        summary.Average28DayPsi.ShouldBe(4500);
+        summary.WarningCount.ShouldBe(2);
+
+        // A batch with persisted warnings must match the warning filter.
+        var withWarningsResponse = await client.GetAsync(
+            $"/api/batches?search={batchNumber}&hasWarnings=true");
+
+        withWarningsResponse.StatusCode.ShouldBe(System.Net.HttpStatusCode.OK);
+
+        var withWarnings = await withWarningsResponse.Content
+            .ReadFromJsonAsync<GetBatchListResponse>(_jsonOptions);
+
+        withWarnings.ShouldNotBeNull();
+        withWarnings.Count.ShouldBe(1);
+
+        // The same batch must be excluded when filtering for no warnings.
+        var withoutWarningsResponse = await client.GetAsync(
+            $"/api/batches?search={batchNumber}&hasWarnings=false");
+
+        withoutWarningsResponse.StatusCode.ShouldBe(System.Net.HttpStatusCode.OK);
+
+        var withoutWarnings = await withoutWarningsResponse.Content
+            .ReadFromJsonAsync<GetBatchListResponse>(_jsonOptions);
+
+        withoutWarnings.ShouldNotBeNull();
+        withoutWarnings.ShouldBeEmpty();
     }
 
     private async Task<WebApplication> StartAsync()
