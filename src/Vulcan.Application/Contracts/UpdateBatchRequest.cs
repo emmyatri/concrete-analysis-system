@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using Vulcan.Domain.Entities;
 using Vulcan.Domain.Enums;
 
 namespace Vulcan.Application.Contracts;
@@ -25,4 +26,18 @@ public class UpdateBatchRequest
     public CompositionDto? Composition { get; init; }
 
     public OxidesDto? Oxides { get; init; }
+
+    public Batch ToDomain(string batchNumber)
+        => new()
+        {
+            BatchNumber = batchNumber,
+            CastAt = CastAt,
+            FinalWeightLb = (decimal)FinalWeightLb,
+            CementType = CementType,
+            MixWaterPh = (decimal)MixWaterPh,
+            IsSynthetic = IsSynthetic,
+            ExpectedFinalBreakPsi = ExpectedFinalBreakPsi,
+            Composition = Composition?.ToDomain(),
+            CementOxideAnalysis = Oxides?.ToDomain(),
+        };
 }

@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using Vulcan.Domain.Entities;
 using Vulcan.Domain.Enums;
 
 namespace Vulcan.Application.Contracts;
@@ -24,4 +25,15 @@ public class CompositionDto
     public required double ScmPct { get; init; }
 
     // no derived attributes
+
+    public Composition ToDomain()
+        => new()
+        {
+            CementPct = (decimal)CementPct,
+            WaterPct = (decimal)WaterPct,
+            CoarseAggregatePct = (decimal)CoarseAggregatePct,
+            FineAggregatePct = (decimal)FineAggregatePct,
+            ScmType = ScmType,
+            ScmPct = (decimal)ScmPct
+        };
 }

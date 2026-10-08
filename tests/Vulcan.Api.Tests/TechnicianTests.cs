@@ -99,8 +99,12 @@ public sealed class TechnicianTests : IDisposable
 
         var response = await client.PostAsJsonAsync("/api/batches", new { });
 
-        // No batches endpoint yet, so it reaches the JSON 404 instead of being stopped at the door.
-        response.StatusCode.ShouldBe(HttpStatusCode.NotFound);
+        // The technician header passes middleware validation.
+        // The empty request is rejected by batch validation.
+        response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
+
+        var body = await response.Content.ReadAsStringAsync();
+        body.ShouldNotContain("\"Technician\":");
     }
 
     [Fact]
