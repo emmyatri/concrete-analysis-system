@@ -6,6 +6,7 @@ using Microsoft.Extensions.FileProviders;
 using Microsoft.OpenApi;
 using Vulcan.Api.Controllers;
 using Vulcan.Api.Technicians;
+using Vulcan.Application.Interfaces;
 using Vulcan.Domain.Interfaces;
 using Vulcan.Infrastructure;
 using Vulcan.Infrastructure.Interceptors;
@@ -124,7 +125,9 @@ public static class ApiHost
         var options = new DbContextOptionsBuilder<VulcanDbContext>()
                     .UseSqlite(db.Database.GetDbConnection())
                     .AddInterceptors(
-                        new AuditSaveChangesInterceptor(new SystemTechnician()))
+                        new AuditSaveChangesInterceptor(
+                            new SystemTechnician(),
+                            scope.ServiceProvider.GetRequiredService<IClock>()))
                     .Options;
 
         using var seedDb = new VulcanDbContext(options);
