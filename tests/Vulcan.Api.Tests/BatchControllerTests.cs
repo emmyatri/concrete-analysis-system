@@ -84,6 +84,101 @@ public class BatchControllerTests()
     }
 
     [Fact]
+    public async Task Create_valid_batch_without_warnings_works()
+    {
+        await using var app = await StartAsync();
+        var client = ClientFor(app);
+
+        var response = await client.PostAsJsonAsync("/api/batches", new
+        {
+            Batch = new
+            {
+                BatchNumber = "VM-CLEAN-127",
+                CastAt = DateTime.UtcNow.AddDays(-4),
+                FinalWeightLb = 30,
+                CementType = CementType.TypeII,
+                MixWaterPh = 7.2,
+                ExpectedFinalBreakPsi = 3600,
+                IsSynthetic = false
+            },
+            Oxides = new
+            {
+                IronOxidePct = 3.5,
+                AluminaPct = 5.0,
+                MagnesiumOxidePct = 2.0,
+                SulfurTrioxidePct = 2.0
+            },
+            Composition = new
+            {
+                CementPct = 10,
+                WaterPct = 15,
+                CoarseAggregatePct = 40,
+                FineAggregatePct = 25,
+                ScmType = "None",
+                ScmPct = 0
+            }
+        });
+
+        response.StatusCode.ShouldBe(System.Net.HttpStatusCode.Created);
+
+        var content = await response.Content
+            .ReadFromJsonAsync<CreateBatchResponse>(_jsonOptions);
+
+        content.ShouldNotBeNull();
+        content.BatchNumber.ShouldBe("VM-CLEAN-127");
+        content.Id.ShouldBeGreaterThan(0);
+        content.Warnings.ShouldBeEmpty(
+            string.Join("; ", content.Warnings.Select(w => $"{w.Key}: {w.Message}"))
+        );
+    }
+
+    [Fact]
+    public async Task Create_batch_with_invalid_weight_returns_field_error()
+    {
+        await using var app = await StartAsync();
+        var client = ClientFor(app);
+
+        var response = await client.PostAsJsonAsync("/api/batches", new
+        {
+            Batch = new
+            {
+                BatchNumber = "VM-WEIGHT-127",
+                CastAt = DateTime.UtcNow.AddDays(-4),
+                FinalWeightLb = 0,
+                CementType = CementType.TypeII,
+                MixWaterPh = 7.2,
+                ExpectedFinalBreakPsi = 3600,
+                IsSynthetic = false
+            },
+            Oxides = new
+            {
+                IronOxidePct = 3.5,
+                AluminaPct = 5.0,
+                MagnesiumOxidePct = 2.0,
+                SulfurTrioxidePct = 2.0
+            },
+            Composition = new
+            {
+                CementPct = 10,
+                WaterPct = 15,
+                CoarseAggregatePct = 40,
+                FineAggregatePct = 25,
+                ScmType = "None",
+                ScmPct = 0
+            }
+        });
+
+        response.StatusCode.ShouldBe(System.Net.HttpStatusCode.BadRequest);
+
+        var content = await response.Content
+            .ReadFromJsonAsync<ValidationProblemDetails>(_jsonOptions);
+
+        content.ShouldNotBeNull();
+        content.Errors.Keys.ShouldContain("Batch.FinalWeightLb");
+        content.Errors.Count.ShouldBe(1);
+    }
+
+    [Fact]
     public async Task Create_conflict_batch_fails()
     {
         await using var app = await StartAsync();
