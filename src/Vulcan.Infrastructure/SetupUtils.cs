@@ -65,6 +65,8 @@ public static class SetupUtils
         services.AddScoped<ISpecimenRepository, SpecimenRepository>();
         services.AddScoped<ICuringRepository, CuringRepository>();
         services.AddScoped<IRecordWarningRepository, RecordWarningRepository>();
+        services.AddScoped<ISpecificGravityRepository, SpecificGravityRepository>();
+        services.AddScoped<IValidationLimitRepository, ValidationLimitRepository>();
 
         services.AddScoped<BatchValidator>();
         services.AddScoped<CompositionValidator>();
@@ -76,6 +78,8 @@ public static class SetupUtils
         services.AddScoped<BatchService>();
         services.AddScoped<SpecimenService>();
         services.AddScoped<CuringService>();
+        services.AddScoped<SpecificGravityService>();
+        services.AddScoped<ValidationLimitService>();
 
         return services;
     }

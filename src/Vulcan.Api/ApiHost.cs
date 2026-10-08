@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.OpenApi;
+using Vulcan.Api.Controllers;
 using Vulcan.Api.Technicians;
 using Vulcan.Infrastructure;
 using Vulcan.Infrastructure.Seed;
@@ -51,6 +52,9 @@ public static class ApiHost
                 });
             })
             .AddControllers()
+            // IMPORTANT: required so the desktop can discover the controllers
+            .AddApplicationPart(
+                typeof(ValidationLimitController).Assembly)
             .AddJsonOptions(o => o.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter()));
 
         // use overrides if provided
