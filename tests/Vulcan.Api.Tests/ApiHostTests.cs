@@ -5,8 +5,10 @@ using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using Vulcan.Domain.Interfaces;
 using Vulcan.Infrastructure;
 using Vulcan.Infrastructure.Seed;
+using Vulcan.Infrastructure.Services;
 
 namespace Vulcan.Api.Tests;
 
@@ -92,7 +94,11 @@ public class ApiHostTests
     [Fact]
     public async Task Synthetic_seed_data_does_not_load_when_database_has_batches()
     {
-        await using var app = ApiHost.Create(_args);
+        // No web request in a test, so saves need an explicit technician (FR-21).
+        await using var app = ApiHost.Create(
+            _args,
+            configureServices: services =>
+                services.AddScoped<ICurrentTechnician, SystemTechnician>());
 
         using (var scope = app.Services.CreateScope())
         {

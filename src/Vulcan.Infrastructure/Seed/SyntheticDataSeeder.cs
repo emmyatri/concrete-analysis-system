@@ -26,9 +26,6 @@ public static class SyntheticDataSeeder
             SetSyntheticAuditFields(batch);
         }
 
-        /* TODO(SCRUM-105): Reconcile synthetic seeding with the audit interceptor once
-        M1-22 is merged. Startup seeding will need an explicit system technician
-        identity if audited saves reject records without a current technician. */
         db.Batch.AddRange(batches);
         db.SaveChanges();
     }
