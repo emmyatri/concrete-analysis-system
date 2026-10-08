@@ -36,7 +36,6 @@ public static class ApiHost
         var builder = WebApplication.CreateBuilder(args);
 
         // Bind only to this computer and let the OS select an available port.
-        // FIXME
         builder.WebHost.UseUrls($"http://127.0.0.1:{port}");
 
         builder.Services
