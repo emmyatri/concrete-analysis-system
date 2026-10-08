@@ -52,7 +52,9 @@ public static class ApiHost
                 });
             })
             .AddControllers()
+            // IMPORTANT: required so the desktop can discover the controllers
             .AddApplicationPart(typeof(BatchController).Assembly)
+            .AddApplicationPart(typeof(ValidationLimitController).Assembly)
             .AddJsonOptions(o => o.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter()));
 
         // use overrides if provided

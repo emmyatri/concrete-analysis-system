@@ -966,3 +966,102 @@ Sent with the `201` response.
     "required": ["id", "specimenId", "warnings"]
 }
 ```
+
+## Validation Limit
+
+### Get Validation Limit List
+
+Use to get all validation limits.
+
+**Endpoint:** `GET /api/validation-limits`
+
+**Response Status Codes:**
+
+* `200`: if the server was able to respond with a list of all validation limits
+
+**Response Schema:**
+
+Sent with the `200` response.
+
+```json
+{
+    "title": "GetValidationLimitListResponse",
+    "type": "array",
+    "default": [],
+    "items": {
+        "type": "object",
+        "properties": {
+            "key": {
+                "type": "string"
+            },
+            "severity": {
+                "enum": ["Reject", "Warn"]
+            },
+            "min": {
+                "type": "number"
+            },
+            "max": {
+                "type": "number"
+            },
+            "unit": {
+                "type": "string"
+            },
+            "message": {
+                "type": "string"
+            },
+            "source": {
+                "type": "string"
+            }
+        },
+        "required": [
+            "key",
+            "severity",
+            "unit",
+            "message",
+            "source"
+        ]
+    }
+}
+```
+
+## Specific Gravity
+
+### Get Specific Gravity List
+
+Use to get all specific gravities.
+
+**Endpoint:** `GET /api/specific-gravities`
+
+**Response Status Codes:**
+
+* `200`: if the server was able to return a list of all specific gravities.
+
+**Response Schema:**
+
+Sent with the `200` response.
+
+```json
+{
+    "title": "GetSpecificGravityListResponse",
+    "type": "array",
+    "default": [],
+    "items": {
+        "type": "object",
+        "properties": {
+            "material": {
+                "enum": [
+                    "Cement",
+                    "Water",
+                    "FlyAsh",
+                    "Slag",
+                    "SilicaFume"
+                ]
+            },
+            "value": {
+                "type": "number"
+            }
+        },
+        "required": ["material", "value"]
+    }
+}
+```
