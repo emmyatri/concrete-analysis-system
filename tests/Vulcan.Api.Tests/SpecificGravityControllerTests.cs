@@ -33,9 +33,13 @@ public class SpecificGravityControllerTests
             .ShouldNotBeNull()
             .StatusCode.ShouldBe(HttpStatusCode.OK);
 
-        var deserialized = await response
-            .Content
-            .ReadFromJsonAsync<GetSpecificGravityListResponse>(_jsonOptions);
+        var content = await response.Content.ReadAsStringAsync();
+
+        content.ShouldContain("FlyAsh");
+        content.ShouldContain("Slag");
+
+        var deserialized = JsonSerializer
+            .Deserialize<GetSpecificGravityListResponse>(content, _jsonOptions);
         deserialized.ShouldNotBeNull()
             .ShouldContain(x => x.Material == Domain.Enums.Material.FlyAsh && x.Value == 2.35);
     }
