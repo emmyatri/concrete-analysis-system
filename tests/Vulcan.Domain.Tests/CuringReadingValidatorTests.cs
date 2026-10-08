@@ -130,6 +130,35 @@ public class CuringReadingValidatorTests
         Assert.Equal(expected, ResultFor(outcome, LimitKeys.InternalTempF));
     }
 
+    [Theory]
+    [InlineData("72", true)]
+    [InlineData("72.0", true)]
+    [InlineData("72.1", true)]
+    [InlineData("72.12", false)]
+    [InlineData("72.123", false)]
+    public void InternalTemp_EnforcesOneDecimalPlace(
+        string value, bool expectedValid)
+    {
+        var outcome = _validator.Validate(
+            CreateReading(internalTempF: decimal.Parse(value)),
+            _castAt,
+            _now);
+
+        var precisionErrors = outcome.Errors
+            .Where(error => error.Key == LimitKeys.InternalTempF)
+            .ToList();
+
+        if (expectedValid)
+        {
+            Assert.Empty(precisionErrors);
+        }
+        else
+        {
+            var error = Assert.Single(precisionErrors);
+            Assert.Equal("Max 1 decimal place", error.Message);
+        }
+    }
+
     // -------------------------------------------------------------------------
     // Moisture and relative humidity: 0–100 %
     // -------------------------------------------------------------------------

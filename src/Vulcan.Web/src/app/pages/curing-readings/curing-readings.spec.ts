@@ -126,6 +126,32 @@ describe('CuringReadingsPage', () => {
     expect((await readings()).length).toBe(8);
   });
 
+  it('accepts internal temperature with one decimal place', async () => {
+    await open();
+    await fill(newRows()[0], ['72.1', '68.9', '91.8', '96.1', '14.88', '418.5']);
+
+    expect(inputs(newRows()[0])[1].classList).not.toContain('cell--error');
+
+    await pressEnter(newRows()[0]);
+
+    expect(status(newRows()[0])).toBe('Saved');
+    expect((await readings()).length).toBe(8);
+    expect((await readings()).at(-1)?.internalTempF).toBe(72.1);
+  });
+
+  it('rejects internal temperature with more than one decimal place', async () => {
+    await open();
+    await fill(newRows()[0], ['72.12', '68.9', '91.8', '96.1', '14.88', '418.5']);
+
+    expect(inputs(newRows()[0])[1].classList).toContain('cell--error');
+
+    await pressEnter(newRows()[0]);
+
+    expect(status(newRows()[0])).toBe('Not saved');
+    expect(messages()).toEqual(['Row 8 · Internal — max 1 decimal place.']);
+    expect((await readings()).length).toBe(7);
+  });
+
   it('blocks ambient 720 and says why', async () => {
     await open();
     await fill(newRows()[0], ['78.4', '720', '91.8', '96.1', '14.88', '418.5']);
@@ -153,6 +179,19 @@ describe('CuringReadingsPage', () => {
     expect(batch.warnings.some((w) => w.entityType === 'CuringReading' && w.value === 84.2)).toBe(
       true,
     );
+  });
+
+  it('accepts internal temperature entered without a leading zero', async () => {
+    await open();
+    await fill(newRows()[0], ['.5', '68.9', '91.8', '96.1', '14.88', '418.5']);
+
+    expect(inputs(newRows()[0])[1].classList).not.toContain('cell--error');
+
+    await pressEnter(newRows()[0]);
+
+    expect(status(newRows()[0])).toBe('Saved');
+    expect((await readings()).length).toBe(8);
+    expect((await readings()).at(-1)?.internalTempF).toBe(0.5);
   });
 
   it('blocks a time before the batch was cast', async () => {
