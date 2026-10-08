@@ -1,4 +1,4 @@
-using System.Runtime.CompilerServices;
+
 using Microsoft.AspNetCore.Mvc;
 using Vulcan.Application.Contracts;
 using Vulcan.Application.Interfaces;
@@ -130,9 +130,7 @@ public class BatchController(
                     ModelState.AddModelError(error.Key, error.Message);
                 }
 
-                return ValidationProblem(
-                    modelStateDictionary: ModelState,
-                    statusCode: StatusCodes.Status409Conflict);
+                return ValidationProblem(ModelState);
         }
 
         logger.LogError("Batch request failed with unknown error.");

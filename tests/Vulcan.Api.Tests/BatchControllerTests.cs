@@ -148,7 +148,7 @@ public class BatchControllerTests()
 
         response
             .StatusCode
-            .ShouldBe(System.Net.HttpStatusCode.Conflict);
+            .ShouldBe(System.Net.HttpStatusCode.BadRequest);
 
         var content = await response
             .Content
