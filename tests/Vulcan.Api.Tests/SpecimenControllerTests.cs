@@ -135,6 +135,33 @@ public sealed class SpecimenControllerTests
     }
 
     [Fact]
+    public async Task Adding_a_reading_with_warning_returns_201()
+    {
+        await using var app = await StartAsync();
+        using var client = ClientFor(app);
+
+        var id = await NewCylinderIdAsync(client);
+
+        // 85 °F is inside the allowed 0–150 but outside the normal 60–80, so it saves with a warning.
+        var response = await AddReadingAsync(
+            client,
+            id,
+            ambientTempF: 85);
+
+        response.StatusCode.ShouldBe(HttpStatusCode.Created);
+
+        using var body = await JsonAsync(response);
+
+        var warnings = body.RootElement
+            .GetProperty("warnings")
+            .EnumerateArray()
+            .ToArray();
+
+        warnings.ShouldContain(w =>
+            w.GetProperty("key").GetString() == "Curing.AmbientTempF");
+    }
+
+    [Fact]
     public async Task Pending_breaks_hide_synthetic_cylinders_when_asked()
     {
         await using var app = await StartAsync();
