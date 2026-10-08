@@ -3,7 +3,15 @@ import { inject } from '@angular/core';
 import { Observable, of, throwError } from 'rxjs';
 
 import { CreateBatchRequest } from '../batches';
-import { BatchDetail, BatchSummary, CreateSpecimenRequest, RecordWarning } from '../models';
+import {
+  BatchDetail,
+  BatchSummary,
+  CreateBreakResultRequest,
+  CreateCuringReadingRequest,
+  CreateSpecimenRequest,
+  PendingBreak,
+  RecordWarning,
+} from '../models';
 import { TECHNICIAN_HEADER } from '../../session/technician.interceptor';
 import { USE_MOCKS } from '../use-mocks';
 import { MOCK_BATCH_DETAILS, mockBatchDetailFromRequest } from './mock-batch-details';
@@ -15,20 +23,20 @@ const savedBatches: BatchSummary[] = [];
 /** The same batches in full, so Batch Detail can open one right after it's saved. */
 const savedDetails: BatchDetail[] = [];
 let nextId = 1000;
-/** Cylinders added while the app is open, so tests can take them back off the fake batches. */
-const addedSpecimenIds = new Set<number>();
 
-/** Forgets the batches and cylinders saved so far. Tests call this so one test's saves don't show up in another. */
+/** The fake batches as they were at start-up. Saved cylinders and breaks change them, so tests put them back. */
+const originalBatches = structuredClone(MOCK_BATCHES);
+const originalDetails = structuredClone(MOCK_BATCH_DETAILS);
+
+/**
+ * Forgets the batches, cylinders and breaks saved so far. Tests call this so one test's saves don't
+ * show up in another.
+ */
 export function clearSavedMockBatches(): void {
   savedBatches.length = 0;
   savedDetails.length = 0;
-  for (const batch of MOCK_BATCH_DETAILS) {
-    const kept = batch.specimens.filter((s) => !addedSpecimenIds.has(s.id));
-    const summary = MOCK_BATCHES.find((row) => row.id === batch.id);
-    if (summary) summary.cylinderCount -= batch.specimens.length - kept.length;
-    batch.specimens = kept;
-  }
-  addedSpecimenIds.clear();
+  MOCK_BATCHES.splice(0, MOCK_BATCHES.length, ...structuredClone(originalBatches));
+  MOCK_BATCH_DETAILS.splice(0, MOCK_BATCH_DETAILS.length, ...structuredClone(originalDetails));
 }
 
 /**
@@ -45,6 +53,9 @@ export const mockApiInterceptor: HttpInterceptorFn = (request, next) => {
   if (request.method === 'POST' && path === '/api/batches') return createBatch(request);
   if (request.method === 'POST' && /^\/api\/batches\/[^/]+\/specimens$/.test(path)) return createSpecimen(request, path);
   if (request.method === 'GET' && path.startsWith('/api/batches/')) return getBatch(request, path);
+  if (request.method === 'GET' && path === '/api/breaks/pending') return ok(pendingBreaks(request));
+  if (request.method === 'POST' && /^\/api\/specimens\/\d+\/break$/.test(path)) return createBreak(request, path);
+  if (request.method === 'POST' && /^\/api\/specimens\/\d+\/readings$/.test(path)) return createReading(request, path);
 
   return next(request);
 };
@@ -216,8 +227,191 @@ function createSpecimen(request: HttpRequest<unknown>, path: string) {
     breakResult: null,
     curingReadings: [],
   });
-  addedSpecimenIds.add(id);
   const summary = [...savedBatches, ...MOCK_BATCHES].find((row) => row.id === batch.id);
   if (summary) summary.cylinderCount += 1;
   return ok({ id, label }, 201);
+}
+
+/** Every cylinder without a break, soonest due first (cast date + test age). */
+function pendingBreaks(request: HttpRequest<unknown>): PendingBreak[] {
+  const includeSynthetic = request.params.get('includeSynthetic') !== 'false';
+  const due = (row: PendingBreak) => Date.parse(row.castAt) + TEST_AGE_DAYS[row.testAgeDays] * DAY_MS;
+  return [...savedDetails, ...MOCK_BATCH_DETAILS]
+    .filter((batch) => includeSynthetic || !batch.isSynthetic)
+    .flatMap((batch) =>
+      batch.specimens
+        .filter((specimen) => !specimen.breakResult)
+        .map((specimen) => ({
+          specimenId: specimen.id,
+          batchNumber: batch.batchNumber,
+          label: specimen.label,
+          testAgeDays: specimen.testAgeDays,
+          castAt: batch.castAt,
+          isSynthetic: specimen.isSynthetic,
+        })),
+    )
+    .sort((a, b) => due(a) - due(b));
+}
+
+const DAY_MS = 24 * 60 * 60 * 1000;
+const TEST_AGE_DAYS = { Day3: 3, Day7: 7, Day28: 28 } as const;
+
+/**
+ * Records a break the way the server will: 404 for an unknown cylinder, 409 if it's already broken,
+ * 400 for a strength outside 1–10,000 or not whole, or a date before the cast date or in the future.
+ * Below 3,000 PSI saves with a warning (failing breaks are kept).
+ */
+function createBreak(request: HttpRequest<unknown>, path: string) {
+  const specimenId = Number(path.split('/')[3]);
+  const batch = [...savedDetails, ...MOCK_BATCH_DETAILS].find((row) =>
+    row.specimens.some((s) => s.id === specimenId),
+  );
+  const specimen = batch?.specimens.find((s) => s.id === specimenId);
+  if (!batch || !specimen) {
+    return problem(request, 404, 'Not Found', { detail: `Cylinder ${specimenId} was not found.` });
+  }
+  if (specimen.breakResult) {
+    return problem(request, 409, 'Conflict', { detail: `Cylinder ${specimen.label} already has a break result.` });
+  }
+
+  const body = request.body as CreateBreakResultRequest;
+  const errors: Record<string, string[]> = {};
+  const warnings: RecordWarning[] = [];
+  const strength = body.strengthPsi;
+  if (!Number.isInteger(strength)) errors['Break.StrengthPsi'] = ['PSI must be a whole number'];
+  for (const limit of MOCK_VALIDATION_LIMITS.filter((row) => row.key === 'Break.StrengthPsi')) {
+    const outside = (limit.min !== null && strength < limit.min) || (limit.max !== null && strength > limit.max);
+    if (!outside) continue;
+    if (limit.severity === 'Reject') errors[limit.key] = [...(errors[limit.key] ?? []), limit.message];
+    else warnings.push({ key: limit.key, message: limit.message });
+  }
+  const brokenAt = new Date(body.brokenAt);
+  const day = (date: Date) => new Date(date.getFullYear(), date.getMonth(), date.getDate()).getTime();
+  if (Number.isNaN(brokenAt.getTime())) errors['Break.BrokenAt'] = ['Break date is required'];
+  else if (day(brokenAt) < day(new Date(batch.castAt))) errors['Break.BrokenAt'] = ["Break date can't be before the cast date"];
+  else if (day(brokenAt) > day(new Date())) errors['Break.BrokenAt'] = ["Break date can't be in the future"];
+
+  if (Object.keys(errors).length > 0) {
+    return problem(request, 400, 'Bad Request', { title: 'One or more validation errors occurred.', errors });
+  }
+
+  const id = nextId++;
+  specimen.breakResult = { id, brokenAt: brokenAt.toISOString(), strengthPsi: strength };
+  for (const warning of warnings) {
+    batch.warnings.push({
+      id: nextId++,
+      entityType: 'BreakResult',
+      entityId: id,
+      fieldName: 'StrengthPsi',
+      limitKey: warning.key,
+      value: strength,
+      message: warning.message,
+      createdAtUtc: new Date().toISOString(),
+    });
+  }
+  const summary = [...savedBatches, ...MOCK_BATCHES].find((row) => row.id === batch.id);
+  if (summary) {
+    summary.breaksRecorded += 1;
+    summary.warningCount += warnings.length;
+    const day28 = batch.specimens.filter((s) => s.testAgeDays === 'Day28' && s.breakResult);
+    if (day28.length > 0) {
+      const total = day28.reduce((sum, s) => sum + s.breakResult!.strengthPsi, 0);
+      summary.average28DayPsi = Math.round(total / day28.length);
+    }
+  }
+  return ok({ id, warnings }, 201);
+}
+
+/** An error response shaped like ASP.NET's ProblemDetails. */
+function problem(request: HttpRequest<unknown>, status: number, statusText: string, body: Record<string, unknown>) {
+  return throwError(
+    () =>
+      new HttpErrorResponse({
+        status,
+        statusText,
+        url: request.url,
+        error: { title: statusText, status, ...body },
+      }),
+  );
+}
+
+
+/** Each reading field and the ValidationLimit key that checks it. */
+const READING_FIELDS = [
+  ['internalTempF', 'Curing.InternalTempF'],
+  ['ambientTempF', 'Curing.AmbientTempF'],
+  ['moisturePct', 'Curing.MoisturePct'],
+  ['relativeHumidityPct', 'Curing.RelativeHumidityPct'],
+  ['resistivityOhmPerFt', 'Curing.ResistivityOhmPerFt'],
+  ['co2Ppm', 'Curing.Co2Ppm'],
+] as const;
+
+/**
+ * Adds a curing reading the way the server will: 404 for an unknown cylinder, 400 for a value outside its
+ * Reject limits or a time before the cast date or in the future. Warn limits (ambient 60–80 °F) save and
+ * come back as warnings.
+ */
+function createReading(request: HttpRequest<unknown>, path: string) {
+  const specimenId = Number(path.split('/')[3]);
+  const batch = [...savedDetails, ...MOCK_BATCH_DETAILS].find((row) =>
+    row.specimens.some((s) => s.id === specimenId),
+  );
+  const specimen = batch?.specimens.find((s) => s.id === specimenId);
+  if (!batch || !specimen) {
+    return problem(request, 404, 'Not Found', { detail: `Cylinder ${specimenId} was not found.` });
+  }
+
+  const body = request.body as CreateCuringReadingRequest;
+  const errors: Record<string, string[]> = {};
+  const warnings: RecordWarning[] = [];
+  for (const [field, key] of READING_FIELDS) {
+    const value = body[field];
+    if (typeof value !== 'number' || !Number.isFinite(value)) {
+      errors[key] = ['A number is required'];
+      continue;
+    }
+    for (const limit of MOCK_VALIDATION_LIMITS.filter((row) => row.key === key)) {
+      const outside = (limit.min !== null && value < limit.min) || (limit.max !== null && value > limit.max);
+      if (!outside) continue;
+      if (limit.severity === 'Reject') errors[key] = [...(errors[key] ?? []), limit.message];
+      else warnings.push({ key, message: limit.message });
+    }
+  }
+  const takenAt = new Date(body.takenAt);
+  if (Number.isNaN(takenAt.getTime())) errors['Curing.TakenAt'] = ['Enter when the reading was taken'];
+  else if (takenAt < new Date(batch.castAt)) errors['Curing.TakenAt'] = ["Reading time can't be before the batch was cast"];
+  else if (takenAt > new Date()) errors['Curing.TakenAt'] = ["Reading time can't be in the future"];
+
+  if (Object.keys(errors).length > 0) {
+    return problem(request, 400, 'Bad Request', { title: 'One or more validation errors occurred.', errors });
+  }
+
+  const id = nextId++;
+  specimen.curingReadings.push({
+    id,
+    takenAt: takenAt.toISOString(),
+    internalTempF: body.internalTempF,
+    ambientTempF: body.ambientTempF,
+    moisturePct: body.moisturePct,
+    relativeHumidityPct: body.relativeHumidityPct,
+    resistivityOhmPerFt: body.resistivityOhmPerFt,
+    co2Ppm: body.co2Ppm,
+  });
+  specimen.curingReadings.sort((a, b) => a.takenAt.localeCompare(b.takenAt));
+  for (const warning of warnings) {
+    const field = READING_FIELDS.find(([, key]) => key === warning.key)![0];
+    batch.warnings.push({
+      id: nextId++,
+      entityType: 'CuringReading',
+      entityId: id,
+      fieldName: warning.key.split('.')[1],
+      limitKey: warning.key,
+      value: body[field],
+      message: warning.message,
+      createdAtUtc: new Date().toISOString(),
+    });
+  }
+  const summary = [...savedBatches, ...MOCK_BATCHES].find((row) => row.id === batch.id);
+  if (summary) summary.warningCount += warnings.length;
+  return ok({ id, warnings }, 201);
 }

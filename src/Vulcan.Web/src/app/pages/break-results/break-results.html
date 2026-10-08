@@ -1,0 +1,98 @@
+﻿<div class="break-results">
+  <h1 class="page-title">Break results</h1>
+
+  @if (lastSaved(); as saved) {
+    <p
+      class="saved"
+      [class.saved--warn]="saved.warnings.length > 0"
+      role="status"
+      data-testid="saved"
+    >
+      <i
+        class="pi"
+        [class.pi-check-circle]="saved.warnings.length === 0"
+        [class.pi-exclamation-triangle]="saved.warnings.length > 0"
+        aria-hidden="true"
+      ></i>
+      <span>
+        Saved {{ saved.batchNumber }} · {{ saved.label }}: {{ saved.strengthPsi | number }} PSI.
+        @for (warning of saved.warnings; track warning.key) {
+          {{ warning.message }}
+        }
+      </span>
+      <a [routerLink]="['/batches', saved.batchNumber]">View batch</a>
+    </p>
+  }
+
+  <section class="card" aria-labelledby="pending-title">
+    <header class="card-header">
+      <h2 id="pending-title">Waiting to be broken</h2>
+      <span class="search-box">
+        <i class="pi pi-search" aria-hidden="true"></i>
+        <input
+          pInputText
+          [ngModel]="filter()"
+          (ngModelChange)="filter.set($event)"
+          placeholder="Filter by batch number"
+          aria-label="Filter by batch number"
+          autocomplete="off"
+          data-testid="filter"
+        />
+      </span>
+    </header>
+
+    @if (message()) {
+      <p class="message" data-testid="pending-message">{{ message() }}</p>
+    } @else {
+      <p-table [value]="rows()" data-testid="pending">
+        <ng-template #header>
+          <tr>
+            <th>Batch number</th>
+            <th>Cylinder</th>
+            <th>Test age</th>
+            <th>Cast</th>
+            <th>Age</th>
+            <th></th>
+          </tr>
+        </ng-template>
+        <ng-template #body let-row>
+          <tr>
+            <td>
+              <a class="batch-number" [routerLink]="['/batches', row.batchNumber]">{{
+                  row.batchNumber
+                }}</a>
+              @if (row.isSynthetic) {
+                <span class="badge-synthetic">SYNTHETIC</span>
+              }
+            </td>
+            <td>{{ row.label }}</td>
+            <td>{{ row.testAge }} days</td>
+            <td>{{ row.castAt | date: 'MM/dd/yy' }}</td>
+            <td>
+              {{ row.age }} {{ row.age === 1 ? 'day' : 'days' }}
+              @if (row.due) {
+                <span class="due-tag">Due</span>
+              }
+            </td>
+            <td class="actions">
+              <p-button
+                label="Record break"
+                size="small"
+                [outlined]="!row.due"
+                (onClick)="record(row)"
+                data-testid="record-break"
+              />
+            </td>
+          </tr>
+        </ng-template>
+      </p-table>
+    }
+  </section>
+</div>
+
+<app-break-dialog
+  [cylinder]="selected()"
+  [(visible)]="dialogOpen"
+  (saved)="breakSaved($event)"
+  (stale)="refresh()"
+/>

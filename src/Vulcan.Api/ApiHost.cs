@@ -1,11 +1,15 @@
+using System.Text.Json.Serialization;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.FileProviders;
+using Microsoft.OpenApi;
+using Vulcan.Api.Controllers;
 using Vulcan.Api.Technicians;
 using Vulcan.Domain.Interfaces;
 using Vulcan.Infrastructure;
 using Vulcan.Infrastructure.Interceptors;
+using Vulcan.Infrastructure.Seed;
 using Vulcan.Infrastructure.Services;
 
 namespace Vulcan.Api;
@@ -36,10 +40,28 @@ public static class ApiHost
 
         // Bind only to this computer and let the OS select an available port.
         builder.WebHost.UseUrls($"http://127.0.0.1:{port}");
-        builder.Services.AddDatabase(builder.Configuration);
-        builder.Services.AddSingleton<TechnicianSettings>();
-        builder.Services.AddHttpContextAccessor();
-        builder.Services.AddScoped<ICurrentTechnician, CurrentTechnician>();
+
+
+        builder.Services
+            .AddDatabase(builder.Configuration)
+            .AddSingleton<TechnicianSettings>()
+            .AddHttpContextAccessor()
+            .AddScoped<ICurrentTechnician, CurrentTechnician>()
+            .ConfigureHttpJsonOptions(o => o.SerializerOptions.Converters.Add(new JsonStringEnumConverter()))
+            .AddEndpointsApiExplorer()
+            .AddSwaggerGen(o =>
+            {
+                o.SwaggerDoc("v1", new OpenApiInfo()
+                {
+                    Title = "Vulcan API",
+                    Version = "v1",
+                });
+            })
+            .AddControllers()
+            // IMPORTANT: required so the desktop can discover the controllers
+            .AddApplicationPart(
+                typeof(ValidationLimitController).Assembly)
+            .AddJsonOptions(o => o.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter()));
 
         // use overrides if provided
         configureServices?.Invoke(builder.Services);
@@ -56,6 +78,16 @@ public static class ApiHost
         app.UseDefaultFiles(new DefaultFilesOptions { FileProvider = uiFiles });
         app.UseStaticFiles(new StaticFileOptions { FileProvider = uiFiles });
 
+        if (app.Environment.IsDevelopment())
+        {
+            app.UseSwagger();
+            app.UseSwaggerUI(o =>
+            {
+                o.SwaggerEndpoint("/swagger/v1/swagger.json", "Vulcan API");
+                // makes docs visible at http://host:port/api/v1/docs
+                o.RoutePrefix = "api/v1/docs";
+            });
+        }
         // Saves without a technician name are rejected before they reach an endpoint.
         app.RequireTechnicianOnSaves();
 
@@ -64,6 +96,7 @@ public static class ApiHost
         api.MapGet("/health", () => Results.Ok(new { status = "ok" }));
 
         api.MapTechnicianEndpoints();
+        app.MapControllers();
 
         // Unknown /api routes return a JSON 404, never the Angular page.
         api.Map("/{**path}", () => Results.Problem(
@@ -89,14 +122,20 @@ public static class ApiHost
         var db = scope.ServiceProvider.GetRequiredService<VulcanDbContext>();
 
         var options = new DbContextOptionsBuilder<VulcanDbContext>()
-            .UseSqlite(db.Database.GetDbConnection())
-            .AddInterceptors(
-                new AuditSaveChangesInterceptor(new SystemTechnician()))
-            .Options;
+                    .UseSqlite(db.Database.GetDbConnection())
+                    .AddInterceptors(
+                        new AuditSaveChangesInterceptor(new SystemTechnician()))
+                    .Options;
 
         using var seedDb = new VulcanDbContext(options);
 
         seedDb.SeedValidationLimits();
         seedDb.SeedSpecificGravities();
+
+        if (app.Configuration.GetValue<bool>("SeedSyntheticData"))
+        {
+            SyntheticDataSeeder.Seed(seedDb);
+        }
+
     }
 }

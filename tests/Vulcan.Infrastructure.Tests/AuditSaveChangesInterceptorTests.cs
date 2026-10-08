@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using Vulcan.Domain.Entities;
 using Vulcan.Domain.Interfaces;
 using Vulcan.Infrastructure.Interceptors;
+using Vulcan.Infrastructure.Services;
 
 namespace Vulcan.Infrastructure.Tests;
 
@@ -490,6 +491,44 @@ public sealed class AuditSaveChangesInterceptorTests
 
         saved.CreatedBy.ShouldBe("Daniel");
         saved.CreatedAtUtc.ShouldBe(originalCreatedAt);
+        saved.ModifiedBy.ShouldBeNull();
+        saved.ModifiedAtUtc.ShouldBeNull();
+    }
+
+    [Fact]
+    public async Task Creating_a_record_preserves_prefilled_creation_details()
+    {
+        using var connection = new SqliteConnection("Filename=:memory:");
+        await connection.OpenAsync();
+
+        var options = new DbContextOptionsBuilder<VulcanDbContext>()
+            .UseSqlite(connection)
+            .AddInterceptors(
+                new AuditSaveChangesInterceptor(new SystemTechnician()))
+            .Options;
+
+        await using var db = new VulcanDbContext(options);
+        await db.Database.EnsureCreatedAsync();
+
+        var castAt = new DateTime(
+            2026, 9, 1, 12, 0, 0, DateTimeKind.Utc);
+
+        db.Batch.Add(new Batch
+        {
+            BatchNumber = "SYN-AUDIT-PREFILLED",
+            IsSynthetic = true,
+            CastAt = castAt,
+            CreatedBy = "Synthetic data",
+            CreatedAtUtc = castAt,
+        });
+
+        await db.SaveChangesAsync();
+
+        db.ChangeTracker.Clear();
+        var saved = await db.Batch.SingleAsync();
+
+        saved.CreatedBy.ShouldBe("Synthetic data");
+        saved.CreatedAtUtc.ShouldBe(castAt);
         saved.ModifiedBy.ShouldBeNull();
         saved.ModifiedAtUtc.ShouldBeNull();
     }

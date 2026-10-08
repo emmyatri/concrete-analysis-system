@@ -256,20 +256,26 @@
                   <tr>
                     <td>{{ row.specimen.label }}</td>
                     <td>{{ row.testAge }}</td>
-                    <td>{{ row.specimen.lengthIn | number: '1.2-2' }}</td>
-                    <td>{{ row.specimen.widthIn | number: '1.2-2' }}</td>
-                    <td>{{ (row.specimen.breakResult?.brokenAt | date: 'MM/dd HH:mm') ?? '—' }}</td>
+                    <td>{{ row.specimen.lengthIn | number: '1.2-2' }} in</td>
+                    <td>{{ row.specimen.widthIn | number: '1.2-2' }} in</td>
+                    <td>{{ (row.specimen.breakResult?.brokenAt | date: 'MM/dd @ HH:mm') ?? '—' }}</td>
                     <td>
                       @if (row.specimen.breakResult; as result) {
                         @if (row.breakWarning) {
                           <span class="flagged" [title]="row.breakWarning.message"
-                          >{{ result.strengthPsi | number }} ⚠</span
+                          >{{ result.strengthPsi | number }} PSI ⚠</span
                           >
                         } @else {
-                          {{ result.strengthPsi | number }}
+                          {{ result.strengthPsi | number }} PSI
                         }
                       } @else {
-                        <span class="muted">Not broken</span>
+                        <a
+                          class="row-link"
+                          routerLink="/breaks"
+                          [queryParams]="{ batch: batch.batchNumber, cylinder: row.specimen.label }"
+                          data-testid="record-break"
+                        >Record break</a
+                        >
                       }
                     </td>
                     <td>{{ row.specimen.curingReadings.length }}</td>
@@ -311,27 +317,28 @@
                 <ng-template #groupheader let-row>
                   <tr class="group-row">
                     <td colspan="7">
-                      Cylinder {{ row.label }} · {{ readingCount(row.label) }} readings
+                      Cylinder {{ row.label }} · {{ readingCount(row.label) }}
+                      {{ readingCount(row.label) === 1 ? 'reading' : 'readings' }}
                     </td>
                   </tr>
                 </ng-template>
                 <ng-template #body let-row>
                   <tr>
                     <td>{{ row.reading.takenAt | date: 'MM/dd/yy HH:mm' }}</td>
-                    <td>{{ row.reading.internalTempF | number: '1.1-1' }}</td>
+                    <td>{{ row.reading.internalTempF | number: '1.1-1' }} °F</td>
                     <td>
                       @if (row.ambientWarning) {
                         <span class="flagged" [title]="row.ambientWarning.message"
-                        >{{ row.reading.ambientTempF | number: '1.1-1' }} ⚠</span
+                        >{{ row.reading.ambientTempF | number: '1.1-1' }} °F ⚠</span
                         >
                       } @else {
-                        {{ row.reading.ambientTempF | number: '1.1-1' }}
+                        {{ row.reading.ambientTempF | number: '1.1-1' }} °F
                       }
                     </td>
-                    <td>{{ row.reading.moisturePct | number: '1.1-2' }}</td>
-                    <td>{{ row.reading.relativeHumidityPct | number: '1.1-2' }}</td>
-                    <td>{{ row.reading.resistivityOhmPerFt | number: '1.2-2' }}</td>
-                    <td>{{ row.reading.co2Ppm | number: '1.1-1' }}</td>
+                    <td>{{ row.reading.moisturePct | number: '1.1-2' }}%</td>
+                    <td>{{ row.reading.relativeHumidityPct | number: '1.1-2' }}%</td>
+                    <td>{{ row.reading.resistivityOhmPerFt | number: '1.2-2' }} Ω/ft</td>
+                    <td>{{ row.reading.co2Ppm | number: '1.1-1' }} ppm</td>
                   </tr>
                 </ng-template>
               </p-table>

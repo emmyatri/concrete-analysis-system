@@ -62,8 +62,12 @@ public sealed class AuditSaveChangesInterceptor(
         {
             if (entry.State == EntityState.Added)
             {
-                entry.Entity.CreatedBy = technician;
-                entry.Entity.CreatedAtUtc = now;
+                if (string.IsNullOrEmpty(entry.Entity.CreatedBy))
+                {
+                    entry.Entity.CreatedBy = technician;
+                    entry.Entity.CreatedAtUtc = now;
+                }
+
                 entry.Entity.ModifiedBy = null;
                 entry.Entity.ModifiedAtUtc = null;
             }

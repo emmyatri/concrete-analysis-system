@@ -67,14 +67,25 @@ describe('BatchDetailPage', () => {
     const cylinders = rows('cylinders');
     expect(cylinders).toHaveLength(9);
     expect(cells(cylinders[0])).toEqual(
-      expect.arrayContaining(['D3-1', 'Day 3', '11.93', '5.99', '2,950 ⚠', '7', 'View']),
+      expect.arrayContaining(['D3-1', 'Day 3', '11.93 in', '5.99 in', '2,950 PSI ⚠', '7', 'View']),
     );
+    // Broken at reads "06/24 @ 12:05".
+    expect(cells(cylinders[0])[4]).toMatch(/^\d\d\/\d\d @ \d\d:\d\d$/);
 
     // Curing readings: 63, grouped under 9 cylinders.
     const readings = rows('readings');
     expect(readings.filter((r) => r.classList.contains('group-row'))).toHaveLength(9);
     expect(readings.filter((r) => !r.classList.contains('group-row'))).toHaveLength(63);
     expect(text('[data-testid="readings"] .group-row')).toBe('Cylinder D3-1 · 7 readings');
+    // Each value shows its unit.
+    expect(cells(readings[1]).slice(1)).toEqual([
+      '78.4 °F',
+      '69.5 °F',
+      '91.6%',
+      '96.1%',
+      '15.98 Ω/ft',
+      '416.8 ppm',
+    ]);
 
     // Warnings: both saved warnings, each saying which record it's on.
     expect(rows('warnings').map((r) => cells(r).slice(0, 3))).toEqual([
@@ -147,7 +158,10 @@ describe('BatchDetailPage', () => {
     await open('VM-2026-0142');
 
     expect(root.querySelector('[data-testid="synthetic-tag"]')).toBeNull();
-    expect(rows('cylinders').map((r) => cells(r)[5])).toEqual(Array(6).fill('Not broken'));
+    expect(rows('cylinders').map((r) => cells(r)[5])).toEqual(Array(6).fill('Record break'));
+    expect(root.querySelector('[data-testid="record-break"]')?.getAttribute('href')).toBe(
+      '/breaks?batch=VM-2026-0142&cylinder=A1',
+    );
     expect(text('[data-testid="audit"]')).toContain('Changed by J. Rivera');
     expect(text('.tabs-card')).toContain('No curing readings yet.');
   });

@@ -257,6 +257,9 @@ Settings live in `src/Vulcan.Api/appsettings.json`.
 | `UseMocks`          | `false` | `true` makes the screens use fake API responses inside the desktop app (for UI work before endpoints exist). `npm start` always uses mocks. |
 | `SeedSyntheticData` | `false` | `true` loads `data/synthetic/` into an empty database (turn on for demos)                                                                   |
 
+For the demo machine, keep `SeedSyntheticData` set to `false` in the repository and enable it with the `SeedSyntheticData=true` environment variable before starting the application.
+Synthetic data is loaded only when the batch database is empty, so restarting the application will not create duplicate demo data.
+
 For personal overrides, use `appsettings.Development.local.json`. It's git-ignored.
 
 ---
@@ -270,23 +273,114 @@ For personal overrides, use `appsettings.Development.local.json`. It's git-ignor
 - **Units:** °F, inches, pounds, PSI, ohms/ft, ppm. Mix percentages are **by volume**; the water-to-cement ratio is
   calculated **by weight**. All times are stored in UTC and shown in local time.
 
+## Installing Vulcan CBAS
+
+For Vulcan and anyone using the app. No .NET, Node or internet connection needed.
+
+1. **Download the installer:**
+   **[VulcanCBAS-Setup.exe](https://github.com/emmyatri/concrete-analysis-system/releases/latest/download/VulcanCBAS-Setup.exe)**
+   (about 265 MB, always the latest release). Older versions are on the
+   [Releases page](https://github.com/emmyatri/concrete-analysis-system/releases).
+2. **Double-click it.** Windows may say **"Windows protected your PC"** because the installer isn't signed yet. Click
+   **More info → Run anyway**.
+3. **Choose who it's for:**
+    - **Install for me only**: no administrator rights needed. Pick this on a work laptop.
+    - **Install for all users**: needs administrator rights; installs to `C:\Program Files\Vulcan CBAS`.
+4. **Click Next** through the rest. Leave **Open Vulcan CBAS** ticked at the end.
+5. Next time, open it from the **Start Menu → Vulcan CBAS**.
+
+**Requirements:** Windows 11, 64-bit. The WebView2 runtime it needs is part of Windows 11; if it's missing, the
+installer adds it from its own copy.
+
+**Updating:** run the newer installer over the old one. Your data is kept.
+
+**Uninstalling:** Settings → Apps → Vulcan CBAS → Uninstall. **Your data is kept** in `%LOCALAPPDATA%\VulcanCBAS`
+(database, logs), so nothing is lost if you reinstall. To erase it too, delete that folder after uninstalling.
+
+---
+
+## Testing an installer from a branch
+
+For reviewers checking a PR before it's released. Pick **one** way to get the installer:
+
+**A. From GitHub (nothing to set up)**
+
+1. On GitHub, open **Actions → CI → Run workflow**, pick the PR's branch, and click **Run workflow**.
+2. Wait for the run to go green (about 10 minutes), open it, and download **vulcan-cbas-installer** under
+   **Artifacts**.
+3. It downloads as a `.zip`. **Unzip it first**, then run `VulcanCBAS-Setup.exe` from the unzipped folder.
+
+**B. On your own computer (one command)**
+
+```powershell
+git switch <branch-name>
+powershell -ExecutionPolicy Bypass -File installer\build.ps1
+```
+
+The installer appears in `installer\output\`. See [Building the installer](#building-the-installer) for what the
+script does.
+
+**Then check:**
+
+| #   | Do this                                                     | Pass if                                                                                  |
+| --- | ----------------------------------------------------------- | ---------------------------------------------------------------------------------------- |
+| 1   | Run the installer, choose **Install for all users**         | Admin prompt appears; installs to `C:\Program Files\Vulcan CBAS`; app opens at the end   |
+| 2   | Look at the side menu footer                                | It shows the version, e.g. **v0.1.0-m1**                                                 |
+| 3   | Start Menu → type **Vulcan**                                | **Vulcan CBAS** is listed and opens the app                                              |
+| 4   | Open `%LOCALAPPDATA%\VulcanCBAS\`                           | `vulcan.db` and a `logs` folder are there                                                |
+| 5   | Close the app, run the **same installer again**             | Upgrades with no errors; the app still opens                                             |
+| 6   | Settings → Apps → Vulcan CBAS → **Uninstall**               | Program folder and Start Menu entry are gone; **`vulcan.db` is still there**             |
+| 7   | Run the installer again, choose **Install for me only**     | **No** admin prompt; installs to `%LOCALAPPDATA%\Programs\Vulcan CBAS`; app opens        |
+| 8   | Uninstall that copy                                         | Uninstalls cleanly, no admin prompt                                                      |
+
+The installed app talks to the real local server, not fake data. If a screen shows "Something went wrong on the local
+service", the server endpoints for that screen haven't been merged yet. That's not an installer problem.
+
+To see exactly what an install did, run it with a log:
+`.\VulcanCBAS-Setup.exe /LOG="$env:TEMP\vulcan-setup.log"` (use whichever name your copy has)
+
 ---
 
 ## Building the installer
 
-CI builds the installer automatically on every push to `dev` and `main`; download it from the workflow run's **Artifacts**.
+**Easiest: let CI build it.** Every push to `dev` and `main` builds the installer (download **vulcan-cbas-installer**
+from the run's Artifacts), and tagging a version on `main` (e.g. `v0.1.0-m1`) publishes it as a GitHub Release, which
+is what the download link in [Installing Vulcan CBAS](#installing-vulcan-cbas) points to.
 
-To build locally:
+**On your own computer**, one command from the repo root:
 
 ```powershell
-dotnet publish src/Vulcan.Desktop -p:PublishProfile=win-x64-selfcontained
-# then compile installer/vulcan.iss with Inno Setup
+powershell -ExecutionPolicy Bypass -File installer\build.ps1
 ```
 
-The installer is self-contained and works offline (SLA NFR-1, NFR-3). The target computer does not need .NET, Node or
-internet access. If the WebView2 runtime is missing, the installer installs it from the copy bundled inside.
+It writes `installer\output\VulcanCBAS-Setup-<version>.exe`. You need Node.js and the .NET 10 SDK from
+[Prerequisites](#prerequisites); the script installs Inno Setup if you don't have it. The first run takes a few
+minutes because it downloads the WebView2 runtime (about 200 MB, once).
 
----
+<details>
+<summary>What the script does, step by step</summary>
+
+1. `npm ci` and `npm run build` in `src/Vulcan.Web` (the screens, into `src/Vulcan.Api/wwwroot`)
+2. `dotnet publish src/Vulcan.Desktop -p:PublishProfile=win-x64-selfcontained`: a self-contained folder in
+   `src/Vulcan.Desktop/bin/publish/win-x64/` with the app, its own .NET runtime, the screens, SQLite and the WebView2
+   loader. CI also uploads this folder as **vulcan-cbas-win-x64**, which you can unzip and run without installing.
+3. Downloads Microsoft's offline WebView2 runtime to `installer/redist/` (git-ignored)
+4. Finds Inno Setup 6, or installs it with `winget`
+5. Compiles `installer/vulcan.iss` into `installer/output/` (git-ignored)
+
+</details>
+
+**Don't copy just `Vulcan.Desktop.exe` somewhere else.** It's a small launcher that needs the hundreds of files next
+to it. Share the installer instead.
+
+**New version:** bump `<Version>` in `Directory.Build.props`, `version` in `src/Vulcan.Web/src/app/core/app-info.ts`
+`AppVersion` in `installer/vulcan.iss`, and "Current version" at the top of this README. Merge to `main`, then tag it:
+
+```powershell
+git switch main; git pull
+git tag v0.1.0-m1
+git push origin v0.1.0-m1
+```
 
 ## Troubleshooting
 

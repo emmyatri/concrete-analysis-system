@@ -4,7 +4,8 @@ on:
   pull_request:
     branches: [dev, main]
   push:
-    branches: [dev, main]
+    branches: [ dev, main ]
+    tags: [ 'v*' ]
   workflow_dispatch:
 
 concurrency:
@@ -12,7 +13,7 @@ concurrency:
   cancel-in-progress: true
 
 permissions:
-  contents: read
+  contents: write # creating a GitHub Release on version tags (SCRUM-133)
 
 env:
   DOTNET_NOLOGO: true
@@ -88,6 +89,70 @@ jobs:
 
       - name: Test
         run: dotnet test --no-build --configuration Release --logger trx --results-directory TestResults
+
+      # ---------- Self-contained build (SCRUM-108) ----------
+
+      - name: Publish (self-contained, win-x64)
+        run: dotnet publish src/Vulcan.Desktop -p:PublishProfile=win-x64-selfcontained
+
+      # Proves the build runs without .NET installed: the runtime, the UI, SQLite and WebView2 are all inside.
+      - name: Check the self-contained build
+        shell: pwsh
+        run: |
+          $dir = "src/Vulcan.Desktop/bin/publish/win-x64"
+          foreach ($file in "Vulcan.Desktop.exe", "coreclr.dll", "e_sqlite3.dll", "WebView2Loader.dll", "wwwroot/index.html") {
+            if (-not (Test-Path "$dir/$file")) { throw "Missing from the self-contained build: $file" }
+          }
+          Write-Host "Self-contained build OK"
+
+      - name: Upload the self-contained build
+        uses: actions/upload-artifact@v4
+        with:
+          name: vulcan-cbas-win-x64
+          path: src/Vulcan.Desktop/bin/publish/win-x64/
+
+      # ---------- Installer (SCRUM-116) ----------
+      # Pushes to dev/main and manual runs only, so PRs don't download ~180 MB each time.
+
+      - name: Download the WebView2 runtime (bundled in the installer)
+        if: github.event_name != 'pull_request'
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force installer/redist | Out-Null
+          # Microsoft's Evergreen Standalone Installer, x64 (works offline).
+          Invoke-WebRequest "https://go.microsoft.com/fwlink/?linkid=2124701" -OutFile installer/redist/MicrosoftEdgeWebView2RuntimeInstallerX64.exe
+          $size = (Get-Item installer/redist/MicrosoftEdgeWebView2RuntimeInstallerX64.exe).Length
+          if ($size -lt 50MB) { throw "WebView2 download looks wrong ($size bytes). Check the link." }
+
+      - name: Build the installer
+        if: github.event_name != 'pull_request'
+        shell: pwsh
+        run: |
+          $iscc = "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe"
+          if (-not (Test-Path $iscc)) {
+          choco install innosetup -y --no-progress
+          if ($LASTEXITCODE -ne 0) { throw "Couldn't install Inno Setup" }
+          }
+          & $iscc installer\vulcan.iss
+          if ($LASTEXITCODE -ne 0) { throw "Inno Setup failed" }
+          # Same file without the version in its name, for the permanent "latest" download link in the README.
+          Copy-Item (Get-ChildItem installer/output/VulcanCBAS-Setup-*.exe).FullName installer/output/VulcanCBAS-Setup.exe
+
+      - name: Upload the installer
+        if: github.event_name != 'pull_request'
+        uses: actions/upload-artifact@v4
+        with:
+          name: vulcan-cbas-installer
+          path: installer/output/VulcanCBAS-Setup.exe
+
+      # On a version tag (e.g. v0.1.0-m1), publish a GitHub Release with the installer attached.
+      - name: Publish the release
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: installer/output/*.exe
+          generate_release_notes: true
+          make_latest: true
 
       - name: Upload test results
         if: always()
