@@ -345,6 +345,14 @@ export class CuringReadingsPage {
         });
         continue;
       }
+      if (column.field === 'internalTempF' && !/^-?\d+(?:\.\d{1})?$/.test(raw)) {
+        issues.push({
+          field: column.field,
+          severity: 'error',
+          text: 'Max 1 decimal place',
+        });
+        continue;
+      }
       const { reject, warn } = this.limitsFor(column.key);
       const result = this.validation.evaluate(column.key, value, this.referenceData.limits());
       const shown = withUnit(formatNumber(value, 'en-US', '1.0-3'), reject?.unit ?? '');
