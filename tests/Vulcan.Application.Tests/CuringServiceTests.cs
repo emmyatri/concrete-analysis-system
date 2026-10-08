@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Vulcan.Application.Services;
+using Vulcan.Domain.Constants;
 using Vulcan.Domain.Entities;
 using Vulcan.Domain.Services;
 using Vulcan.Infrastructure.Services;
@@ -137,9 +138,8 @@ public class CuringServiceTests(DatabaseFixture dbFixture)
         Assert.True(result.IsSuccess);
         Assert.Empty(result.Errors);
 
-        Assert.Contains(
-            result.Warnings,
-            warning => warning.Key == "Curing.AmbientTempF");
+        var warning = Assert.Single(result.Warnings);
+        Assert.Equal(LimitKeys.AmbientTempF, warning.Key);
 
         Assert.True(reading.Id > 0);
 

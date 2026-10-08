@@ -76,7 +76,10 @@ public class BatchControllerTests()
             .ShouldNotBeNull()
             .ShouldSatisfyAllConditions(
                 it => it.BatchNumber.ShouldBe("VMDE-355"),
-                it => it.Id.ShouldBeGreaterThan(0)
+                it => it.Id.ShouldBeGreaterThan(0),
+                it => it.Warnings.ShouldContain(w =>
+                    w.Key == "Oxide.AluminaPct" &&
+                    !string.IsNullOrWhiteSpace(w.Message))
             );
     }
 
