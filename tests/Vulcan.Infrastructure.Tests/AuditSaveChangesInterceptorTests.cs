@@ -1,5 +1,6 @@
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
+using Vulcan.Application.Interfaces;
 using Vulcan.Domain.Entities;
 using Vulcan.Domain.Interfaces;
 using Vulcan.Infrastructure.Interceptors;
@@ -19,7 +20,7 @@ public sealed class AuditSaveChangesInterceptorTests
 
         var options = new DbContextOptionsBuilder<VulcanDbContext>()
             .UseSqlite(connection)
-            .AddInterceptors(new AuditSaveChangesInterceptor(technician))
+            .AddInterceptors(new AuditSaveChangesInterceptor(technician, new SystemClock()))
             .Options;
 
         await using var db = new VulcanDbContext(options);
@@ -56,7 +57,8 @@ public sealed class AuditSaveChangesInterceptorTests
         var creatorOptions = new DbContextOptionsBuilder<VulcanDbContext>()
             .UseSqlite(connection)
             .AddInterceptors(
-                new AuditSaveChangesInterceptor(new TestTechnician("Daniel")))
+                new AuditSaveChangesInterceptor(
+                    new TestTechnician("Daniel"), new SystemClock()))
             .Options;
 
         await using (var creatorDb = new VulcanDbContext(creatorOptions))
@@ -75,7 +77,8 @@ public sealed class AuditSaveChangesInterceptorTests
         var editorOptions = new DbContextOptionsBuilder<VulcanDbContext>()
             .UseSqlite(connection)
             .AddInterceptors(
-                new AuditSaveChangesInterceptor(new TestTechnician("NotDaniel")))
+                new AuditSaveChangesInterceptor(
+                    new TestTechnician("NotDaniel"), new SystemClock()))
             .Options;
 
         await using var editorDb = new VulcanDbContext(editorOptions);
@@ -116,7 +119,8 @@ public sealed class AuditSaveChangesInterceptorTests
         var options = new DbContextOptionsBuilder<VulcanDbContext>()
             .UseSqlite(connection)
             .AddInterceptors(
-                new AuditSaveChangesInterceptor(new TestTechnician(name)))
+                new AuditSaveChangesInterceptor(
+                    new TestTechnician(name), new SystemClock()))
             .Options;
 
         await using var db = new VulcanDbContext(options);
@@ -149,7 +153,8 @@ public sealed class AuditSaveChangesInterceptorTests
         var creatorOptions = new DbContextOptionsBuilder<VulcanDbContext>()
             .UseSqlite(connection)
             .AddInterceptors(
-                new AuditSaveChangesInterceptor(new TestTechnician("Daniel")))
+                new AuditSaveChangesInterceptor(
+                    new TestTechnician("Daniel"), new SystemClock()))
             .Options;
 
         await using (var creatorDb = new VulcanDbContext(creatorOptions))
@@ -169,7 +174,8 @@ public sealed class AuditSaveChangesInterceptorTests
         var editorOptions = new DbContextOptionsBuilder<VulcanDbContext>()
             .UseSqlite(connection)
             .AddInterceptors(
-                new AuditSaveChangesInterceptor(new TestTechnician(name)))
+                new AuditSaveChangesInterceptor(
+                    new TestTechnician(name), new SystemClock()))
             .Options;
 
         await using var editorDb = new VulcanDbContext(editorOptions);
@@ -202,7 +208,8 @@ public sealed class AuditSaveChangesInterceptorTests
         var creatorOptions = new DbContextOptionsBuilder<VulcanDbContext>()
             .UseSqlite(connection)
             .AddInterceptors(
-                new AuditSaveChangesInterceptor(new TestTechnician("Daniel")))
+                new AuditSaveChangesInterceptor(
+                    new TestTechnician("Daniel"), new SystemClock()))
             .Options;
 
         using (var creatorDb = new VulcanDbContext(creatorOptions))
@@ -234,7 +241,8 @@ public sealed class AuditSaveChangesInterceptorTests
         var editorOptions = new DbContextOptionsBuilder<VulcanDbContext>()
             .UseSqlite(connection)
             .AddInterceptors(
-                new AuditSaveChangesInterceptor(new TestTechnician("NotDaniel")))
+                new AuditSaveChangesInterceptor(
+                    new TestTechnician("NotDaniel"), new SystemClock()))
             .Options;
 
         using var editorDb = new VulcanDbContext(editorOptions);
@@ -272,7 +280,8 @@ public sealed class AuditSaveChangesInterceptorTests
         var missingNameOptions = new DbContextOptionsBuilder<VulcanDbContext>()
             .UseSqlite(connection)
             .AddInterceptors(
-                new AuditSaveChangesInterceptor(new TestTechnician(name)))
+                new AuditSaveChangesInterceptor(
+                    new TestTechnician(name), new SystemClock()))
             .Options;
 
         using (var rejectedDb = new VulcanDbContext(missingNameOptions))
@@ -297,7 +306,8 @@ public sealed class AuditSaveChangesInterceptorTests
         var creatorOptions = new DbContextOptionsBuilder<VulcanDbContext>()
             .UseSqlite(connection)
             .AddInterceptors(
-                new AuditSaveChangesInterceptor(new TestTechnician("Daniel")))
+                new AuditSaveChangesInterceptor(
+                    new TestTechnician("Daniel"), new SystemClock()))
             .Options;
 
         using (var creatorDb = new VulcanDbContext(creatorOptions))
@@ -349,7 +359,8 @@ public sealed class AuditSaveChangesInterceptorTests
         var options = new DbContextOptionsBuilder<VulcanDbContext>()
             .UseSqlite(connection)
             .AddInterceptors(
-                new AuditSaveChangesInterceptor(new TestTechnician(name)))
+                new AuditSaveChangesInterceptor(
+                    new TestTechnician(name), new SystemClock()))
             .Options;
 
         await using var db = new VulcanDbContext(options);
@@ -391,7 +402,8 @@ public sealed class AuditSaveChangesInterceptorTests
         var options = new DbContextOptionsBuilder<VulcanDbContext>()
             .UseSqlite(connection)
             .AddInterceptors(
-                new AuditSaveChangesInterceptor(new TestTechnician("Daniel")))
+                new AuditSaveChangesInterceptor(
+                    new TestTechnician("Daniel"), new SystemClock()))
             .Options;
 
         await using var db = new VulcanDbContext(options);
@@ -457,7 +469,8 @@ public sealed class AuditSaveChangesInterceptorTests
         var creatorOptions = new DbContextOptionsBuilder<VulcanDbContext>()
             .UseSqlite(connection)
             .AddInterceptors(
-                new AuditSaveChangesInterceptor(new TestTechnician("Daniel")))
+                new AuditSaveChangesInterceptor(
+                    new TestTechnician("Daniel"), new SystemClock()))
             .Options;
 
         await using (var creatorDb = new VulcanDbContext(creatorOptions))
@@ -476,7 +489,8 @@ public sealed class AuditSaveChangesInterceptorTests
         var readerOptions = new DbContextOptionsBuilder<VulcanDbContext>()
             .UseSqlite(connection)
             .AddInterceptors(
-                new AuditSaveChangesInterceptor(new TestTechnician(null)))
+                new AuditSaveChangesInterceptor(
+                    new TestTechnician(null), new SystemClock()))
             .Options;
 
         await using var readerDb = new VulcanDbContext(readerOptions);
@@ -504,7 +518,8 @@ public sealed class AuditSaveChangesInterceptorTests
         var options = new DbContextOptionsBuilder<VulcanDbContext>()
             .UseSqlite(connection)
             .AddInterceptors(
-                new AuditSaveChangesInterceptor(new SystemTechnician()))
+                new AuditSaveChangesInterceptor(
+                    new SystemTechnician(), new SystemClock()))
             .Options;
 
         await using var db = new VulcanDbContext(options);
@@ -533,8 +548,161 @@ public sealed class AuditSaveChangesInterceptorTests
         saved.ModifiedAtUtc.ShouldBeNull();
     }
 
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task All_record_types_use_clock_for_creation_and_modification(
+        bool synchronous)
+    {
+        using var connection = new SqliteConnection("Filename=:memory:");
+        await connection.OpenAsync();
+
+        var createdAt = new DateTime(
+            2026, 10, 8, 12, 0, 0, DateTimeKind.Utc);
+        var modifiedAt = createdAt.AddHours(1);
+        var clock = new TestClock(createdAt);
+        var technician = new TestTechnician("Daniel");
+
+        var options = new DbContextOptionsBuilder<VulcanDbContext>()
+            .UseSqlite(connection)
+            .AddInterceptors(
+                new AuditSaveChangesInterceptor(technician, clock))
+            .Options;
+
+        await using var db = new VulcanDbContext(options);
+        await db.Database.EnsureCreatedAsync();
+
+        var specimen = new Specimen
+        {
+            Label = "SYN-CLOCK-1",
+            IsSynthetic = true,
+            BreakResult = new BreakResult
+            {
+                BrokenAt = createdAt,
+                StrengthPsi = 3000,
+            },
+            CuringReadings =
+            [
+                new CuringReading
+                {
+                    TakenAt = createdAt,
+                    AmbientTempF = 70m,
+                },
+            ],
+        };
+
+        db.Batch.Add(new Batch
+        {
+            BatchNumber = "SYN-AUDIT-CLOCK",
+            IsSynthetic = true,
+            Composition = new Composition(),
+            CementOxideAnalysis = new CementOxideAnalysis(),
+            Specimens = [specimen],
+        });
+
+        db.RecordWarning.Add(new RecordWarning
+        {
+            EntityType = nameof(Batch),
+            FieldName = "FinalWeightLb",
+            LimitKey = "FinalWeightLb",
+            Value = 20m,
+            Message = "Synthetic test warning",
+        });
+
+        if (synchronous)
+        {
+            db.SaveChanges();
+        }
+        else
+        {
+            await db.SaveChangesAsync();
+        }
+
+        db.ChangeTracker.Clear();
+
+        var batch = await db.Batch.SingleAsync();
+        var composition = await db.Composition.SingleAsync();
+        var oxides = await db.CementOxideAnalysis.SingleAsync();
+        var savedSpecimen = await db.Specimen.SingleAsync();
+        var breakResult = await db.BreakResult.SingleAsync();
+        var reading = await db.CuringReading.SingleAsync();
+        var warning = await db.RecordWarning.SingleAsync();
+
+        AuditableEntity[] records =
+        [
+            batch,
+            composition,
+            oxides,
+            savedSpecimen,
+            breakResult,
+            reading,
+            warning,
+        ];
+
+        foreach (var record in records)
+        {
+            record.CreatedBy.ShouldBe("Daniel");
+            record.CreatedAtUtc.ShouldBe(createdAt);
+            record.ModifiedBy.ShouldBeNull();
+            record.ModifiedAtUtc.ShouldBeNull();
+        }
+
+        technician.Name = "NotDaniel";
+        clock.UtcNow = modifiedAt;
+
+        batch.FinalWeightLb = 30m;
+        composition.CementPct = 10m;
+        oxides.AluminaPct = 5m;
+        savedSpecimen.LengthIn = 12m;
+        breakResult.StrengthPsi = 3500;
+        reading.AmbientTempF = 75m;
+        warning.Message = "Updated synthetic test warning";
+
+        foreach (var record in records)
+        {
+            record.CreatedBy = "Incorrect creator";
+            record.CreatedAtUtc = DateTime.MinValue;
+        }
+
+        if (synchronous)
+        {
+            db.SaveChanges();
+        }
+        else
+        {
+            await db.SaveChangesAsync();
+        }
+
+        db.ChangeTracker.Clear();
+
+        AuditableEntity[] updatedRecords =
+        [
+            await db.Batch.SingleAsync(),
+            await db.Composition.SingleAsync(),
+            await db.CementOxideAnalysis.SingleAsync(),
+            await db.Specimen.SingleAsync(),
+            await db.BreakResult.SingleAsync(),
+            await db.CuringReading.SingleAsync(),
+            await db.RecordWarning.SingleAsync(),
+        ];
+
+        foreach (var record in updatedRecords)
+        {
+            record.CreatedBy.ShouldBe("Daniel");
+            record.CreatedAtUtc.ShouldBe(createdAt);
+            record.ModifiedBy.ShouldBe("NotDaniel");
+            record.ModifiedAtUtc.ShouldBe(modifiedAt);
+        }
+    }
+
     private sealed class TestTechnician(string? name) : ICurrentTechnician
     {
-        public string? Name => name;
+        public string? Name { get; set; } = name;
+    }
+
+    private sealed class TestClock(DateTime utcNow) : IClock
+    {
+        public DateTime UtcNow { get; set; } = utcNow;
     }
 }
