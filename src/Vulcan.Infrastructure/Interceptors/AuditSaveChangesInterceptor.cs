@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
+using Vulcan.Application.Interfaces;
 using Vulcan.Domain.Entities;
 using Vulcan.Domain.Interfaces;
 using Vulcan.Domain.Technicians;
@@ -7,7 +8,8 @@ using Vulcan.Domain.Technicians;
 namespace Vulcan.Infrastructure.Interceptors;
 
 public sealed class AuditSaveChangesInterceptor(
-    ICurrentTechnician currentTechnician) : SaveChangesInterceptor
+    ICurrentTechnician currentTechnician,
+    IClock clock) : SaveChangesInterceptor
 {
     public override InterceptionResult<int> SavingChanges(
         DbContextEventData eventData,
@@ -56,7 +58,7 @@ public sealed class AuditSaveChangesInterceptor(
         }
 
         var technician = TechnicianName.Normalize(name);
-        var now = DateTime.UtcNow;
+        var now = clock.UtcNow;
 
         foreach (var entry in entries)
         {
