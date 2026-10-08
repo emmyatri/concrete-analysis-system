@@ -148,6 +148,50 @@ public sealed class SpecimenControllerTests
         list.RootElement.EnumerateArray().ShouldNotContain(x => x.GetProperty("specimenId").GetInt32() == id);
     }
 
+    [Fact]
+    public async Task Pending_breaks_are_ordered_by_due_date()
+    {
+        await using var app = await StartAsync();
+        using var client = ClientFor(app);
+
+        // Create cylinders out of due-date order.
+        async Task<int> AddAsync(string label, string testAge)
+        {
+            var response = await client.PostAsJsonAsync(
+                $"/api/batches/{_batch}/specimens",
+                new
+                {
+                    label,
+                    lengthIn = 12.0,
+                    widthIn = 6.0,
+                    testAgeDays = testAge,
+                });
+
+            response.StatusCode.ShouldBe(HttpStatusCode.Created);
+
+            using var body = await JsonAsync(response);
+            return body.RootElement.GetProperty("id").GetInt32();
+        }
+
+        var day28 = await AddAsync("ORDER-28", "Day28");
+        var day3 = await AddAsync("ORDER-3", "Day3");
+        var day7 = await AddAsync("ORDER-7", "Day7");
+
+        var response = await client.GetAsync("/api/breaks/pending?includeSynthetic=true");
+
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
+
+        using var body = await JsonAsync(response);
+
+        var ids = body.RootElement
+            .EnumerateArray()
+            .Select(x => x.GetProperty("specimenId").GetInt32())
+            .Where(id => id == day28 || id == day3 || id == day7)
+            .ToArray();
+
+        ids.ShouldBe(new[] { day3, day7, day28 });
+    }
+
     private static Task<HttpResponseMessage> AddCylinderAsync(
         HttpClient client,
         string label,
