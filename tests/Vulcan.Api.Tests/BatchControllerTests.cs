@@ -4,6 +4,7 @@ using System.Text.Json.Serialization;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting.Server;
 using Microsoft.AspNetCore.Hosting.Server.Features;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.Json;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.DependencyInjection;
@@ -457,6 +458,12 @@ public class BatchControllerTests()
         {
             var db = scope.ServiceProvider.GetRequiredService<VulcanDbContext>();
 
+            var httpContextAccessor = scope.ServiceProvider
+                .GetRequiredService<IHttpContextAccessor>();
+
+            httpContextAccessor.HttpContext = new DefaultHttpContext();
+            httpContextAccessor.HttpContext.Request.Headers[TechnicianHeader.Name] = "Test Technician";
+
             db.Batch.Add(new Batch
             {
                 BatchNumber = batchNumber,
@@ -531,6 +538,12 @@ public class BatchControllerTests()
         using (var scope = app.Services.CreateScope())
         {
             var db = scope.ServiceProvider.GetRequiredService<VulcanDbContext>();
+
+            var httpContextAccessor = scope.ServiceProvider
+                .GetRequiredService<IHttpContextAccessor>();
+
+            httpContextAccessor.HttpContext = new DefaultHttpContext();
+            httpContextAccessor.HttpContext.Request.Headers[TechnicianHeader.Name] = "Test Technician";
 
             var batch = new Batch
             {
