@@ -12,6 +12,27 @@ public sealed class SpecimenService(
     BreakResultValidator breakResultValidator,
     IClock clock)
 {
+    /// <summary>Adds a cylinder by batch number (the route uses the number, not the id).</summary>
+    public async Task<ServiceResult<Specimen>> AddAsync(
+        string batchNumber,
+        Specimen specimen)
+    {
+        var batch = await specimenRepository.GetBatchByNumberAsync(
+            BatchValidator.NormalizeBatchNumber(batchNumber));
+
+        if (batch is null)
+        {
+            return ServiceResult<Specimen>.NotFound(
+            [
+                new ValidationError(
+                    "Specimen.BatchId",
+                    "Batch was not found.")
+            ]);
+        }
+
+        return await AddAsync(batch.Id, specimen);
+    }
+
     public async Task<ServiceResult<Specimen>> AddAsync(
         int batchId,
         Specimen specimen)
@@ -65,6 +86,9 @@ public sealed class SpecimenService(
         }
 
         specimen.BatchId = batchId;
+
+        // A cylinder is synthetic exactly when its batch is (schema.md, FR-20).
+        specimen.IsSynthetic = batch.IsSynthetic;
 
         await specimenRepository.AddAsync(specimen);
         await specimenRepository.SaveChangesAsync();
@@ -129,5 +153,17 @@ public sealed class SpecimenService(
         return ServiceResult<BreakResult>.Success(
             breakResult,
             validation.Warnings);
+    }
+
+    /// <summary>Cylinders without a break, soonest due first (cast date + test age).</summary>
+    public async Task<IReadOnlyList<Specimen>> GetPendingBreaksAsync(bool includeSynthetic)
+    {
+        var pending = await specimenRepository.GetPendingBreaksAsync(includeSynthetic);
+
+        return pending
+            .OrderBy(x => x.Batch.CastAt.AddDays((int)x.TestAgeDays))
+            .ThenBy(x => x.Batch.BatchNumber)
+            .ThenBy(x => x.Label)
+            .ToList();
     }
 }
