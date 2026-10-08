@@ -1,4 +1,5 @@
 using Vulcan.Domain.Entities;
+using Vulcan.Domain.Enums;
 
 namespace Vulcan.Application.Interfaces;
 
@@ -12,9 +13,12 @@ public interface IBatchRepository
     Task<bool> ExistsAsync(string batchNumber);
 
     Task<IReadOnlyList<Batch>> SearchAsync(
-        string searchTerm,
-        int page,
-        int pageSize);
+        string search,
+        DateTime? castFrom,
+        DateTime? castTo,
+        CementType? cementType,
+        bool? hasWarnings,
+        bool? includeSynthetic);
 
     Task SaveChangesAsync();
 }

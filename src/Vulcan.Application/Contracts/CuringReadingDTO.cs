@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using Vulcan.Domain.Entities;
 
 namespace Vulcan.Application.Contracts;
 
@@ -27,4 +28,17 @@ public class CuringReadingDTO
 
     [Required]
     public required double Co2Ppm { get; init; }
+
+    public static CuringReadingDTO FromDomain(CuringReading cr)
+        => new()
+        {
+            Id = cr.Id,
+            TakenAt = cr.TakenAt,
+            InternalTempF = (double)cr.InternalTempF,
+            AmbientTempF = (double)cr.AmbientTempF,
+            MoisturePct = (double)cr.MoisturePct,
+            RelativeHumidityPct = (double)cr.RelativeHumidityPct,
+            ResistivityOhmPerFt = (double)cr.ResistivityOhmPerFt,
+            Co2Ppm = (double)cr.Co2Ppm,
+        };
 }

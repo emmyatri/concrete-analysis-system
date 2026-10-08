@@ -1,28 +1,56 @@
-using System.Net.Security;
+using System.Runtime.CompilerServices;
 using Microsoft.AspNetCore.Mvc;
+using Vulcan.Application.Contracts;
 using Vulcan.Application.Services;
 using Vulcan.Domain.Entities;
+using Vulcan.Domain.Enums;
+using Vulcan.Domain.Services;
+using Vulcan.Domain.Validation;
 
 namespace Vulcan.Api.Controllers;
 
 [ApiController]
 [Route("/api/batches")]
-class BatchController(
+public class BatchController(
     BatchService batchService,
+    WaterCementRatioCalculator waterCementRatioCalculator,
     ILogger<BatchController> logger
 ) : ControllerBase
 {
     [HttpGet]
-    public async Task<IResult> GetBatchList([FromQuery] string q, [FromQuery] int page)
+    public async Task<IActionResult> GetBatchList(
+        [FromQuery] string? search,
+        [FromQuery] DateTime? castFrom,
+        [FromQuery] DateTime? castTo,
+        [FromQuery] CementType? cementType,
+        [FromQuery] bool? hasWarnings,
+        [FromQuery] bool? includeSynthetic
+    )
     {
-        var result = await batchService.SearchAsync(q, page);
-        return Results.Json(result);
+        var batches = await batchService.SearchAsync(
+            search,
+            castFrom,
+            castTo,
+            cementType,
+            hasWarnings,
+            includeSynthetic
+        );
+        GetBatchListResponse result = [..batches.Select(b =>
+        {
+            double? waterCementRatio = null;
+            if (b is { Composition: { } composition })
+            {
+                waterCementRatio = (double?)waterCementRatioCalculator.Calculate(composition);
+            }
+            return BatchSummaryDTO.FromDomain(b, waterCementRatio);
+        })];
+        return Ok(result);
     }
 
     [HttpPost]
     public async Task<IActionResult> CreateBatch([FromBody] CreateBatchRequest request)
     {
-        var result = await batchService.CreateAsync(request.batch);
+        var result = await batchService.CreateAsync(request.ToDomain());
         return HandleBatchResult(result, successStatusCode: StatusCodes.Status201Created);
     }
 
@@ -30,15 +58,20 @@ class BatchController(
     public async Task<IResult> GetBatch([FromRoute] string batchNumber)
     {
         var result = await batchService.GetByNumberAsync(batchNumber);
+        double? waterCementRatio = null;
+        if (result is { Composition: { } composition })
+        {
+            waterCementRatio = (double?)waterCementRatioCalculator.Calculate(composition);
+        }
         return result == null
             ? Results.NotFound()
-            : Results.Json(result);
+            : Results.Json(GetBatchResponse.FromDomain(result, waterCementRatio));
     }
 
     [HttpPut("{batchNumber}")]
     public async Task<IActionResult> UpdateBatch([FromRoute] string batchNumber, [FromBody] UpdateBatchRequest request)
     {
-        var result = await batchService.UpdateAsync(batchNumber, Batch.FromDTO(request));
+        var result = await batchService.UpdateAsync(batchNumber, request.ToDomain(batchNumber));
         return HandleBatchResult(result);
     }
 
@@ -56,14 +89,14 @@ class BatchController(
                 return ValidationProblem(ModelState);
 
             case { Kind: ServiceResultKind.Success, Value: { } batch, Warnings: var warnings }:
-                return (IActionResult)Results.Json(new
+                return StatusCode(statusCode: successStatusCode, new CreateBatchResponse
                 {
-                    id = batch.Id,
-                    batchNumber = batch.BatchNumber,
-                    warnings,
-                }, statusCode: successStatusCode);
+                    Id = batch.Id,
+                    BatchNumber = batch.BatchNumber,
+                    Warnings = ToWarningDto(warnings),
+                });
 
-            case { Kind: ServiceResultKind.NotFound, Errors: var errors}:
+            case { Kind: ServiceResultKind.NotFound, Errors: var errors }:
                 foreach (var error in errors)
                 {
                     ModelState.AddModelError(error.Key, error.Message);
@@ -85,6 +118,13 @@ class BatchController(
         }
 
         logger.LogError("Batch request failed with unknown error.");
-        return (IActionResult)Results.InternalServerError();
+        return StatusCode(StatusCodes.Status500InternalServerError);
     }
+
+    private static List<WarningDTO> ToWarningDto(IEnumerable<ValidationError>? items)
+        => [.. items?.Select(i => new WarningDTO
+        {
+            Key = i.Key,
+            Message = i.Message
+        }) ?? []];
 }

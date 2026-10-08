@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Vulcan.Application.Interfaces;
 using Vulcan.Domain.Entities;
+using Vulcan.Domain.Enums;
 
 namespace Vulcan.Infrastructure.Services;
 
@@ -61,21 +62,54 @@ public sealed class BatchRepository(VulcanDbContext dbContext) : IBatchRepositor
     }
 
     public async Task<IReadOnlyList<Batch>> SearchAsync(
-        string searchTerm,
-        int page,
-        int pageSize)
+        string search,
+        DateTime? castFrom,
+        DateTime? castTo,
+        CementType? cementType,
+        bool? hasWarnings,
+        bool? includeSynthetic
+    )
     {
-        var escapedSearchTerm = EscapeLikePattern(searchTerm);
+        bool includeSyntheticResults = includeSynthetic ??= false;
+        var escapedSearchTerm = EscapeLikePattern(search);
 
-        return await dbContext.Batch
+        var query = dbContext.Batch
             .Where(x => EF.Functions.Like(
                 x.BatchNumber,
                 $"%{escapedSearchTerm}%",
-                @"\"))
-            .OrderByDescending(x => x.CastAt)
-            .Skip((page - 1) * pageSize)
-            .Take(pageSize)
-            .ToListAsync();
+                @"\"));
+
+        // assuming inclusive ranges
+        if (castFrom.HasValue)
+        {
+            query = query.Where(b => b.CastAt >= castFrom);
+        }
+
+        if (castTo.HasValue)
+        {
+            query = query.Where(b => b.CastAt <= castTo);
+        }
+
+        if (cementType.HasValue)
+        {
+            query = query.Where(b => b.CementType == cementType);
+        }
+
+        if (hasWarnings.HasValue)
+        {
+            query = query.Where(b =>
+                dbContext.RecordWarning.Any(w =>
+                    w.EntityType == "Batch" &&
+                    w.EntityId == b.Id
+                ) == hasWarnings);
+        }
+
+        if (!includeSyntheticResults)
+        {
+            query = query.Where(b => b.IsSynthetic == false);
+        }
+
+        return await query.ToListAsync();
     }
 
     public async Task SaveChangesAsync()
