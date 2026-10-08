@@ -97,24 +97,23 @@
 > | Step | Action / What to Type | Expected Result | Req ID | Pass / Fail |
 > |---|---|---|---|:---:|
 > | 2.16 | Under **Batch**, enter<br>Batch number: `54%6!34578)2` | Inline red error: "Letters, digits and dashes only". Save batch button is disabled. | FR-1, NFR-6 | ☐ |
-> | 2.17 | Under **Batch**, enter<br>Batch number: `123456789123456123456789123456789` | Field stops accepting input at 32 characters; the extra character is not entered (field shows `12345678912345612345678912345678`). ⚠️ **TO CONFIRM:** whether an inline red error ("Limit to 32 characters only") should also display. | FR-1, NFR-6 | ☐ |
-> | 2.18 | Under **Batch**, enter<br>Batch number: a preregistered batch in the system *(e.g., existing batch `VM-2026-000`)* | Inline error: "Batch number already exists". Re-entry required. Save batch button is disabled. | FR-1 | ☐ |
-> | 2.19 | Under **Batch**, open the **Cast date/time** date picker and attempt to select a future date. | Future dates are disabled on the date picker and cannot be selected. | FR-1, NFR-6 | ☐ |
-> | 2.20 | Under **Batch**, enter<br>Final batch weight (lb): `-500` | Red error: "Weight must be greater than 0". Value is not saved. | FR-1, NFR-6 | ☐ |
-> | 2.21 | Under **Batch**, enter<br>Final batch weight (lb): `1.234` | Red error: "Weight must be within two decimals." Value is not saved. | FR-1, NFR-6 | ☐ |
-> | 2.22 | Under **Batch**, enter<br>Expected final break (PSI): `2999` | Red error: "PSI must be within the range [3000-10,000]". Value is not saved. | FR-5, NFR-6 | ☐ |
-> | 2.23 | Under **Batch**, enter<br>Mix water pH: `15.0` | Red inline message: "pH must be within the range [1-9]". Save batch button is disabled. | FR-7, NFR-6 | ☐ |
-> | 2.24 | Under **Cement oxides**, enter<br>Alumina Al₂O₃ (%): `101` | Red boundary error: "The aluminum oxide percent must be a valid percentage [0-100]". Save batch button is disabled. | FR-3, NFR-6 | ☐ |
-> | 2.25 | Under **Cement oxides**, enter<br>Iron oxide Fe₂O₃ (%): `101` | Red boundary error: "The iron oxide percent must be a valid percentage [0-100]". Save remains disabled. | FR-3, NFR-6 | ☐ |
-> | 2.26 | Under **Cement oxides**, enter<br>Magnesium oxide MgO (%): `6.01` | Red boundary error: "The magnesium oxide percent must be within the range [0.0-6.0]". Save batch button is disabled. | FR-3, NFR-6 | ☐ |
-> | 2.27 | Under **Cement oxides**, enter<br>Sulfur trioxide SO₃ (%): `4.59` | Red boundary error: "The sulfur trioxide percent must be within the range [0.0-4.5]". Save remains disabled. | FR-3, NFR-6 | ☐ |
-> | 2.28 | Under **Mix Composition**, enter<br>Cement (%): `9` | Red boundary error: "Cement composition must be within the range [10-15]". Save remains disabled. | FR-2, FR-2.1, NFR-6 | ☐ |
-> | 2.29 | Under **Mix Composition**, enter<br>Water (%): `14` | Red boundary error: "Water composition must be within the range [15-20]". Save remains disabled. | FR-2, FR-2.1, NFR-6 | ☐ |
-> | 2.30 | Under **Mix Composition**, enter<br>Coarse aggregate (%): `39` | Red boundary error: "Coarse aggregate composition must be within the range [40-55]". Save remains disabled. | FR-2, FR-2.1, NFR-6 | ☐ |
-> | 2.31 | Under **Mix Composition**, enter<br>Fine aggregate / sand (%): `24` | Red boundary error: "Fine aggregate composition must be within the range [25-30]". Save remains disabled. | FR-2, FR-2.1, NFR-6 | ☐ |
-> | 2.32 | Under **Mix Composition**, enter<br>SCM (%): `101` | Red boundary error: "SCM composition must be a valid percentage [0-100]". Save remains disabled. | FR-2, FR-2.1, NFR-6 | ☐ |
-> | 2.33 | Under **Mix Composition**, clear prior values and enter:<br>• Cement (%): `15`<br>• Water (%): `20`<br>• Coarse agg (%): `40`<br>• Fine agg (%): `25`<br>• SCM (%): `1` *(sum = 101%)* | Composition card highlights in red: "Total composition must not exceed 100%". Save batch button is disabled. | FR-2, FR-2.1, NFR-6 | ☐ |
-> | 2.34 | Under **Supplementary Cementitious Materials (SCM)**, set:<br>• SCM type: `None`<br>• SCM (%): `10` | **SCM type** field displays inline red error: "Choose the SCM type when SCM is more than 0%". Save batch button is disabled. | FR-2.1, NFR-6 | ☐ |
+> | 2.17 | Under **Batch**, enter<br>Batch number: `123456789123456123456789123456789` | Field stops accepting input at 32 characters with no error message (intended); the extra character is not entered (field shows `12345678912345612345678912345678`). | FR-1, NFR-6 | ☐ |
+> | 2.18 | Under **Batch**, open the **Cast date/time** date picker and attempt to select a future date. | Future dates are disabled on the date picker and cannot be selected. | FR-1, NFR-6 | ☐ |
+> | 2.19 | Under **Batch**, enter<br>Final batch weight (lb): `-500` | Red error: "Weight must be greater than 0". Value is not saved. | FR-1, NFR-6 | ☐ |
+> | 2.20 | Under **Batch**, enter<br>Final batch weight (lb): `1.234` | Red error: "Weight must be within two decimals." Value is not saved. | FR-1, NFR-6 | ☐ |
+> | 2.21 | Under **Batch**, enter<br>Expected final break (PSI): `2999` | Red error: "PSI must be within the range [3000-10,000]". Value is not saved. | FR-5, NFR-6 | ☐ |
+> | 2.22 | Under **Batch**, enter<br>Mix water pH: `15.0` | Red inline message: "pH must be within the range [1-9]". Save batch button is disabled. | FR-7, NFR-6 | ☐ |
+> | 2.23 | Under **Cement oxides**, enter<br>Alumina Al₂O₃ (%): `101` | Red boundary error: "The aluminum oxide percent must be a valid percentage [0-100]". Save batch button is disabled. | FR-3, NFR-6 | ☐ |
+> | 2.24 | Under **Cement oxides**, enter<br>Iron oxide Fe₂O₃ (%): `101` | Red boundary error: "The iron oxide percent must be a valid percentage [0-100]". Save remains disabled. | FR-3, NFR-6 | ☐ |
+> | 2.25 | Under **Cement oxides**, enter<br>Magnesium oxide MgO (%): `6.01` | Red boundary error: "The magnesium oxide percent must be within the range [0.0-6.0]". Save batch button is disabled. | FR-3, NFR-6 | ☐ |
+> | 2.26 | Under **Cement oxides**, enter<br>Sulfur trioxide SO₃ (%): `4.59` | Red boundary error: "The sulfur trioxide percent must be within the range [0.0-4.5]". Save remains disabled. | FR-3, NFR-6 | ☐ |
+> | 2.27 | Under **Mix Composition**, enter<br>Cement (%): `9` | Red boundary error: "Cement composition must be within the range [10-15]". Save remains disabled. | FR-2, FR-2.1, NFR-6 | ☐ |
+> | 2.28 | Under **Mix Composition**, enter<br>Water (%): `14` | Red boundary error: "Water composition must be within the range [15-20]". Save remains disabled. | FR-2, FR-2.1, NFR-6 | ☐ |
+> | 2.29 | Under **Mix Composition**, enter<br>Coarse aggregate (%): `39` | Red boundary error: "Coarse aggregate composition must be within the range [40-55]". Save remains disabled. | FR-2, FR-2.1, NFR-6 | ☐ |
+> | 2.30 | Under **Mix Composition**, enter<br>Fine aggregate / sand (%): `24` | Red boundary error: "Fine aggregate composition must be within the range [25-30]". Save remains disabled. | FR-2, FR-2.1, NFR-6 | ☐ |
+> | 2.31 | Under **Mix Composition**, enter<br>SCM (%): `101` | Red boundary error: "SCM composition must be a valid percentage [0-100]". Save remains disabled. | FR-2, FR-2.1, NFR-6 | ☐ |
+> | 2.32 | Under **Mix Composition**, clear prior values and enter:<br>• Cement (%): `15`<br>• Water (%): `20`<br>• Coarse agg (%): `40`<br>• Fine agg (%): `25`<br>• SCM (%): `1` *(sum = 101%)* | Composition card highlights in red: "Total composition must not exceed 100%". Save batch button is disabled. | FR-2, FR-2.1, NFR-6 | ☐ |
+> | 2.33 | Under **Supplementary Cementitious Materials (SCM)**, set:<br>• SCM type: `None`<br>• SCM (%): `10` | **SCM type** field displays inline red error: "Choose the SCM type when SCM is more than 0%". Save batch button is disabled. | FR-2.1, NFR-6 | ☐ |
 >
 > #### Warnings on unusual values (amber)
 >
@@ -122,21 +121,22 @@
 >
 > | Step | Action / What to Type | Expected Result | Req ID | Pass / Fail |
 > |---|---|---|---|:---:|
-> | 2.35 | In **Mix water pH**, enter `6.9`. | "pH is outside the normal range [7.0-7.5]" | FR-7 | ☐ |
-> | 2.36 | Under **Mix Composition**, enter:<br>• Cement (%): `15`<br>• Water (%): `15`<br>• Coarse agg (%): `40`<br>• Fine agg (%): `25`<br>• SCM type: `Fly Ash`<br>• SCM (%): `5` *(sum = 100%)* | Inputs result in a water/cementitious ratio of **0.25** (15 ÷ (15 × 3.15 + 5 × 2.35)). Field turns amber: "The water to cement ratio is outside the normal range [0.4-0.6]" | FR-8 | ☐ |
-> | 2.37 | Under **Cement oxides**, enter<br>Alumina Al₂O₃ (%): `2.9` | "The aluminum oxide percent is outside the normal range [3.0-7.5]" | FR-3 | ☐ |
-> | 2.38 | Under **Cement oxides**, enter<br>Iron oxide Fe₂O₃ (%): `0.4` | "The iron oxide percent is outside the normal range [0.5-6.0]" | FR-3 | ☐ |
-> | 2.39 | Under **Cement oxides**, enter<br>Magnesium oxide MgO (%): `4.1` | "The magnesium oxide percent is outside the normal range [0.1-4.0]" | FR-3 | ☐ |
-> | 2.40 | Under **Cement oxides**, enter<br>Sulfur trioxide SO₃ (%): `1.2` | "The sulfur trioxide percent is outside the normal range [1.3-3.0]" | FR-3 | ☐ |
+> | 2.34 | In **Mix water pH**, enter `6.9`. | "pH is outside the normal range [7.0-7.5]" | FR-7 | ☐ |
+> | 2.35 | Under **Mix Composition**, enter:<br>• Cement (%): `15`<br>• Water (%): `15`<br>• Coarse agg (%): `40`<br>• Fine agg (%): `25`<br>• SCM type: `Fly Ash`<br>• SCM (%): `5` *(sum = 100%)* | Inputs result in a water/cementitious ratio of **0.25** (15 ÷ (15 × 3.15 + 5 × 2.35)). Field turns amber: "The water to cement ratio is outside the normal range [0.4-0.6]" | FR-8 | ☐ |
+> | 2.36 | Under **Cement oxides**, enter<br>Alumina Al₂O₃ (%): `2.9` | "The aluminum oxide percent is outside the normal range [3.0-7.5]" | FR-3 | ☐ |
+> | 2.37 | Under **Cement oxides**, enter<br>Iron oxide Fe₂O₃ (%): `0.4` | "The iron oxide percent is outside the normal range [0.5-6.0]" | FR-3 | ☐ |
+> | 2.38 | Under **Cement oxides**, enter<br>Magnesium oxide MgO (%): `4.1` | "The magnesium oxide percent is outside the normal range [0.1-4.0]" | FR-3 | ☐ |
+> | 2.39 | Under **Cement oxides**, enter<br>Sulfur trioxide SO₃ (%): `1.2` | "The sulfur trioxide percent is outside the normal range [1.3-3.0]" | FR-3 | ☐ |
 >
 > #### Valid save – create `VM-2026-M1-001`
 >
 > | Step | Action / What to Type | Expected Result | Req ID | Pass / Fail |
 > |---|---|---|---|:---:|
-> | 2.41 | Navigate to **New batch** via the side navigation menu. Under **Batch**, enter valid batch metadata:<br>• Batch number: `VM-2026-M1-001`<br>• Cast date/time: **T−3** at `8:00 AM`<br>• Final weight (lb): `4,050`<br>• Expected final break (PSI): `6,200`<br>• Cement type: `Type I`<br>• Mix water pH: `7.2` | New batch screen appears and New batch tab is active in the side navigation menu. All metadata fields accept input with neutral valid styling. | FR-1, FR-2, FR-7 | ☐ |
-> | 2.42 | Under **Cement oxides**, enter:<br>• Alumina Al₂O₃ (%): `5.1`<br>• Iron oxide Fe₂O₃ (%): `3.2`<br>• Magnesium oxide MgO (%): `2.1`<br>• Sulfur trioxide SO₃ (%): `2.4` | No warning or error banners appear; chemistry validation card reflects valid composition. | FR-3 | ☐ |
-> | 2.43 | Under **Composition**, enter:<br>• Cement (%): `10`<br>• Water (%): `20`<br>• Coarse aggregate (%): `40`<br>• Fine aggregate / sand (%): `25`<br>• SCM type: `Fly Ash`<br>• SCM (%): `5` | • **Total volume:** 100.0%<br>• **W/c ratio:** **0.46** = 20 ÷ (10 × 3.15 + 5 × 2.35), updates automatically<br>• **Warning:** none | FR-2, FR-2.1, FR-8 | ☐ |
-> | 2.44 | Click **Save & add cylinder**. | Batch record saves to database. Add cylinder modal opens automatically. **Continue directly to Section 3.** | FR-1, FR-4 | ☐ |
+> | 2.40 | Navigate to **New batch** via the side navigation menu. Under **Batch**, enter valid batch metadata:<br>• Batch number: `VM-2026-M1-001`<br>• Cast date/time: **T−3** at `8:00 AM`<br>• Final weight (lb): `4,050`<br>• Expected final break (PSI): `6,200`<br>• Cement type: `Type I`<br>• Mix water pH: `7.2` | New batch screen appears and New batch tab is active in the side navigation menu. All metadata fields accept input with neutral valid styling. | FR-1, FR-2, FR-7 | ☐ |
+> | 2.41 | Under **Cement oxides**, enter:<br>• Alumina Al₂O₃ (%): `5.1`<br>• Iron oxide Fe₂O₃ (%): `3.2`<br>• Magnesium oxide MgO (%): `2.1`<br>• Sulfur trioxide SO₃ (%): `2.4` | No warning or error banners appear; chemistry validation card reflects valid composition. | FR-3 | ☐ |
+> | 2.42 | Under **Composition**, enter:<br>• Cement (%): `10`<br>• Water (%): `20`<br>• Coarse aggregate (%): `40`<br>• Fine aggregate / sand (%): `25`<br>• SCM type: `Fly Ash`<br>• SCM (%): `5` | • **Total volume:** 100.0%<br>• **W/c ratio:** **0.46** = 20 ÷ (10 × 3.15 + 5 × 2.35), updates automatically<br>• **Warning:** none | FR-2, FR-2.1, FR-8 | ☐ |
+> | 2.43 | In **Batch number**, change the value to `VM-2026-0142` (a batch that already exists) and click **Save & add cylinders**. | Error: "Batch number VM-2026-0142 already exists". Batch is not saved. | FR-1 | ☐ |
+> | 2.44 | Change **Batch number** back to `VM-2026-M1-001` and click **Save & add cylinders**. | Batch record saves to database. Add cylinder modal opens automatically. **Continue directly to Section 3.** | FR-1, FR-4 | ☐ |
 
 ---
 
@@ -167,7 +167,7 @@
 >
 > | Step | Action / What to Type | Expected Result | Req ID | Pass / Fail |
 > |---|---|---|---|:---:|
-> | 3.6 | In **Label**, enter `333-22A-BCAB-CABC1-2312-34879`. | Field stops accepting input at 20 characters; extra characters are not entered (field shows `333-22A-BCAB-CABC1-2`). ⚠️ **TO CONFIRM:** whether an inline red error ("Limit to 20 characters only") should also display. | FR-4, NFR-6 | ☐ |
+> | 3.6 | In **Label**, enter `333-22A-BCAB-CABC1-2312-34879`. | Field stops accepting input at 20 characters with no error message (intended); extra characters are not entered (field shows `333-22A-BCAB-CABC1-2`). | FR-4, NFR-6 | ☐ |
 > | 3.7 | In **Length (in)**, enter `-1`. | Red boundary error: "Specimen length must be nonzero and in the range [0-12]". Save buttons are disabled. | FR-4, NFR-6 | ☐ |
 > | 3.8 | In **Length (in)**, enter `1.234`. | Red boundary error: "Specimen length must be within two decimals". Save buttons are disabled. | FR-4, NFR-6 | ☐ |
 > | 3.9 | In **Width (in)**, enter `-1`. | Red boundary error: "Specimen width must be nonzero and in the range [0-6]". Save buttons are disabled. | FR-4, NFR-6 | ☐ |
@@ -178,7 +178,7 @@
 > | Step | Action / What to Type | Expected Result | Req ID | Pass / Fail |
 > |---|---|---|---|:---:|
 > | 3.11 | Clear the previous values and enter Cylinder 1:<br>• Label: `C1`<br>• Test age: `3 days`<br>• Length (in): `12.00`<br>• Width (in): `6.00`<br>Click **Save & add another**. | • **C1** saves to `VM-2026-M1-001`<br>• **Modal:** stays open with confirmation "Added C1"<br>• **Label:** clears for the next entry<br>• **Length, width, test age:** stay filled | FR-4, FR-5 | ☐ |
-> | 3.12 | In **Label**, enter `C1` again (keep the other values) and click **Save**. | On **Save**, error shows: "Specimen label already exists for this batch." Cylinder is not saved and the modal stays open. | FR-4, NFR-6 | ☐ |
+> | 3.12 | In **Label**, enter `C1` again (keep the other values) and click **Save**. | On **Save**, error shows: "Cylinder C1 already exists on this batch". Cylinder is not saved and the modal stays open. | FR-4, NFR-6 | ☐ |
 > | 3.13 | Enter Cylinder 2:<br>• Label: `C2`<br>• Test age: `7 days`<br>• Length (in): `12.00`<br>• Width (in): `6.00`<br>Click **Save**. | Cylinder C2 saves. Modal closes, returning to the Batch Detail view. **Cylinders & breaks** count shows 2. | FR-4, FR-5 | ☐ |
 >
 > #### Cancel
@@ -274,7 +274,7 @@
 > | 5.10 | In **Time taken**, enter a future date and time: **T+1** at `10:00 AM`. | "Row 1 · Time taken — can't be in the future." | FR-6, NFR-6 | ☐ |
 > | 5.11 | In **Time taken**, enter a time before the batch was cast: **T−4** at `8:00 AM`. | "Row 1 · Time taken — can't be before the batch was cast." | FR-6, NFR-6 | ☐ |
 > | 5.12 | In **Internal (°F)**, enter `201`. | "Row 1 · Internal 201 °F — must be 0–200 °F." | FR-6, NFR-6 | ☐ |
-> | 5.13 | In **Internal (°F)**, enter `72.12`. **Don't click Save for this step;** just check the cell. | ⚠️ **FAIL / TO CONFIRM:** Cell turns red: "Internal temperature must be within one decimal". | FR-6, NFR-6 | ☐ |
+> | 5.13 | In **Internal (°F)**, enter `72.12`. **Don't click Save for this step;** just check the cell. | Cell turns red: "Internal temperature must be within one decimal". | FR-6, NFR-6 | ☐ |
 > | 5.14 | In **Ambient (°F)**, enter `151`. | "Row 1 · Ambient 151 °F — must be 0–150 °F." | FR-6, NFR-6 | ☐ |
 > | 5.15 | In **Moisture (%)**, enter `101`. | "Row 1 · Moisture 101% — must be 0–100%." | FR-6, NFR-6 | ☐ |
 > | 5.16 | In **RH (%)**, enter `101`. | "Row 1 · RH 101% — must be 0–100%." | FR-6, NFR-6 | ☐ |
@@ -361,7 +361,7 @@
 
 | Step # | Error / Observation | Jira Key |
 |---|---|---|
-| 5.13 | Curing Internal (°F) accepts more than one decimal place (`72.12`); no "within one decimal" check in the app. | |
+| | | |
 | | | |
 | | | |
 

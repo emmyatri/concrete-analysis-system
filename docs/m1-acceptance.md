@@ -11,8 +11,20 @@
 
 ---
 
+## How to run this
+
+| Item | Details |
+|---|---|
+| **Build** | ⚠️ **TBD (leads):** which build to install and run, e.g. the `v0.1.0-m1` installer and where to get it |
+| **Data** | ⚠️ **TBD (leads):** real server (the installed desktop app, which saves to its own local database) or fake data (the browser preview, `npm start`, which uses built-in mock data) |
+| **Computer** | Windows 11. Section 9 checks files the desktop app writes, so it can only be run on the installed app. |
+| **Starting state** | Start from a fresh install so `VM-2026-M1-001` doesn't already exist. On a rerun, close the app and delete `%LOCALAPPDATA%\VulcanCBAS\vulcan.db` first; it rebuilds on the next launch. *(With fake data, reloading the page resets everything.)* |
+
+---
+
 ## Contents
 
+- [How to run this](#how-to-run-this)
 - [Execution Record](#execution-record)
 - [Test Execution Matrix](#test-execution-matrix)
   1. [Sign-In & Home](#section-1-sign-in--home)
@@ -70,7 +82,7 @@
 > | 2.1 | Navigate to **New batch** via the side navigation menu. Under **Batch**, enter valid batch metadata:<br>• Batch number: `VM-2026-M1-001`<br>• Cast date/time: **T−3** at `8:00 AM`<br>• Final weight (lb): `4,050`<br>• Expected final break (PSI): `6,200`<br>• Cement type: `Type I`<br>• Mix water pH: `7.2` | New batch screen appears and New batch tab is active in the side navigation menu. All metadata fields accept input with neutral valid styling. | FR-1, FR-2, FR-7 | ☐ |
 > | 2.2 | Under **Cement oxides**, enter:<br>• Alumina Al₂O₃ (%): `5.1`<br>• Iron oxide Fe₂O₃ (%): `3.2`<br>• Magnesium oxide MgO (%): `2.1`<br>• Sulfur trioxide SO₃ (%): `2.4` | No warning or error banners appear; chemistry validation card reflects valid composition. | FR-3 | ☐ |
 > | 2.3 | Under **Composition**, enter:<br>• Cement (%): `10`<br>• Water (%): `20`<br>• Coarse aggregate (%): `40`<br>• Fine aggregate / sand (%): `25`<br>• SCM type: `Fly Ash`<br>• SCM (%): `5` | • **Total volume:** 100.0%<br>• **W/c ratio:** **0.46** = 20 ÷ (10 × 3.15 + 5 × 2.35), updates automatically<br>• **Warning:** none | FR-2, FR-2.1, FR-8 | ☐ |
-> | 2.4 | Click **Save & add cylinder**. | Batch record saves to database. Add cylinder modal opens automatically. **Continue directly to Section 3.** | FR-1, FR-4 | ☐ |
+> | 2.4 | Click **Save & add cylinders**. | Batch record saves to database. Add cylinder modal opens automatically. **Continue directly to Section 3.** | FR-1, FR-4 | ☐ |
 
 ---
 
