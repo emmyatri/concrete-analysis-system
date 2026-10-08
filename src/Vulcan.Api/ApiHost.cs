@@ -6,8 +6,11 @@ using Microsoft.Extensions.FileProviders;
 using Microsoft.OpenApi;
 using Vulcan.Api.Controllers;
 using Vulcan.Api.Technicians;
+using Vulcan.Domain.Interfaces;
 using Vulcan.Infrastructure;
+using Vulcan.Infrastructure.Interceptors;
 using Vulcan.Infrastructure.Seed;
+using Vulcan.Infrastructure.Services;
 
 namespace Vulcan.Api;
 
@@ -38,9 +41,12 @@ public static class ApiHost
         // Bind only to this computer and let the OS select an available port.
         builder.WebHost.UseUrls($"http://127.0.0.1:{port}");
 
+
         builder.Services
             .AddDatabase(builder.Configuration)
             .AddSingleton<TechnicianSettings>()
+            .AddHttpContextAccessor()
+            .AddScoped<ICurrentTechnician, CurrentTechnician>()
             .ConfigureHttpJsonOptions(o => o.SerializerOptions.Converters.Add(new JsonStringEnumConverter()))
             .AddEndpointsApiExplorer()
             .AddSwaggerGen(o =>
@@ -115,14 +121,21 @@ public static class ApiHost
         using var scope = app.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<VulcanDbContext>();
 
-        db.SeedValidationLimits();
-        db.SeedSpecificGravities();
+        var options = new DbContextOptionsBuilder<VulcanDbContext>()
+                    .UseSqlite(db.Database.GetDbConnection())
+                    .AddInterceptors(
+                        new AuditSaveChangesInterceptor(new SystemTechnician()))
+                    .Options;
 
-        // Synthetic demo data is opt-in and remains disabled by default.
-        // The seeder itself also verifies that the batch database is empty.
+        using var seedDb = new VulcanDbContext(options);
+
+        seedDb.SeedValidationLimits();
+        seedDb.SeedSpecificGravities();
+
         if (app.Configuration.GetValue<bool>("SeedSyntheticData"))
         {
-            SyntheticDataSeeder.Seed(db);
+            SyntheticDataSeeder.Seed(seedDb);
         }
+
     }
 }
