@@ -663,39 +663,39 @@ public class BatchControllerTests()
         withoutWarnings.ShouldNotBeNull();
         withoutWarnings.ShouldBeEmpty();
     }
-    
+
     [Fact]
-public async Task Get_batch_list_counts_break_result_warnings()
-{
-    await using var app = await StartAsync();
-    using var client = ClientFor(app);
-
-    const string batchNumber = "VM-BREAK-WARN-001";
-
-    // Arrange: create a batch with a 2,500 PSI break result.
-    using (var scope = app.Services.CreateScope())
+    public async Task Get_batch_list_counts_break_result_warnings()
     {
-        var db = scope.ServiceProvider.GetRequiredService<VulcanDbContext>();
+        await using var app = await StartAsync();
+        using var client = ClientFor(app);
 
-        var httpContextAccessor = scope.ServiceProvider
-            .GetRequiredService<IHttpContextAccessor>();
+        const string batchNumber = "VM-BREAK-WARN-001";
 
-        httpContextAccessor.HttpContext = new DefaultHttpContext();
-        httpContextAccessor.HttpContext.Request.Headers[TechnicianHeader.Name] =
-            "Test Technician";
-
-        var batch = new Batch
+        // Arrange: create a batch with a 2,500 PSI break result.
+        using (var scope = app.Services.CreateScope())
         {
-            BatchNumber = batchNumber,
-            CastAt = DateTime.UtcNow.AddDays(-28),
-            FinalWeightLb = 100m,
-            ExpectedFinalBreakPsi = 4500,
-            CementType = CementType.TypeI,
-            MixWaterPh = 7.2m,
-            IsSynthetic = false,
-            Specimens =
-            [
-                new Specimen
+            var db = scope.ServiceProvider.GetRequiredService<VulcanDbContext>();
+
+            var httpContextAccessor = scope.ServiceProvider
+                .GetRequiredService<IHttpContextAccessor>();
+
+            httpContextAccessor.HttpContext = new DefaultHttpContext();
+            httpContextAccessor.HttpContext.Request.Headers[TechnicianHeader.Name] =
+                "Test Technician";
+
+            var batch = new Batch
+            {
+                BatchNumber = batchNumber,
+                CastAt = DateTime.UtcNow.AddDays(-28),
+                FinalWeightLb = 100m,
+                ExpectedFinalBreakPsi = 4500,
+                CementType = CementType.TypeI,
+                MixWaterPh = 7.2m,
+                IsSynthetic = false,
+                Specimens =
+                [
+                    new Specimen
                 {
                     Label = "28-A",
                     LengthIn = 12m,
@@ -707,70 +707,70 @@ public async Task Get_batch_list_counts_break_result_warnings()
                         StrengthPsi = 2500
                     }
                 }
-            ]
-        };
+                ]
+            };
 
-        db.Batch.Add(batch);
-        await db.SaveChangesAsync();
+            db.Batch.Add(batch);
+            await db.SaveChangesAsync();
 
-        var breakResult = batch.Specimens.Single().BreakResult;
-        breakResult.ShouldNotBeNull();
+            var breakResult = batch.Specimens.Single().BreakResult;
+            breakResult.ShouldNotBeNull();
 
-        // Persist a warning against the break result, not the batch.
-        db.RecordWarning.Add(new RecordWarning
-        {
-            EntityType = nameof(BreakResult),
-            EntityId = breakResult.Id,
-            FieldName = "StrengthPsi",
-            LimitKey = "BreakResult.StrengthPsi",
-            Value = 2500m,
-            Message = "Break strength is below the expected range."
-        });
+            // Persist a warning against the break result, not the batch.
+            db.RecordWarning.Add(new RecordWarning
+            {
+                EntityType = nameof(BreakResult),
+                EntityId = breakResult.Id,
+                FieldName = "StrengthPsi",
+                LimitKey = "BreakResult.StrengthPsi",
+                Value = 2500m,
+                Message = "Break strength is below the expected range."
+            });
 
-        await db.SaveChangesAsync();
-    }
+            await db.SaveChangesAsync();
+        }
 
         // Act: retrieve the batch through the HTTP endpoint.
         var response = await client.GetAsync(
             $"/api/batches?search={batchNumber}");
-    
+
         response.StatusCode.ShouldBe(System.Net.HttpStatusCode.OK);
-    
+
         var summaries = await response.Content
             .ReadFromJsonAsync<GetBatchListResponse>(_jsonOptions);
-    
+
         summaries.ShouldNotBeNull();
         summaries.Count.ShouldBe(1);
-    
+
         var summary = summaries.Single();
-    
+
         // The break warning must count toward the parent batch.
         summary.BatchNumber.ShouldBe(batchNumber);
         summary.BreaksRecorded.ShouldBe(1);
         summary.WarningCount.ShouldBe(1);
-    
+
         // The batch must appear when filtering for warnings.
         var withWarningsResponse = await client.GetAsync(
             $"/api/batches?search={batchNumber}&hasWarnings=true");
-    
+
         withWarningsResponse.StatusCode.ShouldBe(System.Net.HttpStatusCode.OK);
-    
+
         var withWarnings = await withWarningsResponse.Content
             .ReadFromJsonAsync<GetBatchListResponse>(_jsonOptions);
-    
+
         withWarnings.ShouldNotBeNull();
         withWarnings.Count.ShouldBe(1);
         withWarnings.Single().WarningCount.ShouldBe(1);
-    
+
         // The batch must not appear when filtering for no warnings.
         var withoutWarningsResponse = await client.GetAsync(
             $"/api/batches?search={batchNumber}&hasWarnings=false");
-    
+
         withoutWarningsResponse.StatusCode.ShouldBe(System.Net.HttpStatusCode.OK);
-    
+
         var withoutWarnings = await withoutWarningsResponse.Content
             .ReadFromJsonAsync<GetBatchListResponse>(_jsonOptions);
-    
+
         withoutWarnings.ShouldNotBeNull();
         withoutWarnings.ShouldBeEmpty();
     }

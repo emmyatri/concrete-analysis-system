@@ -24,7 +24,7 @@ public class SavedWarningDTO
 
     [Required]
     public required DateTime CreatedAtUtc { get; set; }
-    
+
     [Required]
     public required string Message { get; set; }
 }

@@ -88,7 +88,9 @@ public class BatchController(
         var result = await batchService.GetByNumberAsync(batchNumber);
 
         if (result == null)
+        {
             return Results.NotFound();
+        }
 
         double? waterCementRatio = null;
 
