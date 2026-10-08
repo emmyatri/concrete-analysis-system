@@ -1,6 +1,7 @@
 using Vulcan.Application.Interfaces;
 using Vulcan.Domain.Constants;
 using Vulcan.Domain.Entities;
+using Vulcan.Domain.Enums;
 using Vulcan.Domain.Services;
 using Vulcan.Domain.Validation;
 
@@ -29,6 +30,8 @@ public sealed class BatchService(
             errors.Add(new ValidationError(
                 "Batch.BatchNumber",
                 "Batch number already exists."));
+
+            return ServiceResult<Batch>.Conflict(errors);
         }
 
         if (errors.Count > 0)
@@ -59,22 +62,24 @@ public sealed class BatchService(
     }
 
     public async Task<IReadOnlyList<Batch>> SearchAsync(
-        string searchTerm,
+        string? search,
+        DateTime? castFrom,
+        DateTime? castTo,
+        CementType? cementType,
+        bool? hasWarnings,
+        bool? includeSynthetic,
         int page = 1)
     {
-        const int PageSize = 50;
-
-        if (page < 1)
-        {
-            page = 1;
-        }
-
-        searchTerm = BatchValidator.NormalizeBatchNumber(searchTerm);
+        var searchTerm = BatchValidator.NormalizeBatchNumber(search);
 
         return await batchRepository.SearchAsync(
             searchTerm,
-            page,
-            PageSize);
+            castFrom,
+            castTo,
+            cementType,
+            hasWarnings,
+            includeSynthetic,
+            page);
     }
 
     public async Task<ServiceResult<Batch>> UpdateAsync(

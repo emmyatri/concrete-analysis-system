@@ -237,8 +237,11 @@ public class BatchServiceTests(DatabaseFixture fixture)
 
         await db.SaveChangesAsync();
 
-        var firstPage = await service.SearchAsync("vm-search", 1);
-        var secondPage = await service.SearchAsync("vm-search", 2);
+        var firstPage = await service.SearchAsync(
+            "vm-search", null, null, null, null, null, 1);
+
+        var secondPage = await service.SearchAsync(
+            "vm-search", null, null, null, null, null, 2);
 
         Assert.Equal(50, firstPage.Count);
         Assert.Equal(5, secondPage.Count);

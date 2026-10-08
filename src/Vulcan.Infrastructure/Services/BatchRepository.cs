@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Vulcan.Application.Interfaces;
 using Vulcan.Domain.Entities;
+using Vulcan.Domain.Enums;
 
 namespace Vulcan.Infrastructure.Services;
 
@@ -61,20 +62,73 @@ public sealed class BatchRepository(VulcanDbContext dbContext) : IBatchRepositor
     }
 
     public async Task<IReadOnlyList<Batch>> SearchAsync(
-        string searchTerm,
-        int page,
-        int pageSize)
+        string search,
+        DateTime? castFrom,
+        DateTime? castTo,
+        CementType? cementType,
+        bool? hasWarnings,
+        bool? includeSynthetic,
+        int page
+    )
     {
-        var escapedSearchTerm = EscapeLikePattern(searchTerm);
+        bool includeSyntheticResults = includeSynthetic ??= true;
+        var escapedSearchTerm = EscapeLikePattern(search);
 
-        return await dbContext.Batch
+        var query = dbContext.Batch
+            .AsNoTracking()
+            .AsSplitQuery()
+            .Include(b => b.Composition)
+            .Include(b => b.Specimens)
+            .ThenInclude(s => s.BreakResult)
+            .Include(b => b.Specimens)
+            .ThenInclude(s => s.CuringReadings)
             .Where(x => EF.Functions.Like(
                 x.BatchNumber,
                 $"%{escapedSearchTerm}%",
-                @"\"))
-            .OrderByDescending(x => x.CastAt)
-            .Skip((page - 1) * pageSize)
-            .Take(pageSize)
+                @"\"));
+
+        // assuming inclusive ranges
+        if (castFrom.HasValue)
+        {
+            query = query.Where(b => b.CastAt >= castFrom);
+        }
+
+        if (castTo.HasValue)
+        {
+            var endExclusive = castTo.Value.Date.AddDays(1);
+            query = query.Where(b => b.CastAt < endExclusive);
+        }
+
+        if (cementType.HasValue)
+        {
+            query = query.Where(b => b.CementType == cementType);
+        }
+
+        if (hasWarnings.HasValue)
+        {
+            query = query.Where(b =>
+                dbContext.RecordWarning.Any(w =>
+                    (w.EntityType == nameof(Batch) && w.EntityId == b.Id) ||
+                    (w.EntityType == nameof(BreakResult) &&
+                     b.Specimens.Any(s =>
+                         s.BreakResult != null &&
+                         s.BreakResult.Id == w.EntityId)) ||
+                    (w.EntityType == nameof(CuringReading) &&
+                     b.Specimens.Any(s =>
+                         s.CuringReadings.Any(r => r.Id == w.EntityId))))
+                == hasWarnings.Value);
+        }
+
+        if (!includeSyntheticResults)
+        {
+            query = query.Where(b => b.IsSynthetic == false);
+        }
+
+        return await query
+            .OrderByDescending(b => b.CastAt)
+            .ThenByDescending(b => b.Id)
+            .Skip((page - 1) * 50)
+            .Take(50)
             .ToListAsync();
     }
 

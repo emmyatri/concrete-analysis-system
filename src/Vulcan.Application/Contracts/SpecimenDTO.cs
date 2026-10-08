@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using Vulcan.Domain.Entities;
 using Vulcan.Domain.Enums;
 
 namespace Vulcan.Application.Contracts;
@@ -30,4 +31,20 @@ public class SpecimenDTO
 
     [Required]
     public required List<CuringReadingDTO> CuringReadings { get; init; } = [];
+
+    public static SpecimenDTO FromDomain(Specimen s)
+        => new()
+        {
+            Id = s.Id,
+            BatchId = s.BatchId,
+            Label = s.Label,
+            LengthIn = (double)s.LengthIn,
+            WidthIn = (double)s.WidthIn,
+            TestAgeDays = s.TestAgeDays,
+            IsSynthetic = s.IsSynthetic,
+            BreakResult = s.BreakResult != null
+                ? BreakResultDTO.FromDomain(s.BreakResult)
+                : null,
+            CuringReadings = [.. s.CuringReadings.Select(CuringReadingDTO.FromDomain)],
+        };
 }

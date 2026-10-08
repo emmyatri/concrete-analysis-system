@@ -635,9 +635,10 @@ Returns a paged list of batches.
 * `search`: (optional) from query. The batch search query.
 * `castFrom`: (optional) from query. Beginning of range to filter by each batch's castAt field.
 * `castTo`: (optional) from query. End of range to filter by each batch's castAt field.
-* `cementType`: (optional) from query. Filters by batches that have the same cement type.
-* `hasWarnings`: (optional) from query. Filters by batches that have or don't wave warnings.
-* `includeSynthetic`: (optional) from query. Whether to include synthetic batches or not.
+* `cementType`: (optional) from query. Filters by cement type.
+* `hasWarnings`: (optional) from query. Filters batches by whether they have warnings.
+* `includeSynthetic`: (optional) from query. Whether to include synthetic batches. Defaults to true.
+* `page`: (optional) from query. Page number, starting at 1. Defaults to 1. Each page contains up to 50 batches.
 
 **Response Status Codes:**
 
@@ -964,5 +965,104 @@ Sent with the `201` response.
         }
     },
     "required": ["id", "specimenId", "warnings"]
+}
+```
+
+## Validation Limit
+
+### Get Validation Limit List
+
+Use to get all validation limits.
+
+**Endpoint:** `GET /api/validation-limits`
+
+**Response Status Codes:**
+
+* `200`: if the server was able to respond with a list of all validation limits
+
+**Response Schema:**
+
+Sent with the `200` response.
+
+```json
+{
+    "title": "GetValidationLimitListResponse",
+    "type": "array",
+    "default": [],
+    "items": {
+        "type": "object",
+        "properties": {
+            "key": {
+                "type": "string"
+            },
+            "severity": {
+                "enum": ["Reject", "Warn"]
+            },
+            "min": {
+                "type": "number"
+            },
+            "max": {
+                "type": "number"
+            },
+            "unit": {
+                "type": "string"
+            },
+            "message": {
+                "type": "string"
+            },
+            "source": {
+                "type": "string"
+            }
+        },
+        "required": [
+            "key",
+            "severity",
+            "unit",
+            "message",
+            "source"
+        ]
+    }
+}
+```
+
+## Specific Gravity
+
+### Get Specific Gravity List
+
+Use to get all specific gravities.
+
+**Endpoint:** `GET /api/specific-gravities`
+
+**Response Status Codes:**
+
+* `200`: if the server was able to return a list of all specific gravities.
+
+**Response Schema:**
+
+Sent with the `200` response.
+
+```json
+{
+    "title": "GetSpecificGravityListResponse",
+    "type": "array",
+    "default": [],
+    "items": {
+        "type": "object",
+        "properties": {
+            "material": {
+                "enum": [
+                    "Cement",
+                    "Water",
+                    "FlyAsh",
+                    "Slag",
+                    "SilicaFume"
+                ]
+            },
+            "value": {
+                "type": "number"
+            }
+        },
+        "required": ["material", "value"]
+    }
 }
 ```

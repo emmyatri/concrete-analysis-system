@@ -58,6 +58,8 @@ export interface BatchQuery {
   hasWarnings?: boolean;
   /** Defaults to true. */
   includeSynthetic?: boolean;
+  /** Page number, starting at 1. Defaults to 1. */
+  page?: number;
 }
 
 

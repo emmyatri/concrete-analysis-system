@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using Vulcan.Domain.Entities;
 using Vulcan.Domain.Enums;
 
 namespace Vulcan.Application.Contracts;
@@ -35,4 +36,30 @@ public class BatchSummaryDTO
 
     [Required]
     public required bool IsSynthetic { get; init; }
+
+    public static BatchSummaryDTO FromDomain(
+        Batch b,
+        double? waterCementRatio,
+        int warningCount)
+        => new()
+        {
+            Id = b.Id,
+            BatchNumber = b.BatchNumber,
+            CastAt = b.CastAt,
+            CementType = b.CementType,
+            ExpectedFinalBreakPsi = b.ExpectedFinalBreakPsi,
+            WaterCementRatio = waterCementRatio,
+            CylinderCount = b.Specimens.Count,
+            BreaksRecorded = b.Specimens.Count(s => s.BreakResult != null),
+            Average28DayPsi = b
+                .Specimens
+                .Any(s => s.TestAgeDays == TestAgeDays.Day28 && s.BreakResult != null)
+                    ? b
+                        .Specimens
+                        .Where(s => s.TestAgeDays == TestAgeDays.Day28 && s.BreakResult != null)
+                        .Average(s => s.BreakResult!.StrengthPsi)
+                    : null,
+            IsSynthetic = b.IsSynthetic,
+            WarningCount = warningCount,
+        };
 }

@@ -11,6 +11,7 @@ using Vulcan.Application.Services;
 using Vulcan.Domain.Entities;
 using Vulcan.Domain.Interfaces;
 using Vulcan.Domain.Services;
+using Vulcan.Infrastructure.Interceptors;
 using Vulcan.Infrastructure.Services;
 
 namespace Vulcan.Infrastructure;
@@ -25,6 +26,8 @@ public static class SetupUtils
     /// <returns></returns>
     public static IServiceCollection AddDatabase(this IServiceCollection services, IConfiguration config)
     {
+        services.AddScoped<AuditSaveChangesInterceptor>();
+
         // create the database at %LOCALAPPDATA%/VulcanCBAS/vulcan.db
         // On linux this is ~/.config/VulcanCBAS/vulcan.db
         // Or $HOME/.var/app/com.jetbrains.Rider/config/VulcanCBAS/vulcan.db if using Rider.
@@ -46,12 +49,17 @@ public static class SetupUtils
                 connection.Open();
                 return connection;
             });
-            services.AddDbContext<VulcanDbContext>((provider, o) =>
-                o.UseSqlite(provider.GetRequiredService<SqliteConnection>()));
+            services.AddDbContext<VulcanDbContext>((provider, options) =>
+                options.UseSqlite(provider.GetRequiredService<SqliteConnection>())
+                    .AddInterceptors(
+                        provider.GetRequiredService<AuditSaveChangesInterceptor>()));
         }
         else
         {
-            services.AddDbContext<VulcanDbContext>(o => o.UseSqlite(cs));
+            services.AddDbContext<VulcanDbContext>((provider, options) =>
+                options.UseSqlite(cs)
+                    .AddInterceptors(
+                        provider.GetRequiredService<AuditSaveChangesInterceptor>()));
         }
 
         services.AddScoped<ILimitProvider, LimitProvider>();
@@ -65,6 +73,8 @@ public static class SetupUtils
         services.AddScoped<ISpecimenRepository, SpecimenRepository>();
         services.AddScoped<ICuringRepository, CuringRepository>();
         services.AddScoped<IRecordWarningRepository, RecordWarningRepository>();
+        services.AddScoped<ISpecificGravityRepository, SpecificGravityRepository>();
+        services.AddScoped<IValidationLimitRepository, ValidationLimitRepository>();
 
         services.AddScoped<BatchValidator>();
         services.AddScoped<CompositionValidator>();
@@ -76,6 +86,8 @@ public static class SetupUtils
         services.AddScoped<BatchService>();
         services.AddScoped<SpecimenService>();
         services.AddScoped<CuringService>();
+        services.AddScoped<SpecificGravityService>();
+        services.AddScoped<ValidationLimitService>();
 
         return services;
     }

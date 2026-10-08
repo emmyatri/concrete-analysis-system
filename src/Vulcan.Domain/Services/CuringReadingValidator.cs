@@ -37,7 +37,16 @@ public class CuringReadingValidator(LimitEvaluator limitEvaluator)
             errors.Add(new ValidationError(_takenAtKey, "Reading time can't be in the future."));
         }
 
-        Check(LimitKeys.InternalTempF, reading.InternalTempF, errors, warnings);
+        if (decimal.Round(reading.InternalTempF, 1) != reading.InternalTempF)
+        {
+            errors.Add(new ValidationError(
+                LimitKeys.InternalTempF,
+                "Max 1 decimal place"));
+        }
+        else
+        {
+            Check(LimitKeys.InternalTempF, reading.InternalTempF, errors, warnings);
+        }
         Check(LimitKeys.AmbientTempF, reading.AmbientTempF, errors, warnings);
         Check(LimitKeys.MoisturePct, reading.MoisturePct, errors, warnings);
         Check(LimitKeys.RelativeHumidityPct, reading.RelativeHumidityPct, errors, warnings);

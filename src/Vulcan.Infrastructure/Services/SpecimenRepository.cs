@@ -71,6 +71,21 @@ public sealed class SpecimenRepository(VulcanDbContext dbContext) : ISpecimenRep
         }
     }
 
+    public async Task<Batch?> GetBatchByNumberAsync(string batchNumber)
+    {
+        return await dbContext.Batch
+            .SingleOrDefaultAsync(x => x.BatchNumber == batchNumber);
+    }
+
+    public async Task<IReadOnlyList<Specimen>> GetPendingBreaksAsync(bool includeSynthetic)
+    {
+        return await dbContext.Specimen
+            .Include(x => x.Batch)
+            .Where(x => x.BreakResult == null)
+            .Where(x => includeSynthetic || !x.IsSynthetic)
+            .ToListAsync();
+    }
+
     public async Task SaveChangesAsync()
     {
         await dbContext.SaveChangesAsync();

@@ -6,6 +6,10 @@ public interface ISpecimenRepository
 {
     Task<Batch?> GetBatchAsync(int batchId);
 
+    Task<Batch?> GetBatchByNumberAsync(string batchNumber);
+
+    Task<IReadOnlyList<Specimen>> GetPendingBreaksAsync(bool includeSynthetic);
+
     Task<Specimen?> GetByIdAsync(int specimenId);
 
     Task<bool> LabelExistsAsync(
