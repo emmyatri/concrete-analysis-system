@@ -278,7 +278,7 @@ For personal overrides, use `appsettings.Development.local.json`. It's git-ignor
 For Vulcan and anyone using the app. No .NET, Node or internet connection needed.
 
 1. **Download the installer:**
-   **[VulcanCBAS-Setup.exe](https://github.com/emmyatri/concrete-analysis-system/releases/latest/download/VulcanCBAS-Setup.exe)**
+   **[VulcanCBAS-Setup.exe](https://github.com/emmyatri/concrete-analysis-system/releases/download/v0.1.0-m1/VulcanCBAS-Setup.exe)**
    (about 265 MB, always the latest release). Older versions are on the
    [Releases page](https://github.com/emmyatri/concrete-analysis-system/releases).
 2. **Double-click it.** Windows may say **"Windows protected your PC"** because the installer isn't signed yet. Click
