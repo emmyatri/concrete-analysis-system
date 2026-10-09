@@ -6,13 +6,21 @@ public static class SyntheticDataSeeder
 {
     public static void Seed(VulcanDbContext db)
     {
-        // Synthetic demo data is only loaded when there are no existing batches.
-        if (db.Batch.Any())
+        // DEMO HOTFIX (M1 presentation): load the demo set unless it's already there, even if real
+        // batches exist. Revert to "only into an empty database" (M1-24) after the demo.
+        if (db.Batch.Any(b => b.IsSynthetic))
         {
             return;
         }
 
-        var batches = SyntheticDataLoader.Load();
+        // Skip any demo batch whose number is already taken, so startup can't hit the unique index.
+        var existingNumbers = db.Batch
+            .Select(b => b.BatchNumber.ToUpper())
+            .ToHashSet();
+
+        var batches = SyntheticDataLoader.Load()
+            .Where(b => !existingNumbers.Contains(b.BatchNumber.ToUpperInvariant()))
+            .ToList();
 
         foreach (var batch in batches)
         {
