@@ -74,6 +74,11 @@
 .ranges {
   font-size: 12px;
   color: var(--p-text-muted-color);
+
+  // Same compact size as the grid headers below 1600px.
+  @media (max-width: 1599px) {
+    font-size: 11px;
+  }
 }
 
 .grid-scroll {
@@ -104,6 +109,33 @@
     text-align: right;
   }
 
+  // Headers and saved values end where the typed numbers do
+  // (8px cell padding + 1px input border + 8px input padding).
+  th.num,
+  .saved-row td.num,
+  .new-row--locked td.num {
+    padding-right: 10px;
+  }
+
+  // Number headers wrap ("Resistivity / (Ω/ft)") like the Search table, so they don't set the grid width.
+  th.num {
+    white-space: normal;
+    vertical-align: bottom;
+  }
+
+  // Compact text below 1600px (laptops at 125%+ scaling), same breakpoint as Batch Detail.
+  // Data stays a step bigger than the headers; the inputs inherit it.
+  @media (max-width: 1599px) {
+    th {
+      font-size: 11px;
+    }
+
+    td {
+      font-size: 13px;
+    }
+  }
+
+
   .num-col {
     width: 32px;
     color: var(--p-text-muted-color);
@@ -116,7 +148,7 @@
 
 .cell {
   width: 100%;
-  min-width: 80px;
+  min-width: 70px;
   padding: 6px 8px;
   border: 1px solid var(--p-content-border-color);
   border-radius: 4px;
