@@ -1,4 +1,9 @@
-﻿import { HttpClient, HttpErrorResponse, provideHttpClient, withInterceptors } from '@angular/common/http';
+﻿import {
+  HttpClient,
+  HttpErrorResponse,
+  provideHttpClient,
+  withInterceptors,
+} from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
 import { firstValueFrom } from 'rxjs';
@@ -25,7 +30,11 @@ describe('mockApiInterceptor', () => {
 
     const batches = await firstValueFrom(api.getBatches());
 
-    expect(batches.slice(0, 3).map((b) => b.batchNumber)).toEqual(['VM-2026-0142', 'VM-2026-0141', 'VM-2026-0139']);
+    expect(batches.slice(0, 3).map((b) => b.batchNumber)).toEqual([
+      'VM-2026-0142',
+      'VM-2026-0141',
+      'VM-2026-0139',
+    ]);
   });
 
   it('finds batches by any part of the number, ignoring upper/lowercase', async () => {
@@ -53,7 +62,11 @@ describe('mockApiInterceptor', () => {
     const limits = await firstValueFrom(api.getValidationLimits());
     const gravities = await firstValueFrom(api.getSpecificGravities());
 
-    expect(limits.find((l) => l.key === 'Composition.CementPct')).toMatchObject({ severity: 'Reject', min: 10, max: 15 });
+    expect(limits.find((l) => l.key === 'Composition.CementPct')).toMatchObject({
+      severity: 'Reject',
+      min: 10,
+      max: 15,
+    });
     expect(gravities.find((g) => g.material === 'Cement')?.value).toBe(3.15);
   });
 
@@ -65,7 +78,9 @@ describe('mockApiInterceptor', () => {
     ).catch((e: unknown) => e);
 
     expect(error).toBeInstanceOf(HttpErrorResponse);
-    expect((error as HttpErrorResponse).error.errors['Batch.BatchNumber']).toEqual(['Batch number vm-2026-0142 already exists']);
+    expect((error as HttpErrorResponse).error.errors['Batch.BatchNumber']).toEqual([
+      'Batch number vm-2026-0142 already exists',
+    ]);
   });
 
   it('saves a batch with an unusual value and returns it as a warning', async () => {
@@ -86,9 +101,28 @@ describe('mockApiInterceptor', () => {
 
     await firstValueFrom(
       api.createBatch({
-        batch: { batchNumber: 'VM-TEST-0002', castAt: '2026-10-05T14:00:00.000Z', finalWeightLb: 4380, expectedFinalBreakPsi: 6000, cementType: 'TypeI', mixWaterPh: 7.8 },
-        composition: { cementPct: 10, waterPct: 17, coarseAggregatePct: 45, fineAggregatePct: 26, scmType: 'FlyAsh', scmPct: 2 },
-        oxides: { aluminaPct: 4.8, ironOxidePct: 2.8, magnesiumOxidePct: 1.8, sulfurTrioxidePct: 2.2 },
+        batch: {
+          batchNumber: 'VM-TEST-0002',
+          castAt: '2026-10-05T14:00:00.000Z',
+          finalWeightLb: 25,
+          expectedFinalBreakPsi: 6000,
+          cementType: 'TypeI',
+          mixWaterPh: 7.8,
+        },
+        composition: {
+          cementPct: 10,
+          waterPct: 17,
+          coarseAggregatePct: 45,
+          fineAggregatePct: 26,
+          scmType: 'FlyAsh',
+          scmPct: 2,
+        },
+        oxides: {
+          aluminaPct: 4.8,
+          ironOxidePct: 2.8,
+          magnesiumOxidePct: 1.8,
+          sulfurTrioxidePct: 2.2,
+        },
       }),
     );
     const batch = await firstValueFrom(api.getBatch('vm-test-0002'));
@@ -103,11 +137,19 @@ describe('mockApiInterceptor', () => {
     const api = setUp(true);
 
     const error = await firstValueFrom(
-      api.createSpecimen('VM-2026-0142', { label: 'Z9', lengthIn: 12.01, widthIn: 0, testAgeDays: 'Day3' }),
+      api.createSpecimen('VM-2026-0142', {
+        label: 'Z9',
+        lengthIn: 12.01,
+        widthIn: 0,
+        testAgeDays: 'Day3',
+      }),
     ).catch((e: unknown) => e);
 
     expect(error).toBeInstanceOf(HttpErrorResponse);
-    expect(Object.keys((error as HttpErrorResponse).error.errors)).toEqual(['Specimen.LengthIn', 'Specimen.WidthIn']);
+    expect(Object.keys((error as HttpErrorResponse).error.errors)).toEqual([
+      'Specimen.LengthIn',
+      'Specimen.WidthIn',
+    ]);
   });
 
   it('returns a whole batch from the synthetic dataset, with its saved warnings', async () => {
@@ -130,7 +172,11 @@ describe('mockApiInterceptor', () => {
 
     for (const summary of await firstValueFrom(api.getBatches())) {
       const detail = await firstValueFrom(api.getBatch(summary.batchNumber)).catch(() => null);
-      if (detail) expect([summary.batchNumber, detail.warnings.length]).toEqual([summary.batchNumber, summary.warningCount]);
+      if (detail)
+        expect([summary.batchNumber, detail.warnings.length]).toEqual([
+          summary.batchNumber,
+          summary.warningCount,
+        ]);
     }
   });
 

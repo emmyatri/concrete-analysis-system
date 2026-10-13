@@ -111,10 +111,10 @@ function fromSynthetic(row: (typeof synthetic.Batches)[number]): BatchDetail {
     isSynthetic: specimen.IsSynthetic,
     breakResult: specimen.BreakResult
       ? {
-        id: id * 100 + index + 1,
-        brokenAt: specimen.BreakResult.BrokenAt,
-        strengthPsi: specimen.BreakResult.StrengthPsi,
-      }
+          id: id * 100 + index + 1,
+          brokenAt: specimen.BreakResult.BrokenAt,
+          strengthPsi: specimen.BreakResult.StrengthPsi,
+        }
       : null,
     curingReadings: specimen.CuringReadings.map((reading) => ({
       id: ++readingId,
@@ -167,7 +167,7 @@ function mockupBatch(): BatchDetail {
     id: 142,
     batchNumber: 'VM-2026-0142',
     castAt: '2026-09-29T11:40:00Z',
-    finalWeightLb: 4380,
+    finalWeightLb: 25,
     expectedFinalBreakPsi: 6000,
     cementType: 'TypeIII' as const,
     mixWaterPh: 7.2,
@@ -203,7 +203,6 @@ export const MOCK_BATCH_DETAILS: BatchDetail[] = [
   mockupBatch(),
   ...synthetic.Batches.map(fromSynthetic),
 ];
-
 
 /** A batch saved from New batch while the app is open, in the same shape as the fake ones. */
 export function mockBatchDetailFromRequest(
