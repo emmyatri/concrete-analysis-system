@@ -168,7 +168,7 @@ function mockupBatch(): BatchDetail {
     id: 142,
     batchNumber: 'VM-2026-0142',
     castAt: '2026-09-29T11:40:00Z',
-    finalWeightLb: 4380,
+    finalWeightLb: 25,
     expectedFinalBreakPsi: 6000,
     cementType: 'TypeIII' as const,
     mixWaterPh: 7.2,
