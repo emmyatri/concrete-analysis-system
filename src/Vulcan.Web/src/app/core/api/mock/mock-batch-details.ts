@@ -68,6 +68,7 @@ function warningsFor(batch: Omit<BatchDetail, 'warnings'>): SavedWarning[] {
   };
 
   check('Batch', batch.id, 'Batch.MixWaterPh', batch.mixWaterPh);
+  check('Batch', batch.id, 'Batch.FinalWeightLb', batch.finalWeightLb);
   check(
     'Composition',
     batch.id,
@@ -111,10 +112,10 @@ function fromSynthetic(row: (typeof synthetic.Batches)[number]): BatchDetail {
     isSynthetic: specimen.IsSynthetic,
     breakResult: specimen.BreakResult
       ? {
-        id: id * 100 + index + 1,
-        brokenAt: specimen.BreakResult.BrokenAt,
-        strengthPsi: specimen.BreakResult.StrengthPsi,
-      }
+          id: id * 100 + index + 1,
+          brokenAt: specimen.BreakResult.BrokenAt,
+          strengthPsi: specimen.BreakResult.StrengthPsi,
+        }
       : null,
     curingReadings: specimen.CuringReadings.map((reading) => ({
       id: ++readingId,
@@ -203,7 +204,6 @@ export const MOCK_BATCH_DETAILS: BatchDetail[] = [
   mockupBatch(),
   ...synthetic.Batches.map(fromSynthetic),
 ];
-
 
 /** A batch saved from New batch while the app is open, in the same shape as the fake ones. */
 export function mockBatchDetailFromRequest(

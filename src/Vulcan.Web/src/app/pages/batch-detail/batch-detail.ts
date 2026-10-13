@@ -57,7 +57,15 @@ const FIELDS: Record<string, { label: string; short?: string; digits: string }> 
  */
 @Component({
   selector: 'app-batch-detail',
-  imports: [DatePipe, DecimalPipe, RouterLink, ButtonModule, TableModule, TabsModule, AddCylinderDialog],
+  imports: [
+    DatePipe,
+    DecimalPipe,
+    RouterLink,
+    ButtonModule,
+    TableModule,
+    TabsModule,
+    AddCylinderDialog,
+  ],
   templateUrl: './batch-detail.html',
   styleUrl: './batch-detail.scss',
 })
@@ -129,6 +137,11 @@ export class BatchDetailPage {
   protected readonly phWarning = computed(() => {
     const batch = this.batch();
     return batch ? this.warningFor('Batch', batch.id, 'Batch.MixWaterPh') : undefined;
+  });
+
+  protected readonly weightWarning = computed(() => {
+    const batch = this.batch();
+    return batch ? this.warningFor('Batch', batch.id, 'Batch.FinalWeightLb') : undefined;
   });
 
   protected readonly ratioWarning = computed(() => {
@@ -258,7 +271,6 @@ export class BatchDetailPage {
     this.attempt.update((n) => n + 1);
   }
 
-
   constructor() {
     // Opened with ?addCylinder=1: show the dialog once the batch is on screen, then drop the flag from the
     // address so going back or reloading doesn't open it again.
@@ -266,7 +278,11 @@ export class BatchDetailPage {
       if (this.addCylinder() !== '1' || !this.batch()) return;
       untracked(() => {
         this.addCylinderOpen.set(true);
-        this.router.navigate([], { queryParams: { addCylinder: null }, queryParamsHandling: 'merge', replaceUrl: true });
+        this.router.navigate([], {
+          queryParams: { addCylinder: null },
+          queryParamsHandling: 'merge',
+          replaceUrl: true,
+        });
       });
     });
   }
