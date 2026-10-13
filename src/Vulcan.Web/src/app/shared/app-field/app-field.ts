@@ -22,6 +22,9 @@ export type AppFieldState = 'error' | 'warn' | 'normal';
 // Keys for which the maximum value should be displayed in the hint.
 const KEYS_WITH_DISPLAYED_MAXIMUM = new Set(['Oxide.MagnesiumOxidePct', 'Oxide.SulfurTrioxidePct']);
 
+// Keys that show typical (Warn) and allowed (Reject) ranges in one hint, e.g. sample weight.
+const KEYS_WITH_TYPICAL_AND_ALLOWED = new Set(['Batch.FinalWeightLb']);
+
 // Reusable wrapper for a form control with a label and optional hint.
 @Component({
   selector: 'app-field',
@@ -134,6 +137,10 @@ export class AppField {
     // Show the Reject range when the value is an error. Otherwise, prefer the normal Warn range.
     const result = this.validationResult();
 
+    if (KEYS_WITH_TYPICAL_AND_ALLOWED.has(limitKey) && warnLimit && rejectLimit) {
+      return this.formatTypicalAndAllowedHint(warnLimit, rejectLimit) ?? hint;
+    }
+
     const selectedLimit = result.severity === 'Reject' ? rejectLimit : (warnLimit ?? rejectLimit);
 
     // Return the range hint from the selected limit.
@@ -151,6 +158,25 @@ export class AppField {
 
     return this.formatLimitHint(selectedLimit, maximumLimit) ?? hint;
   });
+
+  // "20–30 lb typical (12×6 cylinder) · 10–40 allowed" from Warn + Reject rows.
+  private formatTypicalAndAllowedHint(
+    typicalLimit: ValidationLimit,
+    allowedLimit: ValidationLimit,
+  ): string | null {
+    const { min: typicalMin, max: typicalMax } = typicalLimit;
+    const { min: allowedMin, max: allowedMax } = allowedLimit;
+    if (typicalMin === null || typicalMax === null || allowedMin === null || allowedMax === null) {
+      return null;
+    }
+
+    const typicalRange = withLimitUnit(
+      `${formatLimitNumber(typicalMin)}–${formatLimitNumber(typicalMax)}`,
+      typicalLimit.unit,
+    );
+    const allowedRange = `${formatLimitNumber(allowedMin)}–${formatLimitNumber(allowedMax)}`;
+    return `${typicalRange} typical (12×6 cylinder) · ${allowedRange} allowed`;
+  }
 
   // Formats the range hint like the mockup: "10–15%", "3,000–10,000 PSI", "0.1–4% · max 6%".
   private formatLimitHint(

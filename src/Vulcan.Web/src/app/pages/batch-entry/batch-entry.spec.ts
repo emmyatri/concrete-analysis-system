@@ -99,7 +99,7 @@ describe('BatchEntry', () => {
     expect(save().disabled).toBe(true);
 
     form().patchValue({
-      batch: { batchNumber: 'VM-2026-0142', castAt: new Date(2026, 8, 29, 11, 40), finalWeightLb: '4380', expectedFinalBreakPsi: '6000', cementType: 'TypeIII', mixWaterPh: '7.2' },
+      batch: { batchNumber: 'VM-2026-0142', castAt: new Date(2026, 8, 29, 11, 40), finalWeightLb: '25', expectedFinalBreakPsi: '6000', cementType: 'TypeIII', mixWaterPh: '7.2' },
       composition: { cementPct: '12', waterPct: '17', coarseAggregatePct: '44', fineAggregatePct: '25', scmType: 'FlyAsh', scmPct: '2' },
       oxides: { aluminaPct: '4.8', ironOxidePct: '2.8', magnesiumOxidePct: '1.8', sulfurTrioxidePct: '2.2' },
     });
@@ -126,7 +126,7 @@ describe('BatchEntry', () => {
   it('blocks Save when the total is over 100%, and warns on the water / cementitious ratio', async () => {
     const save = () => el().querySelector('[data-testid="save-batch"] button') as HTMLButtonElement;
     form().patchValue({
-      batch: { batchNumber: 'VSN-003', castAt: new Date(2026, 8, 29, 11, 40), finalWeightLb: '10000', expectedFinalBreakPsi: '3000', cementType: 'TypeII', mixWaterPh: '7.2' },
+      batch: { batchNumber: 'VSN-003', castAt: new Date(2026, 8, 29, 11, 40), finalWeightLb: '25', expectedFinalBreakPsi: '3000', cementType: 'TypeII', mixWaterPh: '7.2' },
       // 14 + 17 + 40 + 29 + 2 = 102%
       composition: { cementPct: '14', waterPct: '17', coarseAggregatePct: '40', fineAggregatePct: '29', scmType: 'FlyAsh', scmPct: '2' },
       oxides: { aluminaPct: '4.8', ironOxidePct: '2.8', magnesiumOxidePct: '1.8', sulfurTrioxidePct: '2.2' },
@@ -161,7 +161,7 @@ describe('BatchEntry', () => {
     expect(finalWeightLb.errors?.['number']?.message).toBe('Enter a number');
     mixWaterPh.setValue('   ');
     expect(mixWaterPh.errors?.['required']).toBe(true);
-    finalWeightLb.setValue('4,380.00');
+    finalWeightLb.setValue('25.00');
     expect(finalWeightLb.valid).toBe(true);
   });
 
@@ -173,9 +173,9 @@ describe('BatchEntry', () => {
     expectedFinalBreakPsi.setValue('6000');
     expect(expectedFinalBreakPsi.valid).toBe(true);
 
-    finalWeightLb.setValue('4380.123');
+    finalWeightLb.setValue('25.123');
     expect(finalWeightLb.errors?.['decimals']?.message).toBe('Max 2 decimal places');
-    finalWeightLb.setValue('4380.12');
+    finalWeightLb.setValue('25.12');
     expect(finalWeightLb.valid).toBe(true);
   });
 
@@ -193,13 +193,99 @@ describe('BatchEntry', () => {
     expect(message()).toBe('1 error blocks saving');
   });
 
+  const saveButton = () => el().querySelector('[data-testid="save-batch"] button') as HTMLButtonElement;
+  const weightField = () => el().querySelector('#finalWeightLb')?.closest('app-field');
+
+  it('labels sample weight and shows the typical and allowed range', () => {
+    const field = weightField();
+    expect(field?.querySelector('label')?.textContent?.trim()).toBe('Sample weight (lb)');
+    expect(field?.querySelector('.app-field-hint')?.textContent?.trim()).toBe(
+      '20–30 lb typical (12×6 cylinder) · 10–40 allowed',
+    );
+  });
+
+  it('does not warn on 25 lb sample weight and keeps Save enabled', async () => {
+    fillValidBatch('VM-WEIGHT-0025');
+    const { finalWeightLb } = form().controls.batch.controls;
+    finalWeightLb.setValue('25');
+    finalWeightLb.markAsTouched();
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    expect(weightField()?.classList).not.toContain('app-field--warn');
+    expect(weightField()?.classList).not.toContain('app-field--error');
+    expect(saveButton().disabled).toBe(false);
+  });
+
+  it('warns in amber on 35 lb sample weight and still allows Save', async () => {
+    fillValidBatch('VM-WEIGHT-0035');
+    const { finalWeightLb } = form().controls.batch.controls;
+    finalWeightLb.setValue('35');
+    finalWeightLb.markAsTouched();
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    expect(weightField()?.classList).toContain('app-field--warn');
+    expect(saveButton().disabled).toBe(false);
+  });
+
+  it('blocks Save on 45 lb sample weight with a red error', async () => {
+    fillValidBatch('VM-WEIGHT-0045');
+    const { finalWeightLb } = form().controls.batch.controls;
+    finalWeightLb.setValue('45');
+    finalWeightLb.markAsTouched();
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    expect(weightField()?.classList).toContain('app-field--error');
+    expect(saveButton().disabled).toBe(true);
+  });
+
+  it('warns just outside 20–30 lb and rejects just outside 10–40 lb', async () => {
+    fillValidBatch('VM-WEIGHT-EDGES');
+    const { finalWeightLb } = form().controls.batch.controls;
+    const setWeight = async (value: string) => {
+      finalWeightLb.setValue(value);
+      finalWeightLb.markAsTouched();
+      fixture.detectChanges();
+      await fixture.whenStable();
+    };
+
+    await setWeight('9.99');
+    expect(weightField()?.classList).toContain('app-field--error');
+    expect(saveButton().disabled).toBe(true);
+
+    await setWeight('10');
+    expect(weightField()?.classList).toContain('app-field--warn');
+    expect(saveButton().disabled).toBe(false);
+
+    await setWeight('20');
+    expect(weightField()?.classList).not.toContain('app-field--warn');
+    expect(weightField()?.classList).not.toContain('app-field--error');
+
+    await setWeight('30');
+    expect(weightField()?.classList).not.toContain('app-field--warn');
+    expect(weightField()?.classList).not.toContain('app-field--error');
+
+    await setWeight('30.01');
+    expect(weightField()?.classList).toContain('app-field--warn');
+    expect(saveButton().disabled).toBe(false);
+
+    await setWeight('40');
+    expect(weightField()?.classList).toContain('app-field--warn');
+    expect(saveButton().disabled).toBe(false);
+
+    await setWeight('40.01');
+    expect(weightField()?.classList).toContain('app-field--error');
+    expect(saveButton().disabled).toBe(true);
+  });
 
   // ---------- Saving ----------
 
   /** A batch that passes every check, with a batch number that isn't taken yet. */
   const fillValidBatch = (batchNumber: string) =>
     form().patchValue({
-      batch: { batchNumber, castAt: new Date(2026, 9, 5, 14, 0), finalWeightLb: '4380', expectedFinalBreakPsi: '6000', cementType: 'TypeI', mixWaterPh: '7.2' },
+      batch: { batchNumber, castAt: new Date(2026, 9, 5, 14, 0), finalWeightLb: '25', expectedFinalBreakPsi: '6000', cementType: 'TypeI', mixWaterPh: '7.2' },
       composition: { cementPct: '10', waterPct: '17', coarseAggregatePct: '45', fineAggregatePct: '26', scmType: 'FlyAsh', scmPct: '2' },
       oxides: { aluminaPct: '4.8', ironOxidePct: '2.8', magnesiumOxidePct: '1.8', sulfurTrioxidePct: '2.2' },
     });
@@ -263,14 +349,14 @@ describe('toCreateBatchRequest', () => {
   it('trims the batch number and turns typed text into numbers', () => {
     const form = createBatchForm(TestBed.inject(NonNullableFormBuilder));
     form.patchValue({
-      batch: { batchNumber: ' VM-2026-0142 ', finalWeightLb: '4,380.00', expectedFinalBreakPsi: '6000', cementType: 'TypeIII', mixWaterPh: '7.2' },
+      batch: { batchNumber: ' VM-2026-0142 ', finalWeightLb: '25.00', expectedFinalBreakPsi: '6000', cementType: 'TypeIII', mixWaterPh: '7.2' },
       composition: { cementPct: '12', waterPct: '17', coarseAggregatePct: '40', fineAggregatePct: '25', scmType: 'FlyAsh', scmPct: '2' },
       oxides: { aluminaPct: '4.8', ironOxidePct: '2.8', magnesiumOxidePct: '1.8', sulfurTrioxidePct: '2.2' },
     });
 
     const request = toCreateBatchRequest(form);
 
-    expect(request.batch).toMatchObject({ batchNumber: 'VM-2026-0142', finalWeightLb: 4380, expectedFinalBreakPsi: 6000, cementType: 'TypeIII', mixWaterPh: 7.2 });
+    expect(request.batch).toMatchObject({ batchNumber: 'VM-2026-0142', finalWeightLb: 25, expectedFinalBreakPsi: 6000, cementType: 'TypeIII', mixWaterPh: 7.2 });
     expect(request.composition).toMatchObject({ cementPct: 12, scmType: 'FlyAsh', scmPct: 2 });
     expect(request.oxides.aluminaPct).toBe(4.8);
   });

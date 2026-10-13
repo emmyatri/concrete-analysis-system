@@ -210,7 +210,7 @@ describe('AppField', () => {
 
   // Test normal state at a minimum-only limit
   it('should return normal state at a minimum-only limit', () => {
-    fixture.componentRef.setInput('limitKey', 'Batch.FinalWeightLb');
+    fixture.componentRef.setInput('limitKey', 'Curing.ResistivityOhmPerFt');
     control.setValue(0.01);
     control.markAsTouched();
     fixture.detectChanges();
@@ -221,13 +221,48 @@ describe('AppField', () => {
 
   // Test reject state just below a minimum-only limit
   it('should return reject state just below a minimum-only limit', () => {
-    fixture.componentRef.setInput('limitKey', 'Batch.FinalWeightLb');
+    fixture.componentRef.setInput('limitKey', 'Curing.ResistivityOhmPerFt');
     control.setValue(0.009);
     control.markAsTouched();
     fixture.detectChanges();
 
     expect(component.state()).toBe('error');
-    expect(component.message()).toBe('Weight must be greater than 0');
+    expect(component.message()).toBe('Resistivity must be a positive number');
+  });
+
+  it('should show typical and allowed ranges for sample weight', () => {
+    fixture.componentRef.setInput('limitKey', 'Batch.FinalWeightLb');
+    fixture.detectChanges();
+    expect(component.computedHint()).toBe('20–30 lb typical (12×6 cylinder) · 10–40 allowed');
+  });
+
+  it('should keep the sample-weight hint when the value is outside the allowed range', () => {
+    fixture.componentRef.setInput('limitKey', 'Batch.FinalWeightLb');
+    control.setValue(45);
+    control.markAsTouched();
+    fixture.detectChanges();
+    expect(component.computedHint()).toBe('20–30 lb typical (12×6 cylinder) · 10–40 allowed');
+    expect(component.state()).toBe('error');
+  });
+
+  it('should warn on sample weight outside 20–30 lb and reject outside 10–40 lb', () => {
+    fixture.componentRef.setInput('limitKey', 'Batch.FinalWeightLb');
+
+    control.setValue(25);
+    control.markAsTouched();
+    fixture.detectChanges();
+    expect(component.state()).toBe('normal');
+    expect(control.valid).toBe(true);
+
+    control.setValue(35);
+    fixture.detectChanges();
+    expect(component.state()).toBe('warn');
+    expect(control.valid).toBe(true);
+
+    control.setValue(45);
+    fixture.detectChanges();
+    expect(component.state()).toBe('error');
+    expect(control.valid).toBe(false);
   });
 
   // Test normal state at a maximum-only limit
