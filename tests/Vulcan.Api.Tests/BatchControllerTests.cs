@@ -1,3 +1,4 @@
+using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json;
 using System.Text.Json.Serialization;
@@ -271,7 +272,7 @@ public class BatchControllerTests()
             {
                 BatchNumber = "VMDE-355",
                 CastAt = DateTime.UtcNow.AddDays(-4),
-                FinalWeightLb = 30,
+                FinalWeightLb = 40.01, // wrong
                 CementType = Domain.Enums.CementType.TypeII,
                 MixWaterPh = 7.0,
                 ExpectedFinalBreakPsi = 3600,
@@ -311,8 +312,97 @@ public class BatchControllerTests()
                 it => it.ShouldContain("Composition.TotalPct"),
                 it => it.ShouldContain("Composition.WaterPct"),
                 it => it.ShouldContain("Composition.ScmPct"),
-                it => it.Count.ShouldBe(4)
+                it => it.ShouldContain("Batch.FinalWeightLb"),
+                it => it.Count.ShouldBe(5)
             );
+    }
+
+    [Theory]
+    [InlineData(9.99, "Sample weight must be within the range [10-40]")]
+    [InlineData(40.01, "Sample weight must be within the range [10-40]")]
+    [InlineData(20.00, null)]
+    [InlineData(25.00, null)]
+    [InlineData(30.00, null)]
+    [InlineData(10.00, "Sample weight is outside the normal range [20-30] for a 12x6 cylinder", true)]
+    [InlineData(19.99, "Sample weight is outside the normal range [20-30] for a 12x6 cylinder", true)]
+    [InlineData(30.01, "Sample weight is outside the normal range [20-30] for a 12x6 cylinder", true)]
+    [InlineData(39.99, "Sample weight is outside the normal range [20-30] for a 12x6 cylinder", true)]
+    [InlineData(25.9139, "Final weight must be rounded to two decimal places.")]
+    [InlineData(10.2404, "Final weight must be rounded to two decimal places.")]
+    [InlineData(35.912, "Final weight must be rounded to two decimal places.")]
+    public async Task Create_batch_final_weight(decimal weight, string? message, bool isWarning = false)
+    {
+        await using var app = await StartAsync();
+        var client = ClientFor(app);
+
+        var response = await client.PostAsJsonAsync("/api/batches", new
+        {
+            Batch = new
+            {
+                BatchNumber = "VM-CLEAN-127",
+                CastAt = DateTime.UtcNow.AddDays(-4),
+                FinalWeightLb = weight,
+                CementType = CementType.TypeII,
+                MixWaterPh = 7.2,
+                ExpectedFinalBreakPsi = 3600,
+                IsSynthetic = false
+            },
+            Oxides = new
+            {
+                IronOxidePct = 3.5,
+                AluminaPct = 5.0,
+                MagnesiumOxidePct = 2.0,
+                SulfurTrioxidePct = 2.0
+            },
+            Composition = new
+            {
+                CementPct = 10,
+                WaterPct = 15,
+                CoarseAggregatePct = 40,
+                FineAggregatePct = 25,
+                ScmType = "None",
+                ScmPct = 0
+            }
+        });
+
+
+        if (string.IsNullOrEmpty(message) || isWarning)
+        {
+            response.StatusCode.ShouldBe(HttpStatusCode.Created);
+            var content = await response.Content.ReadFromJsonAsync<CreateBatchResponse>();
+            var warnings = content.ShouldNotBeNull().Warnings;
+
+            if (isWarning)
+            {
+                warnings.Count.ShouldBe(1);
+                warnings.First().ShouldSatisfyAllConditions(
+                    it => it.Key.ShouldBe("Batch.FinalWeightLb"),
+                    it => it.Message.ShouldBe(message));
+            }
+            else
+            {
+                warnings.ShouldBeEmpty();
+            }
+        }
+        else
+        {
+            response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
+            var content = await response
+                .Content
+                .ReadFromJsonAsync<ValidationProblemDetails>(_jsonOptions);
+            content
+                .ShouldNotBeNull()
+                .Errors
+                .Keys
+                .ShouldContain("Batch.FinalWeightLb");
+            content
+                .Errors["Batch.FinalWeightLb"]
+                .ShouldContain(message);
+            content
+                .Errors
+                .Count
+                .ShouldBe(1);
+        }
     }
 
     // PUT /api/batches/{number}
@@ -387,7 +477,10 @@ public class BatchControllerTests()
         content
             .ShouldNotBeNull()
             .Warnings
-            .ShouldContain(w => w.Key == "Batch.MixWaterPh");
+            .Select(w => w.Key)
+            .ShouldSatisfyAllConditions(
+                it => it.ShouldContain("Batch.MixWaterPh"),
+                it => it.ShouldContain("Batch.FinalWeightLb"));
     }
 
     [Fact]
@@ -399,7 +492,7 @@ public class BatchControllerTests()
         var response = await client.PutAsJsonAsync("/api/batches/NOT-FOUND", new
         {
             CastAt = DateTime.UtcNow.AddDays(-4),
-            FinalWeightLb = 31, // change
+            FinalWeightLb = 25,
             CementType = Domain.Enums.CementType.TypeI, // change
             MixWaterPh = 6.5, // change
             ExpectedFinalBreakPsi = 3600,
@@ -566,7 +659,7 @@ public class BatchControllerTests()
             {
                 BatchNumber = batchNumber,
                 CastAt = DateTime.UtcNow.AddDays(-1),
-                FinalWeightLb = 100m,
+                FinalWeightLb = 25m,
                 ExpectedFinalBreakPsi = 4500,
                 CementType = CementType.TypeI,
                 MixWaterPh = 7.2m,
@@ -647,7 +740,7 @@ public class BatchControllerTests()
             {
                 BatchNumber = batchNumber,
                 CastAt = DateTime.UtcNow.AddDays(-28),
-                FinalWeightLb = 100m,
+                FinalWeightLb = 20m,
                 ExpectedFinalBreakPsi = 4500,
                 CementType = CementType.TypeI,
                 MixWaterPh = 7.2m,
@@ -786,7 +879,7 @@ public class BatchControllerTests()
             {
                 BatchNumber = batchNumber,
                 CastAt = DateTime.UtcNow.AddDays(-28),
-                FinalWeightLb = 100m,
+                FinalWeightLb = 35m,
                 ExpectedFinalBreakPsi = 4500,
                 CementType = CementType.TypeI,
                 MixWaterPh = 7.2m,

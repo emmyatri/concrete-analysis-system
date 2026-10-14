@@ -3,7 +3,8 @@ The following rules apply to the respective numerical field. Unavailable ranges 
 
 | field                            | minimum | maximum | decimal places | severity | message                                                                                                                                              | requirement #   | source                         |
 | -------------------------------- | ------- | ------- | -------------- | -------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- | --------------- | ------------------------------ |
-| `Batch.FinalWeightLb`            | 0.01    | N/A     | 2              | Reject   | If Range Error:<br>Weight must be greater than 0<br><br>If Round Error:<br>Weight must be within two decimals                                        | FR-1            | schema.md                      |
+| `Batch.FinalWeightLb`            | 10      | 40      | 2              | Reject   | If Range Error:<br>Sample weight must be within the range \[10-40\]<br><br>If Round Error: Weight must be within two decimals                        | FR-1            | Client, M1 demo (Oct 9)        |
+| `Batch.FinalWeightLb`            | 20      | 30      | N/A            | Warn     | Sample weight is outside the normal range \[20-30\] for a 12x6 cylinder                                                                              | FR-1            | Client, M1 demo (Oct 9)        |
 | `Batch.ExpectedFinalBreakPsi`    | 3000    | 10000   | 0              | Reject   | PSI must be within the range \[3000-10,000\]                                                                                                         | FR-5            | schema.md, client-decisions.md |
 | `Batch.MixWaterPh`               | 1       | 9       | N/A            | Reject   | pH must be within the range \[1-9\]                                                                                                                  | FR-7            | schema.md, client-decisions.md |
 | `Batch.MixWaterPh`               | 7       | 7.5     | N/A            | Warn     | pH is outside the normal range \[7.0-7.5\]                                                                                                           | FR-7            | schema.md, client-decisions.md |
@@ -45,9 +46,14 @@ This holds true for both warning and error (Reject) thresholds.
 ### Boundary Tests
 | field                            | input | output |
 | -------------------------------- | ----- | ------ |
-| `Batch.FinalWeightLb`            | 0.00  | Reject |
-| `Batch.FinalWeightLb`            | 0.01  | Valid  |
-| `Batch.FinalWeightLb`            | 0.02  | Valid  |
+| `Batch.FinalWeightLb`            | 9.99  | Reject |
+| `Batch.FinalWeightLb`            | 10.0  | Warn   |
+| `Batch.FinalWeightLb`            | 19.99 | Warn   |
+| `Batch.FinalWeightLb`            | 20.0  | Valid  |
+| `Batch.FinalWeightLb`            | 30.0  | Valid  |
+| `Batch.FinalWeightLb`            | 30.01 | Warn   |
+| `Batch.FinalWeightLb`            | 40.0  | Warn   |
+| `Batch.FinalWeightLb`            | 40.01 | Reject |
 | `Batch.ExpectedFinalBreakPsi`    | 2999  | Reject |
 | `Batch.ExpectedFinalBreakPsi`    | 3000  | Valid  |
 | `Batch.ExpectedFinalBreakPsi`    | 10000 | Valid  |
@@ -160,10 +166,9 @@ This holds true for both warning and error (Reject) thresholds.
 ### Rounding Tests
 | field                  | input  | output |
 | ---------------------- | ------ | ------ |
-| `Batch.FinalWeightLb`  | 0.01   | Valid  |
-| `Batch.FinalWeightLb`  | 1.23   | Valid  |
-| `Batch.FinalWeightLb`  | 1.234  | Reject |
-| `Batch.FinalWeightLb`  | 12.345 | Reject |
+| `Batch.FinalWeightLb`  | 10.01  | Warn   |
+| `Batch.FinalWeightLb`  | 20.23  | Valid  |
+| `Batch.FinalWeightLb`  | 15.234 | Reject |
 | `Specimen.LengthIn`    | 0.01   | Valid  |
 | `Specimen.LengthIn`    | 1.23   | Valid  |
 | `Specimen.LengthIn`    | 12.00  | Valid  |

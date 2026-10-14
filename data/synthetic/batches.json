@@ -3,7 +3,7 @@
     {
       "BatchNumber": "VM-SYN-001",
       "CastAt": "2026-06-01T12:00:00Z",
-      "FinalWeightLb": 4200,
+      "FinalWeightLb": 24.52,
       "ExpectedFinalBreakPsi": 6200,
       "CementType": "TypeI",
       "MixWaterPh": 7.2,
@@ -712,7 +712,7 @@
     {
       "BatchNumber": "VM-SYN-002",
       "CastAt": "2026-06-05T12:00:00Z",
-      "FinalWeightLb": 4350,
+      "FinalWeightLb": 26.13,
       "ExpectedFinalBreakPsi": 5600,
       "CementType": "TypeII",
       "MixWaterPh": 7.3,
@@ -1421,7 +1421,7 @@
     {
       "BatchNumber": "VM-SYN-003",
       "CastAt": "2026-06-09T12:00:00Z",
-      "FinalWeightLb": 4400,
+      "FinalWeightLb": 23.12,
       "ExpectedFinalBreakPsi": 6000,
       "CementType": "TypeIII",
       "MixWaterPh": 7.1,
@@ -2130,7 +2130,7 @@
     {
       "BatchNumber": "VM-SYN-004",
       "CastAt": "2026-06-13T12:00:00Z",
-      "FinalWeightLb": 4250,
+      "FinalWeightLb": 25.58,
       "ExpectedFinalBreakPsi": 5900,
       "CementType": "TypeI",
       "MixWaterPh": 7.4,
@@ -2839,7 +2839,7 @@
     {
       "BatchNumber": "VM-SYN-005",
       "CastAt": "2026-06-17T12:00:00Z",
-      "FinalWeightLb": 4300,
+      "FinalWeightLb": 29.0,
       "ExpectedFinalBreakPsi": 5700,
       "CementType": "TypeII",
       "MixWaterPh": 7.2,
@@ -3548,7 +3548,7 @@
     {
       "BatchNumber": "VM-SYN-006",
       "CastAt": "2026-06-21T12:00:00Z",
-      "FinalWeightLb": 4500,
+      "FinalWeightLb": 24.57,
       "ExpectedFinalBreakPsi": 6200,
       "CementType": "TypeIII",
       "MixWaterPh": 7.1,
@@ -4257,7 +4257,7 @@
     {
       "BatchNumber": "VM-SYN-007",
       "CastAt": "2026-06-25T12:00:00Z",
-      "FinalWeightLb": 4375,
+      "FinalWeightLb": 27.85,
       "ExpectedFinalBreakPsi": 6100,
       "CementType": "TypeI",
       "MixWaterPh": 7.3,
@@ -4966,7 +4966,7 @@
     {
       "BatchNumber": "VM-SYN-008",
       "CastAt": "2026-06-29T12:00:00Z",
-      "FinalWeightLb": 4450,
+      "FinalWeightLb": 26.33,
       "ExpectedFinalBreakPsi": 5700,
       "CementType": "TypeII",
       "MixWaterPh": 7.2,
@@ -5675,7 +5675,7 @@
     {
       "BatchNumber": "VM-SYN-009",
       "CastAt": "2026-07-03T12:00:00Z",
-      "FinalWeightLb": 4550,
+      "FinalWeightLb": 25.08,
       "ExpectedFinalBreakPsi": 5500,
       "CementType": "TypeIII",
       "MixWaterPh": 7.6,

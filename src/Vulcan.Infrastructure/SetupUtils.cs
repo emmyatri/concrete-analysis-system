@@ -40,6 +40,7 @@ public static class SetupUtils
             cs = $"Data Source={Path.Combine(dir, "vulcan.db")}";
         }
 
+
         if (cs.Contains(":memory:", StringComparison.OrdinalIgnoreCase))
         {
             // An in-memory database only lives while a connection is open, so keep one open for the app's lifetime (tests).

@@ -1,7 +1,7 @@
 # Data Schema — Concrete Batch Analysis System
 
 **Status:** Approved (M1-02) · **Owner:** Tyler · **Approver:** Amelia
-**Last updated:** 2026-09-28
+**Last updated:** 2026-10-14
 
 This file is the single source of truth for every piece of data the app stores. The names here are the exact names used
 in the C# classes, the API, and the UI bindings. If you need a field that isn't here, don't invent one: open a PR
@@ -149,16 +149,16 @@ in both the UI and the API (NFR-6).
 
 ### Batch — one pour of concrete
 
-| Field                   | Type       | Unit | Req  | Validation / rule                                                      | FR               |
-|-------------------------|------------|------|------|------------------------------------------------------------------------|------------------|
-| `Id`                    | int        | —    | auto | Primary key                                                            | —                |
-| `BatchNumber`           | string(32) | —    | Yes  | Trimmed; letters, digits, dashes only; unique, case-insensitive        | FR-1, FR-9       |
-| `CastAt`                | datetime   | —    | Yes  | Not in the future                                                      | FR-1             |
-| `FinalWeightLb`         | decimal    | lb   | Yes  | > 0, max 2 decimals                                                    | FR-1             |
-| `ExpectedFinalBreakPsi` | int        | PSI  | Yes  | `Batch.ExpectedFinalBreakPsi` (**Reject** outside 3,000–10,000)        | FR-5, Decision 3 |
-| `CementType`            | enum       | —    | Yes  | `TypeI`, `TypeII`, `TypeIII`                                           | A-4              |
-| `MixWaterPh`            | decimal    | —    | Yes  | **Reject outside 1–9**, message states range; **Warn outside 7.0–7.5** | FR-7, Decision 4 |
-| `IsSynthetic`           | bool       | —    | Yes  | Defaults to `false`; seeder sets `true`                                | FR-20            |
+| Field                   | Type       | Unit | Req  | Validation / rule                                                      | FR                |
+|-------------------------|------------|------|------|------------------------------------------------------------------------|-------------------|
+| `Id`                    | int        | —    | auto | Primary key                                                            | —                 |
+| `BatchNumber`           | string(32) | —    | Yes  | Trimmed; letters, digits, dashes only; unique, case-insensitive        | FR-1, FR-9        |
+| `CastAt`                | datetime   | —    | Yes  | Not in the future                                                      | FR-1              |
+| `FinalWeightLb`         | decimal    | lb   | Yes  | **Reject outside 10-40**, **Warn outside 20-30**, max 2 decimals       | FR-1, Decision 11 |
+| `ExpectedFinalBreakPsi` | int        | PSI  | Yes  | `Batch.ExpectedFinalBreakPsi` (**Reject** outside 3,000–10,000)        | FR-5, Decision 3  |
+| `CementType`            | enum       | —    | Yes  | `TypeI`, `TypeII`, `TypeIII`                                           | A-4               |
+| `MixWaterPh`            | decimal    | —    | Yes  | **Reject outside 1–9**, message states range; **Warn outside 7.0–7.5** | FR-7, Decision 4  |
+| `IsSynthetic`           | bool       | —    | Yes  | Defaults to `false`; seeder sets `true`                                | FR-20             |
 
 ### Composition — the mix recipe (1 per batch)
 
@@ -296,7 +296,8 @@ These rows are loaded on first run (M1-21). Changing them later is a data change
 | `Oxide.IronOxidePct`             | Reject   | 0    | 100   | %       | FR-3                                   |
 | `Specimen.LengthIn`              | Reject   | 0.01 | 12.00 | in      | FR-4                                   |
 | `Specimen.WidthIn`               | Reject   | 0.01 | 6.00  | in      | FR-4                                   |
-| `Batch.FinalWeightLb`            | Reject   | 0.01 | —     | lb      | schema.md field dictionary             |
+| `Batch.FinalWeightLb`            | Reject   | 10   | 40    | lb      | Client, M1 demo (Oct 9)                |
+| `Batch.FinalWeightLb`            | Warn     | 20   | 30    | lb      | Client, M1 demo (Oct 9)                |
 | `Batch.ExpectedFinalBreakPsi`    | Reject   | 3000 | 10000 | PSI     | Client doc / FR-5                      |
 | `Break.StrengthPsi`              | Reject   | 1    | 10000 | PSI     | Client doc / FR-5, Decision 3          |
 | `Break.StrengthPsi`              | Warn     | 3000 | 10000 | PSI     | Client doc / FR-5                      |
