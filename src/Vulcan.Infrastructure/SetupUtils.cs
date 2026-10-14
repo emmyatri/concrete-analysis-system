@@ -37,8 +37,11 @@ public static class SetupUtils
             var dir = Path.Combine(
                 Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "VulcanCBAS");
             Directory.CreateDirectory(dir);
+            Console.WriteLine("LOOKIEHERE");
+            Console.WriteLine(dir);
             cs = $"Data Source={Path.Combine(dir, "vulcan.db")}";
         }
+
 
         if (cs.Contains(":memory:", StringComparison.OrdinalIgnoreCase))
         {
