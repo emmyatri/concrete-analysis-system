@@ -808,6 +808,7 @@ public sealed class ApiValidationTests
                 ["FinalWeightLb"] = 30,
                 ["CementType"] = "TypeII",
                 ["MixWaterPh"] = 7.2,
+                ["CementSurfacePh"] = 7.5m,
                 ["ExpectedFinalBreakPsi"] = 3600,
                 ["IsSynthetic"] = false
             },

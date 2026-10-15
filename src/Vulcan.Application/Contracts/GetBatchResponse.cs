@@ -24,6 +24,8 @@ public class GetBatchResponse
     [Required]
     public required double MixWaterPh { get; init; }
 
+    public decimal? CementSurfacePh { get; init; }
+
     [Required]
     public required bool IsSynthetic { get; init; }
 
@@ -62,6 +64,7 @@ public class GetBatchResponse
             FinalWeightLb = (double)batch.FinalWeightLb,
             CementType = batch.CementType,
             MixWaterPh = (double)batch.MixWaterPh,
+            CementSurfacePh = batch.CementSurfacePh,
             IsSynthetic = batch.IsSynthetic,
             ExpectedFinalBreakPsi = batch.ExpectedFinalBreakPsi,
             CreatedAtUtc = batch.CreatedAtUtc,

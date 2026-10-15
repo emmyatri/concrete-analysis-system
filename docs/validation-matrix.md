@@ -8,6 +8,8 @@ The following rules apply to the respective numerical field. Unavailable ranges 
 | `Batch.ExpectedFinalBreakPsi`    | 3000    | 10000   | 0              | Reject   | PSI must be within the range \[3000-10,000\]                                                                                                         | FR-5            | schema.md, client-decisions.md |
 | `Batch.MixWaterPh`               | 1       | 9       | N/A            | Reject   | pH must be within the range \[1-9\]                                                                                                                  | FR-7            | schema.md, client-decisions.md |
 | `Batch.MixWaterPh`               | 7       | 7.5     | N/A            | Warn     | pH is outside the normal range \[7.0-7.5\]                                                                                                           | FR-7            | schema.md, client-decisions.md |
+| `Batch.CementSurfacePh` | 0 | 14 | 2 | Reject | Required: Cement surface pH is required.<br>Precision: Cement surface pH must have at most two decimal places.<br>Range: pH must be within the range \[0-14\] | FR-7 extended, NFR-6 | Client, M1 demo (Oct 9) |
+| `Batch.CementSurfacePh` | 7.1 | 8.0 | N/A | Warn | Cement surface pH is outside the normal range \[7.1-8.0\] | FR-7 extended, NFR-6 | Client, M1 demo (Oct 9) |
 | `Composition.CementPct`          | 10      | 15      | N/A            | Reject   | Cement composition must be within the range \[10-15\]                                                                                                | FR-2.1          | schema.md, client-decisions.md |
 | `Composition.ScmPct`             | 0       | 100     | N/A            | Reject   | SCM composition must be a valid percentage \[0-100\]                                                                                                 | FR-2            | schema.md, client-decisions.md |
 | `Composition.FineAggregatePct`   | 25      | 30      | N/A            | Reject   | Fine aggregate composition must be within the range \[25-30\]                                                                                        | FR-2.1          | schema.md, client-decisions.md |
@@ -66,6 +68,19 @@ This holds true for both warning and error (Reject) thresholds.
 | `Batch.MixWaterPh`               | 7.0   | Valid  |
 | `Batch.MixWaterPh`               | 7.5   | Valid  |
 | `Batch.MixWaterPh`               | 7.6   | Warn   |
+| `Batch.CementSurfacePh` | missing/null | Reject |
+| `Batch.CementSurfacePh` | -0.01 | Reject |
+| `Batch.CementSurfacePh` | 0 | Warn |
+| `Batch.CementSurfacePh` | 7.09 | Warn |
+| `Batch.CementSurfacePh` | 7.1 | Valid |
+| `Batch.CementSurfacePh` | 7.5 | Valid |
+| `Batch.CementSurfacePh` | 8.0 | Valid |
+| `Batch.CementSurfacePh` | 8.01 | Warn |
+| `Batch.CementSurfacePh` | 8.5 | Warn |
+| `Batch.CementSurfacePh` | 14 | Warn |
+| `Batch.CementSurfacePh` | 14.01 | Reject |
+| `Batch.CementSurfacePh` | 7.501 | Reject |
+| `Batch.CementSurfacePh` | 7.500 | Valid |
 | `Composition.CementPct`          | 9     | Reject |
 | `Composition.CementPct`          | 10    | Valid  |
 | `Composition.CementPct`          | 15    | Valid  |

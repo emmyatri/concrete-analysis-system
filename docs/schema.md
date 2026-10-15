@@ -1,7 +1,7 @@
 # Data Schema — Concrete Batch Analysis System
 
 **Status:** Approved (M1-02) · **Owner:** Tyler · **Approver:** Amelia
-**Last updated:** 2026-10-14
+**Last updated:** 2026-10-15
 
 This file is the single source of truth for every piece of data the app stores. The names here are the exact names used
 in the C# classes, the API, and the UI bindings. If you need a field that isn't here, don't invent one: open a PR
@@ -160,7 +160,7 @@ in both the UI and the API (NFR-6).
 | `CementType`            | enum       | —    | Yes  | `TypeI`, `TypeII`, `TypeIII`                                           | A-4               |
 | `MixWaterPh`            | decimal    | —    | Yes  | **Reject outside 1–9**, message states range; **Warn outside 7.0–7.5** | FR-7, Decision 4  |
 | `IsSynthetic`           | bool       | —    | Yes  | Defaults to `false`; seeder sets `true`                                | FR-20             |
-| `CementSurfacePh` | decimal? | — | Yes* | Max 2 decimals; Reject outside 0–14; Warn outside 7.1–8.0 | FR-7 extended, NFR-6 |
+| `CementSurfacePh` | decimal? | — | Yes* | Max 2 decimals; Reject outside 0–14; Warn outside 7.1–8.0 | FR-7 extended, NFR-6, Decision 12 |
 
 \*Required when creating or editing a batch. Historical records may be null.
 

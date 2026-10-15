@@ -79,6 +79,22 @@ public partial class BatchValidator(LimitEvaluator limitEvaluator)
         return limitEvaluator.Check(LimitKeys.MixWaterPh, mixWaterPh);
     }
 
+    public LimitResult CheckCementSurfacePh(decimal? cementSurfacePh)
+    {
+        if (cementSurfacePh is not { } value)
+        {
+            return new LimitResult.Reject("Cement surface pH is required.");
+        }
+
+        if (decimal.Round(value, 2) != value)
+        {
+            return new LimitResult.Reject(
+                "Cement surface pH must have at most two decimal places.");
+        }
+
+        return limitEvaluator.Check(LimitKeys.CementSurfacePh, value);
+    }
+
     public LimitResult CheckFinalWeightLb(decimal finalWeightLb)
     {
         // reject on improper rounding

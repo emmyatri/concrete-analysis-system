@@ -33,6 +33,16 @@ A `400` status code represents a malformed request or one or more fields that fa
 
 ## Batch
 
+`cementSurfacePh` records cement surface pH separately from `mixWaterPh` (SCRUM-149,
+FR-7 extended, NFR-6). Send it inside `batch` for POST and at the top level for PUT.
+It is required on create/update, accepts at most two decimal places, rejects values
+outside 0-14, and saves with a warning outside 7.1-8.0. Numeric ranges and warning
+messages come from the configured `Batch.CementSurfacePh` validation limits.
+
+Omitted or null values return HTTP 400 with an error keyed `Batch.CementSurfacePh`.
+Detail responses include `cementSurfacePh`; historical batches can return null.
+New and edited batches must supply a measurement; historical values are not backfilled.
+
 ### Create Batch
 
 Use to create a batch.
@@ -65,6 +75,10 @@ Use to create a batch.
                 "mixWaterPh": {
                     "type": "number"
                 },
+                "cementSurfacePh": {
+                    "type": "number",
+                    "multipleOf": 0.01
+                },
                 "isSynthetic": {
                     "type": "boolean",
                     "default": false
@@ -79,6 +93,7 @@ Use to create a batch.
                 "finalWeightLb",
                 "cementType",
                 "mixWaterPh",
+                "cementSurfacePh",
                 "expectedFinalBreakResultPsi"
             ]
         },
@@ -200,41 +215,29 @@ Updates the batch by batch number.
     "title": "UpdateBatchRequest",
     "type": "object",
     "properties": {
-        "batch": {
-            "type": "object",
-            "properties": {
-                "batchNumber": {
-                    "type": "string"
-                },
-                "castAt": {
-                    "type": "string",
-                    "format": "date-time"
-                },
-                "finalWeightLb": {
-                    "type": "number"
-                },
-                "cementType": {
-                    "enum": ["TypeI", "TypeII", "TypeIII"]
-                },
-                "mixWaterPh": {
-                    "type": "number"
-                },
-                "isSynthetic": {
-                    "type": "boolean",
-                    "default": false
-                },
-                "expectedFinalBreakPsi": {
-                    "type": "integer",
-                }
-            },
-            "required": [
-                "batchNumber",
-                "castAt",
-                "finalWeightLb",
-                "cementType",
-                "mixWaterPh",
-                "expectedFinalBreakResultPsi"
-            ]
+        "castAt": {
+            "type": "string",
+            "format": "date-time"
+        },
+        "finalWeightLb": {
+            "type": "number"
+        },
+        "cementType": {
+            "enum": ["TypeI", "TypeII", "TypeIII"]
+        },
+        "mixWaterPh": {
+            "type": "number"
+        },
+        "cementSurfacePh": {
+            "type": "number",
+            "multipleOf": 0.01
+        },
+        "isSynthetic": {
+            "type": "boolean",
+            "default": false
+        },
+        "expectedFinalBreakPsi": {
+            "type": "integer"
         },
         "composition": {
             "type": "object",
@@ -291,7 +294,7 @@ Updates the batch by batch number.
             ]
         },
     },
-    "required": ["batch"]
+    "required": ["castAt", "finalWeightLb", "cementType", "mixWaterPh", "cementSurfacePh", "expectedFinalBreakPsi"]
 }
 ```
 
@@ -379,6 +382,10 @@ Sent with the `200` response.
         },
         "mixWaterPh": {
             "type": "number"
+        },
+        "cementSurfacePh": {
+            "type": ["number", "null"],
+            "multipleOf": 0.01
         },
         "isSynthetic": {
             "type": "boolean",

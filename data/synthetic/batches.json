@@ -7,6 +7,7 @@
       "ExpectedFinalBreakPsi": 6200,
       "CementType": "TypeI",
       "MixWaterPh": 7.2,
+      "CementSurfacePh": 7.4,
       "IsSynthetic": true,
       "Composition": {
         "CementPct": 10,
@@ -716,6 +717,7 @@
       "ExpectedFinalBreakPsi": 5600,
       "CementType": "TypeII",
       "MixWaterPh": 7.3,
+      "CementSurfacePh": 7.5,
       "IsSynthetic": true,
       "Composition": {
         "CementPct": 10,
@@ -1425,6 +1427,7 @@
       "ExpectedFinalBreakPsi": 6000,
       "CementType": "TypeIII",
       "MixWaterPh": 7.1,
+      "CementSurfacePh": 7.3,
       "IsSynthetic": true,
       "Composition": {
         "CementPct": 10,
@@ -2134,6 +2137,7 @@
       "ExpectedFinalBreakPsi": 5900,
       "CementType": "TypeI",
       "MixWaterPh": 7.4,
+      "CementSurfacePh": 7.6,
       "IsSynthetic": true,
       "Composition": {
         "CementPct": 11,
@@ -2843,6 +2847,7 @@
       "ExpectedFinalBreakPsi": 5700,
       "CementType": "TypeII",
       "MixWaterPh": 7.2,
+      "CementSurfacePh": 7.7,
       "IsSynthetic": true,
       "Composition": {
         "CementPct": 10,
@@ -3552,6 +3557,7 @@
       "ExpectedFinalBreakPsi": 6200,
       "CementType": "TypeIII",
       "MixWaterPh": 7.1,
+      "CementSurfacePh": 7.2,
       "IsSynthetic": true,
       "Composition": {
         "CementPct": 10.0,
@@ -4261,6 +4267,7 @@
       "ExpectedFinalBreakPsi": 6100,
       "CementType": "TypeI",
       "MixWaterPh": 7.3,
+      "CementSurfacePh": 7.8,
       "IsSynthetic": true,
       "Composition": {
         "CementPct": 10,
@@ -4970,6 +4977,7 @@
       "ExpectedFinalBreakPsi": 5700,
       "CementType": "TypeII",
       "MixWaterPh": 7.2,
+      "CementSurfacePh": 8.0,
       "IsSynthetic": true,
       "Composition": {
         "CementPct": 10.5,
@@ -5679,6 +5687,7 @@
       "ExpectedFinalBreakPsi": 5500,
       "CementType": "TypeIII",
       "MixWaterPh": 7.6,
+      "CementSurfacePh": 7.1,
       "IsSynthetic": true,
       "Composition": {
         "CementPct": 10,
