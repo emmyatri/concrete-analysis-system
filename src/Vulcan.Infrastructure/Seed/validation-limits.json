@@ -1,5 +1,23 @@
 [
     {
+        "Key": "Batch.CementSurfacePh",
+        "Severity": "Reject",
+        "Min": 0,
+        "Max": 14,
+        "Unit": "",
+        "Message": "pH must be within the range [0-14]",
+        "Source": "Client, M1 demo (Oct 9)"
+    },
+    {
+        "Key": "Batch.CementSurfacePh",
+        "Severity": "Warn",
+        "Min": 7.1,
+        "Max": 8.0,
+        "Unit": "",
+        "Message": "Cement surface pH is outside the normal range [7.1-8.0]",
+        "Source": "Client, M1 demo (Oct 9)"
+    },
+    {
         "Key": "Batch.FinalWeightLb",
         "Severity": "Reject",
         "Min": 10,

@@ -32,6 +32,10 @@ namespace Vulcan.Infrastructure.Migrations
                     b.Property<DateTime>("CastAt")
                         .HasColumnType("TEXT");
 
+                    b.Property<decimal?>("CementSurfacePh")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("TEXT");
+
                     b.Property<string>("CementType")
                         .IsRequired()
                         .HasColumnType("TEXT");

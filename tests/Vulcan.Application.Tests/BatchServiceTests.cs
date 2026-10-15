@@ -134,6 +134,7 @@ public class BatchServiceTests(DatabaseFixture fixture)
         updatedBatch.BatchNumber = "VM-UPDATE-001";
         updatedBatch.FinalWeightLb = 35m;
         updatedBatch.ExpectedFinalBreakPsi = 6000;
+        updatedBatch.CementSurfacePh = 7.8m;
 
         updatedBatch.Composition!.CementPct = 13m;
         updatedBatch.Composition.WaterPct = 16m;
@@ -154,6 +155,7 @@ public class BatchServiceTests(DatabaseFixture fixture)
 
         Assert.Equal(35m, loaded.FinalWeightLb);
         Assert.Equal(6000, loaded.ExpectedFinalBreakPsi);
+        Assert.Equal(7.8m, loaded.CementSurfacePh);
 
         Assert.NotNull(loaded.Composition);
         Assert.Equal(13m, loaded.Composition.CementPct);
@@ -532,6 +534,7 @@ public class BatchServiceTests(DatabaseFixture fixture)
             ExpectedFinalBreakPsi = 5000,
             CementType = CementType.TypeI,
             MixWaterPh = 7.2m,
+            CementSurfacePh = 7.5m,
 
             Composition = new Composition
             {

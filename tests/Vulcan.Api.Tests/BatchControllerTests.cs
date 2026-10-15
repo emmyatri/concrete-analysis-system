@@ -45,6 +45,7 @@ public class BatchControllerTests()
                 FinalWeightLb = 30,
                 CementType = Domain.Enums.CementType.TypeII,
                 MixWaterPh = 7.0,
+                CementSurfacePh = 7.5m,
                 ExpectedFinalBreakPsi = 3600,
                 IsSynthetic = false
             },
@@ -99,6 +100,7 @@ public class BatchControllerTests()
                 FinalWeightLb = 30,
                 CementType = CementType.TypeII,
                 MixWaterPh = 7.2,
+                CementSurfacePh = 7.5m,
                 ExpectedFinalBreakPsi = 3600,
                 IsSynthetic = false
             },
@@ -148,6 +150,7 @@ public class BatchControllerTests()
                 FinalWeightLb = 0,
                 CementType = CementType.TypeII,
                 MixWaterPh = 7.2,
+                CementSurfacePh = 7.5m,
                 ExpectedFinalBreakPsi = 3600,
                 IsSynthetic = false
             },
@@ -194,6 +197,7 @@ public class BatchControllerTests()
                 FinalWeightLb = 30,
                 CementType = Domain.Enums.CementType.TypeII,
                 MixWaterPh = 7.0,
+                CementSurfacePh = 7.5m,
                 ExpectedFinalBreakPsi = 3600,
                 IsSynthetic = false
             },
@@ -224,6 +228,7 @@ public class BatchControllerTests()
                 FinalWeightLb = 30,
                 CementType = Domain.Enums.CementType.TypeII,
                 MixWaterPh = 7.0,
+                CementSurfacePh = 7.5m,
                 ExpectedFinalBreakPsi = 3600,
                 IsSynthetic = false
             },
@@ -275,6 +280,7 @@ public class BatchControllerTests()
                 FinalWeightLb = 40.01, // wrong
                 CementType = Domain.Enums.CementType.TypeII,
                 MixWaterPh = 7.0,
+                CementSurfacePh = 7.5m,
                 ExpectedFinalBreakPsi = 3600,
                 IsSynthetic = false
             },
@@ -344,6 +350,7 @@ public class BatchControllerTests()
                 FinalWeightLb = weight,
                 CementType = CementType.TypeII,
                 MixWaterPh = 7.2,
+                CementSurfacePh = 7.5m,
                 ExpectedFinalBreakPsi = 3600,
                 IsSynthetic = false
             },
@@ -421,6 +428,7 @@ public class BatchControllerTests()
                 FinalWeightLb = 30,
                 CementType = Domain.Enums.CementType.TypeII,
                 MixWaterPh = 7.0,
+                CementSurfacePh = 7.5m,
                 ExpectedFinalBreakPsi = 3600,
                 IsSynthetic = false
             },
@@ -448,6 +456,7 @@ public class BatchControllerTests()
             FinalWeightLb = 31, // change
             CementType = Domain.Enums.CementType.TypeI, // change
             MixWaterPh = 6.5, // change
+            CementSurfacePh = 7.5m,
             ExpectedFinalBreakPsi = 3600,
             IsSynthetic = false,
             Oxides = new
@@ -495,6 +504,7 @@ public class BatchControllerTests()
             FinalWeightLb = 25,
             CementType = Domain.Enums.CementType.TypeI, // change
             MixWaterPh = 6.5, // change
+            CementSurfacePh = 7.5m,
             ExpectedFinalBreakPsi = 3600,
             IsSynthetic = false,
             Oxides = new
@@ -543,6 +553,7 @@ public class BatchControllerTests()
                 FinalWeightLb = 30,
                 CementType = Domain.Enums.CementType.TypeII,
                 MixWaterPh = 7.0,
+                CementSurfacePh = 7.5m,
                 ExpectedFinalBreakPsi = 3600,
                 IsSynthetic = false
             },
@@ -572,6 +583,7 @@ public class BatchControllerTests()
                 FinalWeightLb = 30,
                 CementType = Domain.Enums.CementType.TypeII,
                 MixWaterPh = 7.0,
+                CementSurfacePh = 7.5m,
                 ExpectedFinalBreakPsi = 3600,
                 IsSynthetic = false
             },
@@ -601,6 +613,7 @@ public class BatchControllerTests()
                 FinalWeightLb = 30,
                 CementType = Domain.Enums.CementType.TypeII,
                 MixWaterPh = 7.0,
+                CementSurfacePh = 7.5m,
                 ExpectedFinalBreakPsi = 3600,
                 IsSynthetic = false
             },
@@ -663,6 +676,7 @@ public class BatchControllerTests()
                 ExpectedFinalBreakPsi = 4500,
                 CementType = CementType.TypeI,
                 MixWaterPh = 7.2m,
+                CementSurfacePh = 7.5m,
                 IsSynthetic = true
             });
 
@@ -744,6 +758,7 @@ public class BatchControllerTests()
                 ExpectedFinalBreakPsi = 4500,
                 CementType = CementType.TypeI,
                 MixWaterPh = 7.2m,
+                CementSurfacePh = 7.5m,
                 IsSynthetic = false,
                 Specimens =
                 [
@@ -883,6 +898,7 @@ public class BatchControllerTests()
                 ExpectedFinalBreakPsi = 4500,
                 CementType = CementType.TypeI,
                 MixWaterPh = 7.2m,
+                CementSurfacePh = 7.5m,
                 IsSynthetic = false,
                 Specimens =
                 [
@@ -981,6 +997,7 @@ public class BatchControllerTests()
                 FinalWeightLb = 30,
                 CementType = "TypeII",
                 MixWaterPh = 7.0,
+                CementSurfacePh = 7.5m,
                 ExpectedFinalBreakPsi = 3600,
             },
             // Alumina 13.53 is outside the normal 3.0–7.5, so it saves with a warning.
@@ -996,6 +1013,7 @@ public class BatchControllerTests()
         using var doc = JsonDocument.Parse(await client.GetStringAsync("/api/batches/VM-DETAIL-001"));
         var root = doc.RootElement;
 
+        root.GetProperty("cementSurfacePh").GetDecimal().ShouldBe(7.5m);
         root.GetProperty("composition").ValueKind.ShouldBe(JsonValueKind.Object);
         root.GetProperty("oxides").ValueKind.ShouldBe(JsonValueKind.Object);
         root.GetProperty("specimens").GetArrayLength().ShouldBe(1);

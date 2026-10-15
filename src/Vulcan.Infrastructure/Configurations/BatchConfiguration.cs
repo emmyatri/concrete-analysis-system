@@ -24,6 +24,10 @@ public class BatchConfiguration : AuditableEntityConfiguration<Batch>
             .HasConversion(
                 x => x.ToString(),
                 x => Enum.Parse<CementType>(x));
+        builder.Property(x => x.CementSurfacePh)
+            .HasPrecision(18, 2)
+            .IsRequired(false);
+
         // one batch can have many specimens
         builder.HasMany(x => x.Specimens)
             .WithOne(x => x.Batch)

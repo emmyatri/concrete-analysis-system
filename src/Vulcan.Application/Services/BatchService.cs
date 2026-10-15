@@ -129,6 +129,7 @@ public sealed class BatchService(
             updatedBatch.ExpectedFinalBreakPsi;
         existingBatch.CementType = updatedBatch.CementType;
         existingBatch.MixWaterPh = updatedBatch.MixWaterPh;
+        existingBatch.CementSurfacePh = updatedBatch.CementSurfacePh;
 
         existingBatch.Composition!.CementPct =
             updatedBatch.Composition!.CementPct;
@@ -270,6 +271,21 @@ public sealed class BatchService(
                 warn.Message));
         }
 
+        var surfacePhResult = batchValidator.CheckCementSurfacePh(batch.CementSurfacePh);
+
+        if (surfacePhResult is LimitResult.Reject surfacePhReject)
+        {
+            errors.Add(new ValidationError(
+                LimitKeys.CementSurfacePh,
+                surfacePhReject.Message));
+        }
+        else if (surfacePhResult is LimitResult.Warn surfacePhWarn)
+        {
+            warnings.Add(new ValidationError(
+                LimitKeys.CementSurfacePh,
+                surfacePhWarn.Message));
+        }
+
         var finalWeightResult = batchValidator.CheckFinalWeightLb(batch.FinalWeightLb);
 
         if (finalWeightResult is LimitResult.Reject weightReject)
@@ -303,6 +319,7 @@ public sealed class BatchService(
             Value = warning.Key switch
             {
                 LimitKeys.MixWaterPh => batch.MixWaterPh,
+                LimitKeys.CementSurfacePh => batch.CementSurfacePh!.Value,
                 LimitKeys.FinalWeightLb => batch.FinalWeightLb,
                 LimitKeys.WaterCementRatio => ratio ?? 0m,
                 LimitKeys.AluminaPct => batch.CementOxideAnalysis!.AluminaPct,

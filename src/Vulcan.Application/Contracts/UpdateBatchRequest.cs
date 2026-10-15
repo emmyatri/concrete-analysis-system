@@ -18,6 +18,8 @@ public class UpdateBatchRequest
     [Required]
     public required double MixWaterPh { get; init; }
 
+    public decimal? CementSurfacePh { get; init; }
+
     public bool IsSynthetic { get; init; } = false;
 
     [Required]
@@ -35,6 +37,7 @@ public class UpdateBatchRequest
             FinalWeightLb = (decimal)FinalWeightLb,
             CementType = CementType,
             MixWaterPh = (decimal)MixWaterPh,
+            CementSurfacePh = CementSurfacePh,
             IsSynthetic = IsSynthetic,
             ExpectedFinalBreakPsi = ExpectedFinalBreakPsi,
             Composition = Composition?.ToDomain(),

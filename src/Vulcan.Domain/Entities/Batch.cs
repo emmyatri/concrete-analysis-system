@@ -10,6 +10,7 @@ public class Batch : AuditableEntity
     public int ExpectedFinalBreakPsi { get; set; }
     public CementType CementType { get; set; }
     public decimal MixWaterPh { get; set; }
+    public decimal? CementSurfacePh { get; set; }
     public bool IsSynthetic { get; set; }
 
     public Composition? Composition { get; set; }
