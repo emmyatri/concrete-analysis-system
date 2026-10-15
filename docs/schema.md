@@ -38,6 +38,7 @@ erDiagram
         int ExpectedFinalBreakPsi "design target, PSI"
         enum CementType "TypeI, TypeII, TypeIII"
         decimal MixWaterPh "pH of the mix water"
+        decimal CementSurfacePh "nullable for historical records; required on create/update"
         bool IsSynthetic
         datetime CreatedAtUtc
         string CreatedBy
@@ -159,6 +160,9 @@ in both the UI and the API (NFR-6).
 | `CementType`            | enum       | —    | Yes  | `TypeI`, `TypeII`, `TypeIII`                                           | A-4               |
 | `MixWaterPh`            | decimal    | —    | Yes  | **Reject outside 1–9**, message states range; **Warn outside 7.0–7.5** | FR-7, Decision 4  |
 | `IsSynthetic`           | bool       | —    | Yes  | Defaults to `false`; seeder sets `true`                                | FR-20             |
+| `CementSurfacePh` | decimal? | — | Yes* | Max 2 decimals; Reject outside 0–14; Warn outside 7.1–8.0 | FR-7 extended, NFR-6 |
+
+\*Required when creating or editing a batch. Historical records may be null.
 
 ### Composition — the mix recipe (1 per batch)
 
@@ -303,6 +307,8 @@ These rows are loaded on first run (M1-21). Changing them later is a data change
 | `Break.StrengthPsi`              | Warn     | 3000 | 10000 | PSI     | Client doc / FR-5                      |
 | `Batch.MixWaterPh`               | Reject   | 1    | 9     | —       | Client doc / FR-7, Decision 4          |
 | `Batch.MixWaterPh`               | Warn     | 7.0  | 7.5   | —       | Client doc ("normal")                  |
+| `Batch.CementSurfacePh`          | Reject   | 0    | 14    | —       | Client, M1 demo (Oct 9) |
+| `Batch.CementSurfacePh`          | Warn     | 7.1  | 8.0   | —       | Client, M1 demo (Oct 9) |
 | `Curing.AmbientTempF`            | Reject   | 0    | 150   | °F      | Plausibility                           |
 | `Curing.AmbientTempF`            | Warn     | 60   | 80    | °F      | ASTM C31 initial curing                |
 | `Curing.InternalTempF`           | Reject   | 0    | 200   | °F      | Plausibility (heat of hydration)       |
