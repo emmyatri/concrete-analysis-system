@@ -1,6 +1,6 @@
 # Client Decisions
 
-**Last updated:** September 28, 2026 · **Contract reference:** SLA section 6.3 · **Requirements:** A-3, A-4, A-6, A-7
+**Last updated:** October 15, 2026 · **Contract reference:** SLA section 6.3 · **Requirements:** A-3, A-4, A-6, A-7
 
 When we started building, a handful of things in the client's requirements weren't spelled out: units, which ranges
 block a save, how some numbers get calculated. Instead of waiting on email replies, we answered each question from
@@ -216,7 +216,26 @@ Types I and II for general work and Types I and III for high-early-strength conc
 Rev 1: "Foreign object detection we can leave off at this time but if there is time near the end, we can discuss and
 maybe integrate that feature." It's not part of Milestone 1.
 
+## 11. Batch final weight field correction
+
+It was brought up by the client in the Milestone 1 Meeting that each batch's final weight (in lbs) should be about 25
+pounds per the average cylinder. We have adjusted the ranges to warn values outside of 20-30 lbs and reject values outside
+of 10-40 lbs.
+
 ---
+
+## 12. Cement surface pH is recorded separately from mix water pH
+
+At the M1 demo, the client requested the cement's surface pH alongside the mix water pH.
+`Batch.CementSurfacePh` is required when creating or editing a batch, with at most two
+decimal places. Reject outside 0-14 and warn outside the normal 7.1-8.0 range.
+The ranges and messages come from `ValidationLimit` data.
+
+The database column is nullable so historical batches still load. Historical null values
+are not backfilled; the operator supplies the measurement when editing a batch.
+
+*Source:* Client, M1 demo (Oct 9)
+*Affects:* `Batch.CementSurfacePh`, FR-7 (extended), NFR-6; SCRUM-149
 
 ## Our own defaults (not client rules)
 

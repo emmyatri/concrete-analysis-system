@@ -129,6 +129,7 @@ public sealed class BatchService(
             updatedBatch.ExpectedFinalBreakPsi;
         existingBatch.CementType = updatedBatch.CementType;
         existingBatch.MixWaterPh = updatedBatch.MixWaterPh;
+        existingBatch.CementSurfacePh = updatedBatch.CementSurfacePh;
 
         existingBatch.Composition!.CementPct =
             updatedBatch.Composition!.CementPct;
@@ -233,13 +234,6 @@ public sealed class BatchService(
                 "Batch number is required and may contain only letters, numbers, and dashes."));
         }
 
-        if (!batchValidator.IsFinalWeightValid(batch.FinalWeightLb))
-        {
-            errors.Add(new ValidationError(
-                LimitKeys.FinalWeightLb,
-                "Final weight is invalid."));
-        }
-
         if (!BatchValidator.IsCastAtValid(batch.CastAt, clock.UtcNow))
         {
             errors.Add(new ValidationError(
@@ -276,6 +270,36 @@ public sealed class BatchService(
                 LimitKeys.MixWaterPh,
                 warn.Message));
         }
+
+        var surfacePhResult = batchValidator.CheckCementSurfacePh(batch.CementSurfacePh);
+
+        if (surfacePhResult is LimitResult.Reject surfacePhReject)
+        {
+            errors.Add(new ValidationError(
+                LimitKeys.CementSurfacePh,
+                surfacePhReject.Message));
+        }
+        else if (surfacePhResult is LimitResult.Warn surfacePhWarn)
+        {
+            warnings.Add(new ValidationError(
+                LimitKeys.CementSurfacePh,
+                surfacePhWarn.Message));
+        }
+
+        var finalWeightResult = batchValidator.CheckFinalWeightLb(batch.FinalWeightLb);
+
+        if (finalWeightResult is LimitResult.Reject weightReject)
+        {
+            errors.Add(new ValidationError(
+                LimitKeys.FinalWeightLb,
+                weightReject.Message));
+        }
+        else if (finalWeightResult is LimitResult.Warn warn)
+        {
+            warnings.Add(new ValidationError(
+                LimitKeys.FinalWeightLb,
+                warn.Message));
+        }
     }
 
     private IReadOnlyList<RecordWarning> CreateWarningRecords(
@@ -295,6 +319,8 @@ public sealed class BatchService(
             Value = warning.Key switch
             {
                 LimitKeys.MixWaterPh => batch.MixWaterPh,
+                LimitKeys.CementSurfacePh => batch.CementSurfacePh!.Value,
+                LimitKeys.FinalWeightLb => batch.FinalWeightLb,
                 LimitKeys.WaterCementRatio => ratio ?? 0m,
                 LimitKeys.AluminaPct => batch.CementOxideAnalysis!.AluminaPct,
                 LimitKeys.IronOxidePct => batch.CementOxideAnalysis!.IronOxidePct,

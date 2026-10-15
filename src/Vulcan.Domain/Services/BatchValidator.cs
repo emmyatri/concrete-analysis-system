@@ -29,6 +29,7 @@ public partial class BatchValidator(LimitEvaluator limitEvaluator)
         return BatchNumberPattern().IsMatch(normalized);
     }
 
+    [Obsolete("This method is deprecated, use CheckFinalWeightLb instead")]
     public bool IsFinalWeightValid(decimal finalWeightLb)
     {
         var result = limitEvaluator.Check(
@@ -76,6 +77,32 @@ public partial class BatchValidator(LimitEvaluator limitEvaluator)
     public LimitResult CheckMixWaterPh(decimal mixWaterPh)
     {
         return limitEvaluator.Check(LimitKeys.MixWaterPh, mixWaterPh);
+    }
+
+    public LimitResult CheckCementSurfacePh(decimal? cementSurfacePh)
+    {
+        if (cementSurfacePh is not { } value)
+        {
+            return new LimitResult.Reject("Cement surface pH is required.");
+        }
+
+        if (decimal.Round(value, 2) != value)
+        {
+            return new LimitResult.Reject(
+                "Cement surface pH must have at most two decimal places.");
+        }
+
+        return limitEvaluator.Check(LimitKeys.CementSurfacePh, value);
+    }
+
+    public LimitResult CheckFinalWeightLb(decimal finalWeightLb)
+    {
+        // reject on improper rounding
+        if (decimal.Round(finalWeightLb, 2) != finalWeightLb)
+        {
+            return new LimitResult.Reject("Final weight must be rounded to two decimal places.");
+        }
+        return limitEvaluator.Check(LimitKeys.FinalWeightLb, finalWeightLb);
     }
 
     [GeneratedRegex(@"^[A-Za-z0-9-]+$")]

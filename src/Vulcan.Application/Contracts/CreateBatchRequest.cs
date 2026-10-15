@@ -23,6 +23,7 @@ public class CreateBatchRequest
             FinalWeightLb = (decimal)Batch.FinalWeightLb,
             CementType = Batch.CementType,
             MixWaterPh = (decimal)Batch.MixWaterPh,
+            CementSurfacePh = Batch.CementSurfacePh,
             ExpectedFinalBreakPsi = Batch.ExpectedFinalBreakPsi,
             IsSynthetic = Batch.IsSynthetic,
             Composition = Composition?.ToDomain(),
@@ -51,6 +52,8 @@ public class BatchWrapper
 
     [Required]
     public required double MixWaterPh { get; init; }
+
+    public decimal? CementSurfacePh { get; init; }
 
     [Required]
     public required int ExpectedFinalBreakPsi { get; init; }

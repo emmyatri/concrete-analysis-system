@@ -89,31 +89,79 @@ public class BatchValidatorTests
         Assert.False(BatchValidator.IsBatchNumberValid(batchNumber));
     }
 
-    // Final weight must be greater than zero and contain no more than
+    // Final weight must be between 10 and 40 and must be within
     // two decimal places. The numeric range comes from the configured limit.
     [Theory]
-    [InlineData("0.01")]
-    [InlineData("1")]
-    [InlineData("1.1")]
-    [InlineData("1.12")]
-    [InlineData("100.00")]
+    [InlineData("10.0")]
+    [InlineData("10.1")]
+    [InlineData("39.9")]
+    [InlineData("40.0")]
     public void FinalWeight_WithValidValue_IsValid(string value)
     {
         var finalWeightLb = decimal.Parse(value);
 
+#pragma warning disable CS0618 // Type or member is obsolete
         Assert.True(_validator.IsFinalWeightValid(finalWeightLb));
+#pragma warning restore CS0618 // Type or member is obsolete
     }
 
     [Theory]
-    [InlineData("0")]
-    [InlineData("-0.01")]
-    [InlineData("1.001")]
-    [InlineData("1.123")]
+    [InlineData("9.99")]
+    [InlineData("40.01")]
+    [InlineData("25.001")]
+    [InlineData("25.123")]
     public void FinalWeight_WithInvalidValue_IsInvalid(string value)
     {
         var finalWeightLb = decimal.Parse(value);
-
+#pragma warning disable CS0618 // Type or member is obsolete
         Assert.False(_validator.IsFinalWeightValid(finalWeightLb));
+#pragma warning restore CS0618 // Type or member is obsolete
+    }
+
+    [Theory]
+    [InlineData("20.0")]
+    [InlineData("25.0")]
+    [InlineData("30.0")]
+    public void FinalWeightCheck_WithValidValue_IsValid(string value)
+    {
+        var finalWeightLb = decimal.Parse(value);
+
+        var result = _validator.CheckFinalWeightLb(finalWeightLb);
+        result.ShouldBeOfType<LimitResult.Ok>();
+    }
+
+    [Theory]
+    [InlineData("10.00")]
+    [InlineData("10.01")]
+    [InlineData("19.99")]
+    [InlineData("30.01")]
+    [InlineData("35.00")]
+    [InlineData("40.00")]
+    public void FinalWeightCheck_WithWarningValue_IsWarn(string value)
+    {
+        var finalWeightLb = decimal.Parse(value);
+
+        var result = _validator.CheckFinalWeightLb(finalWeightLb);
+        result
+            .ShouldBeOfType<LimitResult.Warn>()
+            .Message
+            .ShouldBe("Sample weight is outside the normal range [20-30] for a 12x6 cylinder");
+    }
+
+    [Theory]
+    [InlineData("9.99", "Sample weight must be within the range [10-40]")]
+    [InlineData("40.01", "Sample weight must be within the range [10-40]")]
+    [InlineData("35.1202", "Final weight must be rounded to two decimal places.")]
+    [InlineData("25.391", "Final weight must be rounded to two decimal places.")]
+    public void FinalWeightCheck_WithRejectValue_IsReject(string value, string message)
+    {
+        var finalWeightLb = decimal.Parse(value);
+
+        var result = _validator.CheckFinalWeightLb(finalWeightLb);
+        result
+            .ShouldBeOfType<LimitResult.Reject>()
+            .Message
+            .ShouldBe(message);
     }
 
     // Cast time is required and cannot be later than the current time.
@@ -206,11 +254,21 @@ public class BatchValidatorTests
                     {
                         Key = LimitKeys.FinalWeightLb,
                         Severity = Severity.Reject,
-                        Min = 0.01m,
-                        Max = null,
+                        Min = 10,
+                        Max = 40,
                         Unit = "lb",
-                        Message = "Weight must be greater than 0",
-                        Source = "schema.md"
+                        Message = "Sample weight must be within the range [10-40]",
+                        Source = "Client, M1 demo (Oct 9)"
+                    },
+                    Warn = new ValidationLimit
+                    {
+                        Key = LimitKeys.FinalWeightLb,
+                        Severity = Severity.Warn,
+                        Min = 20,
+                        Max = 30,
+                        Unit = "lb",
+                        Message = "Sample weight is outside the normal range [20-30] for a 12x6 cylinder",
+                        Source = "Client, M1 demo (Oct 9)"
                     }
                 },
 
@@ -232,4 +290,6 @@ public class BatchValidatorTests
             };
         }
     }
+
+
 }

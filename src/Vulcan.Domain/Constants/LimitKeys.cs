@@ -20,6 +20,7 @@ public static class LimitKeys
     public const string WidthIn = "Specimen.WidthIn";
     public const string StrengthPsi = "Break.StrengthPsi";
     public const string MixWaterPh = "Batch.MixWaterPh";
+    public const string CementSurfacePh = "Batch.CementSurfacePh";
     public const string FinalWeightLb = "Batch.FinalWeightLb";
     public const string ExpectedFinalBreakPsi = "Batch.ExpectedFinalBreakPsi";
     public const string AmbientTempF = "Curing.AmbientTempF";

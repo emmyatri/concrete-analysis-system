@@ -17,6 +17,11 @@ public class SyntheticDataLoaderTests(DatabaseFixture dbFixture)
         var batches = SyntheticDataLoader.Load();
 
         Assert.Equal(9, batches.Count);
+        Assert.All(batches, batch =>
+        {
+            Assert.NotNull(batch.CementSurfacePh);
+            Assert.InRange(batch.CementSurfacePh.Value, 7.1m, 8.0m);
+        });
 
         // Batch and Specimen are the entities that explicitly store
         // IsSynthetic in the approved schema.
@@ -44,6 +49,10 @@ public class SyntheticDataLoaderTests(DatabaseFixture dbFixture)
         Assert.Equal(81, await db.BreakResult.CountAsync());
         Assert.Equal(567, await db.CuringReading.CountAsync());
 
+        var expectedSurfacePh = SyntheticDataLoader.Load()
+            .ToDictionary(batch => batch.BatchNumber, batch => batch.CementSurfacePh);
+        db.ChangeTracker.Clear();
+
         var batches = await db.Batch
             .Include(batch => batch.Composition)
             .Include(batch => batch.CementOxideAnalysis)
@@ -56,6 +65,8 @@ public class SyntheticDataLoaderTests(DatabaseFixture dbFixture)
         Assert.All(batches, batch =>
         {
             Assert.True(batch.IsSynthetic);
+            Assert.NotNull(batch.CementSurfacePh);
+            Assert.Equal(expectedSurfacePh[batch.BatchNumber], batch.CementSurfacePh);
             Assert.Equal("Synthetic data", batch.CreatedBy);
             Assert.Equal(batch.CastAt, batch.CreatedAtUtc);
 
