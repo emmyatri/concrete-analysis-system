@@ -6,376 +6,347 @@
   </nav>
 
   @switch (state().status) {
-    @case ('loading') {
-      <p class="message" data-testid="loading">Loading {{ batchNumber() }}…</p>
-    }
+  @case ('loading') {
+  <p class="message" data-testid="loading">Loading {{ batchNumber() }}…</p>
+  }
 
-    @case ('not-found') {
-      <section class="card message-card" data-testid="not-found">
-        <h1>No batch {{ batchNumber() }}</h1>
-        <p>Check the number, or find the batch in Search batches.</p>
-        <a pButton routerLink="/batches"><span pButtonLabel>Search batches</span></a>
-      </section>
-    }
+  @case ('not-found') {
+  <section class="card message-card" data-testid="not-found">
+    <h1>No batch {{ batchNumber() }}</h1>
+    <p>Check the number, or find the batch in Search batches.</p>
+    <a pButton routerLink="/batches"><span pButtonLabel>Search batches</span></a>
+  </section>
+  }
 
-    @case ('failed') {
-      <section class="card message-card" data-testid="failed">
-        <h1>Couldn't open {{ batchNumber() }}</h1>
-        <p>{{ failure() }}</p>
-        <p-button label="Try again" (onClick)="retry()" />
-      </section>
-    }
+  @case ('failed') {
+  <section class="card message-card" data-testid="failed">
+    <h1>Couldn't open {{ batchNumber() }}</h1>
+    <p>{{ failure() }}</p>
+    <p-button label="Try again" (onClick)="retry()" />
+  </section>
+  }
   }
 
   @if (batch(); as batch) {
-    <!-- ---------- Header ---------- -->
-    <header class="page-header">
-      <div class="page-title-row">
-        <h1 class="page-title">{{ batch.batchNumber }}</h1>
-        @if (batch.isSynthetic) {
-          <span class="badge badge-synthetic" data-testid="synthetic-tag">Synthetic</span>
-        }
-        @if (batch.warnings.length > 0) {
-          <span class="badge badge-warn" data-testid="warning-count">
-            {{ batch.warnings.length }} {{ batch.warnings.length === 1 ? 'warning' : 'warnings' }}
-          </span>
-        }
-      </div>
+  <!-- ---------- Header ---------- -->
+  <header class="page-header">
+    <div class="page-title-row">
+      <h1 class="page-title">{{ batch.batchNumber }}</h1>
+      @if (batch.isSynthetic) {
+      <span class="badge badge-synthetic" data-testid="synthetic-tag">Synthetic</span>
+      }
+      @if (batch.warnings.length > 0) {
+      <span class="badge badge-warn" data-testid="warning-count">
+        {{ batch.warnings.length }} {{ batch.warnings.length === 1 ? 'warning' : 'warnings' }}
+      </span>
+      }
+    </div>
 
-      <!-- Each button opens that entry screen for this batch. -->
-      <div class="page-actions">
-        <a
-          pButton
-          [outlined]="true"
-          class="quiet"
-          [routerLink]="['/batches', batch.batchNumber, 'edit']"
-        ><span pButtonLabel>Edit batch</span></a
-        >
-        <a
-          pButton
-          [outlined]="true"
-          class="quiet"
-          routerLink="/curing"
-          [queryParams]="{ batch: batch.batchNumber }"
-        ><span pButtonLabel>Curing readings</span></a
-        >
-        <button pButton type="button" (click)="addCylinderOpen.set(true)" data-testid="add-cylinder">
-          <span pButtonLabel>Add cylinder</span>
-        </button>
-        <a pButton routerLink="/breaks" [queryParams]="{ batch: batch.batchNumber }"
-        ><span pButtonLabel>Enter break</span></a
-        >
-      </div>
-    </header>
+    <!-- Each button opens that entry screen for this batch. -->
+    <div class="page-actions">
+      <a pButton [outlined]="true" class="quiet" [routerLink]="['/batches', batch.batchNumber, 'edit']"><span
+          pButtonLabel>Edit batch</span></a>
+      <a pButton [outlined]="true" class="quiet" routerLink="/curing" [queryParams]="{ batch: batch.batchNumber }"><span
+          pButtonLabel>Curing readings</span></a>
+      <button pButton type="button" (click)="addCylinderOpen.set(true)" data-testid="add-cylinder">
+        <span pButtonLabel>Add cylinder</span>
+      </button>
+      <a pButton routerLink="/breaks" [queryParams]="{ batch: batch.batchNumber }"><span pButtonLabel>Enter
+          break</span></a>
+    </div>
+  </header>
 
-    <!-- ---------- Summary strip ---------- -->
-    <dl class="card summary" data-testid="summary">
-      <div class="summary-item">
-        <dt>Cast</dt>
-        <dd>{{ batch.castAt | date: 'MM/dd/yy HH:mm' }}</dd>
-      </div>
-      <div class="summary-item">
-        <dt>Cement type</dt>
-        <dd>{{ cementLabels[batch.cementType] }}</dd>
-      </div>
-      <div class="summary-item">
-        <dt>Final weight</dt>
-        <dd>{{ batch.finalWeightLb | number: '1.0-2' }} lb</dd>
-      </div>
-      <div class="summary-item">
-        <dt>Mix water pH</dt>
-        <dd>
-          @if (phWarning(); as warning) {
-            <span class="flagged" [title]="warning.message" data-testid="ph-flagged"
-            >{{ batch.mixWaterPh | number: '1.1-2' }} ⚠</span
-            >
-          } @else {
-            {{ batch.mixWaterPh | number: '1.1-2' }}
-          }
-        </dd>
-      </div>
-      <div class="summary-item">
-        <dt>Expected final</dt>
-        <dd>{{ batch.expectedFinalBreakPsi | number }} PSI</dd>
-      </div>
-      <div class="summary-item">
-        <dt>Water / cementitious</dt>
-        <dd>
-          @if (ratioWarning(); as warning) {
-            <span class="flagged-text" [title]="warning.message" data-testid="ratio-flagged"
-            >{{ batch.composition.waterCementRatio | number: '1.2-3' }} ⚠</span
-            >
-          } @else {
-            {{ (batch.composition.waterCementRatio | number: '1.2-3') ?? '—' }}
-          }
-        </dd>
-      </div>
-      <div class="summary-item">
-        <dt>Air / other</dt>
-        <dd>{{ batch.composition.airOtherPct | number: '1.1-2' }}%</dd>
-      </div>
-      <div class="summary-item" data-testid="audit">
-        @if (batch.modifiedBy && batch.modifiedAtUtc) {
-          <dt>Changed by</dt>
-          <dd>
-            {{ batch.modifiedBy }}
-            <small>{{ batch.modifiedAtUtc | date: 'MM/dd/yy HH:mm' }}</small>
-          </dd>
+  <!-- ---------- Summary strip ---------- -->
+  <dl class="card summary" data-testid="summary">
+    <div class="summary-item">
+      <dt>Cast</dt>
+      <dd>{{ batch.castAt | date: 'MM/dd/yy HH:mm' }}</dd>
+    </div>
+    <div class="summary-item">
+      <dt>Cement type</dt>
+      <dd>{{ cementLabels[batch.cementType] }}</dd>
+    </div>
+    <div class="summary-item">
+      <dt>Sample weight</dt>
+      <dd>
+        @if (weightWarning(); as warning) {
+        <span class="flagged" [title]="warning.message" data-testid="weight-flagged">{{ batch.finalWeightLb | number:
+          '1.0-2'
+          }} lb ⚠</span>
         } @else {
-          <dt>Created by</dt>
-          <dd>
-            {{ batch.createdBy }}
-            <small>{{ batch.createdAtUtc | date: 'MM/dd/yy HH:mm' }}</small>
-          </dd>
+        {{ batch.finalWeightLb | number: '1.0-2' }} lb
         }
-      </div>
-    </dl>
+      </dd>
+    </div>
+    <div class="summary-item">
+      <dt>Mix water pH</dt>
+      <dd>
+        @if (phWarning(); as warning) {
+        <span class="flagged" [title]="warning.message" data-testid="ph-flagged">{{ batch.mixWaterPh | number: '1.1-2'
+          }} ⚠</span>
+        } @else {
+        {{ batch.mixWaterPh | number: '1.1-2' }}
+        }
+      </dd>
+    </div>
+    <div class="summary-item">
+      <dt>Expected final</dt>
+      <dd>{{ batch.expectedFinalBreakPsi | number }} PSI</dd>
+    </div>
+    <div class="summary-item">
+      <dt>Water / cementitious</dt>
+      <dd>
+        @if (ratioWarning(); as warning) {
+        <span class="flagged-text" [title]="warning.message" data-testid="ratio-flagged">{{
+          batch.composition.waterCementRatio | number: '1.2-3' }} ⚠</span>
+        } @else {
+        {{ (batch.composition.waterCementRatio | number: '1.2-3') ?? '—' }}
+        }
+      </dd>
+    </div>
+    <div class="summary-item">
+      <dt>Air / other</dt>
+      <dd>{{ batch.composition.airOtherPct | number: '1.1-2' }}%</dd>
+    </div>
+    <div class="summary-item" data-testid="audit">
+      @if (batch.modifiedBy && batch.modifiedAtUtc) {
+      <dt>Changed by</dt>
+      <dd>
+        {{ batch.modifiedBy }}
+        <small>{{ batch.modifiedAtUtc | date: 'MM/dd/yy HH:mm' }}</small>
+      </dd>
+      } @else {
+      <dt>Created by</dt>
+      <dd>
+        {{ batch.createdBy }}
+        <small>{{ batch.createdAtUtc | date: 'MM/dd/yy HH:mm' }}</small>
+      </dd>
+      }
+    </div>
+  </dl>
 
-    <div class="columns">
-      <!-- ---------- Chart (Milestone 2, FR-11) ---------- -->
-      <section class="card chart-card" aria-labelledby="chart-title">
+  <div class="columns">
+    <!-- ---------- Chart (Milestone 2, FR-11) ---------- -->
+    <section class="card chart-card" aria-labelledby="chart-title">
+      <header class="card-header">
+        <i class="pi pi-chart-line" aria-hidden="true"></i>
+        <h2 id="chart-title">{{ batch.batchNumber }} · Strength over time</h2>
+      </header>
+      <div class="chart-body">
+        <i class="pi pi-chart-line" aria-hidden="true"></i>
+        <p>Strength chart — Milestone 2</p>
+      </div>
+    </section>
+
+    <div class="side">
+      <!-- ---------- Composition ---------- -->
+      <section class="card" aria-labelledby="composition-title">
         <header class="card-header">
-          <i class="pi pi-chart-line" aria-hidden="true"></i>
-          <h2 id="chart-title">{{ batch.batchNumber }} · Strength over time</h2>
+          <i class="pi pi-chart-pie" aria-hidden="true"></i>
+          <h2 id="composition-title">Composition</h2>
+          <span class="card-note">% by volume</span>
         </header>
-        <div class="chart-body">
-          <i class="pi pi-chart-line" aria-hidden="true"></i>
-          <p>Strength chart — Milestone 2</p>
+        <div class="card-body">
+          <div class="mix-bar" role="img" aria-label="Mix by volume">
+            @for (part of mix(); track part.cls) {
+            @if (part.pct > 0) {
+            <span [class]="'mix-segment ' + part.cls" [style.flex-grow]="part.pct"></span>
+            }
+            }
+          </div>
+          <dl class="pairs" data-testid="composition">
+            @for (part of mix(); track part.cls) {
+            <div>
+              <dt><span [class]="'mix-swatch ' + part.cls"></span>{{ part.label }}</dt>
+              <dd>{{ part.pct | number: '1.2-2' }}</dd>
+            </div>
+            }
+          </dl>
         </div>
       </section>
 
-      <div class="side">
-        <!-- ---------- Composition ---------- -->
-        <section class="card" aria-labelledby="composition-title">
-          <header class="card-header">
-            <i class="pi pi-chart-pie" aria-hidden="true"></i>
-            <h2 id="composition-title">Composition</h2>
-            <span class="card-note">% by volume</span>
-          </header>
-          <div class="card-body">
-            <div class="mix-bar" role="img" aria-label="Mix by volume">
-              @for (part of mix(); track part.cls) {
-                @if (part.pct > 0) {
-                  <span [class]="'mix-segment ' + part.cls" [style.flex-grow]="part.pct"></span>
+      <!-- ---------- Cement oxides ---------- -->
+      <section class="card" aria-labelledby="oxides-title">
+        <header class="card-header">
+          <i class="pi pi-database" aria-hidden="true"></i>
+          <h2 id="oxides-title">Cement oxides</h2>
+          <span class="card-note">% of cement</span>
+        </header>
+        <div class="card-body">
+          <dl class="pairs" data-testid="oxides">
+            @for (oxide of oxides(); track oxide.key) {
+            <div>
+              <dt>{{ oxide.label }}</dt>
+              <dd>
+                @if (oxide.warning; as warning) {
+                <span class="flagged" [title]="warning.message">{{ oxide.value | number: '1.2-2' }} ⚠</span>
+                } @else {
+                {{ oxide.value | number: '1.2-2' }}
                 }
-              }
+              </dd>
             </div>
-            <dl class="pairs" data-testid="composition">
-              @for (part of mix(); track part.cls) {
-                <div>
-                  <dt><span [class]="'mix-swatch ' + part.cls"></span>{{ part.label }}</dt>
-                  <dd>{{ part.pct | number: '1.2-2' }}</dd>
-                </div>
-              }
-            </dl>
-          </div>
-        </section>
-
-        <!-- ---------- Cement oxides ---------- -->
-        <section class="card" aria-labelledby="oxides-title">
-          <header class="card-header">
-            <i class="pi pi-database" aria-hidden="true"></i>
-            <h2 id="oxides-title">Cement oxides</h2>
-            <span class="card-note">% of cement</span>
-          </header>
-          <div class="card-body">
-            <dl class="pairs" data-testid="oxides">
-              @for (oxide of oxides(); track oxide.key) {
-                <div>
-                  <dt>{{ oxide.label }}</dt>
-                  <dd>
-                    @if (oxide.warning; as warning) {
-                      <span class="flagged" [title]="warning.message"
-                      >{{ oxide.value | number: '1.2-2' }} ⚠</span
-                      >
-                    } @else {
-                      {{ oxide.value | number: '1.2-2' }}
-                    }
-                  </dd>
-                </div>
-              }
-            </dl>
-            @if (flaggedOxides().length === 0) {
-              <p class="status status-ok" data-testid="chemistry-status">
-                <i class="pi pi-check-circle" aria-hidden="true"></i>All within normal range
-              </p>
-            } @else {
-              <p class="status status-warn" data-testid="chemistry-status">
-                @for (oxide of flaggedOxides(); track oxide.key) {
-                  <span>
-                    ⚠ {{ oxide.label }} {{ oxide.value | number: '1.2-2' }}
-                    @if (oxide.normal) {
-                      · normal {{ oxide.normal }}
-                    }
-                  </span>
-                }
-              </p>
             }
-          </div>
-        </section>
-      </div>
+          </dl>
+          @if (flaggedOxides().length === 0) {
+          <p class="status status-ok" data-testid="chemistry-status">
+            <i class="pi pi-check-circle" aria-hidden="true"></i>All within normal range
+          </p>
+          } @else {
+          <p class="status status-warn" data-testid="chemistry-status">
+            @for (oxide of flaggedOxides(); track oxide.key) {
+            <span>
+              ⚠ {{ oxide.label }} {{ oxide.value | number: '1.2-2' }}
+              @if (oxide.normal) {
+              · normal {{ oxide.normal }}
+              }
+            </span>
+            }
+          </p>
+          }
+        </div>
+      </section>
     </div>
+  </div>
 
-    <!-- ---------- Tabs ---------- -->
-    <section class="card tabs-card">
-      <p-tabs value="cylinders">
-        <p-tablist>
-          <p-tab value="cylinders"
-          >Cylinders &amp; breaks <span class="count">{{ batch.specimens.length }}</span></p-tab
-          >
-          <p-tab value="readings"
-          >Curing readings <span class="count">{{ readings().length }}</span></p-tab
-          >
-          <p-tab value="warnings"
-          >Warnings
-            <span class="count" [class.count-warn]="batch.warnings.length > 0">{{
-                batch.warnings.length
-              }}</span></p-tab
-          >
-        </p-tablist>
+  <!-- ---------- Tabs ---------- -->
+  <section class="card tabs-card">
+    <p-tabs value="cylinders">
+      <p-tablist>
+        <p-tab value="cylinders">Cylinders &amp; breaks <span class="count">{{ batch.specimens.length }}</span></p-tab>
+        <p-tab value="readings">Curing readings <span class="count">{{ readings().length }}</span></p-tab>
+        <p-tab value="warnings">Warnings
+          <span class="count" [class.count-warn]="batch.warnings.length > 0">{{
+            batch.warnings.length
+            }}</span></p-tab>
+      </p-tablist>
 
-        <p-tabpanels>
-          <p-tabpanel value="cylinders">
-            @if (cylinders().length === 0) {
-              <p class="empty">No cylinders yet. Use Add cylinder to log one.</p>
-            } @else {
-              <p-table [value]="cylinders()" data-testid="cylinders">
-                <ng-template #header>
-                  <tr>
-                    <th>Label</th>
-                    <th>Age</th>
-                    <th>Length (in)</th>
-                    <th>Width (in)</th>
-                    <th>Broken at</th>
-                    <th>Strength (PSI)</th>
-                    <th>Readings</th>
-                    <th></th>
-                  </tr>
-                </ng-template>
-                <ng-template #body let-row>
-                  <tr>
-                    <td>{{ row.specimen.label }}</td>
-                    <td>{{ row.testAge }}</td>
-                    <td>{{ row.specimen.lengthIn | number: '1.2-2' }} in</td>
-                    <td>{{ row.specimen.widthIn | number: '1.2-2' }} in</td>
-                    <td>{{ (row.specimen.breakResult?.brokenAt | date: 'MM/dd @ HH:mm') ?? '—' }}</td>
-                    <td>
-                      @if (row.specimen.breakResult; as result) {
-                        @if (row.breakWarning) {
-                          <span class="flagged" [title]="row.breakWarning.message"
-                          >{{ result.strengthPsi | number }} PSI ⚠</span
-                          >
-                        } @else {
-                          {{ result.strengthPsi | number }} PSI
-                        }
-                      } @else {
-                        <a
-                          class="row-link"
-                          routerLink="/breaks"
-                          [queryParams]="{ batch: batch.batchNumber, cylinder: row.specimen.label }"
-                          data-testid="record-break"
-                        >Record break</a
-                        >
-                      }
-                    </td>
-                    <td>{{ row.specimen.curingReadings.length }}</td>
-                    <td>
-                      <a
-                        class="row-link"
-                        routerLink="/curing"
-                        [queryParams]="{ batch: batch.batchNumber, cylinder: row.specimen.label }"
-                      >View</a
-                      >
-                    </td>
-                  </tr>
-                </ng-template>
-              </p-table>
-            }
-          </p-tabpanel>
+      <p-tabpanels>
+        <p-tabpanel value="cylinders">
+          @if (cylinders().length === 0) {
+          <p class="empty">No cylinders yet. Use Add cylinder to log one.</p>
+          } @else {
+          <p-table [value]="cylinders()" data-testid="cylinders">
+            <ng-template #header>
+              <tr>
+                <th>Label</th>
+                <th>Age</th>
+                <th>Length (in)</th>
+                <th>Width (in)</th>
+                <th>Broken at</th>
+                <th>Strength (PSI)</th>
+                <th>Readings</th>
+                <th></th>
+              </tr>
+            </ng-template>
+            <ng-template #body let-row>
+              <tr>
+                <td>{{ row.specimen.label }}</td>
+                <td>{{ row.testAge }}</td>
+                <td>{{ row.specimen.lengthIn | number: '1.2-2' }} in</td>
+                <td>{{ row.specimen.widthIn | number: '1.2-2' }} in</td>
+                <td>{{ (row.specimen.breakResult?.brokenAt | date: 'MM/dd @ HH:mm') ?? '—' }}</td>
+                <td>
+                  @if (row.specimen.breakResult; as result) {
+                  @if (row.breakWarning) {
+                  <span class="flagged" [title]="row.breakWarning.message">{{ result.strengthPsi | number }} PSI
+                    ⚠</span>
+                  } @else {
+                  {{ result.strengthPsi | number }} PSI
+                  }
+                  } @else {
+                  <a class="row-link" routerLink="/breaks"
+                    [queryParams]="{ batch: batch.batchNumber, cylinder: row.specimen.label }"
+                    data-testid="record-break">Record break</a>
+                  }
+                </td>
+                <td>{{ row.specimen.curingReadings.length }}</td>
+                <td>
+                  <a class="row-link" routerLink="/curing"
+                    [queryParams]="{ batch: batch.batchNumber, cylinder: row.specimen.label }">View</a>
+                </td>
+              </tr>
+            </ng-template>
+          </p-table>
+          }
+        </p-tabpanel>
 
-          <p-tabpanel value="readings">
-            @if (readings().length === 0) {
-              <p class="empty">No curing readings yet.</p>
-            } @else {
-              <p-table
-                [value]="readings()"
-                rowGroupMode="subheader"
-                groupRowsBy="position"
-                data-testid="readings"
-              >
-                <ng-template #header>
-                  <tr>
-                    <th>Taken at</th>
-                    <th>Internal (°F)</th>
-                    <th>Ambient (°F)</th>
-                    <th>Moisture (%)</th>
-                    <th>RH (%)</th>
-                    <th>Resistivity (Ω/ft)</th>
-                    <th>CO₂ (ppm)</th>
-                  </tr>
-                </ng-template>
-                <ng-template #groupheader let-row>
-                  <tr class="group-row">
-                    <td colspan="7">
-                      Cylinder {{ row.label }} · {{ readingCount(row.label) }}
-                      {{ readingCount(row.label) === 1 ? 'reading' : 'readings' }}
-                    </td>
-                  </tr>
-                </ng-template>
-                <ng-template #body let-row>
-                  <tr>
-                    <td>{{ row.reading.takenAt | date: 'MM/dd/yy HH:mm' }}</td>
-                    <td>{{ row.reading.internalTempF | number: '1.1-1' }} °F</td>
-                    <td>
-                      @if (row.ambientWarning) {
-                        <span class="flagged" [title]="row.ambientWarning.message"
-                        >{{ row.reading.ambientTempF | number: '1.1-1' }} °F ⚠</span
-                        >
-                      } @else {
-                        {{ row.reading.ambientTempF | number: '1.1-1' }} °F
-                      }
-                    </td>
-                    <td>{{ row.reading.moisturePct | number: '1.1-2' }}%</td>
-                    <td>{{ row.reading.relativeHumidityPct | number: '1.1-2' }}%</td>
-                    <td>{{ row.reading.resistivityOhmPerFt | number: '1.2-2' }} Ω/ft</td>
-                    <td>{{ row.reading.co2Ppm | number: '1.1-1' }} ppm</td>
-                  </tr>
-                </ng-template>
-              </p-table>
-            }
-          </p-tabpanel>
+        <p-tabpanel value="readings">
+          @if (readings().length === 0) {
+          <p class="empty">No curing readings yet.</p>
+          } @else {
+          <p-table [value]="readings()" rowGroupMode="subheader" groupRowsBy="position" data-testid="readings">
+            <ng-template #header>
+              <tr>
+                <th>Taken at</th>
+                <th>Internal (°F)</th>
+                <th>Ambient (°F)</th>
+                <th>Moisture (%)</th>
+                <th>RH (%)</th>
+                <th>Resistivity (Ω/ft)</th>
+                <th>CO₂ (ppm)</th>
+              </tr>
+            </ng-template>
+            <ng-template #groupheader let-row>
+              <tr class="group-row">
+                <td colspan="7">
+                  Cylinder {{ row.label }} · {{ readingCount(row.label) }}
+                  {{ readingCount(row.label) === 1 ? 'reading' : 'readings' }}
+                </td>
+              </tr>
+            </ng-template>
+            <ng-template #body let-row>
+              <tr>
+                <td>{{ row.reading.takenAt | date: 'MM/dd/yy HH:mm' }}</td>
+                <td>{{ row.reading.internalTempF | number: '1.1-1' }} °F</td>
+                <td>
+                  @if (row.ambientWarning) {
+                  <span class="flagged" [title]="row.ambientWarning.message">{{ row.reading.ambientTempF | number:
+                    '1.1-1' }} °F ⚠</span>
+                  } @else {
+                  {{ row.reading.ambientTempF | number: '1.1-1' }} °F
+                  }
+                </td>
+                <td>{{ row.reading.moisturePct | number: '1.1-2' }}%</td>
+                <td>{{ row.reading.relativeHumidityPct | number: '1.1-2' }}%</td>
+                <td>{{ row.reading.resistivityOhmPerFt | number: '1.2-2' }} Ω/ft</td>
+                <td>{{ row.reading.co2Ppm | number: '1.1-1' }} ppm</td>
+              </tr>
+            </ng-template>
+          </p-table>
+          }
+        </p-tabpanel>
 
-          <p-tabpanel value="warnings">
-            @if (warningRows().length === 0) {
-              <p class="empty">No warnings. Every value was within its normal range.</p>
-            } @else {
-              <p-table [value]="warningRows()" data-testid="warnings">
-                <ng-template #header>
-                  <tr>
-                    <th>Record</th>
-                    <th>Field</th>
-                    <th>Value</th>
-                    <th>Message</th>
-                  </tr>
-                </ng-template>
-                <ng-template #body let-row>
-                  <tr>
-                    <td>{{ row.record }}</td>
-                    <td>{{ row.field }}</td>
-                    <td>
-                      <span class="flagged">{{ row.value }} ⚠</span>
-                    </td>
-                    <td>{{ row.warning.message }}</td>
-                  </tr>
-                </ng-template>
-              </p-table>
-            }
-          </p-tabpanel>
-        </p-tabpanels>
-      </p-tabs>
-    </section>
+        <p-tabpanel value="warnings">
+          @if (warningRows().length === 0) {
+          <p class="empty">No warnings. Every value was within its normal range.</p>
+          } @else {
+          <p-table [value]="warningRows()" data-testid="warnings">
+            <ng-template #header>
+              <tr>
+                <th>Record</th>
+                <th>Field</th>
+                <th>Value</th>
+                <th>Message</th>
+              </tr>
+            </ng-template>
+            <ng-template #body let-row>
+              <tr>
+                <td>{{ row.record }}</td>
+                <td>{{ row.field }}</td>
+                <td>
+                  <span class="flagged">{{ row.value }} ⚠</span>
+                </td>
+                <td>{{ row.warning.message }}</td>
+              </tr>
+            </ng-template>
+          </p-table>
+          }
+        </p-tabpanel>
+      </p-tabpanels>
+    </p-tabs>
+  </section>
   }
 
   <app-add-cylinder-dialog [batchNumber]="batchNumber()" [visible]="addCylinderOpen()"
-                           (visibleChange)="addCylinderClosed($event)" (saved)="cylinderSaved()" />
+    (visibleChange)="addCylinderClosed($event)" (saved)="cylinderSaved()" />
 </div>

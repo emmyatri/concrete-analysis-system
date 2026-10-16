@@ -7,7 +7,10 @@ import { providePrimeNG } from 'primeng/config';
 
 import { MOCK_BATCH_DETAILS } from '../../core/api/mock/mock-batch-details';
 import { MOCK_SPECIFIC_GRAVITIES, MOCK_VALIDATION_LIMITS } from '../../core/api/mock/mock-data';
-import { clearSavedMockBatches, mockApiInterceptor } from '../../core/api/mock/mock-api.interceptor';
+import {
+  clearSavedMockBatches,
+  mockApiInterceptor,
+} from '../../core/api/mock/mock-api.interceptor';
 import { BatchDetail } from '../../core/api/models';
 import { ReferenceDataService } from '../../core/api/reference-data.service';
 import { USE_MOCKS } from '../../core/api/use-mocks';
@@ -107,6 +110,60 @@ describe('BatchDetailPage', () => {
 
     expect(text('[data-testid="ph-flagged"]')).toBe('7.6 ⚠');
     expect(text('[data-testid="warning-count"]')).toBe('1 warning');
+  });
+
+  /* Test for a batch with a weight outside its normal range; confirms that the 
+  flagged value is displayed and styled correctly. */
+  it('flags a weight outside its normal range', async () => {
+    const source = MOCK_BATCH_DETAILS.find((b) => b.batchNumber === 'VM-SYN-001')!;
+    const batch: BatchDetail = {
+      ...source,
+      finalWeightLb: 35,
+      warnings: [
+        {
+          id: 1,
+          entityType: 'Batch',
+          entityId: source.id,
+          fieldName: 'FinalWeightLb',
+          limitKey: 'Batch.FinalWeightLb',
+          value: 35,
+          message: 'Sample weight is outside the normal range [20-30] for a 12×6 cylinder',
+          createdAtUtc: source.createdAtUtc,
+        },
+      ],
+    };
+    await open('VM-SYN-001', false);
+    const http = TestBed.inject(HttpTestingController);
+    TestBed.inject(ReferenceDataService).load();
+    http.expectOne('/api/validation-limits').flush(MOCK_VALIDATION_LIMITS);
+    http.expectOne('/api/specific-gravities').flush(MOCK_SPECIFIC_GRAVITIES);
+    http.expectOne('/api/batches/VM-SYN-001').flush(batch);
+    harness.detectChanges();
+
+    expect(text('[data-testid="weight-flagged"]')).toBe('35 lb ⚠');
+    expect(text('[data-testid="warning-count"]')).toBe('1 warning');
+    expect(
+      root.querySelector('[data-testid="weight-flagged"]')?.classList.contains('flagged'),
+    ).toBe(true);
+  });
+
+  /* Test for a batch with a normal weight; confirms that the flagged value is not displayed. */
+  it('does not flag a weight within its normal range', async () => {
+    const source = MOCK_BATCH_DETAILS.find((b) => b.batchNumber === 'VM-SYN-001')!;
+    const batch: BatchDetail = {
+      ...source,
+      finalWeightLb: 25,
+      warnings: [],
+    };
+    await open('VM-SYN-001', false);
+    const http = TestBed.inject(HttpTestingController);
+    TestBed.inject(ReferenceDataService).load();
+    http.expectOne('/api/validation-limits').flush(MOCK_VALIDATION_LIMITS);
+    http.expectOne('/api/specific-gravities').flush(MOCK_SPECIFIC_GRAVITIES);
+    http.expectOne('/api/batches/VM-SYN-001').flush(batch);
+    harness.detectChanges();
+
+    expect(root.querySelector('[data-testid="weight-flagged"]')).toBeNull();
   });
 
   it('shows the composition and says the oxides are all within normal range', async () => {
