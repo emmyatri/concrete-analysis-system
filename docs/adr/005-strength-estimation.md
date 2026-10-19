@@ -163,27 +163,30 @@ The initial implementation will not independently estimate ultimate compressive 
 
 ---
 
+
 ## 5. Curing Readings and Prediction Assumptions
 
 ### 5.1 Sufficient Curing Readings
 
-A specimen must have sufficient curing data before a temperature-adjusted strength estimate can be calculated.
+Maturity is calculated independently for each specimen using its own internal temperature readings.
 
-The minimum requirements are:
+A specimen qualifies for batch-level strength estimation when:
 
-- At least two valid internal temperature readings.
-- The readings must span at least 24 hours after casting.
-- The specimen's casting timestamp must be available.
+- At least two valid internal temperature readings are available.
+- The readings span at least 24 hours after casting.
+- The specimen's casting timestamp is available.
 
 These thresholds are application-specific requirements rather than ASTM-mandated minimums.
 
-If sufficient readings are unavailable, the system will report that the specimen has insufficient curing data for a strength estimate.
+Specimen eligibility is determined from the available curing history when the prediction is generated. For each target age, maturity is calculated using only the temperature history applicable to that age.
+
+If no specimens qualify at a target age, the batch will be reported as having insufficient curing data for that estimate.
 
 ### 5.2 Future Temperature Assumption
 
 Strength predictions may extend beyond the most recent recorded curing temperature.
 
-For the period between the last recorded reading and the requested prediction horizon, the system will assume a constant internal temperature equal to the arithmetic average of all valid internal temperature readings recorded so far.
+For the period between the last applicable reading and the requested prediction horizon, the system will assume a constant internal temperature equal to the arithmetic average of the specimen's valid internal temperature readings available up to that point.
 
 ### Equation 5 — Average Recorded Temperature
 
@@ -194,16 +197,38 @@ T_future = (T_1 + T_2 + ... + T_n) / n
 Where:
 
 - `T_future`: Assumed future internal temperature in °F.
-- `T_1 ... T_n`: Valid internal temperature readings.
-- `n`: Number of valid readings.
+- `T_1 ... T_n`: Valid internal temperature readings available for the calculation.
+- `n`: Number of applicable readings.
 
 The assumed temperature will be used to calculate additional maturity through the requested prediction horizon.
 
+Readings recorded after the target timestamp will not influence that target's calculation.
+
 This is a deterministic approximation and does not represent an actual forecast of future curing conditions.
 
-### 5.3 Prediction Horizons
+### 5.3 Prediction Horizons and Batch-Level Aggregation
 
-The system will calculate estimated compressive strength at the following chronological ages:
+The method can estimate compressive strength at any age after casting.
+
+For each target age:
+
+1. Determine the target timestamp relative to casting.
+2. Identify specimens that meet the minimum curing reading requirements.
+3. Calculate maturity and equivalent age independently for each qualifying specimen.
+4. Calculate maturity only through the target timestamp. If a recorded interval crosses the target, interpolate the temperature at the target and include only the elapsed portion of that interval. Do not include maturity accumulated after the target.
+5. Apply the future temperature assumption where necessary.
+6. Calculate the arithmetic average of the qualifying specimens' equivalent ages.
+7. Apply the ACI strength-development equation (Equation 4) once using the batch's average equivalent age and `ExpectedFinalBreakPsi`.
+
+### Equation 6 — Batch Equivalent Age
+
+```text
+BatchEquivalentAge = Sum(SpecimenEquivalentAge) / QualifyingSpecimenCount
+```
+
+Specimen temperature readings will not be combined before maturity calculations, since readings may occur at different times.
+
+The system will report estimated compressive strength at the following chronological ages:
 
 | Horizon | Age after casting |
 |---|---|
@@ -211,15 +236,9 @@ The system will calculate estimated compressive strength at the following chrono
 | Intermediate strength | 7 days |
 | Final strength | 28 days |
 
-For each horizon, the system will:
+The strength-development curve will use the same calculation method to estimate compressive strength at each whole day from day 1 through day 28.
 
-1. Determine the target timestamp from the casting date and time.
-2. Calculate maturity from available curing readings.
-3. Apply the future temperature assumption where necessary.
-4. Convert accumulated maturity to equivalent age.
-5. Calculate estimated compressive strength using Equation 4.
-
-Predictions will be expressed in PSI.
+All predictions will be expressed in PSI.
 
 ---
 
@@ -277,7 +296,7 @@ These limitations will be considered when evaluating prediction accuracy.
 
 As actual cylinder break results become available, predicted and measured compressive strengths may be compared.
 
-### Equation 6 — Percentage Prediction Error
+### Equation 7 — Percentage Prediction Error
 
 ```text
 Error (%) = [|PredictedPSI - ActualPSI| / ActualPSI] × 100
