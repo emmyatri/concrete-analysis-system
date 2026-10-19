@@ -285,7 +285,7 @@ Error (%) = [|PredictedPSI - ActualPSI| / ActualPSI] × 100
 
 The calculation requires an actual break strength greater than zero.
 
-The project's 8% accuracy objective will be evaluated against available laboratory results.
+The project's 5% accuracy objective will be evaluated against available laboratory results.
 
 The initial mathematical model does not guarantee this level of accuracy without calibration and validation.
 
