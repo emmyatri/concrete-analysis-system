@@ -15,6 +15,7 @@ export interface CreateBatchRequest {
     expectedFinalBreakPsi: number;
     cementType: CementType;
     mixWaterPh: number;
+    cementSurfacePh: number;
   };
   composition: {
     cementPct: number;

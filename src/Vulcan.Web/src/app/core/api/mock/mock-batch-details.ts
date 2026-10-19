@@ -69,6 +69,7 @@ function warningsFor(batch: Omit<BatchDetail, 'warnings'>): SavedWarning[] {
 
   check('Batch', batch.id, 'Batch.MixWaterPh', batch.mixWaterPh);
   check('Batch', batch.id, 'Batch.FinalWeightLb', batch.finalWeightLb);
+  check('Batch', batch.id, 'Batch.CementSurfacePh', batch.cementSurfacePh);
   check(
     'Composition',
     batch.id,
@@ -137,6 +138,7 @@ function fromSynthetic(row: (typeof synthetic.Batches)[number]): BatchDetail {
     expectedFinalBreakPsi: row.ExpectedFinalBreakPsi,
     cementType: row.CementType as BatchDetail['cementType'],
     mixWaterPh: row.MixWaterPh,
+    cementSurfacePh: row.CementSurfacePh,
     isSynthetic: row.IsSynthetic,
     createdAtUtc: row.CastAt,
     createdBy: SEEDED_BY,
@@ -172,6 +174,7 @@ function mockupBatch(): BatchDetail {
     expectedFinalBreakPsi: 6000,
     cementType: 'TypeIII' as const,
     mixWaterPh: 7.2,
+    cementSurfacePh: 7.5,
     isSynthetic: false,
     createdAtUtc: '2026-09-29T11:52:00Z',
     createdBy: 'J. Rivera',
@@ -219,6 +222,7 @@ export function mockBatchDetailFromRequest(
     expectedFinalBreakPsi: request.batch.expectedFinalBreakPsi,
     cementType: request.batch.cementType,
     mixWaterPh: request.batch.mixWaterPh,
+    cementSurfacePh: request.batch.cementSurfacePh,
     isSynthetic: false,
     createdAtUtc: new Date().toISOString(),
     createdBy,

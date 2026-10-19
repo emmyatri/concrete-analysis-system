@@ -22,8 +22,12 @@ export type AppFieldState = 'error' | 'warn' | 'normal';
 // Keys for which the maximum value should be displayed in the hint.
 const KEYS_WITH_DISPLAYED_MAXIMUM = new Set(['Oxide.MagnesiumOxidePct', 'Oxide.SulfurTrioxidePct']);
 
-// Keys that show typical (Warn) and allowed (Reject) ranges in one hint, e.g. sample weight.
-const KEYS_WITH_TYPICAL_AND_ALLOWED = new Set(['Batch.FinalWeightLb']);
+// Keys whose hint shows the normal (Warn) and allowed (Reject) ranges together, with the word used for "normal":
+// "20–30 lb typical (12×6 cylinder) · 10–40 allowed", "7.1–8 normal · 0–14 allowed".
+const TYPICAL_AND_ALLOWED_LABELS = new Map([
+  ['Batch.FinalWeightLb', 'typical (12×6 cylinder)'],
+  ['Batch.CementSurfacePh', 'normal'],
+]);
 
 // Reusable wrapper for a form control with a label and optional hint.
 @Component({
@@ -137,8 +141,9 @@ export class AppField {
     // Show the Reject range when the value is an error. Otherwise, prefer the normal Warn range.
     const result = this.validationResult();
 
-    if (KEYS_WITH_TYPICAL_AND_ALLOWED.has(limitKey) && warnLimit && rejectLimit) {
-      return this.formatTypicalAndAllowedHint(warnLimit, rejectLimit) ?? hint;
+    const typicalLabel = TYPICAL_AND_ALLOWED_LABELS.get(limitKey);
+    if (typicalLabel && warnLimit && rejectLimit) {
+      return this.formatTypicalAndAllowedHint(warnLimit, rejectLimit, typicalLabel) ?? hint;
     }
 
     const selectedLimit = result.severity === 'Reject' ? rejectLimit : (warnLimit ?? rejectLimit);
@@ -159,10 +164,11 @@ export class AppField {
     return this.formatLimitHint(selectedLimit, maximumLimit) ?? hint;
   });
 
-  // "20–30 lb typical (12×6 cylinder) · 10–40 allowed" from Warn + Reject rows.
+  // "<normal range> <typicalLabel> · <allowed range> allowed", from the Warn and Reject rows.
   private formatTypicalAndAllowedHint(
     typicalLimit: ValidationLimit,
     allowedLimit: ValidationLimit,
+    typicalLabel: string,
   ): string | null {
     const { min: typicalMin, max: typicalMax } = typicalLimit;
     const { min: allowedMin, max: allowedMax } = allowedLimit;
@@ -175,7 +181,7 @@ export class AppField {
       typicalLimit.unit,
     );
     const allowedRange = `${formatLimitNumber(allowedMin)}–${formatLimitNumber(allowedMax)}`;
-    return `${typicalRange} typical (12×6 cylinder) · ${allowedRange} allowed`;
+    return `${typicalRange} ${typicalLabel} · ${allowedRange} allowed`;
   }
 
   // Formats the range hint like the mockup: "10–15%", "3,000–10,000 PSI", "0.1–4% · max 6%".

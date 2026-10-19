@@ -75,6 +75,11 @@
                      limitKey="Batch.MixWaterPh">
             <input pInputText id="mixWaterPh" formControlName="mixWaterPh" inputmode="decimal" />
           </app-field>
+
+          <app-field label="Cement surface pH" inputId="cementSurfacePh"
+                     [control]="form.controls.batch.controls.cementSurfacePh" limitKey="Batch.CementSurfacePh">
+            <input pInputText id="cementSurfacePh" formControlName="cementSurfacePh" inputmode="decimal" />
+          </app-field>
         </div>
       </section>
 
