@@ -159,8 +159,10 @@ jobs:
           generate_release_notes: true
           make_latest: true
 
+      # A convenience copy only; the test step above already decides pass/fail. Don't fail CI if storage is full.
       - name: Upload test results
         if: always()
+        continue-on-error: true
         uses: actions/upload-artifact@v4
         with:
           name: test-results
