@@ -1,10 +1,10 @@
 ﻿
 # ADR-005: Concrete Strength Estimation Method
 
-**Status:** Proposed — Pending Lead Approval
-**Decision:** Deterministic concrete maturity and compressive strength estimation
-**Requirements:** SLA 1.2, FR-17, NFR-5
-**References:** ASTM C1074, ACI 209R-92
+- **Status:** Proposed — Pending Lead Approval
+- **Decision:** Deterministic concrete maturity and compressive strength estimation
+- **Requirements:** FR-13, FR-14, FR-15, FR-17, NFR-5, NFR-7, SLA 1.2
+- **References:** ASTM C1074, ACI 209R-92
 
 ---
 
@@ -32,7 +32,7 @@ The system will implement a two-stage deterministic strength estimation model:
 
 The calculations will use predefined constants and the curing temperature readings recorded for each specimen.
 
-The initial implementation will follow the published ACI equation without additional normalization or composition-based adjustments.
+The initial implementation will follow the published ACI equation without composition-based adjustments. Once breaks are recorded, the equation is re-fit to them (4.4).
 
 ---
 
@@ -69,7 +69,7 @@ The 32°F datum is a provisional default. The appropriate datum temperature may 
 
 ### 3.2 Average Temperature Between Readings
 
-Curing readings will be ordered chronologically.
+Curing readings will be ordered chronologically. Readings taken before `Batch.CastAt` are ignored.
 
 For each pair of consecutive readings, the system will calculate the average internal temperature.
 
@@ -161,6 +161,48 @@ This behavior will be retained to remain consistent with the selected empirical 
 
 The initial implementation will not independently estimate ultimate compressive strength from mix composition or cement chemistry.
 
+
+### 4.4 Adjusting With Recorded Breaks
+
+Once break results are recorded, the strength equation is re-fit so the curve passes through them. `b` stays at its cement-type value.
+
+- **3-day breaks only:** `a` is re-fit through the average 3-day break (B₃) at the batch's 3-day equivalent age (t₃), keeping `ExpectedFinalBreakPsi` as the reference strength.
+- **3- and 7-day breaks:** `a` and the reference strength F are both re-fit through the average 3- and 7-day breaks.
+
+### Equation 4a — 3-Day Re-fit
+
+```text
+a' = t_3 × (f_c28 / B_3 − b)
+```
+
+### Equation 4b — 3- and 7-Day Re-fit
+
+```text
+k  = (1/B_3 − 1/B_7) / (1/t_3 − 1/t_7)
+c  = 1/B_3 − k/t_3
+F  = b / c
+a' = k × F
+PredictedPSI(t_eq) = [t_eq / (a' + b × t_eq)] × F
+```
+
+The 3-day re-fit is skipped if B₃ differs from the 3-day estimate by more than 30%, or if a' ≤ 0. The 3- and 7-day re-fit falls back to the 3-day re-fit if F ≤ 0 or a' ≤ 0. Each estimate records which adjustment was used.
+
+This adjustment is the team's own method, derived from Equation 4. It is not part of ACI 209R-92, and it will be checked against real breaks in Milestone 3.
+
+### 4.5 Checking Expected Final Against Water-Cement Ratio
+
+The batch's water-cementitious ratio (by weight, including SCM) gives an expected 28-day strength from the ACI 211.1 table for non-air-entrained concrete, interpolated linearly:
+
+| w/cm | 28-day PSI |
+|---:|---:|
+| 0.41 | 6,000 |
+| 0.48 | 5,000 |
+| 0.57 | 4,000 |
+| 0.68 | 3,000 |
+| 0.82 | 2,000 |
+
+If `ExpectedFinalBreakPsi` is more than 30% above the table value, the batch gets an early warning that its target may be too high for its water content. The estimate still uses `ExpectedFinalBreakPsi`. Table values to be verified against ACI 211.1 (SCRUM-161).
+
 ---
 
 
@@ -173,14 +215,11 @@ Maturity is calculated independently for each specimen using its own internal te
 A specimen qualifies for batch-level strength estimation when:
 
 - At least two valid internal temperature readings are available.
-- The readings span at least 24 hours after casting.
-- The specimen's casting timestamp is available.
+- The latest valid reading is at least 24 hours after `Batch.CastAt`.
 
 These thresholds are application-specific requirements rather than ASTM-mandated minimums.
 
-Specimen eligibility is determined from the available curing history when the prediction is generated. For each target age, maturity is calculated using only the temperature history applicable to that age.
-
-If no specimens qualify at a target age, the batch will be reported as having insufficient curing data for that estimate.
+Eligibility is checked once, using all readings available when the prediction is generated. If no specimen qualifies, the batch has insufficient curing data and no estimates are produced. A qualifying specimen contributes to every target age, using only its readings up to that target (5.3).
 
 ### 5.2 Future Temperature Assumption
 
@@ -239,6 +278,16 @@ The system will report estimated compressive strength at the following chronolog
 The strength-development curve will use the same calculation method to estimate compressive strength at each whole day from day 1 through day 28.
 
 All predictions will be expressed in PSI.
+
+
+### 5.4 Engine Interface
+
+The estimator takes the batch's cast time, cement type, `ExpectedFinalBreakPsi`, its recorded breaks, and each specimen's internal temperature readings (time and °F). Constants come from the current calibration version.
+
+It returns either:
+
+- **Insufficient curing data**, with no estimates, or
+- for each whole day from 1 to 28: the batch equivalent age (days) and estimated PSI, and for the 3-, 7- and 28-day horizons also the basis text, calibration version, adjustment used (4.4) and the unadjusted PSI.
 
 ---
 
@@ -322,17 +371,14 @@ Potential activities include:
 
 Any changes to the mathematical method will remain deterministic and will be documented.
 
-### 7.4 External Dataset Evaluation
+### 7.4 Other Datapoints
 
-If historical laboratory break results are unavailable from Vulcan Materials, the development team may use publicly available concrete compressive strength datasets, including datasets hosted on Kaggle, for preliminary model evaluation.
+Water-cement ratio has a published relationship to strength: ACI 211.1 relates water-cementitious ratio to expected 28-day strength. The System uses it to check `ExpectedFinalBreakPsi` (4.5), not to replace it, because the batch's Expected final is closer to actual results when it is reasonable.
 
-Datasets will be reviewed for compatibility with the model's required inputs, including cement type, curing age, temperature history, reference strength, and measured compressive strength.
+No published method converts the remaining datapoints into strength: SCM, aggregates, oxides, mix water and surface pH, ambient temperature, moisture, relative humidity, resistivity and CO₂. The System does not estimate their effect without data.
 
-Datasets without sufficient information may be used only for limited comparisons.
-
-Public datasets may help evaluate the model but cannot establish accuracy for Vulcan Materials' specific concrete mixtures.
-
-Dataset sources, limitations, and preprocessing will be documented when external data is used.
+- **Milestone 2:** these datapoints feed the early warning (SCRUM-180), using the warning ranges in the validation limits.
+- **Milestone 3:** each datapoint's effect on the break, including water-cement ratio, is fitted from real batches and stored as a calibration version (FR-17). The fit remains deterministic.
 
 ---
 
