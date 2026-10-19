@@ -324,6 +324,41 @@ describe('BatchEntry', () => {
     expect(saveButton().disabled).toBe(true);
   });
 
+  it('warns just outside 7.1–8.0 and rejects just outside 0–14 for Cement surface pH', async () => {
+    fillValidBatch('VM-PH-EDGES');
+
+    await setSurfacePh('-0.01');
+    expect(surfacePhField()?.classList).toContain('app-field--error');
+    expect(saveButton().disabled).toBe(true);
+
+    await setSurfacePh('0');
+    expect(surfacePhField()?.classList).toContain('app-field--warn');
+    expect(saveButton().disabled).toBe(false);
+
+    await setSurfacePh('7.09');
+    expect(surfacePhField()?.classList).toContain('app-field--warn');
+
+    await setSurfacePh('7.1');
+    expect(surfacePhField()?.classList).not.toContain('app-field--warn');
+    expect(surfacePhField()?.classList).not.toContain('app-field--error');
+
+    await setSurfacePh('8');
+    expect(surfacePhField()?.classList).not.toContain('app-field--warn');
+    expect(surfacePhField()?.classList).not.toContain('app-field--error');
+
+    await setSurfacePh('8.01');
+    expect(surfacePhField()?.classList).toContain('app-field--warn');
+    expect(saveButton().disabled).toBe(false);
+
+    await setSurfacePh('14');
+    expect(surfacePhField()?.classList).toContain('app-field--warn');
+    expect(saveButton().disabled).toBe(false);
+
+    await setSurfacePh('14.01');
+    expect(surfacePhField()?.classList).toContain('app-field--error');
+    expect(saveButton().disabled).toBe(true);
+  });
+
   // ---------- Saving ----------
 
   /** A batch that passes every check, with a batch number that isn't taken yet. */
