@@ -105,11 +105,14 @@ jobs:
           }
           Write-Host "Self-contained build OK"
 
+      # Pushes to dev/main only, kept 3 days: artifacts count against the repo's 500 MB storage limit.
       - name: Upload the self-contained build
+        if: github.event_name != 'pull_request'
         uses: actions/upload-artifact@v4
         with:
           name: vulcan-cbas-win-x64
           path: src/Vulcan.Desktop/bin/publish/win-x64/
+          retention-days: 3
 
       # ---------- Installer (SCRUM-116) ----------
       # Pushes to dev/main and manual runs only, so PRs don't download ~180 MB each time.
@@ -138,12 +141,14 @@ jobs:
           # Same file without the version in its name, for the permanent "latest" download link in the README.
           Copy-Item (Get-ChildItem installer/output/VulcanCBAS-Setup-*.exe).FullName installer/output/VulcanCBAS-Setup.exe
 
+      # Kept 7 days. Permanent downloads live on the GitHub Release page, which doesn't count against storage.
       - name: Upload the installer
         if: github.event_name != 'pull_request'
         uses: actions/upload-artifact@v4
         with:
           name: vulcan-cbas-installer
           path: installer/output/VulcanCBAS-Setup.exe
+          retention-days: 7
 
       # On a version tag (e.g. v0.1.0-m1), publish a GitHub Release with the installer attached.
       - name: Publish the release
@@ -154,9 +159,12 @@ jobs:
           generate_release_notes: true
           make_latest: true
 
+      # A convenience copy only; the test step above already decides pass/fail. Don't fail CI if storage is full.
       - name: Upload test results
         if: always()
+        continue-on-error: true
         uses: actions/upload-artifact@v4
         with:
           name: test-results
           path: TestResults/*.trx
+          retention-days: 7
