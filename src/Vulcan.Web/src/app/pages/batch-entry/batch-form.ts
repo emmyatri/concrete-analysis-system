@@ -65,6 +65,7 @@ export function createBatchForm(fb: NonNullableFormBuilder) {
       expectedFinalBreakPsi: numeric(0),
       cementType: new FormControl<CementType | null>(null, [Validators.required]),
       mixWaterPh: numeric(),
+      cementSurfacePh: numeric(2),
     }),
     composition: fb.group({
       cementPct: numeric(),
@@ -114,6 +115,7 @@ export function toCreateBatchRequest(form: BatchForm): CreateBatchRequest {
       expectedFinalBreakPsi: num(batch.expectedFinalBreakPsi),
       cementType: batch.cementType as CementType,
       mixWaterPh: num(batch.mixWaterPh),
+      cementSurfacePh: num(batch.cementSurfacePh),
     },
     composition: {
       cementPct: num(composition.cementPct),

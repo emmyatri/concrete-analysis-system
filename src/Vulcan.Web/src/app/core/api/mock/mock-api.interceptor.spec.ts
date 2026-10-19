@@ -108,6 +108,7 @@ describe('mockApiInterceptor', () => {
           expectedFinalBreakPsi: 6000,
           cementType: 'TypeI',
           mixWaterPh: 7.8,
+          cementSurfacePh: 7.5,
         },
         composition: {
           cementPct: 10,

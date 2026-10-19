@@ -265,6 +265,12 @@ describe('AppField', () => {
     expect(control.valid).toBe(false);
   });
 
+  it('should show normal and allowed ranges for cement surface pH', () => {
+    fixture.componentRef.setInput('limitKey', 'Batch.CementSurfacePh');
+    fixture.detectChanges();
+    expect(component.computedHint()).toBe('7.1–8 normal · 0–14 allowed');
+  });
+
   // Test normal state at a maximum-only limit
   it('should return normal state at a maximum-only limit', () => {
     fixture.componentRef.setInput('limitKey', 'Composition.TotalPct');

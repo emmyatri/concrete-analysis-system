@@ -41,7 +41,9 @@ const TEST_AGE_LABELS: Record<Specimen['testAgeDays'], string> = {
 
 /** How each flagged field is named and how many decimals its value shows. */
 const FIELDS: Record<string, { label: string; short?: string; digits: string }> = {
+  'Batch.FinalWeightLb': { label: 'Sample weight (lb)', digits: '1.0-2' },
   'Batch.MixWaterPh': { label: 'Mix water pH', digits: '1.1-2' },
+  'Batch.CementSurfacePh': { label: 'Cement surface pH', digits: '1.1-2' },
   'Composition.WaterCementRatio': { label: 'Water / cementitious', digits: '1.2-3' },
   'Oxide.AluminaPct': { label: 'Alumina Al₂O₃ (%)', short: 'Al₂O₃', digits: '1.2-2' },
   'Oxide.IronOxidePct': { label: 'Iron oxide Fe₂O₃ (%)', short: 'Fe₂O₃', digits: '1.2-2' },
@@ -137,6 +139,11 @@ export class BatchDetailPage {
   protected readonly phWarning = computed(() => {
     const batch = this.batch();
     return batch ? this.warningFor('Batch', batch.id, 'Batch.MixWaterPh') : undefined;
+  });
+
+  protected readonly surfacePhWarning = computed(() => {
+    const batch = this.batch();
+    return batch ? this.warningFor('Batch', batch.id, 'Batch.CementSurfacePh') : undefined;
   });
 
   protected readonly weightWarning = computed(() => {

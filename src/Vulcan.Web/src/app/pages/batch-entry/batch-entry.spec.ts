@@ -99,7 +99,7 @@ describe('BatchEntry', () => {
     expect(save().disabled).toBe(true);
 
     form().patchValue({
-      batch: { batchNumber: 'VM-2026-0142', castAt: new Date(2026, 8, 29, 11, 40), finalWeightLb: '25', expectedFinalBreakPsi: '6000', cementType: 'TypeIII', mixWaterPh: '7.2' },
+      batch: { batchNumber: 'VM-2026-0142', castAt: new Date(2026, 8, 29, 11, 40), finalWeightLb: '25', expectedFinalBreakPsi: '6000', cementType: 'TypeIII', mixWaterPh: '7.2', cementSurfacePh: '7.5' },
       composition: { cementPct: '12', waterPct: '17', coarseAggregatePct: '44', fineAggregatePct: '25', scmType: 'FlyAsh', scmPct: '2' },
       oxides: { aluminaPct: '4.8', ironOxidePct: '2.8', magnesiumOxidePct: '1.8', sulfurTrioxidePct: '2.2' },
     });
@@ -126,7 +126,7 @@ describe('BatchEntry', () => {
   it('blocks Save when the total is over 100%, and warns on the water / cementitious ratio', async () => {
     const save = () => el().querySelector('[data-testid="save-batch"] button') as HTMLButtonElement;
     form().patchValue({
-      batch: { batchNumber: 'VSN-003', castAt: new Date(2026, 8, 29, 11, 40), finalWeightLb: '25', expectedFinalBreakPsi: '3000', cementType: 'TypeII', mixWaterPh: '7.2' },
+      batch: { batchNumber: 'VSN-003', castAt: new Date(2026, 8, 29, 11, 40), finalWeightLb: '25', expectedFinalBreakPsi: '3000', cementType: 'TypeII', mixWaterPh: '7.2', cementSurfacePh: '7.5' },
       // 14 + 17 + 40 + 29 + 2 = 102%
       composition: { cementPct: '14', waterPct: '17', coarseAggregatePct: '40', fineAggregatePct: '29', scmType: 'FlyAsh', scmPct: '2' },
       oxides: { aluminaPct: '4.8', ironOxidePct: '2.8', magnesiumOxidePct: '1.8', sulfurTrioxidePct: '2.2' },
@@ -280,12 +280,56 @@ describe('BatchEntry', () => {
     expect(saveButton().disabled).toBe(true);
   });
 
+  const surfacePhField = () => el().querySelector('#cementSurfacePh')?.closest('app-field');
+  const setSurfacePh = async (value: string) => {
+    const { cementSurfacePh } = form().controls.batch.controls;
+    cementSurfacePh.setValue(value);
+    cementSurfacePh.markAsTouched();
+    fixture.detectChanges();
+    await fixture.whenStable();
+  };
+
+  it('puts Cement surface pH right after Mix water pH, with its normal and allowed range', () => {
+    const labels = Array.from(
+      el().querySelectorAll('section[aria-labelledby="batch-card-title"] app-field label'),
+    ).map((label) => label.textContent?.trim());
+    expect(labels.slice(-2)).toEqual(['Mix water pH', 'Cement surface pH']);
+    expect(surfacePhField()?.querySelector('.app-field-hint')?.textContent?.trim()).toBe(
+      '7.1–8 normal · 0–14 allowed',
+    );
+  });
+
+  it('accepts 7.5, warns on 8.5 and blocks 15 for Cement surface pH', async () => {
+    fillValidBatch('VM-PH-RANGE');
+
+    await setSurfacePh('7.5');
+    expect(surfacePhField()?.classList).not.toContain('app-field--warn');
+    expect(surfacePhField()?.classList).not.toContain('app-field--error');
+    expect(saveButton().disabled).toBe(false);
+
+    await setSurfacePh('8.5');
+    expect(surfacePhField()?.classList).toContain('app-field--warn');
+    expect(saveButton().disabled).toBe(false);
+
+    await setSurfacePh('15');
+    expect(surfacePhField()?.classList).toContain('app-field--error');
+    expect(saveButton().disabled).toBe(true);
+  });
+
+  it('blocks Save when Cement surface pH is empty', async () => {
+    fillValidBatch('VM-PH-EMPTY');
+
+    await setSurfacePh('');
+    expect(form().controls.batch.controls.cementSurfacePh.errors?.['required']).toBe(true);
+    expect(saveButton().disabled).toBe(true);
+  });
+
   // ---------- Saving ----------
 
   /** A batch that passes every check, with a batch number that isn't taken yet. */
   const fillValidBatch = (batchNumber: string) =>
     form().patchValue({
-      batch: { batchNumber, castAt: new Date(2026, 9, 5, 14, 0), finalWeightLb: '25', expectedFinalBreakPsi: '6000', cementType: 'TypeI', mixWaterPh: '7.2' },
+      batch: { batchNumber, castAt: new Date(2026, 9, 5, 14, 0), finalWeightLb: '25', expectedFinalBreakPsi: '6000', cementType: 'TypeI', mixWaterPh: '7.2', cementSurfacePh: '7.5' },
       composition: { cementPct: '10', waterPct: '17', coarseAggregatePct: '45', fineAggregatePct: '26', scmType: 'FlyAsh', scmPct: '2' },
       oxides: { aluminaPct: '4.8', ironOxidePct: '2.8', magnesiumOxidePct: '1.8', sulfurTrioxidePct: '2.2' },
     });
@@ -349,14 +393,14 @@ describe('toCreateBatchRequest', () => {
   it('trims the batch number and turns typed text into numbers', () => {
     const form = createBatchForm(TestBed.inject(NonNullableFormBuilder));
     form.patchValue({
-      batch: { batchNumber: ' VM-2026-0142 ', finalWeightLb: '25.00', expectedFinalBreakPsi: '6000', cementType: 'TypeIII', mixWaterPh: '7.2' },
+      batch: { batchNumber: ' VM-2026-0142 ', finalWeightLb: '25.00', expectedFinalBreakPsi: '6000', cementType: 'TypeIII', mixWaterPh: '7.2', cementSurfacePh: '7.5' },
       composition: { cementPct: '12', waterPct: '17', coarseAggregatePct: '40', fineAggregatePct: '25', scmType: 'FlyAsh', scmPct: '2' },
       oxides: { aluminaPct: '4.8', ironOxidePct: '2.8', magnesiumOxidePct: '1.8', sulfurTrioxidePct: '2.2' },
     });
 
     const request = toCreateBatchRequest(form);
 
-    expect(request.batch).toMatchObject({ batchNumber: 'VM-2026-0142', finalWeightLb: 25, expectedFinalBreakPsi: 6000, cementType: 'TypeIII', mixWaterPh: 7.2 });
+    expect(request.batch).toMatchObject({ batchNumber: 'VM-2026-0142', finalWeightLb: 25, expectedFinalBreakPsi: 6000, cementType: 'TypeIII', mixWaterPh: 7.2, cementSurfacePh: 7.5 });
     expect(request.composition).toMatchObject({ cementPct: 12, scmType: 'FlyAsh', scmPct: 2 });
     expect(request.oxides.aluminaPct).toBe(4.8);
   });

@@ -145,6 +145,8 @@ export interface BatchDetail {
   expectedFinalBreakPsi: number;
   cementType: BatchSummary['cementType'];
   mixWaterPh: number;
+  /** Null on batches saved before it was added (client request, M1 demo). */
+  cementSurfacePh: number | null;
   isSynthetic: boolean;
   /** Audit fields (FR-22), ISO date-times in UTC. */
   createdAtUtc: string;

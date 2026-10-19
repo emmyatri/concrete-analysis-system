@@ -112,7 +112,7 @@ describe('BatchDetailPage', () => {
     expect(text('[data-testid="warning-count"]')).toBe('1 warning');
   });
 
-  /* Test for a batch with a weight outside its normal range; confirms that the 
+  /* Test for a batch with a weight outside its normal range; confirms that the
   flagged value is displayed and styled correctly. */
   it('flags a weight outside its normal range', async () => {
     const source = MOCK_BATCH_DETAILS.find((b) => b.batchNumber === 'VM-SYN-001')!;
@@ -127,7 +127,7 @@ describe('BatchDetailPage', () => {
           fieldName: 'FinalWeightLb',
           limitKey: 'Batch.FinalWeightLb',
           value: 35,
-          message: 'Sample weight is outside the normal range [20-30] for a 12×6 cylinder',
+          message: 'Sample weight is outside the normal range [20-30] for a 12x6 cylinder',
           createdAtUtc: source.createdAtUtc,
         },
       ],
@@ -164,6 +164,57 @@ describe('BatchDetailPage', () => {
     harness.detectChanges();
 
     expect(root.querySelector('[data-testid="weight-flagged"]')).toBeNull();
+  });
+
+  /** Opens VM-SYN-001 with the given changes, answered by hand like the real server. */
+  const openWith = async (changes: Partial<BatchDetail>) => {
+    const source = MOCK_BATCH_DETAILS.find((b) => b.batchNumber === 'VM-SYN-001')!;
+    await open('VM-SYN-001', false);
+    const http = TestBed.inject(HttpTestingController);
+    TestBed.inject(ReferenceDataService).load();
+    http.expectOne('/api/validation-limits').flush(MOCK_VALIDATION_LIMITS);
+    http.expectOne('/api/specific-gravities').flush(MOCK_SPECIFIC_GRAVITIES);
+    http.expectOne('/api/batches/VM-SYN-001').flush({ ...source, ...changes });
+    harness.detectChanges();
+    return source;
+  };
+
+  it('shows both pH values in one cell', async () => {
+    await open('VM-SYN-001');
+
+    expect(text('[data-testid="ph"]')).toBe('7.2 / 7.4');
+    expect(root.querySelector('[data-testid="surface-ph-flagged"]')).toBeNull();
+  });
+
+  it('flags a cement surface pH outside its normal range', async () => {
+    const source = MOCK_BATCH_DETAILS.find((b) => b.batchNumber === 'VM-SYN-001')!;
+    await openWith({
+      cementSurfacePh: 8.5,
+      warnings: [
+        {
+          id: 1,
+          entityType: 'Batch',
+          entityId: source.id,
+          fieldName: 'CementSurfacePh',
+          limitKey: 'Batch.CementSurfacePh',
+          value: 8.5,
+          message: 'Cement surface pH is outside the normal range [7.1-8.0]',
+          createdAtUtc: source.createdAtUtc,
+        },
+      ],
+    });
+
+    expect(text('[data-testid="ph"]')).toBe('7.2 / 8.5 ⚠');
+    expect(root.querySelector('[data-testid="ph-flagged"]')).toBeNull();
+    expect(rows('warnings').map((r) => cells(r).slice(0, 3))).toEqual([
+      ['Batch', 'Cement surface pH', '8.5 ⚠'],
+    ]);
+  });
+
+  it('shows a dash for an old batch with no surface pH', async () => {
+    await openWith({ cementSurfacePh: null, warnings: [] });
+
+    expect(text('[data-testid="ph"]')).toBe('7.2 / —');
   });
 
   it('shows the composition and says the oxides are all within normal range', async () => {
