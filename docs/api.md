@@ -1073,3 +1073,305 @@ Sent with the `200` response.
     }
 }
 ```
+
+## Prediction
+
+### Get Batch Strength Prediction
+
+Use to get the strength predictions for a given batch.
+
+**Endpoint:** `GET /api/batches/{batchNumber}/strength`
+
+**Request Parameters:**
+
+* `batchNumber`: from route. Must be the batch number of an existing batch.
+
+**Response Status Codes:**
+
+- `404`: if the batch is not found
+- `200`: if the batch was found
+
+**Response Schema:**
+
+```json
+{
+    "title": "GetBatchStrengthPredictionResponse",
+    "type": "object",
+    "properties": {
+        "id": {
+            "type": "integer"
+        },
+        "batchNumber": {
+            "type": "string"
+        },
+        "isSynthetic": {
+            "type": "boolean",
+        },
+        "createdAtUtc": {
+            "type": "string",
+            "format": "date-time"
+        },
+        "createdBy": {
+            "type": "string"
+        },
+        "modifiedAtUtc": {
+            "type": "string",
+            "format": "date-time"
+        },
+        "modifiedBy": {
+            "type": "string",
+        },
+        "expectedFinalBreakPsi": {
+            "type": "integer",
+        },
+        "curvePoints": {
+            "type": "array",
+            "default": [],
+            "items": {
+                "type": "object",
+                "properties": {
+                    "day": {
+                        "type": "integer"
+                    },
+                    "psi": {
+                        "type": "integer"
+                    }
+                },
+                "required": ["day", "psi"]
+            }
+        },
+        "estimates": {
+            "type": "array",
+            "default": [],
+            "items": {
+                "type": "object",
+                "properties": {
+                    "specimenId": {
+                        "type": "integer"
+                    },
+                    "horizonDays": {
+                        "enum": ["3", "7", "28"]
+                    },
+                    "estimatedPsi": {
+                        "type": "integer"
+                    },
+                    "equivalentAgeDays": {
+                        "enum": ["Day3", "Day7", "Day28"]
+                    },
+                    "adjustmentStage": {
+                        "enum": ["none", "3day", "3and7day"]
+                    },
+                    "unadjustedPsi": {
+                        "type": "integer"
+                    },
+                    "basis": {
+                        "type": "string"
+                    },
+                    "calibratedVersionId": {
+                        "type": "string"
+                    },
+                    "isSynthetic": {
+                        "type": "boolean"
+                    },
+                    "createdAtUtc": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "createdBy": {
+                        "type": "string"
+                    },
+                    "modifiedAtUtc": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "modifiedBy": {
+                        "type": "string",
+                    },
+                },
+                "required": [
+                    "horizonDays",
+                    "estimatedPsi",
+                    "equivalentAgeDays",
+                    "adjustmentStage",
+                    "unadjustedPsi",
+                    "basis",
+                    "calibratedVersionId",
+                    "isSynthetic",
+                    "createdAtUtc",
+                    "createdBy",
+                ]
+            },
+        },
+        "measuredBreaks": {
+            "type": "array",
+            "default": [],
+            "items": {
+                "type": "object",
+                "properties": {
+                    "specimenId": {
+                        "type": "integer",
+                    },
+                    "ageDays": {
+                        "type": "number"
+                    },
+                    "psi": {
+                        "type": "number"
+                    },
+                    "calibratedVersionId": {
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "specimenId",
+                    "ageDays",
+                    "calibratedVersionId"
+                ]
+            }
+        },
+        "earlyWarnings": {
+            "type": "array",
+            "default": [],
+            "items": {
+                "type": "object",
+                "properties": {
+                    "warning": {
+                        "type": "string",
+                        "description": "Warning message"
+                    },
+                    "field": {
+                        "type": "string",
+                        "description": "What field the warning refers to"
+                    },
+                    "value": {
+                        "type": "number",
+                        "description": "The value that triggered the warning"
+                    }
+                },
+                "required": ["warning", "field", "value"]
+            }
+        },
+        "curingPoints": {
+            "type": "array",
+            "default": [],
+            "items": {
+                "type": "object",
+                "properties": {
+                    "time": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "internalTempF": {
+                        "type": "number"
+                    },
+                    "ambientTempF": {
+                        "type": "number"
+                    },
+                    "maturity": {
+                        "type": "number"
+                    }
+                },
+                "required": [
+                    "time",
+                    "internalTempF",
+                    "ambientTempF",
+                    "maturity"
+                ]
+            }
+        }
+    },
+    "required": [
+        "id",
+        "batchNumber",
+        "isSynthetic",
+        "createdAtUtc",
+        "createdBy",
+        "expectedFinalBreakPsi",
+        "measuredBreaks",
+        "estimates",
+        "earlyWarnings",
+        "curingPoints"
+    ]
+}
+```
+
+### Get At-Risk Batches
+
+Use to get the batches that are predicted to be at-risk.
+
+**Endpoint:** `GET /api/warnings/early`
+
+**Request Parameters:**
+
+* `includeSynthetic`: boolean from query. Default is false. Set to true to have the server include synthetic data in the response.
+
+**Response Status Codes:**
+
+- `400`: if the request was malformed
+- `200`: if the server was able to return a list of at-risk batches
+
+**Response Schema:**
+
+```json
+{
+    "title": "GetBatchStrengthPredictionWarningsResponse",
+    "type": "array",
+    "items": {
+        "type": "object",
+        "properties": {
+            "id": {
+                "type": "integer",
+            },
+            "batchNumber": {
+                "type": "string"
+            },
+            "isSynthetic": {
+                "type": "boolean"
+            },
+            "createdAtUtc": {
+                "type": "string",
+                "format": "date-time"
+            },
+            "createdBy": {
+                "type": "string"
+            },
+            "modifiedAtUtc": {
+                "type": "string",
+                "format": "date-time"
+            },
+            "modifiedBy": {
+                "type": "string",
+            },
+            "earlyWarnings": {
+                "type": "array",
+                "default": [],
+                "items": {
+                    "type": "object",
+                    "properties": {
+                        "warning": {
+                            "type": "string",
+                            "description": "Warning message"
+                        },
+                        "field": {
+                            "type": "string",
+                            "description": "What field the warning refers to"
+                        },
+                        "value": {
+                            "type": "number",
+                            "description": "The value that triggered the warning"
+                        }
+                    },
+                    "required": ["warning", "field", "value"]
+                }
+            },
+        },
+        "required": [
+            "id",
+            "batchNumber",
+            "isSynthetic",
+            "createdAt",
+            "createdBy",
+            "earlyWarnings"
+        ]
+    }
+}
+```
