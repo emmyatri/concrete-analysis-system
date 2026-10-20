@@ -1,6 +1,7 @@
-﻿# ADR-005: Concrete Strength Estimation Method
+﻿
+# ADR-005: Concrete Strength Estimation Method
 
-- **Status:** Proposed — Pending Lead Approval
+- **Status:** Approved — October 20, 2026
 - **Decision:** Deterministic concrete maturity and compressive strength estimation
 - **Requirements:** FR-13, FR-14, FR-15, FR-17, NFR-5, NFR-7, SLA 1.2
 - **References:** ASTM C1074, ACI 209R-92
@@ -68,11 +69,11 @@ The 32°F datum is a provisional default. The appropriate datum temperature may 
 
 ### 3.2 Average Temperature Between Readings
 
-Curing readings will be ordered chronologically. Readings taken before `Batch.CastAt` are ignored.
+Curing readings will be ordered chronologically. Readings taken before `Batch.CastAt` are ignored when calculating maturity.
 
-For each pair of consecutive readings, the system will calculate the average internal temperature.
+For each pair of consecutive applicable readings, the system will calculate the average internal temperature.
 
-For the period between casting and the first recorded curing reading, the system will assume the internal temperature remained constant at the first recorded value.
+For the period between casting and the first applicable curing reading, the system will assume the internal temperature remained constant at the first recorded value.
 
 ### Equation 2 — Average Interval Temperature
 
@@ -80,11 +81,20 @@ For the period between casting and the first recorded curing reading, the system
 T_avg,i = (T_i + T_(i+1)) / 2
 ```
 
-The duration of each interval will be calculated from the timestamps of the two readings.
+The duration of each interval will be calculated from the timestamps of the two readings. Each interval's maturity contribution will be calculated using Equation 1.
 
-Each interval's maturity contribution will be calculated using Equation 1.
+**Maturity calculator input validation (SCRUM-160):**
 
-Intervals with zero or negative elapsed time will not contribute to accumulated maturity.
+- Casting, target, and reading timestamps must be UTC or `DateTimeKind.Unspecified`. Unspecified timestamps are interpreted as UTC without changing their clock values, to support timestamps retrieved through SQLite/EF Core. Explicitly local timestamps are rejected.
+- Internal temperatures and maturity settings must be finite numeric values.
+- Duplicate reading timestamps are rejected, rather than silently merged or overwritten.
+- The target timestamp must not precede casting.
+- At least one valid reading must exist at or after casting. The first reading may occur after the target timestamp; in that case, its temperature is assumed constant from casting through the target.
+- The reference temperature must be greater than the datum temperature.
+
+Zero-duration intervals contribute no maturity. Readings are ordered before intervals are constructed, preventing negative-duration intervals.
+
+These calculator-level validation rules are separate from the stricter batch-level specimen eligibility requirements in Section 5.1.
 
 ### 3.3 Equivalent Age
 
@@ -225,15 +235,40 @@ A specimen qualifies for batch-level strength estimation when:
 
 These thresholds are application-specific requirements rather than ASTM-mandated minimums.
 
-Eligibility is checked once, using all readings available when the prediction is generated. If no specimen qualifies, the batch has insufficient curing data and no estimates are produced. A qualifying specimen contributes to every target age, using only its readings up to that target (5.3).
+Eligibility is checked once, using all readings available when the prediction is generated. If no specimen qualifies, the batch has insufficient curing data and no estimates are produced. A qualifying specimen contributes to every target age. The maturity calculator uses the available readings to determine temperatures at each target timestamp according to Section 5.2.
 
-### 5.2 Future Temperature Assumption
+### 5.2 Future Temperature Assumption and Target Interpolation
 
-Strength predictions may extend beyond the most recent recorded curing temperature.
+Strength predictions may extend beyond the most recent recorded curing temperature. The maturity calculator uses one deterministic calculation method for all target timestamps.
 
-For the period between the last applicable reading and the requested prediction horizon, the system will assume a constant internal temperature equal to the arithmetic average of the specimen's valid internal temperature readings available up to that point.
+**When a reading exists after the target timestamp:**
 
-### Equation 5 — Average Recorded Temperature
+If the target falls between two recorded readings, the calculator linearly interpolates the internal temperature at the target using the last reading before the target and the first reading after it.
+
+Only maturity accumulated from casting through the target is included. The reading after the target is used solely to determine the interpolated endpoint temperature.
+
+### Equation 5 — Linear Temperature Interpolation
+
+```text
+T_target = T_before + [(T_after - T_before) × (t_target - t_before) / (t_after - t_before)]
+```
+
+Where:
+
+- `T_target`: Interpolated internal temperature at the target timestamp, in °F.
+- `T_before`: Last recorded internal temperature before the target, in °F.
+- `T_after`: First recorded internal temperature after the target, in °F.
+- `t_target`: Target timestamp.
+- `t_before`: Timestamp of the last reading before the target.
+- `t_after`: Timestamp of the first reading after the target.
+
+The interpolated target temperature and the last recorded temperature are averaged to calculate the final interval's maturity contribution.
+
+**When no reading exists after the target timestamp:**
+
+If the target is later than the last available reading, the calculator uses the arithmetic average of all applicable recorded internal temperatures as the assumed temperature for the remaining interval.
+
+### Equation 5a — Average Recorded Temperature
 
 ```text
 T_future = (T_1 + T_2 + ... + T_n) / n
@@ -241,15 +276,19 @@ T_future = (T_1 + T_2 + ... + T_n) / n
 
 Where:
 
-- `T_future`: Assumed future internal temperature in °F.
-- `T_1 ... T_n`: Valid internal temperature readings available for the calculation.
+- `T_future`: Assumed internal temperature for the unobserved interval, in °F.
+- `T_1 ... T_n`: Valid specimen readings from casting through the target timestamp, inclusive.
 - `n`: Number of applicable readings.
 
-The assumed temperature will be used to calculate additional maturity through the requested prediction horizon.
+**When the first reading occurs after the target timestamp:**
 
-Readings recorded after the target timestamp will not influence that target's calculation.
+The calculator assumes the first recorded internal temperature remained constant from casting through the target timestamp.
 
-This is a deterministic approximation and does not represent an actual forecast of future curing conditions.
+This allows maturity to be calculated for an earlier target even when no readings were recorded within that period.
+
+The future-temperature assumption is a deterministic approximation, not a physical forecast of future curing conditions.
+
+The calculator does not expose separate calculation modes. Callers requiring a historical calculation that excludes future observations must filter those readings before invoking the calculator.
 
 ### 5.3 Prediction Horizons and Batch-Level Aggregation
 
@@ -258,12 +297,14 @@ The method can estimate compressive strength at any age after casting.
 For each target age:
 
 1. Determine the target timestamp relative to casting.
-2. Identify specimens that meet the minimum curing reading requirements.
+2. Identify specimens that meet the minimum curing reading requirements in Section 5.1.
 3. Calculate maturity and equivalent age independently for each qualifying specimen.
-4. Calculate maturity only through the target timestamp. If a recorded interval crosses the target, interpolate the temperature at the target and include only the elapsed portion of that interval. Do not include maturity accumulated after the target.
-5. Apply the future temperature assumption where necessary.
-6. Calculate the arithmetic average of the qualifying specimens' equivalent ages.
-7. Apply the ACI strength-development equation (Equation 4) once using the batch's average equivalent age and `ExpectedFinalBreakPsi`.
+4. Accumulate maturity only from casting through the target timestamp. Ignore readings before casting.
+5. When the target falls between recorded readings, interpolate the target temperature using the surrounding readings.
+6. When the target extends beyond the last available reading, apply the average-temperature assumption in Section 5.2.
+7. When the target precedes the first valid reading, use the first recorded temperature from casting through the target.
+8. Calculate the arithmetic average of the qualifying specimens' equivalent ages.
+9. Apply the ACI strength-development equation (Equation 4) once using the batch's average equivalent age and `ExpectedFinalBreakPsi`.
 
 ### Equation 6 — Batch Equivalent Age
 
@@ -340,7 +381,7 @@ The initial model has several known limitations:
 
 - The model depends on the entered `ExpectedFinalBreakPsi` rather than independently calculating ultimate strength from mix composition.
 - Cement chemistry, SCM composition, and aggregate characteristics do not directly modify the initial strength equation.
-- Future curing temperatures are assumed from recorded temperature averages.
+- Future curing temperatures are assumed from recorded temperature averages when no later reading is available.
 - The selected ACI coefficients may not accurately represent every concrete mixture.
 - Nurse–Saul maturity uses a linear temperature-rate approximation.
 - When the first curing temperature is recorded after casting, the model assumes that temperature remained constant between casting and the first reading. This may not capture temperature changes during early hydration and can affect early-age strength estimates.
@@ -404,7 +445,7 @@ No published method converts the remaining datapoints into strength: SCM, aggreg
 
 - Predictions depend on the entered reference strength.
 - Curing data must meet the minimum reading requirements.
-- Future temperatures are assumed rather than measured.
+- Future temperatures are assumed rather than measured when extrapolation is necessary.
 - The model does not independently account for every recorded mixture characteristic.
 - Accuracy must be evaluated against actual laboratory results.
 
@@ -412,9 +453,9 @@ No published method converts the remaining datapoints into strength: SCM, aggreg
 
 ## 9. Approval
 
-This ADR establishes the proposed mathematical method, default constants, and assumptions for the initial strength estimation engine.
+This ADR establishes the mathematical method, default constants, and assumptions for the initial deterministic strength estimation engine.
 
-Implementation may begin once the calculation method has been reviewed and approved by both project leads.
+The underlying method was approved on October 20, 2026. SCRUM-160 implements the maturity calculation component using a single deterministic calculation method, including target-time interpolation and the documented future-temperature assumption.
 
 - **Backend Lead:** Approved — Tyler Schaefer, Oct 20, 2026
 - **Frontend Lead:** Approved — Amelia Black, Oct 20, 2026
