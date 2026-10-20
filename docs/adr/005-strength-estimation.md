@@ -1,5 +1,4 @@
-﻿
-# ADR-005: Concrete Strength Estimation Method
+﻿# ADR-005: Concrete Strength Estimation Method
 
 - **Status:** Proposed — Pending Lead Approval
 - **Decision:** Deterministic concrete maturity and compressive strength estimation
@@ -145,7 +144,7 @@ The system will substitute equivalent age for chronological age to account for t
 | Type II | 4.0 | 0.85 |
 | Type III | 2.3 | 0.92 |
 
-Type I and Type III coefficients are based on commonly published ACI 209R-92 moist-curing values.
+Type I and Type III coefficients are based on commonly published ACI 209R-92 moist-curing values. To be verified against ACI 209R-92.
 
 Type II will initially use Type I coefficients as an application-specific assumption.
 
@@ -160,7 +159,6 @@ The original ACI equation does not necessarily return exactly the reference stre
 This behavior will be retained to remain consistent with the selected empirical equation.
 
 The initial implementation will not independently estimate ultimate compressive strength from mix composition or cement chemistry.
-
 
 ### 4.4 Adjusting With Recorded Breaks
 
@@ -191,7 +189,6 @@ This adjustment is the team's own method, derived from Equation 4. It is not par
 
 Adjustments will also be skipped or reverted when inputs are invalid, denominators are zero or numerically unstable, or calculated parameters are non-finite or nonpositive.
 
-
 ### 4.5 Checking Expected Final Against Water-Cement Ratio
 
 The batch's water-cementitious ratio (by weight, including SCM) gives an approximate expected 28-day strength from ACI 211.1-97, Table 6.3.4(a), for non-air-entrained concrete, interpolated linearly:
@@ -207,11 +204,11 @@ The batch's water-cementitious ratio (by weight, including SCM) gives an approxi
 
 If `ExpectedFinalBreakPsi` is more than 30% above the table value, the batch gets an early warning that its target may be too high for its water content. The estimate still uses `ExpectedFinalBreakPsi`.
 
-Values outside the published w/cm range (0.33–0.82) will not be extrapolated for this warning.
+Below 0.33, the check is skipped. Above 0.82, the 2,000 PSI value is used, so a very high water content still triggers the warning.
 
 **Reference:** ACI 211.1-97, Table 6.3.4(a), *Relationship Between Water-Cementitious Ratio and Compressive Strength of Concrete*.
 
-**Source:** [American Concrete Institute — Webinar Material](https://www.concrete.org/portals/0/files/pdf/webinars/Folks.pdf)
+**Source:** Values as reproduced in [American Concrete Institute webinar material](https://www.concrete.org/portals/0/files/pdf/webinars/Folks.pdf).
 
 ---
 
@@ -287,7 +284,6 @@ The system will report estimated compressive strength at the following chronolog
 The strength-development curve will use the same calculation method to estimate compressive strength at each whole day from day 1 through day 28.
 
 All predictions will be expressed in PSI.
-
 
 ### 5.4 Engine Interface
 
@@ -420,6 +416,6 @@ This ADR establishes the proposed mathematical method, default constants, and as
 
 Implementation may begin once the calculation method has been reviewed and approved by both project leads.
 
-**Backend Lead:** Proposed
-**Frontend Lead:** Pending
-**Status:** Proposed
+- **Backend Lead:** Approved — Tyler Schaefer, Oct 20, 2026
+- **Frontend Lead:** Approved — Amelia Black, Oct 20, 2026
+- **Status:** Approved
