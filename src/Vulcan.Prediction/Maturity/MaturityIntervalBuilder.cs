@@ -1,3 +1,4 @@
+
 namespace Vulcan.Prediction.Maturity;
 
 /// <summary>
@@ -8,25 +9,41 @@ internal static class MaturityIntervalBuilder
     public static List<MaturityInterval> Build(
         DateTime castAt,
         IReadOnlyList<TemperatureReading> readings,
-        DateTime targetTime,
-        MaturityCalculationMode mode)
+        DateTime targetTime)
     {
-
         var intervals = new List<MaturityInterval>();
 
-        // Only use readings within the requested calculation period.
-        var applicableReadings = readings
-            .Where(r => r.TakenAt >= castAt && r.TakenAt <= targetTime)
+        // Only use readings recorded at or after casting.
+        var validReadings = readings
+            .Where(r => r.TakenAt >= castAt)
             .OrderBy(r => r.TakenAt)
             .ToList();
 
-        if (applicableReadings.Count == 0)
+        if (validReadings.Count == 0)
         {
             return intervals;
         }
 
-        // Assume the first recorded temperature applies from casting.
-        var firstReading = applicableReadings[0];
+        // The first recorded temperature applies from casting.
+        var firstReading = validReadings[0];
+
+        // The target may occur before the first recorded reading.
+        if (targetTime <= firstReading.TakenAt)
+        {
+            if (targetTime > castAt)
+            {
+                intervals.Add(new MaturityInterval(
+                    castAt,
+                    targetTime,
+                    firstReading.InternalTempF));
+            }
+
+            return intervals;
+        }
+
+        var applicableReadings = validReadings
+            .Where(r => r.TakenAt <= targetTime)
+            .ToList();
 
         if (firstReading.TakenAt > castAt)
         {
@@ -42,11 +59,6 @@ internal static class MaturityIntervalBuilder
             var previous = applicableReadings[i - 1];
             var current = applicableReadings[i];
 
-            if (current.TakenAt <= previous.TakenAt)
-            {
-                continue;
-            }
-
             double averageTempF =
                 (previous.InternalTempF + current.InternalTempF) / 2.0;
 
@@ -56,8 +68,7 @@ internal static class MaturityIntervalBuilder
                 averageTempF));
         }
 
-        // Determine how to handle the interval from the final reading
-        // to the requested target time.
+        // Extend the calculation from the last reading to the target.
         var lastReading = applicableReadings[^1];
 
         if (lastReading.TakenAt < targetTime)
@@ -65,33 +76,26 @@ internal static class MaturityIntervalBuilder
             double averageTempF =
                 applicableReadings.Average(r => r.InternalTempF);
 
-            if (mode == MaturityCalculationMode.Retrospective)
+            // Interpolate if a later reading is available.
+            var nextReading = validReadings
+                .FirstOrDefault(r => r.TakenAt > targetTime);
+
+            if (nextReading is not null)
             {
-                // Find the first reading after the target time.
-                var nextReading = readings
-                    .Where(r => r.TakenAt > targetTime)
-                    .OrderBy(r => r.TakenAt)
-                    .FirstOrDefault();
+                double totalHours =
+                    (nextReading.TakenAt - lastReading.TakenAt).TotalHours;
 
-                if (nextReading is not null)
-                {
-                    // Interpolate temperature at the target timestamp.
-                    double totalHours =
-                        (nextReading.TakenAt - lastReading.TakenAt).TotalHours;
+                double elapsedHours =
+                    (targetTime - lastReading.TakenAt).TotalHours;
 
-                    double elapsedHours =
-                        (targetTime - lastReading.TakenAt).TotalHours;
+                double fraction = elapsedHours / totalHours;
 
-                    double fraction = elapsedHours / totalHours;
+                double targetTempF = lastReading.InternalTempF +
+                    (nextReading.InternalTempF - lastReading.InternalTempF)
+                    * fraction;
 
-                    double targetTempF = lastReading.InternalTempF +
-                                         (nextReading.InternalTempF - lastReading.InternalTempF)
-                                         * fraction;
-
-                    // Average the starting and interpolated temperatures.
-                    averageTempF =
-                        (lastReading.InternalTempF + targetTempF) / 2.0;
-                }
+                averageTempF =
+                    (lastReading.InternalTempF + targetTempF) / 2.0;
             }
 
             intervals.Add(new MaturityInterval(

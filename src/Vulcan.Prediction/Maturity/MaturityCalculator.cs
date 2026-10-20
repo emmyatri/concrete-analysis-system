@@ -1,3 +1,4 @@
+
 namespace Vulcan.Prediction.Maturity;
 
 public static class MaturityCalculator
@@ -6,18 +7,22 @@ public static class MaturityCalculator
         DateTime castAt,
         IEnumerable<TemperatureReading> readings,
         DateTime targetTime,
-        MaturitySettings settings,
-        MaturityCalculationMode mode = MaturityCalculationMode.AsOfTarget)
+        MaturitySettings settings)
     {
         ArgumentNullException.ThrowIfNull(readings);
         ArgumentNullException.ThrowIfNull(settings);
 
-        if (castAt.Kind != DateTimeKind.Utc ||
-            targetTime.Kind != DateTimeKind.Utc)
+        // SQLite may return UTC timestamps with an Unspecified kind.
+        // Reject Local timestamps, but interpret Unspecified as UTC.
+        if (castAt.Kind == DateTimeKind.Local ||
+            targetTime.Kind == DateTimeKind.Local)
         {
             throw new ArgumentException(
-                "Cast and target timestamps must be UTC.");
+                "Cast and target timestamps must be UTC or Unspecified.");
         }
+
+        castAt = DateTime.SpecifyKind(castAt, DateTimeKind.Utc);
+        targetTime = DateTime.SpecifyKind(targetTime, DateTimeKind.Utc);
 
         if (targetTime < castAt)
         {
@@ -33,20 +38,17 @@ public static class MaturityCalculator
                 "Reference temperature must be greater than datum temperature.");
         }
 
-        if (!Enum.IsDefined(mode))
-        {
-            throw new ArgumentOutOfRangeException(nameof(mode));
-        }
-
         // Validate all supplied readings before filtering.
         var validatedReadings = readings.ToList();
 
-        foreach (var reading in validatedReadings)
+        for (int i = 0; i < validatedReadings.Count; i++)
         {
-            if (reading.TakenAt.Kind != DateTimeKind.Utc)
+            var reading = validatedReadings[i];
+
+            if (reading.TakenAt.Kind == DateTimeKind.Local)
             {
                 throw new ArgumentException(
-                    "Temperature reading timestamps must be UTC.");
+                    "Temperature reading timestamps must be UTC or Unspecified.");
             }
 
             if (!double.IsFinite(reading.InternalTempF))
@@ -54,9 +56,17 @@ public static class MaturityCalculator
                 throw new ArgumentException(
                     "Temperature readings must contain finite values.");
             }
+
+            // Normalize SQLite timestamps without changing their clock values.
+            validatedReadings[i] = reading with
+            {
+                TakenAt = DateTime.SpecifyKind(
+                    reading.TakenAt,
+                    DateTimeKind.Utc)
+            };
         }
 
-        // Reject duplicate timestamps to prevent ambiguous temperature intervals.
+        // Reject duplicate timestamps to prevent ambiguous intervals.
         var duplicateTimestamp = validatedReadings
             .GroupBy(r => r.TakenAt)
             .FirstOrDefault(group => group.Count() > 1);
@@ -68,23 +78,20 @@ public static class MaturityCalculator
                 nameof(readings));
         }
 
-        // Require at least one temperature reading within the calculation period.
-        // Missing data must not be interpreted as zero maturity.
-        if (!validatedReadings.Any(r =>
-                r.TakenAt >= castAt &&
-                r.TakenAt <= targetTime))
+        // A reading after the target is valid because the first
+        // recorded temperature applies from casting.
+        if (!validatedReadings.Any(r => r.TakenAt >= castAt))
         {
             throw new ArgumentException(
-                "At least one temperature reading is required between casting and the target time.",
+                "At least one temperature reading is required at or after casting.",
                 nameof(readings));
         }
 
-        // Build curing intervals using the selected calculation mode.
+        // Build curing intervals using the approved interpolation behavior.
         var intervals = MaturityIntervalBuilder.Build(
             castAt,
             validatedReadings,
-            targetTime,
-            mode);
+            targetTime);
 
         double maturityFHours = 0;
 
