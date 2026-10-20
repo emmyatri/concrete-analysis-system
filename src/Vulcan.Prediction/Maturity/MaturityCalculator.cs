@@ -6,7 +6,8 @@ public static class MaturityCalculator
         DateTime castAt,
         IEnumerable<TemperatureReading> readings,
         DateTime targetTime,
-        MaturitySettings settings)
+        MaturitySettings settings,
+        MaturityCalculationMode mode = MaturityCalculationMode.AsOfTarget)
     {
         ArgumentNullException.ThrowIfNull(readings);
         ArgumentNullException.ThrowIfNull(settings);
@@ -32,6 +33,71 @@ public static class MaturityCalculator
                 "Reference temperature must be greater than datum temperature.");
         }
 
-        return new MaturityResult(0, 0);
+        if (!Enum.IsDefined(mode))
+        {
+            throw new ArgumentOutOfRangeException(nameof(mode));
+        }
+
+        // Validate all supplied readings before filtering.
+        var validatedReadings = readings.ToList();
+
+        foreach (var reading in validatedReadings)
+        {
+            if (reading.TakenAt.Kind != DateTimeKind.Utc)
+            {
+                throw new ArgumentException(
+                    "Temperature reading timestamps must be UTC.");
+            }
+
+            if (!double.IsFinite(reading.InternalTempF))
+            {
+                throw new ArgumentException(
+                    "Temperature readings must contain finite values.");
+            }
+        }
+        
+        // Require at least one temperature reading within the calculation period.
+        // Missing data must not be interpreted as zero maturity.
+        if (!validatedReadings.Any(r =>
+                r.TakenAt >= castAt &&
+                r.TakenAt <= targetTime))
+        {
+            throw new ArgumentException(
+                "At least one temperature reading is required between casting and the target time.",
+                nameof(readings));
+        }
+
+        // Build curing intervals using the selected calculation mode.
+        var intervals = MaturityIntervalBuilder.Build(
+            castAt,
+            validatedReadings,
+            targetTime,
+            mode);
+
+        double maturityFHours = 0;
+
+        // Accumulate Nurse–Saul maturity across all curing intervals.
+        foreach (var interval in intervals)
+        {
+            double elapsedHours =
+                (interval.End - interval.Start).TotalHours;
+
+            if (elapsedHours <= 0)
+            {
+                continue;
+            }
+
+            double temperatureDifference = Math.Max(
+                0,
+                interval.AverageTempF - settings.DatumTempF);
+
+            maturityFHours += temperatureDifference * elapsedHours;
+        }
+
+        // Convert accumulated maturity into equivalent age in days.
+        double equivalentAgeDays = maturityFHours /
+            ((settings.ReferenceTempF - settings.DatumTempF) * 24);
+
+        return new MaturityResult(maturityFHours, equivalentAgeDays);
     }
 }
