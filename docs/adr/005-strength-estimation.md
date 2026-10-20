@@ -189,22 +189,31 @@ The 3-day re-fit is skipped if B₃ differs from the 3-day estimate by more than
 
 This adjustment is the team's own method, derived from Equation 4. It is not part of ACI 209R-92, and it will be checked against real breaks in Milestone 3.
 
+Adjustments will also be skipped or reverted when inputs are invalid, denominators are zero or numerically unstable, or calculated parameters are non-finite or nonpositive.
+
+
 ### 4.5 Checking Expected Final Against Water-Cement Ratio
 
-The batch's water-cementitious ratio (by weight, including SCM) gives an expected 28-day strength from the ACI 211.1 table for non-air-entrained concrete, interpolated linearly:
+The batch's water-cementitious ratio (by weight, including SCM) gives an approximate expected 28-day strength from ACI 211.1-97, Table 6.3.4(a), for non-air-entrained concrete, interpolated linearly:
 
 | w/cm | 28-day PSI |
 |---:|---:|
+| 0.33 | 7,000 |
 | 0.41 | 6,000 |
 | 0.48 | 5,000 |
 | 0.57 | 4,000 |
 | 0.68 | 3,000 |
 | 0.82 | 2,000 |
 
-If `ExpectedFinalBreakPsi` is more than 30% above the table value, the batch gets an early warning that its target may be too high for its water content. The estimate still uses `ExpectedFinalBreakPsi`. Table values to be verified against ACI 211.1 (SCRUM-161).
+If `ExpectedFinalBreakPsi` is more than 30% above the table value, the batch gets an early warning that its target may be too high for its water content. The estimate still uses `ExpectedFinalBreakPsi`.
+
+Values outside the published w/cm range (0.33–0.82) will not be extrapolated for this warning.
+
+**Reference:** ACI 211.1-97, Table 6.3.4(a), *Relationship Between Water-Cementitious Ratio and Compressive Strength of Concrete*.
+
+**Source:** [American Concrete Institute — Webinar Material](https://www.concrete.org/portals/0/files/pdf/webinars/Folks.pdf)
 
 ---
-
 
 ## 5. Curing Readings and Prediction Assumptions
 
@@ -303,7 +312,7 @@ The implementation will not use:
 - Randomized calculations.
 - External prediction services.
 - Cloud-based processing.
-- Automatically adjusted coefficients.
+- Uncontrolled or nondeterministic coefficient adjustments.
 
 All calculations will be performed locally within the existing application architecture.
 
@@ -338,6 +347,7 @@ The initial model has several known limitations:
 - Future curing temperatures are assumed from recorded temperature averages.
 - The selected ACI coefficients may not accurately represent every concrete mixture.
 - Nurse–Saul maturity uses a linear temperature-rate approximation.
+- When the first curing temperature is recorded after casting, the model assumes that temperature remained constant between casting and the first reading. This may not capture temperature changes during early hydration and can affect early-age strength estimates.
 
 These limitations will be considered when evaluating prediction accuracy.
 
