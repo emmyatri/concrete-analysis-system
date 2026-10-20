@@ -257,6 +257,65 @@ numeric ones live in the `ValidationLimit` table, so changing them is a data cha
 
 ---
 
+
+## 13. Two-tier early warning system (M2-50)
+
+The early warning system evaluates both the recorded batch data and the predicted 28-day compressive strength. Warnings are informational and do not prevent a valid batch from being saved.
+
+### Tier 1 — Range verification
+
+The system checks recorded values against their existing `ValidationLimit` ranges.
+
+- Values outside a Reject range are blocked during data entry.
+- Values outside a Warn range are saved and flagged.
+- Fields without an established warning range will not receive an arbitrary threshold.
+
+Once a valid strength prediction is available, the system also warns when the predicted 28-day strength is below 3,000 PSI.
+
+**Proposed limit:** `Prediction.MinimumPsi`
+**Threshold:** 3,000 PSI
+
+This minimum is based on the client's existing strength range but requires confirmation before being treated as an approved prediction rule.
+
+### Tier 2 — Projected strength shortfall
+
+The system compares its predicted 28-day strength against the batch's `ExpectedFinalBreakPsi`.
+
+```text
+ShortfallPct =
+    (ExpectedFinalBreakPsi - Predicted28DayPsi)
+    / ExpectedFinalBreakPsi * 100
+```
+
+A warning is generated when the calculated shortfall exceeds 5%.
+
+**Proposed limit:** `Prediction.ShortfallPct`
+**Threshold:** Greater than 5%
+
+The threshold is proposed for Milestone 2 and requires client confirmation.
+
+### Independent warnings
+
+Both prediction warnings are evaluated independently.
+
+If a prediction is below 3,000 PSI and more than 5% below the expected final strength, both warnings are displayed. Each warning identifies its own reason and limit key.
+
+This provides operators with more specific feedback and allows the development team to distinguish minimum-strength concerns from target-strength shortfalls.
+
+### Prediction availability
+
+Batch-entry warnings are evaluated when data is entered or updated.
+
+Prediction-related warnings are evaluated only when sufficient curing readings are available to produce a valid 28-day strength estimate.
+
+If insufficient curing data is available, the system does not generate prediction-related warnings.
+
+*Source:* Rev 1, strength ranges and early warning requirements; ADR-005, strength estimation method.
+
+*Affects:* `ValidationLimit`, SCRUM-181 (early warning implementation)
+*Requirements:* SLA A-3
+
+
 ## If something changes
 
 If Vulcan tells us something different from what's here:
