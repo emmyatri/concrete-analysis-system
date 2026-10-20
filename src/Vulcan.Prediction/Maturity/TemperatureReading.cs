@@ -1,4 +1,4 @@
-﻿namespace Vulcan.Prediction.Maturity;
+namespace Vulcan.Prediction.Maturity;
 
 public sealed record TemperatureReading(
     DateTime TakenAt,

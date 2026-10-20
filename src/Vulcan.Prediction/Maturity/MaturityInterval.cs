@@ -1,4 +1,4 @@
-﻿namespace Vulcan.Prediction.Maturity;
+namespace Vulcan.Prediction.Maturity;
 
 /// <summary>
 /// Represents a curing interval with an average internal temperature.

@@ -1,4 +1,4 @@
-﻿namespace Vulcan.Prediction.Maturity;
+namespace Vulcan.Prediction.Maturity;
 
 /// <summary>
 /// Builds curing temperature intervals for maturity calculations.
@@ -11,7 +11,7 @@ internal static class MaturityIntervalBuilder
         DateTime targetTime,
         MaturityCalculationMode mode)
     {
-        
+
         var intervals = new List<MaturityInterval>();
 
         // Only use readings within the requested calculation period.
@@ -55,7 +55,7 @@ internal static class MaturityIntervalBuilder
                 current.TakenAt,
                 averageTempF));
         }
-        
+
         // Determine how to handle the interval from the final reading
         // to the requested target time.
         var lastReading = applicableReadings[^1];
@@ -99,7 +99,7 @@ internal static class MaturityIntervalBuilder
                 targetTime,
                 averageTempF));
         }
-        
+
         return intervals;
     }
 }

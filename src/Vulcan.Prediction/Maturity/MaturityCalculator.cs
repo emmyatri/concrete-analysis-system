@@ -1,4 +1,4 @@
-﻿namespace Vulcan.Prediction.Maturity;
+namespace Vulcan.Prediction.Maturity;
 
 public static class MaturityCalculator
 {
@@ -55,7 +55,19 @@ public static class MaturityCalculator
                     "Temperature readings must contain finite values.");
             }
         }
-        
+
+        // Reject duplicate timestamps to prevent ambiguous temperature intervals.
+        var duplicateTimestamp = validatedReadings
+            .GroupBy(r => r.TakenAt)
+            .FirstOrDefault(group => group.Count() > 1);
+
+        if (duplicateTimestamp is not null)
+        {
+            throw new ArgumentException(
+                "Temperature readings cannot contain duplicate timestamps.",
+                nameof(readings));
+        }
+
         // Require at least one temperature reading within the calculation period.
         // Missing data must not be interpreted as zero maturity.
         if (!validatedReadings.Any(r =>

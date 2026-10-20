@@ -1,4 +1,4 @@
-﻿namespace Vulcan.Prediction.Maturity;
+namespace Vulcan.Prediction.Maturity;
 
 /// <summary>
 /// Determines how temperature readings are used when calculating
