@@ -237,26 +237,6 @@ are not backfilled; the operator supplies the measurement when editing a batch.
 *Source:* Client, M1 demo (Oct 9)
 *Affects:* `Batch.CementSurfacePh`, FR-7 (extended), NFR-6; SCRUM-149
 
-## Our own defaults (not client rules)
-
-These fill gaps Rev 1 doesn't cover. They're our calls, and we'll change them if real data proves them wrong. The
-numeric ones live in the `ValidationLimit` table, so changing them is a data change, not a code change.
-
-- **Windows 11, 64-bit.** We build on .NET 10, which supports Windows 10 only in its Enterprise, LTSC and IoT
-  editions ([supported OS list](https://github.com/dotnet/core/blob/main/release-notes/10.0/supported-os.md)). If
-  Vulcan's workstations are still on Windows 10, we need to know early. Affects the installer and build target (
-  `win-x64`).
-- **Temperature typo guards.** Ambient rejects outside 0–150°F and internal outside 0–200°F. These don't reflect how
-  concrete behaves. They just catch someone typing 720 instead of 72.
-- **Times.** Stored in UTC, shown in the computer's local time, so daylight saving never scrambles the order of
-  readings. Vulcan sees Eastern time on screen.
-- **Two-tier validation.** Rev 1 separates "allowed" from "normal" for pH, so we use the same reject/warn pattern
-  everywhere it makes sense.
-- **Technician name.** Entered once per session instead of on every batch. Every record still stores who created it (
-  FR-22).
-
-- **Demo data loads next to real batches.** The M1 demo hotfix (#58) is kept on purpose: `SeedSyntheticData` adds the 9 synthetic batches once, even if real batches exist, so demos work on a machine that's already in use. They stay marked synthetic and can be hidden with the Synthetic data switch.
-
 ---
 
 ## 13. Two-tier early warning system (M2-50)
@@ -280,15 +260,17 @@ Once a valid strength prediction is available, the system also checks whether th
 **Proposed limit:** `Prediction.MinimumPsi`
 **Warning condition:** Predicted 28-day PSI < 3,000
 
+The Batch Detail strength chart will use the configured `Prediction.MinimumPsi` value for its minimum-strength reference line, rather than hard-coding 3,000 PSI in the UI.
+
 This proposed prediction rule is based on the client's existing 3,000–10,000 PSI strength range. Applying that minimum to predicted strength requires client confirmation.
 
 ### Tier 2 — Projected strength shortfall
 
-The system compares its predicted 28-day compressive strength against the batch's `ExpectedFinalBreakPsi`.
+The system compares the current 28-day strength estimate against the batch's `ExpectedFinalBreakPsi`. When recorded breaks are available, the estimate includes the adjustments defined in SCRUM-162. Otherwise, the original unadjusted estimate is used.
 
 ```text
 ShortfallPct =
-    (ExpectedFinalBreakPsi - Predicted28DayPsi)
+    (ExpectedFinalBreakPsi - Current28DayEstimatePsi)
     / ExpectedFinalBreakPsi * 100
 ```
 
@@ -324,7 +306,8 @@ A warning is generated when the expected final strength exceeds the interpolated
 **Proposed limit:** `Batch.ExpectedFinalVsWcmPct`
 **Warning condition:** ExpectedFinalVsWcmPct > 30%
 
-Interpolation is limited to the published w/cm range of 0.33–0.82. Values outside this range are not extrapolated, and this specific warning is skipped.
+Below a w/cm of 0.33, this check is skipped. Above 0.82, the
+2,000 PSI endpoint is used without further extrapolation.
 
 This warning is independent of the predicted-strength warnings and can be evaluated when a batch is entered, without curing readings or a strength prediction.
 
@@ -356,13 +339,14 @@ Our existing `ValidationLimit` configuration includes warning ranges for several
 
 The following warning ranges require clarification from Vulcan:
 
-| Measurement | Existing validation | Information requested |
+| Measurement | Client-provided information | Remaining clarification |
 |---|---|---|
-| Internal temperature (°F) | Reject outside 0–200°F | Normal curing range |
-| Moisture (%) | Reject outside 0–100% | Acceptable range and measurement method |
-| Relative humidity (%) | Reject outside 0–100% | Acceptable range and measurement location |
-| Resistivity (ohms/ft) | Reject values below 0.01 | Acceptable range and testing method |
-| CO₂ (ppm) | Reject negative values | Acceptable range and measurement location |
+| Internal temperature (°F) | Not provided | Normal curing range and hard limits |
+| Moisture (%) | 3.5–5% of total batch weight | Confirm warning versus rejection thresholds |
+| Relative humidity (%) | Below 75% | Treat 75% or above as outside the normal range; confirm warning versus rejection threshold |
+| Electrical resistance (Ω) | Below 7,000–9,000 Ω, measured end to end | Confirm exact upper threshold, testing method, and compatibility with stored resistivity (ohms/ft) |
+| CO₂ (%) | 0.5–0.7% of total batch weight | Confirm warning versus rejection thresholds and update stored units/API contract as needed |
+| Ambient temperature (°F) | No new range provided | Confirm whether existing 60–80°F warning range applies and establish hard limits |
 
 Vulcan should also confirm whether separate warning ranges are needed for SCM percentage and aggregate proportions. These fields currently have rejection limits but no warning limits.
 
@@ -389,7 +373,29 @@ All three thresholds are proposed and may be adjusted following client feedback.
 *Sources:* Rev 1, strength ranges and early warning requirements; ACI 211.1-97, Table 6.3.4(a); ADR-005, strength estimation method.
 
 *Affects:* `ValidationLimit`, SCRUM-181 (early warning implementation)
-*Requirements:* SLA A-3
+*Requirements:* SLA A-3, FR-16
+
+---
+
+## Our own defaults (not client rules)
+
+These fill gaps Rev 1 doesn't cover. They're our calls, and we'll change them if real data proves them wrong. The
+numeric ones live in the `ValidationLimit` table, so changing them is a data change, not a code change.
+
+- **Windows 11, 64-bit.** We build on .NET 10, which supports Windows 10 only in its Enterprise, LTSC and IoT
+  editions ([supported OS list](https://github.com/dotnet/core/blob/main/release-notes/10.0/supported-os.md)). If
+  Vulcan's workstations are still on Windows 10, we need to know early. Affects the installer and build target (
+  `win-x64`).
+- **Temperature typo guards.** Ambient rejects outside 0–150°F and internal outside 0–200°F. These don't reflect how
+  concrete behaves. They just catch someone typing 720 instead of 72.
+- **Times.** Stored in UTC, shown in the computer's local time, so daylight saving never scrambles the order of
+  readings. Vulcan sees Eastern time on screen.
+- **Two-tier validation.** Rev 1 separates "allowed" from "normal" for pH, so we use the same reject/warn pattern
+  everywhere it makes sense.
+- **Technician name.** Entered once per session instead of on every batch. Every record still stores who created it (
+  FR-22).
+
+- **Demo data loads next to real batches.** The M1 demo hotfix (#58) is kept on purpose: `SeedSyntheticData` adds the 9 synthetic batches once, even if real batches exist, so demos work on a machine that's already in use. They stay marked synthetic and can be hidden with the Synthetic data switch.
 
 ## If something changes
 
