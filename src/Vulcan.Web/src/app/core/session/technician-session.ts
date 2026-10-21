@@ -39,7 +39,9 @@ export class TechnicianSession {
   start(name: string): Observable<void> {
     const trimmed = name.trim();
     return this.http.put<void>(TECHNICIAN_SETTINGS_URL, { name: trimmed }).pipe(
-      catchError((error: unknown) => (this.allowWithoutApi ? of(undefined) : throwError(() => error))),
+      catchError((error: unknown) =>
+        this.allowWithoutApi ? of(undefined) : throwError(() => error),
+      ),
       tap(() => this._name.set(trimmed)),
     );
   }

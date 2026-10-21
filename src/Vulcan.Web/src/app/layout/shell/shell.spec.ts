@@ -40,9 +40,17 @@ describe('Shell', () => {
     )!;
 
   it('shows every menu item from the mockup, in order', () => {
-    const labels = Array.from(page().querySelectorAll('.shell-menu-link')).map((link) => link.textContent?.trim());
+    const labels = Array.from(page().querySelectorAll('.shell-menu-link')).map((link) =>
+      link.textContent?.trim(),
+    );
 
-    expect(labels).toEqual(['Home', 'New batch', 'Search batches', 'Break results', 'Curing readings']);
+    expect(labels).toEqual([
+      'Home',
+      'New batch',
+      'Search batches',
+      'Break results',
+      'Curing readings',
+    ]);
   });
 
   for (const item of SHELL_MENU) {
@@ -72,7 +80,9 @@ describe('Shell', () => {
     http.expectOne('/api/health').flush({ status: 'ok' });
     harness.detectChanges();
 
-    expect(page().querySelector('[data-testid="api-status"]')?.textContent).toContain('Local API ready');
+    expect(page().querySelector('[data-testid="api-status"]')?.textContent).toContain(
+      'Local API ready',
+    );
   });
 
   it('shows the technician in the top bar', () => {
@@ -87,8 +97,8 @@ describe('Shell', () => {
     page().querySelector<HTMLButtonElement>('[data-testid="technician"]')!.click();
     harness.detectChanges();
 
-    const item = Array.from(document.querySelectorAll<HTMLElement>('.p-menu-item-link')).find((link) =>
-      link.textContent?.includes('Switch technician'),
+    const item = Array.from(document.querySelectorAll<HTMLElement>('.p-menu-item-link')).find(
+      (link) => link.textContent?.includes('Switch technician'),
     );
     item!.click();
     await harness.fixture.whenStable();
@@ -97,6 +107,8 @@ describe('Shell', () => {
   });
 
   it('shows "Starting local service…" while waiting for the API', () => {
-    expect(page().querySelector('[data-testid="api-status"]')?.textContent).toContain('Starting local service');
+    expect(page().querySelector('[data-testid="api-status"]')?.textContent).toContain(
+      'Starting local service',
+    );
   });
 });

@@ -52,7 +52,6 @@ export class VulcanApiService {
     return this.http.post<CreateBatchResponse>('/api/batches', request);
   }
 
-
   /** Cylinders not broken yet, soonest due first. Follows the Synthetic data switch like Search. */
   getPendingBreaks(includeSynthetic: boolean) {
     const params = new HttpParams().set('includeSynthetic', String(includeSynthetic));
@@ -67,7 +66,6 @@ export class VulcanApiService {
     return this.http.post<CreateBreakResultResponse>(`/api/specimens/${specimenId}/break`, request);
   }
 
-
   /**
    * Adds one curing reading to a cylinder. A 400 lists bad values by key ("Curing.AmbientTempF",
    * "Curing.TakenAt", …); a 404 means there's no such cylinder.
@@ -78,7 +76,6 @@ export class VulcanApiService {
       request,
     );
   }
-
 
   /**
    * Adds a cylinder to a batch. A 400 lists bad values by ValidationLimit key ("Specimen.Label" for a label

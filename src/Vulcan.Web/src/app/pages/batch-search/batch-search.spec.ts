@@ -115,7 +115,6 @@ describe('BatchSearchPage', () => {
     expect(batchNumbers()).toEqual(['VM-2026-0142', 'VM-2026-0141', 'VM-2026-0139']);
   });
 
-
   it('says synthetic data is hidden when that is why nothing matches', async () => {
     TestBed.inject(SyntheticDataSetting).show.set(false);
     await search('008');
