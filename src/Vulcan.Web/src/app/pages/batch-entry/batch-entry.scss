@@ -15,31 +15,12 @@
   gap: 16px;
 }
 
-.breadcrumb {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 12px;
-  color: var(--p-text-muted-color);
-
-  a {
-    color: inherit;
-    text-decoration: none;
-
-    &:hover {
-      text-decoration: underline;
-    }
-  }
-
-  .pi {
-    font-size: 10px;
-  }
+.breadcrumb a:hover {
+  text-decoration: underline;
 }
 
 .page-title {
   margin: 4px 0 0;
-  font-size: 22px;
-  font-weight: 600;
 }
 
 .page-actions {
@@ -100,37 +81,18 @@
 }
 
 .card {
-  background: var(--p-surface-0);
-  border: 1px solid var(--p-content-border-color);
-  border-radius: 6px;
   overflow: hidden;
 }
 
 .card-header {
-  display: flex;
-  align-items: center;
   gap: 12px;
   height: 50px;
   padding: 0 17px;
-  background: var(--p-surface-100);
-  border-bottom: 1px solid var(--p-content-border-color);
-
-  h2 {
-    margin: 0;
-    font-size: 15px;
-    font-weight: 600;
-  }
 
   .pi {
     font-size: 17px;
     color: var(--p-surface-700);
   }
-}
-
-.card-note {
-  margin-left: auto;
-  font-size: 12px;
-  color: var(--p-text-muted-color);
 }
 
 .card-body {
@@ -254,13 +216,7 @@
 }
 
 .mix-bar {
-  display: flex;
-  gap: 2px;
   height: 10px;
-}
-
-.mix-segment {
-  flex-basis: 0;
 }
 
 .mix-legend {
@@ -278,28 +234,4 @@
     align-items: center;
     gap: 5px;
   }
-}
-
-.mix-swatch {
-  width: 8px;
-  height: 8px;
-}
-
-.mix-cement {
-  background: var(--p-primary-800);
-}
-.mix-water {
-  background: var(--p-primary-500);
-}
-.mix-coarse {
-  background: var(--p-primary-400);
-}
-.mix-fine {
-  background: var(--p-primary-200);
-}
-.mix-scm {
-  background: var(--p-orange-400);
-}
-.mix-air {
-  background: var(--p-surface-200);
 }
