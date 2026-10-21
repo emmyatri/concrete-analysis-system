@@ -1,5 +1,10 @@
 import { provideHttpClient, withInterceptors } from '@angular/common/http';
-import { ApplicationConfig, inject, provideAppInitializer, provideBrowserGlobalErrorListeners } from '@angular/core';
+import {
+  ApplicationConfig,
+  inject,
+  provideAppInitializer,
+  provideBrowserGlobalErrorListeners,
+} from '@angular/core';
 import { provideRouter, withComponentInputBinding } from '@angular/router';
 import { providePrimeNG } from 'primeng/config';
 
@@ -18,7 +23,11 @@ export const appConfig: ApplicationConfig = {
     provideRouter(routes, withComponentInputBinding()),
     // Fake data in development builds (environment.useMocks), and logging of connection problems (M1-60).
     provideHttpClient(
-      withInterceptors([technicianInterceptor, apiErrorLoggingInterceptor, ...environment.devInterceptors]),
+      withInterceptors([
+        technicianInterceptor,
+        apiErrorLoggingInterceptor,
+        ...environment.devInterceptors,
+      ]),
     ),
     { provide: USE_MOCKS, useValue: environment.useMocks },
     // Validation rules and specific gravities load once at startup, without holding up the first screen.

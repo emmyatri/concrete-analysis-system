@@ -44,7 +44,14 @@ export const labelField: ValidatorFn = (control) => {
  */
 @Component({
   selector: 'app-add-cylinder-dialog',
-  imports: [ReactiveFormsModule, ButtonModule, DialogModule, InputTextModule, SelectModule, AppField],
+  imports: [
+    ReactiveFormsModule,
+    ButtonModule,
+    DialogModule,
+    InputTextModule,
+    SelectModule,
+    AppField,
+  ],
   templateUrl: './add-cylinder-dialog.html',
   styleUrl: './add-cylinder-dialog.scss',
   providers: [FieldIssues],
@@ -122,7 +129,9 @@ export class AddCylinderDialog {
 
   private showProblem(error: unknown): void {
     if (error instanceof HttpErrorResponse && error.status === 404) {
-      this.saveErrors.set([`There's no batch ${this.batchNumber()}. It may have been removed; reload the page.`]);
+      this.saveErrors.set([
+        `There's no batch ${this.batchNumber()}. It may have been removed; reload the page.`,
+      ]);
       return;
     }
     const problem: ApiProblem = describeApiError(error);

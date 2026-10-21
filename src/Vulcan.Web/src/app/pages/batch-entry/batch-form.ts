@@ -1,4 +1,10 @@
-﻿import { AbstractControl, FormControl, NonNullableFormBuilder, ValidatorFn, Validators } from '@angular/forms';
+﻿import {
+  AbstractControl,
+  FormControl,
+  NonNullableFormBuilder,
+  ValidatorFn,
+  Validators,
+} from '@angular/forms';
 import { numberField } from '../../core/validation/number-field';
 import { parseNumber } from '../../core/validation/parse-number';
 import { CementType, CreateBatchRequest, ScmType } from '../../core/api/batches';

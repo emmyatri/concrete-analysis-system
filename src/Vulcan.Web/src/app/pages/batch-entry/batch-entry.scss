@@ -230,7 +230,6 @@
   font-weight: 600;
 }
 
-
 // Same colors as a red or amber field (M1-45).
 .tile-message {
   font-size: 11px;
@@ -286,9 +285,21 @@
   height: 8px;
 }
 
-.mix-cement { background: var(--p-primary-800); }
-.mix-water { background: var(--p-primary-500); }
-.mix-coarse { background: var(--p-primary-400); }
-.mix-fine { background: var(--p-primary-200); }
-.mix-scm { background: var(--p-orange-400); }
-.mix-air { background: var(--p-surface-200); }
+.mix-cement {
+  background: var(--p-primary-800);
+}
+.mix-water {
+  background: var(--p-primary-500);
+}
+.mix-coarse {
+  background: var(--p-primary-400);
+}
+.mix-fine {
+  background: var(--p-primary-200);
+}
+.mix-scm {
+  background: var(--p-orange-400);
+}
+.mix-air {
+  background: var(--p-surface-200);
+}

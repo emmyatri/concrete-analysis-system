@@ -59,7 +59,8 @@ export class Shell {
     {
       label: 'Switch technician',
       icon: 'pi pi-user-edit',
-      command: () => this.router.navigate(['/start'], { queryParams: { returnUrl: this.router.url } }),
+      command: () =>
+        this.router.navigate(['/start'], { queryParams: { returnUrl: this.router.url } }),
     },
   ];
 }
