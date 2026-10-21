@@ -1144,15 +1144,29 @@ Use to get the strength predictions for a given batch.
                 "required": ["day", "psi"]
             }
         },
+        "unadjustedCurvePoints": {
+            "type": "array",
+            "default": [],
+            "description": "Present when adjustmentStage is not None",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "day": {
+                        "type": "integer"
+                    },
+                    "psi": {
+                        "type": "integer"
+                    }
+                },
+                "required": ["day", "psi"]
+            }
+        },
         "estimates": {
             "type": "array",
             "default": [],
             "items": {
                 "type": "object",
                 "properties": {
-                    "specimenId": {
-                        "type": "integer"
-                    },
                     "horizonDays": {
                         "type": "integer",
                         "enum": [3, 7, 28]
@@ -1166,7 +1180,11 @@ Use to get the strength predictions for a given batch.
                         "minimum": 0
                     },
                     "adjustmentStage": {
-                        "enum": ["none", "3day", "3and7day"]
+                        "enum": [
+                            "None",
+                            "ThreeDay",
+                            "ThreeAndSevenDay"
+                        ]
                     },
                     "unadjustedPsi": {
                         "type": "integer"
@@ -1174,7 +1192,7 @@ Use to get the strength predictions for a given batch.
                     "basis": {
                         "type": "string"
                     },
-                    "calibratedVersionId": {
+                    "calibratedVersion": {
                         "type": "string"
                     },
                     "isSynthetic": {
@@ -1202,7 +1220,7 @@ Use to get the strength predictions for a given batch.
                     "adjustmentStage",
                     "unadjustedPsi",
                     "basis",
-                    "calibratedVersionId",
+                    "calibratedVersion",
                     "isSynthetic",
                     "createdAtUtc",
                     "createdBy",
@@ -1218,14 +1236,14 @@ Use to get the strength predictions for a given batch.
                     "specimenId": {
                         "type": "integer"
                     },
+                    "specimenLabel": {
+                        "type": "string"
+                    },
                     "ageDays": {
                         "type": "number"
                     },
                     "psi": {
                         "type": "number"
-                    },
-                    "calibratedVersionId": {
-                        "type": "string"
                     },
                     "isSynthetic": {
                         "type": "boolean"
@@ -1233,9 +1251,9 @@ Use to get the strength predictions for a given batch.
                 },
                 "required": [
                     "specimenId",
+                    "specimenLabel",
                     "ageDays",
                     "psi",
-                    "calibratedVersionId",
                     "isSynthetic"
                 ]
             }
@@ -1353,11 +1371,11 @@ Status code: `200`
     "id": 1,
     "batchNumber": "VM-SYN-001",
     "isSynthetic": true,
-    "createdAtUtc": "2026-06-01T12:00:00Z",
-    "createdBy": "system",
     "expectedFinalBreakPsi": 6200,
     "atRisk": false,
-    "projected28DayPsi": 6380,
+    "projected28DayPsi": 6390,
+    "cementType": "TypeI",
+    "status": "Estimated",
     "curvePoints":
     [
         {
@@ -1462,358 +1480,51 @@ Status code: `200`
         },
         {
             "day": 26,
-            "psi": 6380
+            "psi": 6360
+        },
+        {
+            "day": 27,
+            "psi": 6375
+        },
+        {
+            "day": 28,
+            "psi": 6390
         }
     ],
     "estimates":
     [
         {
-            "specimenId": 1,
             "horizonDays": 3,
             "estimatedPsi": 3350.0,
             "equivalentAgeDays": 3.0,
-            "adjustmentStage": "none",
+            "adjustmentStage": "None",
             "unadjustedPsi": 3350,
             "basis": "Standard maturity model",
-            "calibratedVersionId": "v1",
+            "calibratedVersion": "v1",
             "isSynthetic": true,
             "createdAtUtc": "2026-06-01T12:00:00Z",
             "createdBy": "system"
         },
         {
-            "specimenId": 1,
             "horizonDays": 7,
             "estimatedPsi": 4794.0,
             "equivalentAgeDays": 7.0,
-            "adjustmentStage": "3day",
+            "adjustmentStage": "ThreeDay",
             "unadjustedPsi": 4794,
             "basis": "Standard maturity model",
-            "calibratedVersionId": "v1",
+            "calibratedVersion": "v1",
             "isSynthetic": true,
             "createdAtUtc": "2026-06-01T12:00:00Z",
             "createdBy": "system"
         },
         {
-            "specimenId": 1,
             "horizonDays": 28,
             "estimatedPsi": 6690.0,
             "equivalentAgeDays": 28.0,
-            "adjustmentStage": "3and7day",
+            "adjustmentStage": "ThreeAndSevenDay",
             "unadjustedPsi": 6690,
             "basis": "Standard maturity model",
-            "calibratedVersionId": "v1",
-            "isSynthetic": true,
-            "createdAtUtc": "2026-06-01T12:00:00Z",
-            "createdBy": "system"
-        },
-        {
-            "specimenId": 2,
-            "horizonDays": 3,
-            "estimatedPsi": 3359.0,
-            "equivalentAgeDays": 3.0,
-            "adjustmentStage": "none",
-            "unadjustedPsi": 3359,
-            "basis": "Standard maturity model",
-            "calibratedVersionId": "v1",
-            "isSynthetic": true,
-            "createdAtUtc": "2026-06-01T12:00:00Z",
-            "createdBy": "system"
-        },
-        {
-            "specimenId": 2,
-            "horizonDays": 7,
-            "estimatedPsi": 4825.0,
-            "equivalentAgeDays": 7.0,
-            "adjustmentStage": "3day",
-            "unadjustedPsi": 4825,
-            "basis": "Standard maturity model",
-            "calibratedVersionId": "v1",
-            "isSynthetic": true,
-            "createdAtUtc": "2026-06-01T12:00:00Z",
-            "createdBy": "system"
-        },
-        {
-            "specimenId": 2,
-            "horizonDays": 28,
-            "estimatedPsi": 6614.0,
-            "equivalentAgeDays": 28.0,
-            "adjustmentStage": "3and7day",
-            "unadjustedPsi": 6614,
-            "basis": "Standard maturity model",
-            "calibratedVersionId": "v1",
-            "isSynthetic": true,
-            "createdAtUtc": "2026-06-01T12:00:00Z",
-            "createdBy": "system"
-        },
-        {
-            "specimenId": 3,
-            "horizonDays": 3,
-            "estimatedPsi": 3371.0,
-            "equivalentAgeDays": 3.0,
-            "adjustmentStage": "none",
-            "unadjustedPsi": 3371,
-            "basis": "Standard maturity model",
-            "calibratedVersionId": "v1",
-            "isSynthetic": true,
-            "createdAtUtc": "2026-06-01T12:00:00Z",
-            "createdBy": "system"
-        },
-        {
-            "specimenId": 3,
-            "horizonDays": 7,
-            "estimatedPsi": 4861.0,
-            "equivalentAgeDays": 7.0,
-            "adjustmentStage": "3day",
-            "unadjustedPsi": 4861,
-            "basis": "Standard maturity model",
-            "calibratedVersionId": "v1",
-            "isSynthetic": true,
-            "createdAtUtc": "2026-06-01T12:00:00Z",
-            "createdBy": "system"
-        },
-        {
-            "specimenId": 3,
-            "horizonDays": 28,
-            "estimatedPsi": 6740.0,
-            "equivalentAgeDays": 28.0,
-            "adjustmentStage": "3and7day",
-            "unadjustedPsi": 6740,
-            "basis": "Standard maturity model",
-            "calibratedVersionId": "v1",
-            "isSynthetic": true,
-            "createdAtUtc": "2026-06-01T12:00:00Z",
-            "createdBy": "system"
-        },
-        {
-            "specimenId": 4,
-            "horizonDays": 3,
-            "estimatedPsi": 3350.0,
-            "equivalentAgeDays": 3.0,
-            "adjustmentStage": "none",
-            "unadjustedPsi": 3350,
-            "basis": "Standard maturity model",
-            "calibratedVersionId": "v1",
-            "isSynthetic": true,
-            "createdAtUtc": "2026-06-01T12:00:00Z",
-            "createdBy": "system"
-        },
-        {
-            "specimenId": 4,
-            "horizonDays": 7,
-            "estimatedPsi": 4794.0,
-            "equivalentAgeDays": 7.0,
-            "adjustmentStage": "3day",
-            "unadjustedPsi": 4794,
-            "basis": "Standard maturity model",
-            "calibratedVersionId": "v1",
-            "isSynthetic": true,
-            "createdAtUtc": "2026-06-01T12:00:00Z",
-            "createdBy": "system"
-        },
-        {
-            "specimenId": 4,
-            "horizonDays": 28,
-            "estimatedPsi": 6690.0,
-            "equivalentAgeDays": 28.0,
-            "adjustmentStage": "3and7day",
-            "unadjustedPsi": 6690,
-            "basis": "Standard maturity model",
-            "calibratedVersionId": "v1",
-            "isSynthetic": true,
-            "createdAtUtc": "2026-06-01T12:00:00Z",
-            "createdBy": "system"
-        },
-        {
-            "specimenId": 5,
-            "horizonDays": 3,
-            "estimatedPsi": 3359.0,
-            "equivalentAgeDays": 3.0,
-            "adjustmentStage": "none",
-            "unadjustedPsi": 3359,
-            "basis": "Standard maturity model",
-            "calibratedVersionId": "v1",
-            "isSynthetic": true,
-            "createdAtUtc": "2026-06-01T12:00:00Z",
-            "createdBy": "system"
-        },
-        {
-            "specimenId": 5,
-            "horizonDays": 7,
-            "estimatedPsi": 4825.0,
-            "equivalentAgeDays": 7.0,
-            "adjustmentStage": "3day",
-            "unadjustedPsi": 4825,
-            "basis": "Standard maturity model",
-            "calibratedVersionId": "v1",
-            "isSynthetic": true,
-            "createdAtUtc": "2026-06-01T12:00:00Z",
-            "createdBy": "system"
-        },
-        {
-            "specimenId": 5,
-            "horizonDays": 28,
-            "estimatedPsi": 6614.0,
-            "equivalentAgeDays": 28.0,
-            "adjustmentStage": "3and7day",
-            "unadjustedPsi": 6614,
-            "basis": "Standard maturity model",
-            "calibratedVersionId": "v1",
-            "isSynthetic": true,
-            "createdAtUtc": "2026-06-01T12:00:00Z",
-            "createdBy": "system"
-        },
-        {
-            "specimenId": 6,
-            "horizonDays": 3,
-            "estimatedPsi": 3371.0,
-            "equivalentAgeDays": 3.0,
-            "adjustmentStage": "none",
-            "unadjustedPsi": 3371,
-            "basis": "Standard maturity model",
-            "calibratedVersionId": "v1",
-            "isSynthetic": true,
-            "createdAtUtc": "2026-06-01T12:00:00Z",
-            "createdBy": "system"
-        },
-        {
-            "specimenId": 6,
-            "horizonDays": 7,
-            "estimatedPsi": 4861.0,
-            "equivalentAgeDays": 7.0,
-            "adjustmentStage": "3day",
-            "unadjustedPsi": 4861,
-            "basis": "Standard maturity model",
-            "calibratedVersionId": "v1",
-            "isSynthetic": true,
-            "createdAtUtc": "2026-06-01T12:00:00Z",
-            "createdBy": "system"
-        },
-        {
-            "specimenId": 6,
-            "horizonDays": 28,
-            "estimatedPsi": 6740.0,
-            "equivalentAgeDays": 28.0,
-            "adjustmentStage": "3and7day",
-            "unadjustedPsi": 6740,
-            "basis": "Standard maturity model",
-            "calibratedVersionId": "v1",
-            "isSynthetic": true,
-            "createdAtUtc": "2026-06-01T12:00:00Z",
-            "createdBy": "system"
-        },
-        {
-            "specimenId": 7,
-            "horizonDays": 3,
-            "estimatedPsi": 3350.0,
-            "equivalentAgeDays": 3.0,
-            "adjustmentStage": "none",
-            "unadjustedPsi": 3350,
-            "basis": "Standard maturity model",
-            "calibratedVersionId": "v1",
-            "isSynthetic": true,
-            "createdAtUtc": "2026-06-01T12:00:00Z",
-            "createdBy": "system"
-        },
-        {
-            "specimenId": 7,
-            "horizonDays": 7,
-            "estimatedPsi": 4794.0,
-            "equivalentAgeDays": 7.0,
-            "adjustmentStage": "3day",
-            "unadjustedPsi": 4794,
-            "basis": "Standard maturity model",
-            "calibratedVersionId": "v1",
-            "isSynthetic": true,
-            "createdAtUtc": "2026-06-01T12:00:00Z",
-            "createdBy": "system"
-        },
-        {
-            "specimenId": 7,
-            "horizonDays": 28,
-            "estimatedPsi": 6690.0,
-            "equivalentAgeDays": 28.0,
-            "adjustmentStage": "3and7day",
-            "unadjustedPsi": 6690,
-            "basis": "Standard maturity model",
-            "calibratedVersionId": "v1",
-            "isSynthetic": true,
-            "createdAtUtc": "2026-06-01T12:00:00Z",
-            "createdBy": "system"
-        },
-        {
-            "specimenId": 8,
-            "horizonDays": 3,
-            "estimatedPsi": 3359.0,
-            "equivalentAgeDays": 3.0,
-            "adjustmentStage": "none",
-            "unadjustedPsi": 3359,
-            "basis": "Standard maturity model",
-            "calibratedVersionId": "v1",
-            "isSynthetic": true,
-            "createdAtUtc": "2026-06-01T12:00:00Z",
-            "createdBy": "system"
-        },
-        {
-            "specimenId": 8,
-            "horizonDays": 7,
-            "estimatedPsi": 4825.0,
-            "equivalentAgeDays": 7.0,
-            "adjustmentStage": "3day",
-            "unadjustedPsi": 4825,
-            "basis": "Standard maturity model",
-            "calibratedVersionId": "v1",
-            "isSynthetic": true,
-            "createdAtUtc": "2026-06-01T12:00:00Z",
-            "createdBy": "system"
-        },
-        {
-            "specimenId": 8,
-            "horizonDays": 28,
-            "estimatedPsi": 6614.0,
-            "equivalentAgeDays": 28.0,
-            "adjustmentStage": "3and7day",
-            "unadjustedPsi": 6614,
-            "basis": "Standard maturity model",
-            "calibratedVersionId": "v1",
-            "isSynthetic": true,
-            "createdAtUtc": "2026-06-01T12:00:00Z",
-            "createdBy": "system"
-        },
-        {
-            "specimenId": 9,
-            "horizonDays": 3,
-            "estimatedPsi": 3371.0,
-            "equivalentAgeDays": 3.0,
-            "adjustmentStage": "none",
-            "unadjustedPsi": 3371,
-            "basis": "Standard maturity model",
-            "calibratedVersionId": "v1",
-            "isSynthetic": true,
-            "createdAtUtc": "2026-06-01T12:00:00Z",
-            "createdBy": "system"
-        },
-        {
-            "specimenId": 9,
-            "horizonDays": 7,
-            "estimatedPsi": 4861.0,
-            "equivalentAgeDays": 7.0,
-            "adjustmentStage": "3day",
-            "unadjustedPsi": 4861,
-            "basis": "Standard maturity model",
-            "calibratedVersionId": "v1",
-            "isSynthetic": true,
-            "createdAtUtc": "2026-06-01T12:00:00Z",
-            "createdBy": "system"
-        },
-        {
-            "specimenId": 9,
-            "horizonDays": 28,
-            "estimatedPsi": 6740.0,
-            "equivalentAgeDays": 28.0,
-            "adjustmentStage": "3and7day",
-            "unadjustedPsi": 6740,
-            "basis": "Standard maturity model",
-            "calibratedVersionId": "v1",
+            "calibratedVersion": "v1",
             "isSynthetic": true,
             "createdAtUtc": "2026-06-01T12:00:00Z",
             "createdBy": "system"
@@ -1823,65 +1534,65 @@ Status code: `200`
     [
         {
             "specimenId": 1,
+            "specimenLabel": "D3-1",
             "ageDays": 3.0,
             "psi": 3350,
-            "calibratedVersionId": "v1",
             "isSynthetic": true
         },
         {
             "specimenId": 2,
+            "specimenLabel": "D3-2",
             "ageDays": 3.0,
             "psi": 3359,
-            "calibratedVersionId": "v1",
             "isSynthetic": true
         },
         {
             "specimenId": 3,
+            "specimenLabel": "D3-3",
             "ageDays": 3.0,
             "psi": 3371,
-            "calibratedVersionId": "v1",
             "isSynthetic": true
         },
         {
             "specimenId": 4,
+            "specimenLabel": "D7-1",
             "ageDays": 7.0,
             "psi": 4794,
-            "calibratedVersionId": "v1",
             "isSynthetic": true
         },
         {
             "specimenId": 5,
+            "specimenLabel": "D7-2",
             "ageDays": 7.0,
             "psi": 4825,
-            "calibratedVersionId": "v1",
             "isSynthetic": true
         },
         {
             "specimenId": 6,
+            "specimenLabel": "D7-3",
             "ageDays": 7.0,
             "psi": 4861,
-            "calibratedVersionId": "v1",
             "isSynthetic": true
         },
         {
             "specimenId": 7,
+            "specimenLabel": "D28-1",
             "ageDays": 28.0,
             "psi": 6690,
-            "calibratedVersionId": "v1",
             "isSynthetic": true
         },
         {
             "specimenId": 8,
+            "specimenLabel": "D28-2",
             "ageDays": 28.0,
             "psi": 6614,
-            "calibratedVersionId": "v1",
             "isSynthetic": true
         },
         {
             "specimenId": 9,
+            "specimenLabel": "D28-3",
             "ageDays": 28.0,
             "psi": 6740,
-            "calibratedVersionId": "v1",
             "isSynthetic": true
         }
     ],
@@ -1890,7 +1601,7 @@ Status code: `200`
     [
         {
             "specimenId": 1,
-            "label": "D3-1",
+            "specimenLabel": "D3-1",
             "time": "2026-06-01T12:00:00Z",
             "internalTempF": 79.8,
             "ambientTempF": 68.9,
@@ -1902,7 +1613,7 @@ Status code: `200`
         },
         {
             "specimenId": 1,
-            "label": "D3-1",
+            "specimenLabel": "D3-1",
             "time": "2026-06-02T00:00:00Z",
             "internalTempF": 80.5,
             "ambientTempF": 69.9,
@@ -1914,7 +1625,7 @@ Status code: `200`
         },
         {
             "specimenId": 1,
-            "label": "D3-1",
+            "specimenLabel": "D3-1",
             "time": "2026-06-02T12:00:00Z",
             "internalTempF": 82.7,
             "ambientTempF": 71.3,
@@ -1926,7 +1637,7 @@ Status code: `200`
         },
         {
             "specimenId": 1,
-            "label": "D3-1",
+            "specimenLabel": "D3-1",
             "time": "2026-06-03T00:00:00Z",
             "internalTempF": 81.6,
             "ambientTempF": 70.3,
@@ -1938,7 +1649,7 @@ Status code: `200`
         },
         {
             "specimenId": 1,
-            "label": "D3-1",
+            "specimenLabel": "D3-1",
             "time": "2026-06-03T12:00:00Z",
             "internalTempF": 79.8,
             "ambientTempF": 69.0,
@@ -1950,7 +1661,7 @@ Status code: `200`
         },
         {
             "specimenId": 1,
-            "label": "D3-1",
+            "specimenLabel": "D3-1",
             "time": "2026-06-04T00:00:00Z",
             "internalTempF": 78.2,
             "ambientTempF": 67.7,
@@ -1962,7 +1673,7 @@ Status code: `200`
         },
         {
             "specimenId": 1,
-            "label": "D3-1",
+            "specimenLabel": "D3-1",
             "time": "2026-06-04T12:00:00Z",
             "internalTempF": 76.8,
             "ambientTempF": 66.5,
@@ -1974,7 +1685,7 @@ Status code: `200`
         },
         {
             "specimenId": 2,
-            "label": "D3-2",
+            "specimenLabel": "D3-2",
             "time": "2026-06-01T12:00:00Z",
             "internalTempF": 79.4,
             "ambientTempF": 68.9,
@@ -1986,7 +1697,7 @@ Status code: `200`
         },
         {
             "specimenId": 2,
-            "label": "D3-2",
+            "specimenLabel": "D3-2",
             "time": "2026-06-02T00:00:00Z",
             "internalTempF": 81.7,
             "ambientTempF": 69.9,
@@ -1998,7 +1709,7 @@ Status code: `200`
         },
         {
             "specimenId": 2,
-            "label": "D3-2",
+            "specimenLabel": "D3-2",
             "time": "2026-06-02T12:00:00Z",
             "internalTempF": 82.8,
             "ambientTempF": 71.3,
@@ -2010,7 +1721,7 @@ Status code: `200`
         },
         {
             "specimenId": 2,
-            "label": "D3-2",
+            "specimenLabel": "D3-2",
             "time": "2026-06-03T00:00:00Z",
             "internalTempF": 82.2,
             "ambientTempF": 70.3,
@@ -2022,7 +1733,7 @@ Status code: `200`
         },
         {
             "specimenId": 2,
-            "label": "D3-2",
+            "specimenLabel": "D3-2",
             "time": "2026-06-03T12:00:00Z",
             "internalTempF": 78.0,
             "ambientTempF": 69.0,
@@ -2034,7 +1745,7 @@ Status code: `200`
         },
         {
             "specimenId": 2,
-            "label": "D3-2",
+            "specimenLabel": "D3-2",
             "time": "2026-06-04T00:00:00Z",
             "internalTempF": 76.1,
             "ambientTempF": 67.7,
@@ -2046,7 +1757,7 @@ Status code: `200`
         },
         {
             "specimenId": 2,
-            "label": "D3-2",
+            "specimenLabel": "D3-2",
             "time": "2026-06-04T12:00:00Z",
             "internalTempF": 76.1,
             "ambientTempF": 66.5,
@@ -2058,7 +1769,7 @@ Status code: `200`
         },
         {
             "specimenId": 3,
-            "label": "D3-3",
+            "specimenLabel": "D3-3",
             "time": "2026-06-01T12:00:00Z",
             "internalTempF": 78.8,
             "ambientTempF": 68.9,
@@ -2070,7 +1781,7 @@ Status code: `200`
         },
         {
             "specimenId": 3,
-            "label": "D3-3",
+            "specimenLabel": "D3-3",
             "time": "2026-06-02T00:00:00Z",
             "internalTempF": 81.5,
             "ambientTempF": 69.9,
@@ -2082,7 +1793,7 @@ Status code: `200`
         },
         {
             "specimenId": 3,
-            "label": "D3-3",
+            "specimenLabel": "D3-3",
             "time": "2026-06-02T12:00:00Z",
             "internalTempF": 82.5,
             "ambientTempF": 71.3,
@@ -2094,7 +1805,7 @@ Status code: `200`
         },
         {
             "specimenId": 3,
-            "label": "D3-3",
+            "specimenLabel": "D3-3",
             "time": "2026-06-03T00:00:00Z",
             "internalTempF": 80.3,
             "ambientTempF": 70.3,
@@ -2106,7 +1817,7 @@ Status code: `200`
         },
         {
             "specimenId": 3,
-            "label": "D3-3",
+            "specimenLabel": "D3-3",
             "time": "2026-06-03T12:00:00Z",
             "internalTempF": 80.4,
             "ambientTempF": 69.0,
@@ -2118,7 +1829,7 @@ Status code: `200`
         },
         {
             "specimenId": 3,
-            "label": "D3-3",
+            "specimenLabel": "D3-3",
             "time": "2026-06-04T00:00:00Z",
             "internalTempF": 76.4,
             "ambientTempF": 67.7,
@@ -2130,7 +1841,7 @@ Status code: `200`
         },
         {
             "specimenId": 3,
-            "label": "D3-3",
+            "specimenLabel": "D3-3",
             "time": "2026-06-04T12:00:00Z",
             "internalTempF": 74.9,
             "ambientTempF": 66.5,
@@ -2142,7 +1853,7 @@ Status code: `200`
         },
         {
             "specimenId": 4,
-            "label": "D7-1",
+            "specimenLabel": "D7-1",
             "time": "2026-06-01T12:00:00Z",
             "internalTempF": 79.4,
             "ambientTempF": 68.9,
@@ -2154,7 +1865,7 @@ Status code: `200`
         },
         {
             "specimenId": 4,
-            "label": "D7-1",
+            "specimenLabel": "D7-1",
             "time": "2026-06-02T00:00:00Z",
             "internalTempF": 81.9,
             "ambientTempF": 69.9,
@@ -2166,7 +1877,7 @@ Status code: `200`
         },
         {
             "specimenId": 4,
-            "label": "D7-1",
+            "specimenLabel": "D7-1",
             "time": "2026-06-02T12:00:00Z",
             "internalTempF": 84.0,
             "ambientTempF": 71.3,
@@ -2178,7 +1889,7 @@ Status code: `200`
         },
         {
             "specimenId": 4,
-            "label": "D7-1",
+            "specimenLabel": "D7-1",
             "time": "2026-06-03T00:00:00Z",
             "internalTempF": 80.9,
             "ambientTempF": 70.3,
@@ -2190,7 +1901,7 @@ Status code: `200`
         },
         {
             "specimenId": 4,
-            "label": "D7-1",
+            "specimenLabel": "D7-1",
             "time": "2026-06-03T12:00:00Z",
             "internalTempF": 79.4,
             "ambientTempF": 69.0,
@@ -2202,7 +1913,7 @@ Status code: `200`
         },
         {
             "specimenId": 4,
-            "label": "D7-1",
+            "specimenLabel": "D7-1",
             "time": "2026-06-04T00:00:00Z",
             "internalTempF": 76.4,
             "ambientTempF": 67.7,
@@ -2214,7 +1925,7 @@ Status code: `200`
         },
         {
             "specimenId": 4,
-            "label": "D7-1",
+            "specimenLabel": "D7-1",
             "time": "2026-06-04T12:00:00Z",
             "internalTempF": 74.7,
             "ambientTempF": 66.5,
@@ -2226,7 +1937,7 @@ Status code: `200`
         },
         {
             "specimenId": 5,
-            "label": "D7-2",
+            "specimenLabel": "D7-2",
             "time": "2026-06-01T12:00:00Z",
             "internalTempF": 80.0,
             "ambientTempF": 68.9,
@@ -2238,7 +1949,7 @@ Status code: `200`
         },
         {
             "specimenId": 5,
-            "label": "D7-2",
+            "specimenLabel": "D7-2",
             "time": "2026-06-02T00:00:00Z",
             "internalTempF": 82.1,
             "ambientTempF": 69.9,
@@ -2250,7 +1961,7 @@ Status code: `200`
         },
         {
             "specimenId": 5,
-            "label": "D7-2",
+            "specimenLabel": "D7-2",
             "time": "2026-06-02T12:00:00Z",
             "internalTempF": 82.0,
             "ambientTempF": 71.3,
@@ -2262,7 +1973,7 @@ Status code: `200`
         },
         {
             "specimenId": 5,
-            "label": "D7-2",
+            "specimenLabel": "D7-2",
             "time": "2026-06-03T00:00:00Z",
             "internalTempF": 82.5,
             "ambientTempF": 70.3,
@@ -2274,7 +1985,7 @@ Status code: `200`
         },
         {
             "specimenId": 5,
-            "label": "D7-2",
+            "specimenLabel": "D7-2",
             "time": "2026-06-03T12:00:00Z",
             "internalTempF": 78.7,
             "ambientTempF": 69.0,
@@ -2286,7 +1997,7 @@ Status code: `200`
         },
         {
             "specimenId": 5,
-            "label": "D7-2",
+            "specimenLabel": "D7-2",
             "time": "2026-06-04T00:00:00Z",
             "internalTempF": 76.4,
             "ambientTempF": 67.7,
@@ -2298,7 +2009,7 @@ Status code: `200`
         },
         {
             "specimenId": 5,
-            "label": "D7-2",
+            "specimenLabel": "D7-2",
             "time": "2026-06-04T12:00:00Z",
             "internalTempF": 74.5,
             "ambientTempF": 66.5,
@@ -2310,7 +2021,7 @@ Status code: `200`
         },
         {
             "specimenId": 6,
-            "label": "D7-3",
+            "specimenLabel": "D7-3",
             "time": "2026-06-01T12:00:00Z",
             "internalTempF": 78.2,
             "ambientTempF": 68.9,
@@ -2322,7 +2033,7 @@ Status code: `200`
         },
         {
             "specimenId": 6,
-            "label": "D7-3",
+            "specimenLabel": "D7-3",
             "time": "2026-06-02T00:00:00Z",
             "internalTempF": 81.2,
             "ambientTempF": 69.9,
@@ -2334,7 +2045,7 @@ Status code: `200`
         },
         {
             "specimenId": 6,
-            "label": "D7-3",
+            "specimenLabel": "D7-3",
             "time": "2026-06-02T12:00:00Z",
             "internalTempF": 81.9,
             "ambientTempF": 71.3,
@@ -2346,7 +2057,7 @@ Status code: `200`
         },
         {
             "specimenId": 6,
-            "label": "D7-3",
+            "specimenLabel": "D7-3",
             "time": "2026-06-03T00:00:00Z",
             "internalTempF": 82.2,
             "ambientTempF": 70.3,
@@ -2358,7 +2069,7 @@ Status code: `200`
         },
         {
             "specimenId": 6,
-            "label": "D7-3",
+            "specimenLabel": "D7-3",
             "time": "2026-06-03T12:00:00Z",
             "internalTempF": 79.4,
             "ambientTempF": 69.0,
@@ -2370,7 +2081,7 @@ Status code: `200`
         },
         {
             "specimenId": 6,
-            "label": "D7-3",
+            "specimenLabel": "D7-3",
             "time": "2026-06-04T00:00:00Z",
             "internalTempF": 77.7,
             "ambientTempF": 67.7,
@@ -2382,7 +2093,7 @@ Status code: `200`
         },
         {
             "specimenId": 6,
-            "label": "D7-3",
+            "specimenLabel": "D7-3",
             "time": "2026-06-04T12:00:00Z",
             "internalTempF": 75.7,
             "ambientTempF": 66.5,
@@ -2394,7 +2105,7 @@ Status code: `200`
         },
         {
             "specimenId": 7,
-            "label": "D28-1",
+            "specimenLabel": "D28-1",
             "time": "2026-06-01T12:00:00Z",
             "internalTempF": 78.9,
             "ambientTempF": 68.9,
@@ -2406,7 +2117,7 @@ Status code: `200`
         },
         {
             "specimenId": 7,
-            "label": "D28-1",
+            "specimenLabel": "D28-1",
             "time": "2026-06-02T00:00:00Z",
             "internalTempF": 80.3,
             "ambientTempF": 69.9,
@@ -2418,7 +2129,7 @@ Status code: `200`
         },
         {
             "specimenId": 7,
-            "label": "D28-1",
+            "specimenLabel": "D28-1",
             "time": "2026-06-02T12:00:00Z",
             "internalTempF": 83.6,
             "ambientTempF": 71.3,
@@ -2430,7 +2141,7 @@ Status code: `200`
         },
         {
             "specimenId": 7,
-            "label": "D28-1",
+            "specimenLabel": "D28-1",
             "time": "2026-06-03T00:00:00Z",
             "internalTempF": 82.1,
             "ambientTempF": 70.3,
@@ -2442,7 +2153,7 @@ Status code: `200`
         },
         {
             "specimenId": 7,
-            "label": "D28-1",
+            "specimenLabel": "D28-1",
             "time": "2026-06-03T12:00:00Z",
             "internalTempF": 79.0,
             "ambientTempF": 69.0,
@@ -2454,7 +2165,7 @@ Status code: `200`
         },
         {
             "specimenId": 7,
-            "label": "D28-1",
+            "specimenLabel": "D28-1",
             "time": "2026-06-04T00:00:00Z",
             "internalTempF": 78.2,
             "ambientTempF": 67.7,
@@ -2466,7 +2177,7 @@ Status code: `200`
         },
         {
             "specimenId": 7,
-            "label": "D28-1",
+            "specimenLabel": "D28-1",
             "time": "2026-06-04T12:00:00Z",
             "internalTempF": 75.5,
             "ambientTempF": 66.5,
@@ -2478,7 +2189,7 @@ Status code: `200`
         },
         {
             "specimenId": 8,
-            "label": "D28-2",
+            "specimenLabel": "D28-2",
             "time": "2026-06-01T12:00:00Z",
             "internalTempF": 79.3,
             "ambientTempF": 68.9,
@@ -2490,7 +2201,7 @@ Status code: `200`
         },
         {
             "specimenId": 8,
-            "label": "D28-2",
+            "specimenLabel": "D28-2",
             "time": "2026-06-02T00:00:00Z",
             "internalTempF": 81.4,
             "ambientTempF": 69.9,
@@ -2502,7 +2213,7 @@ Status code: `200`
         },
         {
             "specimenId": 8,
-            "label": "D28-2",
+            "specimenLabel": "D28-2",
             "time": "2026-06-02T12:00:00Z",
             "internalTempF": 82.2,
             "ambientTempF": 71.3,
@@ -2514,7 +2225,7 @@ Status code: `200`
         },
         {
             "specimenId": 8,
-            "label": "D28-2",
+            "specimenLabel": "D28-2",
             "time": "2026-06-03T00:00:00Z",
             "internalTempF": 80.8,
             "ambientTempF": 70.3,
@@ -2526,7 +2237,7 @@ Status code: `200`
         },
         {
             "specimenId": 8,
-            "label": "D28-2",
+            "specimenLabel": "D28-2",
             "time": "2026-06-03T12:00:00Z",
             "internalTempF": 79.6,
             "ambientTempF": 69.0,
@@ -2538,7 +2249,7 @@ Status code: `200`
         },
         {
             "specimenId": 8,
-            "label": "D28-2",
+            "specimenLabel": "D28-2",
             "time": "2026-06-04T00:00:00Z",
             "internalTempF": 76.3,
             "ambientTempF": 67.7,
@@ -2550,7 +2261,7 @@ Status code: `200`
         },
         {
             "specimenId": 8,
-            "label": "D28-2",
+            "specimenLabel": "D28-2",
             "time": "2026-06-04T12:00:00Z",
             "internalTempF": 75.1,
             "ambientTempF": 66.5,
@@ -2562,7 +2273,7 @@ Status code: `200`
         },
         {
             "specimenId": 9,
-            "label": "D28-3",
+            "specimenLabel": "D28-3",
             "time": "2026-06-01T12:00:00Z",
             "internalTempF": 80.6,
             "ambientTempF": 68.9,
@@ -2574,7 +2285,7 @@ Status code: `200`
         },
         {
             "specimenId": 9,
-            "label": "D28-3",
+            "specimenLabel": "D28-3",
             "time": "2026-06-02T00:00:00Z",
             "internalTempF": 81.4,
             "ambientTempF": 69.9,
@@ -2586,7 +2297,7 @@ Status code: `200`
         },
         {
             "specimenId": 9,
-            "label": "D28-3",
+            "specimenLabel": "D28-3",
             "time": "2026-06-02T12:00:00Z",
             "internalTempF": 81.6,
             "ambientTempF": 71.3,
@@ -2598,7 +2309,7 @@ Status code: `200`
         },
         {
             "specimenId": 9,
-            "label": "D28-3",
+            "specimenLabel": "D28-3",
             "time": "2026-06-03T00:00:00Z",
             "internalTempF": 80.9,
             "ambientTempF": 70.3,
@@ -2610,7 +2321,7 @@ Status code: `200`
         },
         {
             "specimenId": 9,
-            "label": "D28-3",
+            "specimenLabel": "D28-3",
             "time": "2026-06-03T12:00:00Z",
             "internalTempF": 78.7,
             "ambientTempF": 69.0,
@@ -2622,7 +2333,7 @@ Status code: `200`
         },
         {
             "specimenId": 9,
-            "label": "D28-3",
+            "specimenLabel": "D28-3",
             "time": "2026-06-04T00:00:00Z",
             "internalTempF": 78.3,
             "ambientTempF": 67.7,
@@ -2634,7 +2345,7 @@ Status code: `200`
         },
         {
             "specimenId": 9,
-            "label": "D28-3",
+            "specimenLabel": "D28-3",
             "time": "2026-06-04T12:00:00Z",
             "internalTempF": 75.2,
             "ambientTempF": 66.5,
@@ -2656,7 +2367,7 @@ Use to get the batches that are predicted to be at-risk.
 
 **Request Parameters:**
 
-* `includeSynthetic`: boolean from query. Default is false. Set to true to have the server include synthetic data in the response.
+* `includeSynthetic`: boolean from query. Default is true. Set to false to have the server omit synthetic data in the response.
 
 **Response Status Codes:**
 
@@ -2749,15 +2460,17 @@ Status Code: `200`
         "id": 1,
         "batchNumber": "VM-SYN-001",
         "isSynthetic": true,
-        "atRisk": false,
-        "projected28DayPsi": 3680,
+        "atRisk": true,
+        "projected28DayPsi": 4450,
+        "shortfallPsi": 1750,
+        "shortfallPct": 28.23,
         "earlyWarnings": [
             {
-                "warning": "Specimen internal temperature is above the optimal maximum [90]",
-                "field": "internalTempF",
-                "value": "120",
-                "limitKey": "Curing.InternalTempF",
-                "limit": "90"
+                "warning": "Water-cement ratio of 0.603 is above the expected maximum of 0.60",
+                "field": "waterCementRatio",
+                "value": 0.603,
+                "limitKey": "Composition.WaterCementRatio",
+                "limit": 0.6
             }
         ]
     }
