@@ -277,20 +277,15 @@ public sealed class StrengthEstimatorTests
         }
     }
     
-    
     [Fact]
     public void Estimate_TypeI_At28EquivalentDays_ReturnsExpectedRatio()
     {
         const double expectedFinalPsi = 6000;
-        const double expectedRatio = 1.007;
 
-        // Test coefficient chosen to reproduce the acceptance ratio.
-        // Not a verified production calibration coefficient.
-        double a = 28.0 / expectedRatio - 28.0 * 0.85;
-
+        // Approved initial Type I coefficients from ADR-005.
         var settings = CreateSettings() with
         {
-            A = a,
+            A = 4.0,
             B = 0.85
         };
 
@@ -311,26 +306,23 @@ public sealed class StrengthEstimatorTests
         Assert.NotNull(result.Day28);
         Assert.Equal(28.0, result.Day28.EquivalentAgeDays, 8);
 
-        Assert.Equal(
-            expectedFinalPsi * expectedRatio,
-            result.Day28.EstimatedPsi,
-            6);
+        // Expected result from the approved ACI coefficients.
+        double expectedPsi = 28.0 / (4.0 + 0.85 * 28.0)
+                             * expectedFinalPsi;
+
+        Assert.Equal(expectedPsi, result.Day28.EstimatedPsi, 6);
     }
 
     [Fact]
     public void Estimate_TypeIII_At28EquivalentDays_ReturnsExpectedRatio()
     {
         const double expectedFinalPsi = 6000;
-        const double expectedRatio = 0.998;
 
-        // Test coefficient chosen to reproduce the acceptance ratio.
-        // Not a verified production calibration coefficient.
-        double a = 28.0 / expectedRatio - 28.0 * 0.85;
-
+        // Approved initial Type III coefficients from ADR-005.
         var settings = CreateSettings() with
         {
-            A = a,
-            B = 0.85
+            A = 2.3,
+            B = 0.92
         };
 
         var specimens = new[]
@@ -350,12 +342,11 @@ public sealed class StrengthEstimatorTests
         Assert.NotNull(result.Day28);
         Assert.Equal(28.0, result.Day28.EquivalentAgeDays, 8);
 
-        Assert.Equal(
-            expectedFinalPsi * expectedRatio,
-            result.Day28.EstimatedPsi,
-            6);
+        double expectedPsi = 28.0 / (2.3 + 0.92 * 28.0)
+                             * expectedFinalPsi;
+
+        Assert.Equal(expectedPsi, result.Day28.EstimatedPsi, 6);
     }
-    
     
     [Fact]
     public void Estimate_VmSyn006_LoadsRealFixtureAndProducesCurve()
@@ -369,8 +360,13 @@ public sealed class StrengthEstimatorTests
         Assert.All(fixture.Specimens, specimen =>
             Assert.Equal(7, specimen.Readings.Count));
 
-        // Temporary test settings until M2-20 provides calibration.
-        var settings = CreateSettings();
+        // Approved initial Type III coefficients from ADR-005.
+        // M2-20 will provide calibration settings in production.
+        var settings = CreateSettings() with
+        {
+            A = 2.3,
+            B = 0.92
+        };
 
         var result = StrengthEstimator.Estimate(
             fixture.CastAt,
@@ -385,6 +381,11 @@ public sealed class StrengthEstimatorTests
         Assert.NotNull(result.Day3);
         Assert.NotNull(result.Day7);
         Assert.NotNull(result.Day28);
+        
+        // SCRUM-161 numerical acceptance criteria: ±1 PSI.
+        Assert.InRange(result.Day3!.EstimatedPsi, 3916, 3918);
+        Assert.InRange(result.Day7!.EstimatedPsi, 5143, 5145);
+        Assert.InRange(result.Day28!.EstimatedPsi, 6252, 6254);
 
         Assert.True(result.Day3.EstimatedPsi > 0);
         Assert.True(result.Day7.EstimatedPsi > result.Day3.EstimatedPsi);
@@ -420,5 +421,62 @@ public sealed class StrengthEstimatorTests
         Assert.Contains(
             "Future curing temperatures were extrapolated.",
             result.Day28.Basis);
+    }
+    
+    [Fact]
+    public void Estimate_ACI209R92_TypeI_MoistCuring_MatchesPublishedCoefficients()
+    {
+        const double expectedFinalPsi = 6000;
+        const double equivalentAgeDays = 7.0;
+
+        // Reference:
+        // ACI 209R-92, Table 2.2.1
+        // Type I cement, moist curing: a = 4.0, b = 0.85
+        //
+        // WSDOT documentation reproducing the published ACI table:
+        // https://www.wsdot.wa.gov/eesc/bridge/software/Documentation/PGSLibrary/8.0/tg_time_dependent_material_models.html
+
+        var settings = CreateSettings() with
+        {
+            A = 4.0,
+            B = 0.85
+        };
+
+        // Constant reference temperature means chronological age
+        // and equivalent age are equal.
+        var specimens = new[]
+        {
+            CreateSpecimen("S1",
+                (0, 73.4),
+                (24, 73.4),
+                (168, 73.4))
+        };
+
+        var result = StrengthEstimator.Estimate(
+            CastAt,
+            CementType.TypeI,
+            expectedFinalPsi,
+            specimens,
+            settings);
+
+        Assert.NotNull(result.Day7);
+        Assert.Equal(
+            equivalentAgeDays,
+            result.Day7.EquivalentAgeDays,
+            8);
+
+        // ACI 209R-92 strength-development equation:
+        // PSI = [t / (a + b * t)] * expectedFinalPsi
+        //
+        // At 7 days:
+        // PSI = [7 / (4.0 + 0.85 * 7)] * 6000
+        // PSI = 4221.1055...
+
+        const double expectedPsi = 4221.105527638191;
+
+        Assert.Equal(
+            expectedPsi,
+            result.Day7.EstimatedPsi,
+            6);
     }
 }
