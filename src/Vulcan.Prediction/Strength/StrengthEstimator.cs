@@ -51,6 +51,9 @@ public static class StrengthEstimator
                 nameof(settings));
         }
 
+        // Cement-specific coefficients are supplied by the caller through
+        // StrengthSettings. M2-20 is responsible for selecting the correct
+        // calibration for the requested cement type.
         if (!Enum.IsDefined(cementType))
         {
             throw new ArgumentOutOfRangeException(
@@ -202,10 +205,20 @@ public static class StrengthEstimator
                 estimatedPsi));
         }
 
+        bool usesExtrapolation = qualifyingSpecimens.Any(
+            specimen => specimen.Readings.Max(r => r.TakenAt)
+                        < castAt.AddDays(28));
+
+        string specimenLabel = qualifyingSpecimens.Count == 1
+            ? "specimen"
+            : "specimens";
+
         string basis =
-            $"Estimated from {qualifyingSpecimens.Count} qualifying " +
-            "specimen(s) using averaged equivalent ages and the " +
-            "ACI 209R-92 strength curve.";
+            $"Estimated from {qualifyingSpecimens.Count} qualifying {specimenLabel} " +
+            "using averaged equivalent ages and the ACI 209R-92 strength curve." +
+            (usesExtrapolation
+                ? " Future curing temperatures were extrapolated."
+                : "");
 
         StrengthDayEstimate CreateDayEstimate(StrengthCurvePoint point)
         {

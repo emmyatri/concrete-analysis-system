@@ -1,0 +1,424 @@
+﻿using Vulcan.Domain.Enums;
+using Vulcan.Prediction.Maturity;
+using Vulcan.Prediction.Strength;
+
+using System.IO;
+using System.Linq;
+using System.Text.Json;
+using Xunit;
+
+namespace Vulcan.Prediction.Tests.Strength;
+
+public sealed class StrengthEstimatorTests
+{
+    private static readonly DateTime CastAt =
+        new(2026, 10, 1, 12, 0, 0, DateTimeKind.Utc);
+
+    private static StrengthSettings CreateSettings() => new()
+    {
+        A = 4.0,
+        B = 0.85,
+        CalibrationVersion = "test-v1",
+        Maturity = new MaturitySettings()
+    };
+
+    private static StrengthSpecimen CreateSpecimen(
+        string id,
+        params (double Hours, double TemperatureF)[] readings)
+    {
+        return new StrengthSpecimen
+        {
+            SpecimenId = id,
+            Readings = readings
+                .Select(r => new TemperatureReading(
+                    CastAt.AddHours(r.Hours),
+                    r.TemperatureF))
+                .ToList()
+        };
+    }
+    
+    
+    private static string GetFixturePath()
+    {
+        var directory = new DirectoryInfo(AppContext.BaseDirectory);
+
+        while (directory != null)
+        {
+            var path = Path.Combine(
+                directory.FullName,
+                "data",
+                "synthetic",
+                "batches.json");
+
+            if (File.Exists(path))
+                return path;
+
+            directory = directory.Parent;
+        }
+
+        throw new FileNotFoundException(
+            "Could not locate data/synthetic/batches.json");
+    }
+
+    private static (DateTime CastAt,
+        CementType CementType,
+        double ExpectedFinalPsi,
+        StrengthSpecimen[] Specimens) LoadVmSyn006()
+    {
+        using var document = JsonDocument.Parse(
+            File.ReadAllText(GetFixturePath()));
+
+        var root = document.RootElement;
+
+        // Supports either a root array or an object containing "Batches".
+        var batches = root.ValueKind == JsonValueKind.Array
+            ? root
+            : root.GetProperty("Batches");
+
+        var batch = batches.EnumerateArray().First(
+            item => item.GetProperty("BatchNumber").GetString()
+                    == "VM-SYN-006");
+
+        var castAt = batch.GetProperty("CastAt").GetDateTime();
+
+        var cementType = Enum.Parse<CementType>(
+            batch.GetProperty("CementType").GetString()!);
+
+        var expectedFinalPsi = batch
+            .GetProperty("ExpectedFinalBreakPsi")
+            .GetDouble();
+
+        var specimens = batch.GetProperty("Specimens")
+            .EnumerateArray()
+            .Select(specimen => new StrengthSpecimen
+            {
+                SpecimenId = specimen.GetProperty("Label").GetString()!,
+                Readings = specimen.GetProperty("CuringReadings")
+                    .EnumerateArray()
+                    .Select(reading => new TemperatureReading(
+                        reading.GetProperty("TakenAt").GetDateTime(),
+                        reading.GetProperty("InternalTempF").GetDouble()))
+                    .ToArray()
+            })
+            .ToArray();
+
+        return (castAt, cementType, expectedFinalPsi, specimens);
+    }
+    
+    [Fact]
+    public void Estimate_NoSpecimens_ReturnsInsufficientData()
+    {
+        var result = StrengthEstimator.Estimate(
+            CastAt,
+            CementType.TypeI,
+            6000,
+            Array.Empty<StrengthSpecimen>(),
+            CreateSettings());
+
+        Assert.Equal("Not enough curing data yet", result.StatusMessage);
+        Assert.Empty(result.DailyCurve);
+        Assert.Null(result.Day3);
+        Assert.Null(result.Day7);
+        Assert.Null(result.Day28);
+    }
+
+    [Fact]
+    public void Estimate_NoSpecimenReaches24Hours_ReturnsInsufficientData()
+    {
+        var specimens = new[]
+        {
+            CreateSpecimen("S1", (0, 70), (12, 72)),
+            CreateSpecimen("S2", (0, 75), (23, 76))
+        };
+
+        var result = StrengthEstimator.Estimate(
+            CastAt,
+            CementType.TypeI,
+            6000,
+            specimens,
+            CreateSettings());
+
+        Assert.Equal("Not enough curing data yet", result.StatusMessage);
+        Assert.Empty(result.DailyCurve);
+        Assert.Null(result.Day3);
+        Assert.Null(result.Day7);
+        Assert.Null(result.Day28);
+    }
+
+    [Fact]
+    public void Estimate_OneReading_DoesNotQualify()
+    {
+        var specimens = new[]
+        {
+            CreateSpecimen("S1", (48, 75))
+        };
+
+        var result = StrengthEstimator.Estimate(
+            CastAt,
+            CementType.TypeI,
+            6000,
+            specimens,
+            CreateSettings());
+
+        Assert.Equal("Not enough curing data yet", result.StatusMessage);
+        Assert.Empty(result.DailyCurve);
+    }
+
+    [Fact]
+    public void Estimate_QualifyingSpecimen_Returns28DailyPoints()
+    {
+        var specimens = new[]
+        {
+            CreateSpecimen("S1", (0, 73.4), (24, 73.4))
+        };
+
+        var result = StrengthEstimator.Estimate(
+            CastAt,
+            CementType.TypeI,
+            6000,
+            specimens,
+            CreateSettings());
+
+        Assert.Null(result.StatusMessage);
+        Assert.Equal(28, result.DailyCurve.Count);
+
+        for (int day = 1; day <= 28; day++)
+        {
+            var point = result.DailyCurve[day - 1];
+
+            Assert.Equal(day, point.Day);
+            Assert.Equal(day, point.EquivalentAgeDays, 8);
+            Assert.True(point.EstimatedPsi > 0);
+        }
+
+        Assert.Equal(result.DailyCurve[2].EstimatedPsi,
+            result.Day3!.EstimatedPsi);
+
+        Assert.Equal(result.DailyCurve[6].EstimatedPsi,
+            result.Day7!.EstimatedPsi);
+
+        Assert.Equal(result.DailyCurve[27].EstimatedPsi,
+            result.Day28!.EstimatedPsi);
+    }
+
+    [Fact]
+    public void Estimate_DifferentReadingTimes_ProducesOneAveragedCurve()
+    {
+        var specimens = new[]
+        {
+            CreateSpecimen("S1",
+                (0, 73.4),
+                (24, 73.4),
+                (48, 73.4)),
+
+            CreateSpecimen("S2",
+                (6, 82.0),
+                (30, 82.0),
+                (60, 82.0))
+        };
+
+        var result = StrengthEstimator.Estimate(
+            CastAt,
+            CementType.TypeI,
+            6000,
+            specimens,
+            CreateSettings());
+
+        Assert.Equal(28, result.DailyCurve.Count);
+
+        // S1 cures at the reference temperature: 7 equivalent days.
+        // S2 cures above reference temperature:
+        // 7 * (82 - 32) / (73.4 - 32).
+        double expectedAverageAge =
+            (7.0 + 7.0 * (82.0 - 32.0) / (73.4 - 32.0)) / 2.0;
+
+        Assert.Equal(expectedAverageAge,
+            result.Day7!.EquivalentAgeDays, 8);
+
+        double expectedPsi =
+            expectedAverageAge /
+            (4.0 + 0.85 * expectedAverageAge) * 6000;
+
+        Assert.Equal(expectedPsi, result.Day7.EstimatedPsi, 8);
+    }
+
+    [Fact]
+    public void Estimate_DayEstimates_IncludeBasisAndCalibrationVersion()
+    {
+        var specimens = new[]
+        {
+            CreateSpecimen("S1", (0, 73.4), (24, 73.4))
+        };
+
+        var result = StrengthEstimator.Estimate(
+            CastAt,
+            CementType.TypeI,
+            6000,
+            specimens,
+            CreateSettings());
+
+        Assert.Equal("test-v1", result.CalibrationVersion);
+
+        var estimates = new[]
+        {
+            result.Day3!,
+            result.Day7!,
+            result.Day28!
+        };
+
+        Assert.Equal(new[] { 3, 7, 28 },
+            estimates.Select(e => e.Day));
+
+        foreach (var estimate in estimates)
+        {
+            Assert.Equal("test-v1", estimate.CalibrationVersion);
+            Assert.False(string.IsNullOrWhiteSpace(estimate.Basis));
+            Assert.Contains("ACI 209R-92", estimate.Basis);
+        }
+    }
+    
+    
+    [Fact]
+    public void Estimate_TypeI_At28EquivalentDays_ReturnsExpectedRatio()
+    {
+        const double expectedFinalPsi = 6000;
+        const double expectedRatio = 1.007;
+
+        // Test coefficient chosen to reproduce the acceptance ratio.
+        // Not a verified production calibration coefficient.
+        double a = 28.0 / expectedRatio - 28.0 * 0.85;
+
+        var settings = CreateSettings() with
+        {
+            A = a,
+            B = 0.85
+        };
+
+        var specimens = new[]
+        {
+            CreateSpecimen("S1",
+                (0, 73.4),
+                (24, 73.4))
+        };
+
+        var result = StrengthEstimator.Estimate(
+            CastAt,
+            CementType.TypeI,
+            expectedFinalPsi,
+            specimens,
+            settings);
+
+        Assert.NotNull(result.Day28);
+        Assert.Equal(28.0, result.Day28.EquivalentAgeDays, 8);
+
+        Assert.Equal(
+            expectedFinalPsi * expectedRatio,
+            result.Day28.EstimatedPsi,
+            6);
+    }
+
+    [Fact]
+    public void Estimate_TypeIII_At28EquivalentDays_ReturnsExpectedRatio()
+    {
+        const double expectedFinalPsi = 6000;
+        const double expectedRatio = 0.998;
+
+        // Test coefficient chosen to reproduce the acceptance ratio.
+        // Not a verified production calibration coefficient.
+        double a = 28.0 / expectedRatio - 28.0 * 0.85;
+
+        var settings = CreateSettings() with
+        {
+            A = a,
+            B = 0.85
+        };
+
+        var specimens = new[]
+        {
+            CreateSpecimen("S1",
+                (0, 73.4),
+                (24, 73.4))
+        };
+
+        var result = StrengthEstimator.Estimate(
+            CastAt,
+            CementType.TypeIII,
+            expectedFinalPsi,
+            specimens,
+            settings);
+
+        Assert.NotNull(result.Day28);
+        Assert.Equal(28.0, result.Day28.EquivalentAgeDays, 8);
+
+        Assert.Equal(
+            expectedFinalPsi * expectedRatio,
+            result.Day28.EstimatedPsi,
+            6);
+    }
+    
+    
+    [Fact]
+    public void Estimate_VmSyn006_LoadsRealFixtureAndProducesCurve()
+    {
+        var fixture = LoadVmSyn006();
+
+        Assert.Equal(CementType.TypeIII, fixture.CementType);
+        Assert.Equal(6200, fixture.ExpectedFinalPsi);
+        Assert.Equal(9, fixture.Specimens.Length);
+
+        Assert.All(fixture.Specimens, specimen =>
+            Assert.Equal(7, specimen.Readings.Count));
+
+        // Temporary test settings until M2-20 provides calibration.
+        var settings = CreateSettings();
+
+        var result = StrengthEstimator.Estimate(
+            fixture.CastAt,
+            fixture.CementType,
+            fixture.ExpectedFinalPsi,
+            fixture.Specimens,
+            settings);
+
+        Assert.Null(result.StatusMessage);
+        Assert.Equal(28, result.DailyCurve.Count);
+
+        Assert.NotNull(result.Day3);
+        Assert.NotNull(result.Day7);
+        Assert.NotNull(result.Day28);
+
+        Assert.True(result.Day3.EstimatedPsi > 0);
+        Assert.True(result.Day7.EstimatedPsi > result.Day3.EstimatedPsi);
+        Assert.True(result.Day28.EstimatedPsi > result.Day7.EstimatedPsi);
+
+        Assert.Equal("test-v1", result.CalibrationVersion);
+    }
+    
+    [Fact]
+    public void Estimate_ExtrapolatedCuringData_DisclosesExtrapolation()
+    {
+        var specimens = new[]
+        {
+            CreateSpecimen("S1",
+                (0, 73.4),
+                (24, 73.4),
+                (72, 73.4))
+        };
+
+        var result = StrengthEstimator.Estimate(
+            CastAt,
+            CementType.TypeI,
+            6000,
+            specimens,
+            CreateSettings());
+
+        Assert.Null(result.StatusMessage);
+        Assert.Contains(
+            "Future curing temperatures were extrapolated.",
+            result.Basis);
+
+        Assert.NotNull(result.Day28);
+        Assert.Contains(
+            "Future curing temperatures were extrapolated.",
+            result.Day28.Basis);
+    }
+}
