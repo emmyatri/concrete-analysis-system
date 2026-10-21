@@ -115,7 +115,8 @@ public partial class App : System.Windows.Application
 
         try
         {
-            _apiHost = ApiHost.Create([], port: GetUiDevServer() is null ? 0 : _devApiPort);
+            // Command-line args reach the API's settings, e.g. --SeedSyntheticData=true for demos.
+            _apiHost = ApiHost.Create(e.Args, port: GetUiDevServer() is null ? 0 : _devApiPort);
 
             await _apiHost.StartAsync();
 
