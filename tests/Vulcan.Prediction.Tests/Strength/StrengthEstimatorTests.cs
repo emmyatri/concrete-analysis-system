@@ -16,6 +16,7 @@ public sealed class StrengthEstimatorTests
 
     private static StrengthSettings CreateSettings() => new()
     {
+        CementType = CementType.TypeI,
         A = 4.0,
         B = 0.85,
         CalibrationVersion = "test-v1",
@@ -275,6 +276,10 @@ public sealed class StrengthEstimatorTests
             Assert.Equal("test-v1", estimate.CalibrationVersion);
             Assert.False(string.IsNullOrWhiteSpace(estimate.Basis));
             Assert.Contains("ACI 209R-92", estimate.Basis);
+            Assert.Contains("TypeI", estimate.Basis);
+            Assert.Contains("24 hours", estimate.Basis);
+            Assert.Contains("6000 PSI", estimate.Basis);
+            Assert.Contains("averaged", estimate.Basis);
         }
     }
 
@@ -322,6 +327,7 @@ public sealed class StrengthEstimatorTests
         // Approved initial Type III coefficients from ADR-005.
         var settings = CreateSettings() with
         {
+            CementType = CementType.TypeIII,
             A = 2.3,
             B = 0.92
         };
@@ -350,6 +356,32 @@ public sealed class StrengthEstimatorTests
     }
 
     [Fact]
+    public void Estimate_MismatchedCementType_ThrowsArgumentException()
+    {
+        var settings = CreateSettings() with
+        {
+            CementType = CementType.TypeI,
+            A = 4.0,
+            B = 0.85
+        };
+
+        var specimens = new[]
+        {
+            CreateSpecimen("S1", (0, 73.4), (24, 73.4))
+        };
+
+        var exception = Assert.Throws<ArgumentException>(() =>
+            StrengthEstimator.Estimate(
+                _castAt,
+                CementType.TypeIII,
+                6000,
+                specimens,
+                settings));
+
+        Assert.Equal("settings", exception.ParamName);
+    }
+
+    [Fact]
     public void Estimate_VmSyn006_LoadsRealFixtureAndProducesCurve()
     {
         var fixture = LoadVmSyn006();
@@ -365,6 +397,7 @@ public sealed class StrengthEstimatorTests
         // M2-20 will provide calibration settings in production.
         var settings = CreateSettings() with
         {
+            CementType = CementType.TypeIII,
             A = 2.3,
             B = 0.92
         };
@@ -414,13 +447,15 @@ public sealed class StrengthEstimatorTests
             CreateSettings());
 
         Assert.Null(result.StatusMessage);
+
         Assert.Contains(
-            "Future curing temperatures were extrapolated.",
+            "the average of its available curing temperatures was assumed.",
             result.Basis);
 
         Assert.NotNull(result.Day28);
+
         Assert.Contains(
-            "Future curing temperatures were extrapolated.",
+            "the average of its available curing temperatures was assumed.",
             result.Day28.Basis);
     }
 

@@ -61,6 +61,13 @@ public static class StrengthEstimator
                 "Unsupported cement type.");
         }
 
+        if (settings.CementType != cementType)
+        {
+            throw new ArgumentException(
+                "Calibration cement type does not match the requested cement type.",
+                nameof(settings));
+        }
+
         // Validate and normalize all specimen readings before qualification.
         // Invalid data must not silently produce misleading estimates.
         var validatedSpecimens = new List<StrengthSpecimen>();
@@ -213,11 +220,27 @@ public static class StrengthEstimator
             ? "specimen"
             : "specimens";
 
+        double earliestLastReadingHours = qualifyingSpecimens.Min(
+            specimen => (specimen.Readings.Max(r => r.TakenAt) - castAt)
+                .TotalHours);
+
+        double latestLastReadingHours = qualifyingSpecimens.Max(
+            specimen => (specimen.Readings.Max(r => r.TakenAt) - castAt)
+                .TotalHours);
+
+        string readingCoverage = earliestLastReadingHours == latestLastReadingHours
+            ? $"{latestLastReadingHours:0.#} hours"
+            : $"{earliestLastReadingHours:0.#}–{latestLastReadingHours:0.#} hours";
+
         string basis =
-            $"Estimated from {qualifyingSpecimens.Count} qualifying {specimenLabel} " +
-            "using averaged equivalent ages and the ACI 209R-92 strength curve." +
+            $"ACI 209R-92 ({cementType}) using " +
+            $"{qualifyingSpecimens.Count} qualifying {specimenLabel}, " +
+            $"with last curing readings at {readingCoverage} after casting " +
+            $"and reference strength {expectedFinalBreakPsi:0} PSI. " +
+            "Equivalent curing ages were averaged across qualifying specimens." +
             (usesExtrapolation
-                ? " Future curing temperatures were extrapolated."
+                ? " Beyond each specimen's last recorded temperature, " +
+                  "the average of its available curing temperatures was assumed."
                 : "");
 
         StrengthDayEstimate CreateDayEstimate(StrengthCurvePoint point)
