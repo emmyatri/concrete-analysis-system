@@ -129,6 +129,9 @@ If the Project Lead requires pH at every curing interval, a schema change to M1-
 
 The JSON is a nested interchange fixture, not an EF Core database export. An importer must create each batch and its composition and oxide record in the same transaction, assign generated IDs and foreign keys, and allow the audit interceptor to populate audit fields.
 
+
+**How it loads.** With `SeedSyntheticData` on (`--SeedSyntheticData=true` on the command line, or the environment variable), the app loads this file once at startup, next to any real batches. It does nothing if synthetic batches already exist, and skips any batch number that's already taken.
+
 Warnings represented by the synthetic scenarios, including chemistry or mix-water pH warnings, should be produced by the application's validation mechanism rather than hard-coded into the fixture as `RecordWarning` records.
 
 Synthetic data must remain clearly labeled in the UI and reports. This fixture must never be presented as real laboratory evidence.

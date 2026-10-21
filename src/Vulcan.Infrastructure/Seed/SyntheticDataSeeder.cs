@@ -6,8 +6,8 @@ public static class SyntheticDataSeeder
 {
     public static void Seed(VulcanDbContext db)
     {
-        // DEMO HOTFIX (M1 presentation): load the demo set unless it's already there, even if real
-        // batches exist. Revert to "only into an empty database" (M1-24) after the demo.
+        // Load the demo set once, next to any real batches (kept after the M1 demo, see
+        // client-decisions.md). Skip it if synthetic batches are already there.
         if (db.Batch.Any(b => b.IsSynthetic))
         {
             return;
