@@ -1,4 +1,4 @@
-﻿using Vulcan.Domain.Enums;
+using Vulcan.Domain.Enums;
 using Vulcan.Prediction.Maturity;
 
 namespace Vulcan.Prediction.Strength;
@@ -190,7 +190,7 @@ public static class StrengthEstimator
             double estimatedPsi = averageEquivalentAge /
                                   (settings.A + settings.B * averageEquivalentAge)
                                   * expectedFinalBreakPsi;
-            
+
             if (!double.IsFinite(averageEquivalentAge) ||
                 !double.IsFinite(estimatedPsi) ||
                 estimatedPsi < 0)

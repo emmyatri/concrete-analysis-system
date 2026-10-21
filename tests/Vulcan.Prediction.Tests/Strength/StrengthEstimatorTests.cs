@@ -1,17 +1,17 @@
-﻿using Vulcan.Domain.Enums;
-using Vulcan.Prediction.Maturity;
-using Vulcan.Prediction.Strength;
 
 using System.IO;
 using System.Linq;
 using System.Text.Json;
+using Vulcan.Domain.Enums;
+using Vulcan.Prediction.Maturity;
+using Vulcan.Prediction.Strength;
 using Xunit;
 
 namespace Vulcan.Prediction.Tests.Strength;
 
 public sealed class StrengthEstimatorTests
 {
-    private static readonly DateTime CastAt =
+    private static readonly DateTime _castAt =
         new(2026, 10, 1, 12, 0, 0, DateTimeKind.Utc);
 
     private static StrengthSettings CreateSettings() => new()
@@ -31,13 +31,12 @@ public sealed class StrengthEstimatorTests
             SpecimenId = id,
             Readings = readings
                 .Select(r => new TemperatureReading(
-                    CastAt.AddHours(r.Hours),
+                    _castAt.AddHours(r.Hours),
                     r.TemperatureF))
                 .ToList()
         };
     }
-    
-    
+
     private static string GetFixturePath()
     {
         var directory = new DirectoryInfo(AppContext.BaseDirectory);
@@ -51,7 +50,9 @@ public sealed class StrengthEstimatorTests
                 "batches.json");
 
             if (File.Exists(path))
+            {
                 return path;
+            }
 
             directory = directory.Parent;
         }
@@ -104,12 +105,12 @@ public sealed class StrengthEstimatorTests
 
         return (castAt, cementType, expectedFinalPsi, specimens);
     }
-    
+
     [Fact]
     public void Estimate_NoSpecimens_ReturnsInsufficientData()
     {
         var result = StrengthEstimator.Estimate(
-            CastAt,
+            _castAt,
             CementType.TypeI,
             6000,
             Array.Empty<StrengthSpecimen>(),
@@ -132,7 +133,7 @@ public sealed class StrengthEstimatorTests
         };
 
         var result = StrengthEstimator.Estimate(
-            CastAt,
+            _castAt,
             CementType.TypeI,
             6000,
             specimens,
@@ -154,7 +155,7 @@ public sealed class StrengthEstimatorTests
         };
 
         var result = StrengthEstimator.Estimate(
-            CastAt,
+            _castAt,
             CementType.TypeI,
             6000,
             specimens,
@@ -173,7 +174,7 @@ public sealed class StrengthEstimatorTests
         };
 
         var result = StrengthEstimator.Estimate(
-            CastAt,
+            _castAt,
             CementType.TypeI,
             6000,
             specimens,
@@ -218,7 +219,7 @@ public sealed class StrengthEstimatorTests
         };
 
         var result = StrengthEstimator.Estimate(
-            CastAt,
+            _castAt,
             CementType.TypeI,
             6000,
             specimens,
@@ -251,7 +252,7 @@ public sealed class StrengthEstimatorTests
         };
 
         var result = StrengthEstimator.Estimate(
-            CastAt,
+            _castAt,
             CementType.TypeI,
             6000,
             specimens,
@@ -276,7 +277,7 @@ public sealed class StrengthEstimatorTests
             Assert.Contains("ACI 209R-92", estimate.Basis);
         }
     }
-    
+
     [Fact]
     public void Estimate_TypeI_At28EquivalentDays_ReturnsExpectedRatio()
     {
@@ -297,7 +298,7 @@ public sealed class StrengthEstimatorTests
         };
 
         var result = StrengthEstimator.Estimate(
-            CastAt,
+            _castAt,
             CementType.TypeI,
             expectedFinalPsi,
             specimens,
@@ -333,7 +334,7 @@ public sealed class StrengthEstimatorTests
         };
 
         var result = StrengthEstimator.Estimate(
-            CastAt,
+            _castAt,
             CementType.TypeIII,
             expectedFinalPsi,
             specimens,
@@ -347,7 +348,7 @@ public sealed class StrengthEstimatorTests
 
         Assert.Equal(expectedPsi, result.Day28.EstimatedPsi, 6);
     }
-    
+
     [Fact]
     public void Estimate_VmSyn006_LoadsRealFixtureAndProducesCurve()
     {
@@ -381,7 +382,7 @@ public sealed class StrengthEstimatorTests
         Assert.NotNull(result.Day3);
         Assert.NotNull(result.Day7);
         Assert.NotNull(result.Day28);
-        
+
         // SCRUM-161 numerical acceptance criteria: ±1 PSI.
         Assert.InRange(result.Day3!.EstimatedPsi, 3916, 3918);
         Assert.InRange(result.Day7!.EstimatedPsi, 5143, 5145);
@@ -393,7 +394,7 @@ public sealed class StrengthEstimatorTests
 
         Assert.Equal("test-v1", result.CalibrationVersion);
     }
-    
+
     [Fact]
     public void Estimate_ExtrapolatedCuringData_DisclosesExtrapolation()
     {
@@ -406,7 +407,7 @@ public sealed class StrengthEstimatorTests
         };
 
         var result = StrengthEstimator.Estimate(
-            CastAt,
+            _castAt,
             CementType.TypeI,
             6000,
             specimens,
@@ -422,7 +423,7 @@ public sealed class StrengthEstimatorTests
             "Future curing temperatures were extrapolated.",
             result.Day28.Basis);
     }
-    
+
     [Fact]
     public void Estimate_ACI209R92_TypeI_MoistCuring_MatchesPublishedCoefficients()
     {
@@ -453,7 +454,7 @@ public sealed class StrengthEstimatorTests
         };
 
         var result = StrengthEstimator.Estimate(
-            CastAt,
+            _castAt,
             CementType.TypeI,
             expectedFinalPsi,
             specimens,

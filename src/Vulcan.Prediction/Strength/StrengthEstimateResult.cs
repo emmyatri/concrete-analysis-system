@@ -1,4 +1,4 @@
-﻿namespace Vulcan.Prediction.Strength;
+namespace Vulcan.Prediction.Strength;
 
 public sealed record StrengthEstimateResult
 {

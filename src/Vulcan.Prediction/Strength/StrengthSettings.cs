@@ -1,4 +1,4 @@
-﻿using Vulcan.Prediction.Maturity;
+using Vulcan.Prediction.Maturity;
 
 namespace Vulcan.Prediction.Strength;
 
