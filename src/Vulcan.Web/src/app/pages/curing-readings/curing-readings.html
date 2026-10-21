@@ -65,15 +65,15 @@
       <div class="grid-scroll">
         <table class="grid" data-testid="grid">
           <thead>
-          <tr>
-            <th class="num-col">#</th>
-            <th>Time taken</th>
-            @for (column of columns; track column.field) {
-              <th class="num">{{ column.header }}</th>
-            }
-            <th>Status</th>
-            <th></th>
-          </tr>
+            <tr>
+              <th class="num-col">#</th>
+              <th>Time taken</th>
+              @for (column of columns; track column.field) {
+                <th class="num">{{ column.header }}</th>
+              }
+              <th>Status</th>
+              <th></th>
+            </tr>
           </thead>
           <tbody>
             @for (item of existing(); track item.reading.id; let i = $index) {
@@ -84,17 +84,19 @@
                   <td class="num">
                     @if (item.flagged.has(column.key)) {
                       <span class="flagged"
-                      >{{ readingValue(item.reading, column.field) | number: column.digits }}{{ column.unit }} ⚠</span
+                        >{{ readingValue(item.reading, column.field) | number: column.digits
+                        }}{{ column.unit }} ⚠</span
                       >
                     } @else {
-                      {{ readingValue(item.reading, column.field) | number: column.digits }}{{ column.unit }}
+                      {{ readingValue(item.reading, column.field) | number: column.digits
+                      }}{{ column.unit }}
                     }
                   </td>
                 }
                 <td>
                   <span class="status" [class.status--flagged]="item.flagged.size > 0">{{
-                      item.flagged.size > 0 ? 'Saved · flagged' : 'Saved'
-                    }}</span>
+                    item.flagged.size > 0 ? 'Saved · flagged' : 'Saved'
+                  }}</span>
                 </td>
                 <td></td>
               </tr>
@@ -127,7 +129,7 @@
                       <!-- Saved: reads like the rows above, with the unit, amber if flagged. -->
                       @if (cellState(row, column.field) === 'warn') {
                         <span class="flagged"
-                        >{{ savedValue(row, column.field) | number: column.digits
+                          >{{ savedValue(row, column.field) | number: column.digits
                           }}{{ column.unit }} ⚠</span
                         >
                       } @else {
@@ -160,7 +162,7 @@
                       [class.status--flagged]="row.status() === 'flagged'"
                       [class.status--failed]="row.status() === 'failed'"
                       data-testid="row-status"
-                    >{{ label }}</span
+                      >{{ label }}</span
                     >
                   }
                 </td>

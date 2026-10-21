@@ -76,7 +76,7 @@
                 class="batch-number"
                 [routerLink]="['/batches', batch.batchNumber]"
                 (click)="$event.stopPropagation()"
-              >{{ batch.batchNumber }}</a
+                >{{ batch.batchNumber }}</a
               >
               @if (batch.isSynthetic) {
                 <span class="badge-synthetic">SYNTHETIC</span>
@@ -107,7 +107,7 @@
             <td>
               @if (batch.warningCount > 0) {
                 <span class="warning-tag"
-                >{{ batch.warningCount }}
+                  >{{ batch.warningCount }}
                   {{ batch.warningCount === 1 ? 'warning' : 'warnings' }}</span
                 >
               } @else {

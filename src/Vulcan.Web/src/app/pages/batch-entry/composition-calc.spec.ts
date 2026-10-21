@@ -12,7 +12,14 @@ const gravities = new Map<string, number>([
 describe('calculateComposition', () => {
   it('matches the hi-fi mockup: 16/17/40/25 with 2% fly ash → total 100, air 0, w/c 0.31', () => {
     const totals = calculateComposition(
-      { cementPct: 16, waterPct: 17, coarseAggregatePct: 40, fineAggregatePct: 25, scmPct: 2, scmType: 'FlyAsh' },
+      {
+        cementPct: 16,
+        waterPct: 17,
+        coarseAggregatePct: 40,
+        fineAggregatePct: 25,
+        scmPct: 2,
+        scmType: 'FlyAsh',
+      },
       gravities,
     );
 
@@ -21,7 +28,14 @@ describe('calculateComposition', () => {
 
   it('leaves SCM out of the ratio when the SCM type is None', () => {
     const totals = calculateComposition(
-      { cementPct: 12, waterPct: 18, coarseAggregatePct: 45, fineAggregatePct: 25, scmPct: 0, scmType: 'None' },
+      {
+        cementPct: 12,
+        waterPct: 18,
+        coarseAggregatePct: 45,
+        fineAggregatePct: 25,
+        scmPct: 0,
+        scmType: 'None',
+      },
       gravities,
     );
 
@@ -31,7 +45,14 @@ describe('calculateComposition', () => {
 
   it('has no ratio until cement or SCM is entered', () => {
     const totals = calculateComposition(
-      { cementPct: null, waterPct: 17, coarseAggregatePct: null, fineAggregatePct: null, scmPct: null, scmType: 'None' },
+      {
+        cementPct: null,
+        waterPct: 17,
+        coarseAggregatePct: null,
+        fineAggregatePct: null,
+        scmPct: null,
+        scmType: 'None',
+      },
       gravities,
     );
 

@@ -27,7 +27,16 @@ VS Code users: open `src/Vulcan.Web` as the folder (not the repo root) to get th
 ```powershell
 npm test -- --watch=false
 npm run lint
+npm run format:check
 ```
+
+### Formatting
+
+Prettier formats the web app (`.prettierrc`), and CI fails if a file isn't formatted.
+
+- **VS Code:** install the recommended Prettier extension. The workspace settings format on save.
+- **WebStorm / Rider:** Settings → Languages & Frameworks → JavaScript → Prettier → *Automatic Prettier configuration*, and tick *Run on save*.
+- **Before you push:** `npm run format`.
 
 ## Build
 

@@ -13,9 +13,14 @@ export const apiErrorLoggingInterceptor: HttpInterceptorFn = (request, next) =>
       error: (error: unknown) => {
         if (!(error instanceof HttpErrorResponse)) return;
         if (isUnreachable(error)) {
-          console.error(`[api] Can't reach the local service: ${request.method} ${request.url} (${error.status})`);
+          console.error(
+            `[api] Can't reach the local service: ${request.method} ${request.url} (${error.status})`,
+          );
         } else if (error.status >= 500) {
-          console.error(`[api] Server error: ${request.method} ${request.url} (${error.status})`, error.error);
+          console.error(
+            `[api] Server error: ${request.method} ${request.url} (${error.status})`,
+            error.error,
+          );
         }
       },
     }),

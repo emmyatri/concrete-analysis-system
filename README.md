@@ -255,10 +255,19 @@ Settings live in `src/Vulcan.Api/appsettings.json`.
 | Setting             | Default | What it does                                                                                                                                |
 | ------------------- | ------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
 | `UseMocks`          | `false` | `true` makes the screens use fake API responses inside the desktop app (for UI work before endpoints exist). `npm start` always uses mocks. |
-| `SeedSyntheticData` | `false` | `true` loads `data/synthetic/` into an empty database (turn on for demos)                                                                   |
+| `SeedSyntheticData` | `false` | `true` loads the 9 demo batches from `data/synthetic/` on startup (turn on for demos)                                                       |
 
-For the demo machine, keep `SeedSyntheticData` set to `false` in the repository and enable it with the `SeedSyntheticData=true` environment variable before starting the application.
-Synthetic data is loaded only when the batch database is empty, so restarting the application will not create duplicate demo data.
+Keep `SeedSyntheticData` set to `false` in the repository. To turn it on for a demo, start the app with:
+
+```powershell
+& "C:\Program Files\Vulcan CBAS\Vulcan.Desktop.exe" --SeedSyntheticData=true
+```
+
+The `SeedSyntheticData=true` environment variable works too.
+
+- The demo set loads **once**, next to any real batches, which are left unchanged. If synthetic batches are already there, nothing is added, so restarting never creates duplicates.
+- A demo batch is skipped if a batch with the same number already exists.
+- Demo batches are marked synthetic. Hide them with the **Synthetic data** switch in the top bar.
 
 For personal overrides, use `appsettings.Development.local.json`. It's git-ignored.
 

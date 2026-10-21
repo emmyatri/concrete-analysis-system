@@ -4,7 +4,11 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { Router, provideRouter } from '@angular/router';
 import { providePrimeNG } from 'primeng/config';
 
-import { ALLOW_START_WITHOUT_API, TECHNICIAN_SETTINGS_URL, TechnicianSession } from '../../core/session/technician-session';
+import {
+  ALLOW_START_WITHOUT_API,
+  TECHNICIAN_SETTINGS_URL,
+  TechnicianSession,
+} from '../../core/session/technician-session';
 import { VulcanPreset } from '../../theme/vulcan-preset';
 import { StartSession } from './start-session';
 
@@ -32,7 +36,8 @@ describe('StartSession', () => {
   const el = () => fixture.nativeElement as HTMLElement;
   const input = () => el().querySelector<HTMLInputElement>('#technicianName')!;
   const message = () => el().querySelector('#technicianName-message')?.textContent?.trim();
-  const startButton = () => el().querySelector<HTMLButtonElement>('[data-testid="start-session"] button')!;
+  const startButton = () =>
+    el().querySelector<HTMLButtonElement>('[data-testid="start-session"] button')!;
 
   const apiReady = () => {
     http.expectOne('/api/health').flush({ status: 'ok' });
@@ -59,7 +64,9 @@ describe('StartSession', () => {
     setUp();
     lastUsed('J. Rivera');
 
-    expect(el().querySelector('[data-testid="api-status"]')?.textContent).toContain('Starting local service');
+    expect(el().querySelector('[data-testid="api-status"]')?.textContent).toContain(
+      'Starting local service',
+    );
     expect(startButton().disabled).toBe(true);
   });
 
@@ -160,7 +167,9 @@ describe('StartSession', () => {
 
       type('Jordan');
       startButton().click();
-      http.expectOne({ method: 'PUT', url: TECHNICIAN_SETTINGS_URL }).flush(null, { status: 0, statusText: 'Unknown Error' });
+      http
+        .expectOne({ method: 'PUT', url: TECHNICIAN_SETTINGS_URL })
+        .flush(null, { status: 0, statusText: 'Unknown Error' });
 
       expect(TestBed.inject(TechnicianSession).name()).toBe('Jordan');
     } finally {

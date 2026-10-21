@@ -62,7 +62,6 @@ export interface BatchQuery {
   page?: number;
 }
 
-
 export type ScmType = 'None' | 'FlyAsh' | 'Slag' | 'SilicaFume';
 export type TestAge = 'Day3' | 'Day7' | 'Day28';
 
@@ -124,7 +123,8 @@ export interface Specimen {
 /** A value that saved but was flagged (RecordWarning table). entityType + entityId say which record. */
 export interface SavedWarning {
   id: number;
-  entityType: 'Batch' | 'Composition' | 'CementOxideAnalysis' | 'Specimen' | 'BreakResult' | 'CuringReading';
+  entityType:
+    'Batch' | 'Composition' | 'CementOxideAnalysis' | 'Specimen' | 'BreakResult' | 'CuringReading';
   entityId: number;
   fieldName: string;
   /** Matches ValidationLimit.key, e.g. "Break.StrengthPsi". */
@@ -160,7 +160,6 @@ export interface BatchDetail {
   warnings: SavedWarning[];
 }
 
-
 /** POST /api/batches/{batchNumber}/specimens: one new cylinder (M1-61). */
 export interface CreateSpecimenRequest {
   label: string;
@@ -174,7 +173,6 @@ export interface CreateSpecimenResponse {
   id: number;
   label: string;
 }
-
 
 /** GET /api/breaks/pending: a cylinder that hasn't been broken yet (M1-62, Break results). */
 export interface PendingBreak {
@@ -200,7 +198,6 @@ export interface CreateBreakResultResponse {
   id: number;
   warnings: RecordWarning[];
 }
-
 
 /** POST /api/specimens/{specimenId}/readings: one curing reading for one cylinder (M1-63). */
 export interface CreateCuringReadingRequest {

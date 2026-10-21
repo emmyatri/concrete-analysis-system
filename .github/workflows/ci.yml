@@ -46,6 +46,10 @@ jobs:
         working-directory: src/Vulcan.Web
         run: npm run lint
 
+      - name: Format check (Angular)
+        working-directory: src/Vulcan.Web
+        run: npm run format:check
+
       - name: Test (Angular)
         working-directory: src/Vulcan.Web
         run: npm test -- --watch=false

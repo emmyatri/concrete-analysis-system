@@ -32,7 +32,9 @@ describe('App', () => {
     const harness = await RouterTestingHarness.create('/batches');
 
     expect(TestBed.inject(Router).url).toBe('/start?returnUrl=%2Fbatches');
-    expect((harness.routeNativeElement as HTMLElement).querySelector('h1')?.textContent).toContain('Start session');
+    expect((harness.routeNativeElement as HTMLElement).querySelector('h1')?.textContent).toContain(
+      'Start session',
+    );
   });
 
   it('creates the app', () => {

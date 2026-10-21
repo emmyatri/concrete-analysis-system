@@ -255,6 +255,8 @@ numeric ones live in the `ValidationLimit` table, so changing them is a data cha
 - **Technician name.** Entered once per session instead of on every batch. Every record still stores who created it (
   FR-22).
 
+- **Demo data loads next to real batches.** The M1 demo hotfix (#58) is kept on purpose: `SeedSyntheticData` adds the 9 synthetic batches once, even if real batches exist, so demos work on a machine that's already in use. They stay marked synthetic and can be hidden with the Synthetic data switch.
+
 ---
 
 ## 13. Two-tier early warning system (M2-50)
