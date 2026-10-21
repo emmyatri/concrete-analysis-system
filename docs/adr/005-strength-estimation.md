@@ -1,7 +1,7 @@
 ﻿
 # ADR-005: Concrete Strength Estimation Method
 
-- **Status:** Approved — October 20, 2026
+- **Status:** Approved October 20, 2026 — Revision Pending Approval October 21, 2026
 - **Decision:** Deterministic concrete maturity and compressive strength estimation
 - **Requirements:** FR-13, FR-14, FR-15, FR-17, NFR-5, NFR-7, SLA 1.2
 - **References:** ASTM C1074, ACI 209R-92
@@ -59,13 +59,13 @@ Where:
 
 | Parameter | Value |
 |---|---|
-| Datum temperature (T_0) | 32°F (0°C) |
+| Datum temperature (T_0) | 14°F (-10°C) |
 | Reference temperature (T_ref) | 73.4°F (23°C) |
 | Temperature unit | °F |
 | Time interval unit | Hours |
 | Minimum maturity contribution | 0 |
 
-The 32°F datum is a provisional default. The appropriate datum temperature may vary by concrete mixture and can be reviewed during Milestone 3 calibration.
+The 14°F (−10°C) datum is the updated default based on the Nebraska DOT documentation supplied by Vulcan Materials. The appropriate datum temperature may vary by concrete mixture and can be reviewed during Milestone 3 calibration.
 
 ### 3.2 Average Temperature Between Readings
 
@@ -110,15 +110,15 @@ Where:
 
 - `t_eq`: Equivalent age in days.
 - `T_ref`: Reference temperature, 73.4°F.
-- `T_0`: Datum temperature, 32°F.
+- `T_0`: Datum temperature, 14°F.
 - `M`: Accumulated maturity in °F-hours.
 
 Using the default constants:
 
 ```text
-t_eq = M / [(73.4 - 32) × 24]
+t_eq = M / [(73.4 - 14) × 24]
 
-t_eq = M / 993.6
+t_eq = M / 1425.6
 ```
 
 This represents a Nurse–Saul-based linear equivalent-age approximation rather than an Arrhenius equivalent-age calculation.
@@ -459,4 +459,6 @@ The underlying method was approved on October 20, 2026. SCRUM-160 implements the
 
 - **Backend Lead:** Approved — Tyler Schaefer, Oct 20, 2026
 - **Frontend Lead:** Approved — Amelia Black, Oct 20, 2026
-- **Status:** Approved
+- **Original Status:** Approved — Oct 20, 2026
+- **M2-15 Revision:** Updated Nurse–Saul datum from 32°F to 14°F — Oct 21, 2026
+- **Revision Status:** Pending Approval

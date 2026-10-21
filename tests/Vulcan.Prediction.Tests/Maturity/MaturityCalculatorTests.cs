@@ -1,4 +1,3 @@
-
 using Vulcan.Prediction.Maturity;
 
 namespace Vulcan.Prediction.Tests.Maturity;
@@ -8,6 +7,15 @@ public class MaturityCalculatorTests
     // ============================================================
     // Core Maturity Calculations
     // ============================================================
+
+    [Fact]
+    public void MaturitySettings_DefaultDatumTemperature_IsFourteenFahrenheit()
+    {
+        var settings = new MaturitySettings();
+
+        Assert.Equal(14.0, settings.DatumTempF);
+        Assert.Equal(73.4, settings.ReferenceTempF);
+    }
 
     [Fact]
     public void Calculate_ConstantReferenceTemperature_ReturnsThreeEquivalentDays()
@@ -35,8 +43,8 @@ public class MaturityCalculatorTests
             targetTime,
             settings);
 
-        // Assert: (73.4 - 32) * 72 = 2980.8 °F-hours.
-        Assert.Equal(2980.8, result.MaturityFHours, precision: 6);
+        // Assert: (73.4 - 14) * 72 = 4276.8 °F-hours.
+        Assert.Equal(4276.8, result.MaturityFHours, precision: 6);
         Assert.Equal(3.0, result.EquivalentAgeDays, precision: 6);
     }
 
@@ -94,9 +102,9 @@ public class MaturityCalculatorTests
 
         var readings = new List<TemperatureReading>
         {
-            new(castAt, 20.0),
-            new(castAt.AddHours(24), 25.0),
-            new(targetTime, 30.0)
+            new(castAt, 0.0),
+            new(castAt.AddHours(24), 5.0),
+            new(targetTime, 10.0)
         };
 
         var result = MaturityCalculator.Calculate(
@@ -135,9 +143,9 @@ public class MaturityCalculatorTests
             targetTime,
             new MaturitySettings());
 
-        Assert.Equal(3434.4, result.MaturityFHours, precision: 6);
+        Assert.Equal(4730.4, result.MaturityFHours, precision: 6);
         Assert.Equal(
-            3434.4 / 993.6,
+            4730.4 / 1425.6,
             result.EquivalentAgeDays,
             precision: 6);
     }
@@ -169,14 +177,14 @@ public class MaturityCalculatorTests
             targetTime,
             new MaturitySettings());
 
-        // Hours 0-24:  (75 - 32) * 24 = 1032
-        // Hours 24-48: (70 - 32) * 24 = 912
+        // Hours 0-24:  (75 - 14) * 24 = 1464
+        // Hours 24-48: (70 - 14) * 24 = 1344
         // Interpolated temperature at hour 72: 90°F
-        // Hours 48-72: (75 - 32) * 24 = 1032
-        // Total: 2976°F-hours.
-        Assert.Equal(2976.0, result.MaturityFHours, precision: 6);
+        // Hours 48-72: (75 - 14) * 24 = 1464
+        // Total: 4272°F-hours.
+        Assert.Equal(4272.0, result.MaturityFHours, precision: 6);
         Assert.Equal(
-            2976.0 / 993.6,
+            4272.0 / 1425.6,
             result.EquivalentAgeDays,
             precision: 6);
     }
@@ -207,7 +215,7 @@ public class MaturityCalculatorTests
             targetTime,
             new MaturitySettings());
 
-        Assert.Equal(6955.2, result.MaturityFHours, precision: 6);
+        Assert.Equal(9979.2, result.MaturityFHours, precision: 6);
         Assert.Equal(7.0, result.EquivalentAgeDays, precision: 6);
     }
 
@@ -237,13 +245,13 @@ public class MaturityCalculatorTests
             targetTime,
             new MaturitySettings());
 
-        // Hours 0-24: (70 - 32) * 24 = 912
+        // Hours 0-24: (70 - 14) * 24 = 1344
         // Interpolated temperature at hour 36: 90°F
-        // Hours 24-36: (85 - 32) * 12 = 636
-        // Total: 1548°F-hours.
-        Assert.Equal(1548.0, result.MaturityFHours, precision: 6);
+        // Hours 24-36: (85 - 14) * 12 = 852
+        // Total: 2196°F-hours.
+        Assert.Equal(2196.0, result.MaturityFHours, precision: 6);
         Assert.Equal(
-            1548.0 / 993.6,
+            2196.0 / 1425.6,
             result.EquivalentAgeDays,
             precision: 6);
     }
@@ -268,11 +276,11 @@ public class MaturityCalculatorTests
             targetTime,
             new MaturitySettings());
 
-        // Hours 0-24: (70 - 32) * 24 = 912
-        // Hours 24-36: (70 - 32) * 12 = 456
-        Assert.Equal(1368.0, result.MaturityFHours, precision: 6);
+        // Hours 0-24: (70 - 14) * 24 = 1344
+        // Hours 24-36: (70 - 14) * 12 = 672
+        Assert.Equal(2016.0, result.MaturityFHours, precision: 6);
         Assert.Equal(
-            1368.0 / 993.6,
+            2016.0 / 1425.6,
             result.EquivalentAgeDays,
             precision: 6);
     }
@@ -302,11 +310,11 @@ public class MaturityCalculatorTests
             targetTime,
             new MaturitySettings());
 
-        // Hours 0-12: (70 - 32) * 12 = 456
-        // Hours 12-24: (75 - 32) * 12 = 516
-        Assert.Equal(972.0, result.MaturityFHours, precision: 6);
+        // Hours 0-12: (70 - 14) * 12 = 672
+        // Hours 12-24: (75 - 14) * 12 = 732
+        Assert.Equal(1404.0, result.MaturityFHours, precision: 6);
         Assert.Equal(
-            972.0 / 993.6,
+            1404.0 / 1425.6,
             result.EquivalentAgeDays,
             precision: 6);
     }
@@ -331,10 +339,10 @@ public class MaturityCalculatorTests
             targetTime,
             new MaturitySettings());
 
-        // (75 - 32) * 24 = 1032°F-hours.
-        Assert.Equal(1032.0, result.MaturityFHours, precision: 6);
+        // (75 - 14) * 24 = 1464°F-hours.
+        Assert.Equal(1464.0, result.MaturityFHours, precision: 6);
         Assert.Equal(
-            1032.0 / 993.6,
+            1464.0 / 1425.6,
             result.EquivalentAgeDays,
             precision: 6);
     }
@@ -378,7 +386,7 @@ public class MaturityCalculatorTests
             reversedResult.EquivalentAgeDays,
             precision: 6);
 
-        Assert.Equal(1944.0, reversedResult.MaturityFHours, precision: 6);
+        Assert.Equal(2808.0, reversedResult.MaturityFHours, precision: 6);
     }
 
     [Fact]
@@ -472,7 +480,7 @@ public class MaturityCalculatorTests
             castAt.AddHours(24),
             new MaturitySettings());
 
-        Assert.Equal(993.6, result.MaturityFHours, precision: 6);
+        Assert.Equal(1425.6, result.MaturityFHours, precision: 6);
         Assert.Equal(1.0, result.EquivalentAgeDays, precision: 6);
     }
 
