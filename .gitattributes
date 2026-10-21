@@ -1,0 +1,13 @@
+﻿# Store every text file with LF; check out LF on every OS (SCRUM-153).
+* text=auto eol=lf
+
+# Windows scripts need CRLF to run.
+*.ps1 text eol=crlf
+*.cmd text eol=crlf
+*.bat text eol=crlf
+
+# Never touch binaries.
+*.png binary
+*.ico binary
+*.exe binary
+*.db  binary
