@@ -1,0 +1,14 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <ItemGroup>
+    <ProjectReference Include="..\Vulcan.Application\Vulcan.Application.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" />
+  </ItemGroup>
+  <ItemGroup>
+    <!-- ensure seed data is available at runtime -->
+    <EmbeddedResource Include="Seed\*.json" />
+    <EmbeddedResource Include="..\..\data\synthetic\batches.json"
+                      Link="Seed\synthetic-batches.json" />
+  </ItemGroup>
+</Project>

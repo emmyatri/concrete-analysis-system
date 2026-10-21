@@ -1,0 +1,246 @@
+﻿// Mockup "06 · Curing readings". Colors from theme tokens only.
+
+.curing {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.page-title {
+  margin: 0;
+  font-size: 22px;
+  font-weight: 600;
+}
+
+.card {
+  background: var(--p-surface-0);
+  border: 1px solid var(--p-content-border-color);
+  border-radius: 6px;
+}
+
+.picker {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 12px 16px;
+  padding: 14px 17px;
+}
+
+.pick {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 220px;
+  font-size: 13px;
+  color: var(--p-text-muted-color);
+}
+
+.cast {
+  margin: 0 0 8px auto;
+  font-size: 13px;
+  color: var(--p-text-muted-color);
+
+  a {
+    color: var(--p-vulcan-link-color);
+  }
+}
+
+.message {
+  margin: 0;
+  padding: 24px 17px;
+  color: var(--p-text-muted-color);
+}
+
+.grid-card {
+  overflow: hidden;
+}
+
+.card-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 16px;
+  padding: 12px 17px;
+  background: var(--p-surface-100);
+  border-bottom: 1px solid var(--p-content-border-color);
+
+  h2 {
+    margin: 0;
+    font-size: 15px;
+    font-weight: 600;
+  }
+}
+
+.ranges {
+  font-size: 12px;
+  color: var(--p-text-muted-color);
+
+  // Same compact size as the grid headers below 1600px.
+  @media (max-width: 1599px) {
+    font-size: 11px;
+  }
+}
+
+.grid-scroll {
+  overflow-x: auto;
+}
+
+.grid {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+
+  th,
+  td {
+    padding: 6px 8px;
+    border-bottom: 1px solid var(--p-content-border-color);
+    text-align: left;
+    white-space: nowrap;
+  }
+
+  th {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--p-text-muted-color);
+    background: var(--p-surface-50);
+  }
+
+  .num {
+    text-align: right;
+  }
+
+  // Headers and saved values end where the typed numbers do
+  // (8px cell padding + 1px input border + 8px input padding).
+  th.num,
+  .saved-row td.num,
+  .new-row--locked td.num {
+    padding-right: 10px;
+  }
+
+  // Number headers wrap ("Resistivity / (Ω/ft)") like the Search table, so they don't set the grid width.
+  th.num {
+    white-space: normal;
+    vertical-align: bottom;
+  }
+
+  // Compact text below 1600px (laptops at 125%+ scaling), same breakpoint as Batch Detail.
+  // Data stays a step bigger than the headers; the inputs inherit it.
+  @media (max-width: 1599px) {
+    th {
+      font-size: 11px;
+    }
+
+    td {
+      font-size: 13px;
+    }
+  }
+
+
+  .num-col {
+    width: 32px;
+    color: var(--p-text-muted-color);
+  }
+}
+
+.saved-row td {
+  color: var(--p-text-color);
+}
+
+.cell {
+  width: 100%;
+  min-width: 70px;
+  padding: 6px 8px;
+  border: 1px solid var(--p-content-border-color);
+  border-radius: 4px;
+  font: inherit;
+  text-align: right;
+  background: var(--p-surface-0);
+  color: var(--p-text-color);
+
+  &:focus {
+    outline: 2px solid var(--p-primary-color);
+    outline-offset: -1px;
+  }
+
+  &[readonly] {
+    border-color: transparent;
+    background: transparent;
+  }
+}
+
+.cell--time {
+  min-width: 190px;
+  text-align: left;
+}
+
+.cell--error {
+  border-color: var(--p-red-500);
+  background: var(--p-red-50);
+  color: var(--p-red-700);
+}
+
+.cell--warn {
+  border-color: var(--p-orange-400);
+  background: var(--p-orange-50);
+  color: var(--p-orange-800);
+}
+
+.flagged {
+  padding: 1px 6px;
+  border-radius: 4px;
+  background: var(--p-orange-100);
+  color: var(--p-orange-700);
+  font-weight: 600;
+}
+
+.status {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--p-green-700);
+}
+
+.status--flagged {
+  color: var(--p-orange-700);
+}
+
+.status--failed {
+  color: var(--p-red-600);
+}
+
+.actions {
+  text-align: right;
+}
+
+.messages {
+  margin: 0;
+  padding: 10px 17px;
+  list-style: none;
+  border-bottom: 1px solid var(--p-content-border-color);
+  font-size: 13px;
+  color: var(--p-red-700);
+
+  li {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 2px 0;
+  }
+}
+
+.message--warn {
+  color: var(--p-orange-800);
+}
+
+.grid-footer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+  padding: 12px 17px;
+}
+
+.hint {
+  margin-right: auto;
+  font-size: 12px;
+  color: var(--p-text-muted-color);
+}

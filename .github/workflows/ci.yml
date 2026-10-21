@@ -1,0 +1,170 @@
+﻿name: CI
+
+on:
+  pull_request:
+    branches: [dev, main]
+  push:
+    branches: [ dev, main ]
+    tags: [ 'v*' ]
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: write # creating a GitHub Release on version tags (SCRUM-133)
+
+env:
+  DOTNET_NOLOGO: true
+  DOTNET_CLI_TELEMETRY_OPTOUT: true
+  NUGET_PACKAGES: ${{ github.workspace }}\.nuget\packages
+
+jobs:
+  ci:
+    runs-on: windows-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v5
+
+      # ---------- Angular (src/Vulcan.Web) ----------
+
+      - name: Install Node.js 24
+        uses: actions/setup-node@v6
+        with:
+          node-version: '24' # Same as docs/frontend.md
+          cache: npm
+          cache-dependency-path: src/Vulcan.Web/package-lock.json
+
+      - name: Install npm packages
+        working-directory: src/Vulcan.Web
+        run: npm ci
+
+      - name: Lint (Angular)
+        working-directory: src/Vulcan.Web
+        run: npm run lint
+
+      - name: Test (Angular)
+        working-directory: src/Vulcan.Web
+        run: npm test -- --watch=false
+
+      # Writes the production build to src/Vulcan.Api/wwwroot.
+      # Must run before the .NET build so the UI gets copied into the app.
+      - name: Build (Angular)
+        working-directory: src/Vulcan.Web
+        run: npm run build
+
+      # ---------- .NET ----------
+
+      - name: Install .NET 10
+        uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Cache NuGet packages
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.NUGET_PACKAGES }}
+          key: nuget-${{ runner.os }}-${{ hashFiles('**/Directory.Packages.props', '**/*.csproj') }}
+          restore-keys: nuget-${{ runner.os }}-
+
+      - name: Restore
+        run: dotnet restore
+
+      - name: Check formatting
+        run: dotnet format --verify-no-changes --no-restore
+
+      - name: Build
+        run: dotnet build --no-restore --configuration Release
+
+      # Proves the desktop app ships with the UI (ADR-004 §2.6).
+      - name: Check the UI is in the desktop app
+        shell: pwsh
+        run: |
+          $index = "src/Vulcan.Desktop/bin/Release/net10.0-windows/wwwroot/index.html"
+          if (-not (Test-Path $index)) { throw "Angular build missing from desktop output: $index" }
+          Write-Host "Found $index"
+
+      - name: Test
+        run: dotnet test --no-build --configuration Release --logger trx --results-directory TestResults
+
+      # ---------- Self-contained build (SCRUM-108) ----------
+
+      - name: Publish (self-contained, win-x64)
+        run: dotnet publish src/Vulcan.Desktop -p:PublishProfile=win-x64-selfcontained
+
+      # Proves the build runs without .NET installed: the runtime, the UI, SQLite and WebView2 are all inside.
+      - name: Check the self-contained build
+        shell: pwsh
+        run: |
+          $dir = "src/Vulcan.Desktop/bin/publish/win-x64"
+          foreach ($file in "Vulcan.Desktop.exe", "coreclr.dll", "e_sqlite3.dll", "WebView2Loader.dll", "wwwroot/index.html") {
+            if (-not (Test-Path "$dir/$file")) { throw "Missing from the self-contained build: $file" }
+          }
+          Write-Host "Self-contained build OK"
+
+      # Pushes to dev/main only, kept 3 days: artifacts count against the repo's 500 MB storage limit.
+      - name: Upload the self-contained build
+        if: github.event_name != 'pull_request'
+        uses: actions/upload-artifact@v4
+        with:
+          name: vulcan-cbas-win-x64
+          path: src/Vulcan.Desktop/bin/publish/win-x64/
+          retention-days: 3
+
+      # ---------- Installer (SCRUM-116) ----------
+      # Pushes to dev/main and manual runs only, so PRs don't download ~180 MB each time.
+
+      - name: Download the WebView2 runtime (bundled in the installer)
+        if: github.event_name != 'pull_request'
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force installer/redist | Out-Null
+          # Microsoft's Evergreen Standalone Installer, x64 (works offline).
+          Invoke-WebRequest "https://go.microsoft.com/fwlink/?linkid=2124701" -OutFile installer/redist/MicrosoftEdgeWebView2RuntimeInstallerX64.exe
+          $size = (Get-Item installer/redist/MicrosoftEdgeWebView2RuntimeInstallerX64.exe).Length
+          if ($size -lt 50MB) { throw "WebView2 download looks wrong ($size bytes). Check the link." }
+
+      - name: Build the installer
+        if: github.event_name != 'pull_request'
+        shell: pwsh
+        run: |
+          $iscc = "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe"
+          if (-not (Test-Path $iscc)) {
+          choco install innosetup -y --no-progress
+          if ($LASTEXITCODE -ne 0) { throw "Couldn't install Inno Setup" }
+          }
+          & $iscc installer\vulcan.iss
+          if ($LASTEXITCODE -ne 0) { throw "Inno Setup failed" }
+          # Same file without the version in its name, for the permanent "latest" download link in the README.
+          Copy-Item (Get-ChildItem installer/output/VulcanCBAS-Setup-*.exe).FullName installer/output/VulcanCBAS-Setup.exe
+
+      # Kept 7 days. Permanent downloads live on the GitHub Release page, which doesn't count against storage.
+      - name: Upload the installer
+        if: github.event_name != 'pull_request'
+        uses: actions/upload-artifact@v4
+        with:
+          name: vulcan-cbas-installer
+          path: installer/output/VulcanCBAS-Setup.exe
+          retention-days: 7
+
+      # On a version tag (e.g. v0.1.0-m1), publish a GitHub Release with the installer attached.
+      - name: Publish the release
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: installer/output/*.exe
+          generate_release_notes: true
+          make_latest: true
+
+      # A convenience copy only; the test step above already decides pass/fail. Don't fail CI if storage is full.
+      - name: Upload test results
+        if: always()
+        continue-on-error: true
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results
+          path: TestResults/*.trx
+          retention-days: 7

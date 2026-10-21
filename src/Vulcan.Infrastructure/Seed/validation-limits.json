@@ -1,0 +1,299 @@
+[
+    {
+        "Key": "Batch.CementSurfacePh",
+        "Severity": "Reject",
+        "Min": 0,
+        "Max": 14,
+        "Unit": "",
+        "Message": "pH must be within the range [0-14]",
+        "Source": "Client, M1 demo (Oct 9)"
+    },
+    {
+        "Key": "Batch.CementSurfacePh",
+        "Severity": "Warn",
+        "Min": 7.1,
+        "Max": 8.0,
+        "Unit": "",
+        "Message": "Cement surface pH is outside the normal range [7.1-8.0]",
+        "Source": "Client, M1 demo (Oct 9)"
+    },
+    {
+        "Key": "Batch.FinalWeightLb",
+        "Severity": "Reject",
+        "Min": 10,
+        "Max": 40,
+        "Unit": "lb",
+        "Message": "Sample weight must be within the range [10-40]",
+        "Source": "Client, M1 demo (Oct 9)"
+    },
+    {
+        "Key": "Batch.FinalWeightLb",
+        "Severity": "Warn",
+        "Min": 20,
+        "Max": 30,
+        "Unit": "lb",
+        "Message": "Sample weight is outside the normal range [20-30] for a 12x6 cylinder",
+        "Source": "Client, M1 demo (Oct 9)"
+    },
+    {
+        "Key": "Batch.ExpectedFinalBreakPsi",
+        "Severity": "Reject",
+        "Min": 3000,
+        "Max": 10000,
+        "Unit": "PSI",
+        "Message": "PSI must be within the range [3000-10,000]",
+        "Source": "Client doc / FR-5"
+    },
+    {
+        "Key": "Batch.MixWaterPh",
+        "Severity": "Reject",
+        "Min": 1,
+        "Max": 9,
+        "Unit": "",
+        "Message": "pH must be within the range [1-9]",
+        "Source": "Client doc / FR-7, Decision 4"
+    },
+    {
+        "Key": "Batch.MixWaterPh",
+        "Severity": "Warn",
+        "Min": 7,
+        "Max": 7.5,
+        "Unit": "",
+        "Message": "pH is outside the normal range [7.0-7.5]",
+        "Source": "Client doc (\"normal\")"
+    },
+    {
+        "Key": "Composition.CementPct",
+        "Severity": "Reject",
+        "Min": 10,
+        "Max": 15,
+        "Unit": "%",
+        "Message": "Cement composition must be within the range [10-15]",
+        "Source": "Client doc / FR-2.1"
+    },
+    {
+        "Key": "Composition.ScmPct",
+        "Severity": "Reject",
+        "Min": 0,
+        "Max": 100,
+        "Unit": "%",
+        "Message": "SCM composition must be a valid percentage [0-100]",
+        "Source": "FR-2"
+    },
+    {
+        "Key": "Composition.FineAggregatePct",
+        "Severity": "Reject",
+        "Min": 25,
+        "Max": 30,
+        "Unit": "%",
+        "Message": "Fine aggregate composition must be within the range [25-30]",
+        "Source": "Client doc / FR-2.1"
+    },
+    {
+        "Key": "Composition.CoarseAggregatePct",
+        "Severity": "Reject",
+        "Min": 40,
+        "Max": 55,
+        "Unit": "%",
+        "Message": "Coarse aggregate composition must be within the range [40-55]",
+        "Source": "Client doc / FR-2.1"
+    },
+    {
+        "Key": "Composition.WaterPct",
+        "Severity": "Reject",
+        "Min": 15,
+        "Max": 20,
+        "Unit": "%",
+        "Message": "Water composition must be within the range [15-20]",
+        "Source": "Client doc / FR-2.1"
+    },
+    {
+        "Key": "Composition.TotalPct",
+        "Severity": "Reject",
+        "Min": null,
+        "Max": 100,
+        "Unit": "%",
+        "Message": "Total composition must not exceed 100%",
+        "Source": "Decision 2 (NRMCA)"
+    },
+    {
+        "Key": "Composition.WaterCementRatio",
+        "Severity": "Warn",
+        "Min": 0.4,
+        "Max": 0.6,
+        "Unit": "ratio",
+        "Message": "The water to cement ratio is outside the normal range [0.4-0.6]",
+        "Source": "Client doc, Hydration"
+    },
+    {
+        "Key": "Oxide.AluminaPct",
+        "Severity": "Warn",
+        "Min": 3.0,
+        "Max": 7.5,
+        "Unit": "%",
+        "Message": "The aluminum oxide percent is outside the normal range [3.0-7.5]",
+        "Source": "Client doc table"
+    },
+    {
+        "Key": "Oxide.AluminaPct",
+        "Severity": "Reject",
+        "Min": 0,
+        "Max": 100,
+        "Unit": "%",
+        "Message": "The aluminum oxide percent must be a valid percentage [0-100]",
+        "Source": "FR-3"
+    },
+    {
+        "Key": "Oxide.IronOxidePct",
+        "Severity": "Warn",
+        "Min": 0.5,
+        "Max": 6.0,
+        "Unit": "%",
+        "Message": "The iron oxide percent is outside the normal range [0.5-6.0]",
+        "Source": "Client doc table"
+    },
+    {
+        "Key": "Oxide.IronOxidePct",
+        "Severity": "Reject",
+        "Min": 0,
+        "Max": 100,
+        "Unit": "%",
+        "Message": "The iron oxide percent must be a valid percentage [0-100]",
+        "Source": "FR-3"
+    },
+    {
+        "Key": "Oxide.MagnesiumOxidePct",
+        "Severity": "Warn",
+        "Min": 0.1,
+        "Max": 4.0,
+        "Unit": "%",
+        "Message": "The magnesium oxide percent is outside the normal range [0.1-4.0]",
+        "Source": "Client doc table"
+    },
+    {
+        "Key": "Oxide.MagnesiumOxidePct",
+        "Severity": "Reject",
+        "Min": 0,
+        "Max": 6.0,
+        "Unit": "%",
+        "Message": "The magnesium oxide percent must be within the range [0.0-6.0]",
+        "Source": "ASTM C150"
+    },
+    {
+        "Key": "Oxide.SulfurTrioxidePct",
+        "Severity": "Warn",
+        "Min": 1.3,
+        "Max": 3.0,
+        "Unit": "%",
+        "Message": "The sulfur trioxide percent is outside the normal range [1.3-3.0]",
+        "Source": "Client doc table"
+    },
+    {
+        "Key": "Oxide.SulfurTrioxidePct",
+        "Severity": "Reject",
+        "Min": 0,
+        "Max": 4.5,
+        "Unit": "%",
+        "Message": "The sulfur trioxide percent must be within the range [0.0-4.5]",
+        "Source": "ASTM C150 Table 1 (Type III, C3A > 8%)"
+    },
+    {
+        "Key": "Specimen.LengthIn",
+        "Severity": "Reject",
+        "Min": 0.01,
+        "Max": 12,
+        "Unit": "in",
+        "Message": "Specimen length must be nonzero and in the range [0-12]",
+        "Source": "FR-4"
+    },
+    {
+        "Key": "Specimen.WidthIn",
+        "Severity": "Reject",
+        "Min": 0.01,
+        "Max": 6.00,
+        "Unit": "in",
+        "Message": "Specimen width must be nonzero and in the range [0-6]",
+        "Source": "FR-4"
+    },
+    {
+        "Key": "Break.StrengthPsi",
+        "Severity": "Reject",
+        "Min": 1,
+        "Max": 10000,
+        "Unit": "PSI",
+        "Message": "PSI must be within the range [1-10000]",
+        "Source": "Client doc / FR-5, Decision 3"
+    },
+    {
+        "Key": "Break.StrengthPsi",
+        "Severity": "Warn",
+        "Min": 3000,
+        "Max": 10000,
+        "Unit": "PSI",
+        "Message": "Break strength is below 3,000 PSI. Saved and flagged for review.",
+        "Source": "Client doc / FR-5"
+    },
+    {
+        "Key": "Curing.InternalTempF",
+        "Severity": "Reject",
+        "Min": 0,
+        "Max": 200,
+        "Unit": "°F",
+        "Message": "Internal temperature must be within the range [0-200]",
+        "Source": "Plausibility (heat of hydration)"
+    },
+    {
+        "Key": "Curing.AmbientTempF",
+        "Severity": "Warn",
+        "Min": 60,
+        "Max": 80,
+        "Unit": "°F",
+        "Message": "Ambient temperature is outside the normal range [60-80]",
+        "Source": "ASTM C31 initial curing"
+    },
+    {
+        "Key": "Curing.AmbientTempF",
+        "Severity": "Reject",
+        "Min": 0,
+        "Max": 150,
+        "Unit": "°F",
+        "Message": "Ambient temperature must be within the range [0-150]",
+        "Source": "Plausibility"
+    },
+    {
+        "Key": "Curing.MoisturePct",
+        "Severity": "Reject",
+        "Min": 0,
+        "Max": 100,
+        "Unit": "%",
+        "Message": "Moisture percent must be a valid percentage [0-100]",
+        "Source": "FR-6"
+    },
+    {
+        "Key": "Curing.RelativeHumidityPct",
+        "Severity": "Reject",
+        "Min": 0,
+        "Max": 100,
+        "Unit": "%",
+        "Message": "Relative humidity percent must be a valid percentage [0-100]",
+        "Source": "FR-6"
+    },
+    {
+        "Key": "Curing.ResistivityOhmPerFt",
+        "Severity": "Reject",
+        "Min": 0.01,
+        "Max": null,
+        "Unit": "ohms/ft",
+        "Message": "Resistivity must be a positive number",
+        "Source": "FR-6"
+    },
+    {
+        "Key": "Curing.Co2Ppm",
+        "Severity": "Reject",
+        "Min": 0,
+        "Max": null,
+        "Unit": "ppm",
+        "Message": "CO2 ppm must be non-negative",
+        "Source": "FR-6"
+    }
+]

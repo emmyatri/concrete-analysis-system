@@ -1,0 +1,218 @@
+﻿<div class="curing">
+  <h1 class="page-title">Curing readings</h1>
+
+  <section class="card picker" aria-label="Cylinder">
+    <div class="pick">
+      <label for="curing-batch">Batch</label>
+      <p-select
+        inputId="curing-batch"
+        [options]="batchOptions()"
+        [ngModel]="batch() ?? null"
+        (ngModelChange)="chooseBatch($event)"
+        [filter]="true"
+        filterPlaceholder="Type a batch number"
+        placeholder="Pick a batch"
+        appendTo="body"
+        data-testid="batch-select"
+      />
+    </div>
+    <div class="pick">
+      <label for="curing-cylinder">Cylinder</label>
+      <p-select
+        inputId="curing-cylinder"
+        [options]="cylinderOptions()"
+        [ngModel]="specimen()?.label ?? null"
+        (ngModelChange)="chooseCylinder($event)"
+        [disabled]="cylinderOptions().length === 0"
+        placeholder="Pick a cylinder"
+        appendTo="body"
+        data-testid="cylinder-select"
+      />
+    </div>
+    @if (loadedBatch(); as loaded) {
+      <p class="cast" data-testid="cast">
+        Cast {{ loaded.castAt | date: 'MM/dd/yy HH:mm' }} ·
+        <a [routerLink]="['/batches', loaded.batchNumber]">View batch</a>
+      </p>
+    }
+  </section>
+
+  @switch (detail().status) {
+    @case ('none') {
+      <p class="card message" data-testid="curing-message">Pick a batch to enter readings.</p>
+    }
+    @case ('loading') {
+      <p class="card message" data-testid="curing-message">Loading the batch…</p>
+    }
+    @case ('failed') {
+      <p class="card message" data-testid="curing-message">{{ $any(detail()).message }}</p>
+    }
+  }
+
+  @if (loadedBatch() && !specimen()) {
+    <p class="card message" data-testid="curing-message">
+      This batch has no cylinders yet. Add one from Batch Detail first.
+    </p>
+  }
+
+  @if (specimen(); as specimen) {
+    <section class="card grid-card" aria-labelledby="grid-title">
+      <header class="card-header">
+        <h2 id="grid-title">{{ specimen.label }} · readings</h2>
+        <span class="ranges" data-testid="ranges">{{ ranges() }}</span>
+      </header>
+
+      <div class="grid-scroll">
+        <table class="grid" data-testid="grid">
+          <thead>
+          <tr>
+            <th class="num-col">#</th>
+            <th>Time taken</th>
+            @for (column of columns; track column.field) {
+              <th class="num">{{ column.header }}</th>
+            }
+            <th>Status</th>
+            <th></th>
+          </tr>
+          </thead>
+          <tbody>
+            @for (item of existing(); track item.reading.id; let i = $index) {
+              <tr class="saved-row" data-testid="existing-row">
+                <td class="num-col">{{ i + 1 }}</td>
+                <td>{{ item.reading.takenAt | date: 'MM/dd/yy HH:mm' }}</td>
+                @for (column of columns; track column.field) {
+                  <td class="num">
+                    @if (item.flagged.has(column.key)) {
+                      <span class="flagged"
+                      >{{ readingValue(item.reading, column.field) | number: column.digits }}{{ column.unit }} ⚠</span
+                      >
+                    } @else {
+                      {{ readingValue(item.reading, column.field) | number: column.digits }}{{ column.unit }}
+                    }
+                  </td>
+                }
+                <td>
+                  <span class="status" [class.status--flagged]="item.flagged.size > 0">{{
+                      item.flagged.size > 0 ? 'Saved · flagged' : 'Saved'
+                    }}</span>
+                </td>
+                <td></td>
+              </tr>
+            }
+
+            @for (row of rows(); track row.id; let i = $index) {
+              <tr class="new-row" [class.new-row--locked]="row.locked()" data-testid="new-row">
+                <td class="num-col">{{ existing().length + i + 1 }}</td>
+                <td>
+                  @if (row.locked()) {
+                    {{ row.takenAt() | date: 'MM/dd/yy HH:mm' }}
+                  } @else {
+                    <input
+                      type="datetime-local"
+                      class="cell cell--time"
+                      [id]="cellId(row, 'takenAt')"
+                      [class.cell--error]="cellState(row, 'takenAt') === 'error'"
+                      [value]="row.takenAt()"
+                      [readOnly]="row.locked()"
+                      [title]="cellTitle(row, 'takenAt')"
+                      [attr.aria-label]="'Row ' + (existing().length + i + 1) + ' time taken'"
+                      (input)="setTakenAt(row, $any($event.target).value)"
+                      (keydown.enter)="save(row)"
+                    />
+                  }
+                </td>
+                @for (column of columns; track column.field) {
+                  <td class="num">
+                    @if (row.locked()) {
+                      <!-- Saved: reads like the rows above, with the unit, amber if flagged. -->
+                      @if (cellState(row, column.field) === 'warn') {
+                        <span class="flagged"
+                        >{{ savedValue(row, column.field) | number: column.digits
+                          }}{{ column.unit }} ⚠</span
+                        >
+                      } @else {
+                        {{ savedValue(row, column.field) | number: column.digits }}{{ column.unit }}
+                      }
+                    } @else {
+                      <input
+                        class="cell"
+                        inputmode="decimal"
+                        autocomplete="off"
+                        [id]="cellId(row, column.field)"
+                        [class.cell--error]="cellState(row, column.field) === 'error'"
+                        [class.cell--warn]="cellState(row, column.field) === 'warn'"
+                        [value]="row.values()[column.field]"
+                        [readOnly]="row.locked()"
+                        [title]="cellTitle(row, column.field)"
+                        [attr.aria-label]="
+                          'Row ' + (existing().length + i + 1) + ' ' + column.header
+                        "
+                        (input)="setValue(row, column.field, $any($event.target).value)"
+                        (keydown.enter)="save(row)"
+                      />
+                    }
+                  </td>
+                }
+                <td>
+                  @if (statusLabels[row.status()]; as label) {
+                    <span
+                      class="status"
+                      [class.status--flagged]="row.status() === 'flagged'"
+                      [class.status--failed]="row.status() === 'failed'"
+                      data-testid="row-status"
+                    >{{ label }}</span
+                    >
+                  }
+                </td>
+                <td class="actions">
+                  @if (!row.locked()) {
+                    <p-button
+                      label="Save"
+                      size="small"
+                      [text]="true"
+                      (onClick)="save(row)"
+                      data-testid="save-row"
+                    />
+                  }
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+
+      @if (messages().length > 0) {
+        <ul class="messages" data-testid="messages" role="status">
+          @for (message of messages(); track $index) {
+            <li [class.message--warn]="message.severity === 'warn'">
+              <i
+                class="pi"
+                [class.pi-times-circle]="message.severity === 'error'"
+                [class.pi-exclamation-triangle]="message.severity === 'warn'"
+                aria-hidden="true"
+              ></i>
+              {{ message.text }}
+            </li>
+          }
+        </ul>
+      }
+
+      <footer class="grid-footer">
+        <span class="hint">Tab moves across · Enter saves the row</span>
+        <p-button
+          label="Add row"
+          icon="pi pi-plus"
+          [outlined]="true"
+          (onClick)="addRow()"
+          data-testid="add-row"
+        />
+        <p-button
+          [label]="unsaved() > 1 ? 'Save all ' + unsaved() + ' rows' : 'Save all'"
+          [disabled]="unsaved() === 0"
+          (onClick)="saveAll()"
+          data-testid="save-all"
+        />
+      </footer>
+    </section>
+  }
+</div>

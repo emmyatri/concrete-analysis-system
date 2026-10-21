@@ -1,0 +1,63 @@
+﻿// Mockup "04 · Add cylinder dialog". Colors from theme tokens only.
+
+.add-cylinder {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.fields {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px 16px;
+}
+
+.footer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+  width: 100%;
+}
+
+.save-summary {
+  margin-right: auto;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--p-orange-700);
+}
+
+.save-summary--error {
+  color: var(--p-red-600);
+}
+
+.save-summary--muted {
+  color: var(--p-text-muted-color);
+}
+
+.save-banner,
+.added {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin: 0;
+  padding: 10px 14px;
+  border-radius: 6px;
+  font-size: 14px;
+
+  p {
+    margin: 0;
+  }
+}
+
+.save-banner {
+  border: 1px solid var(--p-red-300);
+  background: var(--p-red-50);
+  color: var(--p-red-700);
+}
+
+.added {
+  border: 1px solid var(--p-green-300);
+  background: var(--p-green-50);
+  color: var(--p-green-800);
+}

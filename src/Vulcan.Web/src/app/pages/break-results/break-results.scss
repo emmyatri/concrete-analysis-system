@@ -1,0 +1,117 @@
+﻿// Mockup "09 · Break results". Colors from theme tokens only.
+
+.break-results {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.page-title {
+  margin: 0;
+  font-size: 22px;
+  font-weight: 600;
+}
+
+.card {
+  background: var(--p-surface-0);
+  border: 1px solid var(--p-content-border-color);
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.card-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 17px;
+  background: var(--p-surface-100);
+  border-bottom: 1px solid var(--p-content-border-color);
+
+  h2 {
+    margin: 0;
+    font-size: 15px;
+    font-weight: 600;
+  }
+}
+
+.search-box {
+  position: relative;
+  margin-left: auto;
+  min-width: 260px;
+
+  .pi {
+    position: absolute;
+    top: 50%;
+    left: 12px;
+    transform: translateY(-50%);
+    color: var(--p-text-muted-color);
+  }
+
+  input {
+    width: 100%;
+    padding-left: 36px;
+  }
+}
+
+.message {
+  margin: 0;
+  padding: 24px 17px;
+  color: var(--p-text-muted-color);
+}
+
+.batch-number {
+  font-weight: 600;
+  color: var(--p-vulcan-link-color);
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.badge-synthetic {
+  margin-left: 8px;
+  padding: 1px 6px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--p-surface-0);
+  background: var(--p-blue-500);
+}
+
+.due-tag {
+  margin-left: 6px;
+  padding: 1px 6px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--p-green-800);
+  background: var(--p-green-100);
+}
+
+.actions {
+  text-align: right;
+}
+
+.saved {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0;
+  padding: 10px 14px;
+  border: 1px solid var(--p-green-300);
+  border-radius: 6px;
+  background: var(--p-green-50);
+  color: var(--p-green-800);
+  font-size: 14px;
+
+  a {
+    margin-left: auto;
+    font-weight: 600;
+    color: inherit;
+  }
+}
+
+.saved--warn {
+  border-color: var(--p-orange-300);
+  background: var(--p-orange-50);
+  color: var(--p-orange-800);
+}
