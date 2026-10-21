@@ -1373,7 +1373,7 @@ Status code: `200`
     "isSynthetic": true,
     "expectedFinalBreakPsi": 6200,
     "atRisk": false,
-    "projected28DayPsi": 6390,
+    "projected28DayPsi": 6690,
     "cementType": "TypeI",
     "status": "Estimated",
     "curvePoints":
@@ -1488,7 +1488,7 @@ Status code: `200`
         },
         {
             "day": 28,
-            "psi": 6390
+            "psi": 6690
         }
     ],
     "estimates":
@@ -1509,7 +1509,7 @@ Status code: `200`
             "horizonDays": 7,
             "estimatedPsi": 4794.0,
             "equivalentAgeDays": 7.0,
-            "adjustmentStage": "ThreeDay",
+            "adjustmentStage": "None",
             "unadjustedPsi": 4794,
             "basis": "Standard maturity model",
             "calibratedVersion": "v1",
@@ -1521,7 +1521,7 @@ Status code: `200`
             "horizonDays": 28,
             "estimatedPsi": 6690.0,
             "equivalentAgeDays": 28.0,
-            "adjustmentStage": "ThreeAndSevenDay",
+            "adjustmentStage": "None",
             "unadjustedPsi": 6690,
             "basis": "Standard maturity model",
             "calibratedVersion": "v1",
@@ -2458,7 +2458,7 @@ Status Code: `200`
 [
     {
         "id": 1,
-        "batchNumber": "VM-SYN-001",
+        "batchNumber": "VM-SYN-006",
         "isSynthetic": true,
         "atRisk": true,
         "projected28DayPsi": 4450,
