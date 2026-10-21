@@ -11,7 +11,12 @@
       </p>
 
       <div class="shell-header-actions">
-        <p-tag [severity]="apiDisplay().severity" [rounded]="true" styleClass="api-status" data-testid="api-status">
+        <p-tag
+          [severity]="apiDisplay().severity"
+          [rounded]="true"
+          styleClass="api-status"
+          data-testid="api-status"
+        >
           <span class="status-dot" aria-hidden="true"></span>
           {{ apiDisplay().label }}
         </p-tag>
@@ -58,7 +63,9 @@
       }
     </ul>
 
-    <p class="shell-version">{{ appInfo.name }} · v{{ appInfo.version }} · {{ appInfo.milestone }}</p>
+    <p class="shell-version">
+      {{ appInfo.name }} · v{{ appInfo.version }} · {{ appInfo.milestone }}
+    </p>
   </nav>
 
   <main class="shell-content">

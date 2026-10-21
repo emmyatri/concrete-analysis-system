@@ -448,7 +448,6 @@ export class CuringReadingsPage {
     return reading[field];
   }
 
-
   /** A saved row's value as a number, so it reads like the saved readings above it. */
   protected savedValue(row: NewRow, field: Field): number | null {
     return parseNumber(row.values()[field]);

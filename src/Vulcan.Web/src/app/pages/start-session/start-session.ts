@@ -48,7 +48,9 @@ export class StartSession {
   protected readonly error = computed(() => {
     this.nameChange();
     const shown = this.name.dirty || this.name.touched;
-    return shown ? ((this.name.errors?.['technicianName']?.message as string | undefined) ?? null) : null;
+    return shown
+      ? ((this.name.errors?.['technicianName']?.message as string | undefined) ?? null)
+      : null;
   });
 
   protected readonly canStart = computed(() => {
@@ -92,6 +94,8 @@ export class StartSession {
   /** Only paths inside the app, never another site. */
   private safeReturnUrl(): string {
     const url = this.returnUrl();
-    return url && url.startsWith('/') && !url.startsWith('//') && !url.startsWith('/start') ? url : '/';
+    return url && url.startsWith('/') && !url.startsWith('//') && !url.startsWith('/start')
+      ? url
+      : '/';
   }
 }

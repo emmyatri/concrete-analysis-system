@@ -49,7 +49,7 @@
           [outlined]="true"
           class="quiet"
           [routerLink]="['/batches', batch.batchNumber, 'edit']"
-        ><span pButtonLabel>Edit batch</span></a
+          ><span pButtonLabel>Edit batch</span></a
         >
         <a
           pButton
@@ -57,13 +57,18 @@
           class="quiet"
           routerLink="/curing"
           [queryParams]="{ batch: batch.batchNumber }"
-        ><span pButtonLabel>Curing readings</span></a
+          ><span pButtonLabel>Curing readings</span></a
         >
-        <button pButton type="button" (click)="addCylinderOpen.set(true)" data-testid="add-cylinder">
+        <button
+          pButton
+          type="button"
+          (click)="addCylinderOpen.set(true)"
+          data-testid="add-cylinder"
+        >
           <span pButtonLabel>Add cylinder</span>
         </button>
         <a pButton routerLink="/breaks" [queryParams]="{ batch: batch.batchNumber }"
-        ><span pButtonLabel>Enter break</span></a
+          ><span pButtonLabel>Enter break</span></a
         >
       </div>
     </header>
@@ -78,43 +83,43 @@
         <dt>Cement type</dt>
         <dd>{{ cementLabels[batch.cementType] }}</dd>
       </div>
-    <div class="summary-item">
-      <dt>Sample weight</dt>
-      <dd>
-        @if (weightWarning(); as warning) {
-          <span class="flagged" [title]="warning.message" data-testid="weight-flagged"
-          >{{ batch.finalWeightLb | number: '1.0-2' }} lb ⚠</span
-          >
-        } @else {
-          {{ batch.finalWeightLb | number: '1.0-2' }} lb
-        }
-      </dd>
-    </div>
-    <!-- Both pH values in one cell so the strip stays at 8 (SCRUM-151). Old batches have no surface pH. -->
-    <div class="summary-item">
-      <dt>pH · water / surface</dt>
-      <dd data-testid="ph">
-        @if (phWarning(); as warning) {
-          <span class="flagged" [title]="warning.message" data-testid="ph-flagged"
-          >{{ batch.mixWaterPh | number: '1.1-2' }} ⚠</span
-          >
-        } @else {
-          {{ batch.mixWaterPh | number: '1.1-2' }}
-        }
-        /
-        @if (batch.cementSurfacePh === null) {
-          —
-        } @else {
-          @if (surfacePhWarning(); as warning) {
-            <span class="flagged" [title]="warning.message" data-testid="surface-ph-flagged"
-            >{{ batch.cementSurfacePh | number: '1.1-2' }} ⚠</span
+      <div class="summary-item">
+        <dt>Sample weight</dt>
+        <dd>
+          @if (weightWarning(); as warning) {
+            <span class="flagged" [title]="warning.message" data-testid="weight-flagged"
+              >{{ batch.finalWeightLb | number: '1.0-2' }} lb ⚠</span
             >
           } @else {
-            {{ batch.cementSurfacePh | number: '1.1-2' }}
+            {{ batch.finalWeightLb | number: '1.0-2' }} lb
           }
-        }
-      </dd>
-    </div>
+        </dd>
+      </div>
+      <!-- Both pH values in one cell so the strip stays at 8 (SCRUM-151). Old batches have no surface pH. -->
+      <div class="summary-item">
+        <dt>pH · water / surface</dt>
+        <dd data-testid="ph">
+          @if (phWarning(); as warning) {
+            <span class="flagged" [title]="warning.message" data-testid="ph-flagged"
+              >{{ batch.mixWaterPh | number: '1.1-2' }} ⚠</span
+            >
+          } @else {
+            {{ batch.mixWaterPh | number: '1.1-2' }}
+          }
+          /
+          @if (batch.cementSurfacePh === null) {
+            —
+          } @else {
+            @if (surfacePhWarning(); as warning) {
+              <span class="flagged" [title]="warning.message" data-testid="surface-ph-flagged"
+                >{{ batch.cementSurfacePh | number: '1.1-2' }} ⚠</span
+              >
+            } @else {
+              {{ batch.cementSurfacePh | number: '1.1-2' }}
+            }
+          }
+        </dd>
+      </div>
       <div class="summary-item">
         <dt>Expected final</dt>
         <dd>{{ batch.expectedFinalBreakPsi | number }} PSI</dd>
@@ -124,7 +129,7 @@
         <dd>
           @if (ratioWarning(); as warning) {
             <span class="flagged-text" [title]="warning.message" data-testid="ratio-flagged"
-            >{{ batch.composition.waterCementRatio | number: '1.2-3' }} ⚠</span
+              >{{ batch.composition.waterCementRatio | number: '1.2-3' }} ⚠</span
             >
           } @else {
             {{ (batch.composition.waterCementRatio | number: '1.2-3') ?? '—' }}
@@ -207,7 +212,7 @@
                   <dd>
                     @if (oxide.warning; as warning) {
                       <span class="flagged" [title]="warning.message"
-                      >{{ oxide.value | number: '1.2-2' }} ⚠</span
+                        >{{ oxide.value | number: '1.2-2' }} ⚠</span
                       >
                     } @else {
                       {{ oxide.value | number: '1.2-2' }}
@@ -242,16 +247,16 @@
       <p-tabs value="cylinders">
         <p-tablist>
           <p-tab value="cylinders"
-          >Cylinders &amp; breaks <span class="count">{{ batch.specimens.length }}</span></p-tab
+            >Cylinders &amp; breaks <span class="count">{{ batch.specimens.length }}</span></p-tab
           >
           <p-tab value="readings"
-          >Curing readings <span class="count">{{ readings().length }}</span></p-tab
+            >Curing readings <span class="count">{{ readings().length }}</span></p-tab
           >
           <p-tab value="warnings"
-          >Warnings
+            >Warnings
             <span class="count" [class.count-warn]="batch.warnings.length > 0">{{
-                batch.warnings.length
-              }}</span></p-tab
+              batch.warnings.length
+            }}</span></p-tab
           >
         </p-tablist>
 
@@ -279,12 +284,14 @@
                     <td>{{ row.testAge }}</td>
                     <td>{{ row.specimen.lengthIn | number: '1.2-2' }} in</td>
                     <td>{{ row.specimen.widthIn | number: '1.2-2' }} in</td>
-                    <td>{{ (row.specimen.breakResult?.brokenAt | date: 'MM/dd @ HH:mm') ?? '—' }}</td>
+                    <td>
+                      {{ (row.specimen.breakResult?.brokenAt | date: 'MM/dd @ HH:mm') ?? '—' }}
+                    </td>
                     <td>
                       @if (row.specimen.breakResult; as result) {
                         @if (row.breakWarning) {
                           <span class="flagged" [title]="row.breakWarning.message"
-                          >{{ result.strengthPsi | number }} PSI ⚠</span
+                            >{{ result.strengthPsi | number }} PSI ⚠</span
                           >
                         } @else {
                           {{ result.strengthPsi | number }} PSI
@@ -295,7 +302,7 @@
                           routerLink="/breaks"
                           [queryParams]="{ batch: batch.batchNumber, cylinder: row.specimen.label }"
                           data-testid="record-break"
-                        >Record break</a
+                          >Record break</a
                         >
                       }
                     </td>
@@ -305,7 +312,7 @@
                         class="row-link"
                         routerLink="/curing"
                         [queryParams]="{ batch: batch.batchNumber, cylinder: row.specimen.label }"
-                      >View</a
+                        >View</a
                       >
                     </td>
                   </tr>
@@ -350,7 +357,7 @@
                     <td>
                       @if (row.ambientWarning) {
                         <span class="flagged" [title]="row.ambientWarning.message"
-                        >{{ row.reading.ambientTempF | number: '1.1-1' }} °F ⚠</span
+                          >{{ row.reading.ambientTempF | number: '1.1-1' }} °F ⚠</span
                         >
                       } @else {
                         {{ row.reading.ambientTempF | number: '1.1-1' }} °F
@@ -397,6 +404,10 @@
     </section>
   }
 
-  <app-add-cylinder-dialog [batchNumber]="batchNumber()" [visible]="addCylinderOpen()"
-                           (visibleChange)="addCylinderClosed($event)" (saved)="cylinderSaved()" />
+  <app-add-cylinder-dialog
+    [batchNumber]="batchNumber()"
+    [visible]="addCylinderOpen()"
+    (visibleChange)="addCylinderClosed($event)"
+    (saved)="cylinderSaved()"
+  />
 </div>

@@ -13,7 +13,8 @@ export function numberField(maxDecimals?: number): ValidatorFn {
     if (!text) return { required: true };
     if (parseNumber(text) === null) return { number: { message: 'Enter a number' } };
     if (maxDecimals !== undefined && decimalPlaces(text) > maxDecimals) {
-      const message = maxDecimals === 0 ? 'Whole numbers only' : `Max ${maxDecimals} decimal places`;
+      const message =
+        maxDecimals === 0 ? 'Whole numbers only' : `Max ${maxDecimals} decimal places`;
       return { decimals: { message } };
     }
     return null;

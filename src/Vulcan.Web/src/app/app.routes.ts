@@ -24,15 +24,21 @@ export const routes: Routes = [
       { path: 'batches/new', component: BatchEntry },
       {
         path: 'batches',
-        loadComponent: () => import('./pages/batch-search/batch-search').then((m) => m.BatchSearchPage),
+        loadComponent: () =>
+          import('./pages/batch-search/batch-search').then((m) => m.BatchSearchPage),
       },
       // After batches/new, so "new" isn't read as a batch number.
       {
         path: 'batches/:batchNumber',
         // Loaded when first opened, so its tables and tabs don't slow down the app's start.
-        loadComponent: () => import('./pages/batch-detail/batch-detail').then((m) => m.BatchDetailPage),
+        loadComponent: () =>
+          import('./pages/batch-detail/batch-detail').then((m) => m.BatchDetailPage),
       },
-      { path: 'batches/:batchNumber/edit', component: PlaceholderPage, data: { heading: 'Edit batch' } },
+      {
+        path: 'batches/:batchNumber/edit',
+        component: PlaceholderPage,
+        data: { heading: 'Edit batch' },
+      },
       // Add cylinder is now a popup on Batch Detail.
       {
         path: 'batches/:batchNumber/cylinders/new',
@@ -40,7 +46,8 @@ export const routes: Routes = [
       },
       {
         path: 'breaks',
-        loadComponent: () => import('./pages/break-results/break-results').then((m) => m.BreakResultsPage),
+        loadComponent: () =>
+          import('./pages/break-results/break-results').then((m) => m.BreakResultsPage),
       },
       {
         path: 'curing',
