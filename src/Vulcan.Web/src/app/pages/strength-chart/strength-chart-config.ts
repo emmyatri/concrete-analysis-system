@@ -60,7 +60,10 @@ export function strengthChartConfig(
       borderWidth: 2.5,
       pointRadius: 0,
       pointStyle: 'line',
-      endLabel: `28-day est. ${psi(strength.projected28DayPsi ?? 0)}`,
+      endLabel:
+        strength.projected28DayPsi === null
+          ? undefined
+          : `28-day est. ${psi(strength.projected28DayPsi)}`,
     });
   }
   if (strength.unadjustedCurvePoints.length > 0) {
