@@ -11,6 +11,7 @@ const COLORS: StrengthChartColors = {
   minimum: 'darkorange',
   text: 'gray',
   grid: 'lightgray',
+  surface: 'white',
   font: 'Inter',
 };
 
@@ -27,14 +28,27 @@ describe('strengthChartConfig', () => {
     expect(data.datasets.map((d) => d.label)).toEqual([
       'VM-SYN-006 predicted',
       'VM-SYN-006 before breaks',
+      'VM-SYN-006 estimate',
       'VM-SYN-006 breaks',
       'VM-SYN-006 flagged breaks',
       'VM-SYN-006 mean by age',
       'Expected final',
       'Minimum',
     ]);
-    expect(data.datasets[3].data).toEqual([{ x: 3, y: 2950, specimen: 'D3-1' }]);
-    expect(data.datasets[3].borderColor).toBe('orange');
+    expect(data.datasets[4].data).toEqual([{ x: 3, y: 2950, specimen: 'D3-1' }]);
+    expect(data.datasets[4].borderColor).toBe('orange');
+  });
+
+  it('marks the 3-, 7- and 28-day estimates with hollow markers', () => {
+    const { data } = strengthChartConfig(strengthOf('VM-SYN-006'), 3000, new Set(), COLORS);
+
+    const estimate = data.datasets.find((d) => d.label === 'VM-SYN-006 estimate')!;
+    expect(estimate.data).toEqual([
+      { x: 3, y: 3208 },
+      { x: 7, y: 3903 },
+      { x: 28, y: 4449 },
+    ]);
+    expect([estimate.borderColor, estimate.backgroundColor]).toEqual(['blue', 'white']);
   });
 
   it('starts the curve at zero on the day of cast and runs to day 28', () => {

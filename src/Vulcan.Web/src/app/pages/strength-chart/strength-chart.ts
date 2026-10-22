@@ -83,6 +83,7 @@ export class StrengthChart {
       minimum: token('--p-orange-600', '#ea580c'),
       text: token('--p-text-muted-color', '#696e79'),
       grid: token('--p-surface-200', '#dddfe4'),
+      surface: token('--p-surface-0', '#ffffff'),
       font: style?.getPropertyValue('font-family').trim() || 'Inter, sans-serif',
     };
   }
