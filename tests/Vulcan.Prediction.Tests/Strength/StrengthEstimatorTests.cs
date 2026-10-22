@@ -230,9 +230,9 @@ public sealed class StrengthEstimatorTests
 
         // S1 cures at the reference temperature: 7 equivalent days.
         // S2 cures above reference temperature:
-        // 7 * (82 - 32) / (73.4 - 32).
+        // 7 * (82 - 14) / (73.4 - 14).
         double expectedAverageAge =
-            (7.0 + 7.0 * (82.0 - 32.0) / (73.4 - 32.0)) / 2.0;
+            (7.0 + 7.0 * (82.0 - 14.0) / (73.4 - 14.0)) / 2.0;
 
         Assert.Equal(expectedAverageAge,
             result.Day7!.EquivalentAgeDays, 8);
@@ -416,10 +416,11 @@ public sealed class StrengthEstimatorTests
         Assert.NotNull(result.Day7);
         Assert.NotNull(result.Day28);
 
-        // SCRUM-161 numerical acceptance criteria: ±1 PSI.
-        Assert.InRange(result.Day3!.EstimatedPsi, 3916, 3918);
-        Assert.InRange(result.Day7!.EstimatedPsi, 5143, 5145);
-        Assert.InRange(result.Day28!.EstimatedPsi, 6252, 6254);
+        // M2-15: Updated regression expectations using the 14°F
+        // Nurse–Saul datum using the VM-SYN-006 fixture.
+        Assert.InRange(result.Day3!.EstimatedPsi, 3847, 3849);
+        Assert.InRange(result.Day7!.EstimatedPsi, 5093, 5095);
+        Assert.InRange(result.Day28!.EstimatedPsi, 6234, 6236);
 
         Assert.True(result.Day3.EstimatedPsi > 0);
         Assert.True(result.Day7.EstimatedPsi > result.Day3.EstimatedPsi);
