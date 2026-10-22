@@ -202,8 +202,7 @@ Types I and II for general work and Types I and III for high-early-strength conc
 ## 9. Units and field names
 
 - Resistivity is in **ohms per foot**, as Rev 1 lists it.
-- CO₂ is in **ppm**. Rev 1 asks for "Carbon Dioxide content" but doesn't give a unit. ppm is the standard unit for CO₂
-  sensors, so we chose it.
+- - **CO₂ is measured as a percentage of total batch weight.** This supersedes our original ppm assumption following client confirmation (Don Murphy, Oct 21, 2026). The existing schema, API contract, seed data, and mocks still use the original unit and require updates under a separate ticket. See decision 13.
 - **"Sand" and "fine aggregate" are one field** (`FineAggregatePct`). Rev 1's entry list names them separately, but its
   ingredient section defines them as the same thing: "Fine Aggregate / Sand (25–30%)" and "Fine Aggregates: Clean washed
   concrete sand."
@@ -345,7 +344,7 @@ The following warning ranges require clarification from Vulcan:
 | Moisture (%) | 3.5–5% of total batch weight | Confirm warning versus rejection thresholds |
 | Relative humidity (%) | Below 75% | Treat 75% or above as outside the normal range; confirm warning versus rejection threshold |
 | Electrical resistance (Ω) | Below 7,000–9,000 Ω, measured end to end | Confirm exact upper threshold, testing method, and compatibility with stored resistivity (ohms/ft) |
-| CO₂ (%) | 0.5–0.7% of total batch weight | Confirm warning versus rejection thresholds and update stored units/API contract as needed |
+| CO₂ (%) | 0.5–0.7% of total batch weight | Supersedes decision 9; API, schema, contract, seed data, and mock updates tracked separately |
 | Ambient temperature (°F) | No new range provided | Confirm whether existing 60–80°F warning range applies and establish hard limits |
 
 Vulcan should also confirm whether separate warning ranges are needed for SCM percentage and aggregate proportions. These fields currently have rejection limits but no warning limits.
@@ -354,7 +353,7 @@ Until the client provides these ranges, the system will continue enforcing exist
 
 Once Vulcan confirms the thresholds, they will be added as `ValidationLimit` Warn rows. Changes to the thresholds will be data changes rather than changes to the warning evaluation logic.
 
-**Status:** Pending client clarification under SLA A-3. Questions will be included in the M2-81 client communication.
+**Status:** Partially confirmed by the client (Don Murphy, Oct 21, 2026). Normal ranges have been provided for moisture, relative humidity, electrical resistance, and CO₂. Remaining clarifications include rejection thresholds for these measurements, the exact electrical resistance upper limit, and normal and rejection ranges for internal and ambient temperatures. These outstanding questions will be included in the M2-81 client communication under SLA A-3.
 
 ### Warning limit configuration
 
@@ -370,7 +369,7 @@ The minimum-strength rule warns below its minimum. The percentage-based rules wa
 
 All three thresholds are proposed and may be adjusted following client feedback.
 
-*Sources:* Rev 1, strength ranges and early warning requirements; ACI 211.1-97, Table 6.3.4(a); ADR-005, strength estimation method.
+*Sources:* Rev 1, strength ranges and early warning requirements; ACI 211.1-97, Table 6.3.4(a); ADR-005, strength estimation method; Client email, Don Murphy (Oct 21, 2026).
 
 *Affects:* `ValidationLimit`, SCRUM-181 (early warning implementation)
 *Requirements:* SLA A-3, FR-16
