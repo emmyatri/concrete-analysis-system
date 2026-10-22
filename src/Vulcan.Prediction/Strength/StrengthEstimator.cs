@@ -16,7 +16,7 @@ public static class StrengthEstimator
     {
         ArgumentNullException.ThrowIfNull(specimens);
         ArgumentNullException.ThrowIfNull(settings);
-        
+
         breakMeasurements ??= Array.Empty<StrengthBreakMeasurement>();
 
         // Match M2-12 timestamp conventions.
@@ -232,7 +232,7 @@ public static class StrengthEstimator
 
         // Preserve the original 3-day prediction for the ratio safeguard.
         double unadjustedDay3Psi = dailyCurve[2].EstimatedPsi;
-        
+
         // Apply the same available break measurements across the
         // current curve, preserving the original predictions.
         var adjustedDailyCurve = new List<StrengthCurvePoint>();
@@ -255,6 +255,22 @@ public static class StrengthEstimator
                 measuredDay7Psi: measuredDay7Psi,
                 unadjustedDay3Psi: unadjustedDay3Psi);
 
+            adjustment = adjustment with
+            {
+                Basis = adjustment.Stage switch
+                {
+                    BreakAdjustmentStage.ThreeAndSevenDay =>
+                        $"Re-fit through the average 3- and 7-day breaks " +
+                        $"(reference strength {adjustment.ReferenceStrengthPsi:N0} PSI).",
+
+                    BreakAdjustmentStage.ThreeDay =>
+                        $"Re-fit through the average 3-day breaks " +
+                        $"(reference strength {adjustment.ReferenceStrengthPsi:N0} PSI).",
+
+                    _ => "No break adjustment applied; original ACI 209R-92 prediction."
+                }
+            };
+
             adjustedDailyCurve.Add(new StrengthCurvePoint(
                 point.Day,
                 point.EquivalentAgeDays,
@@ -273,7 +289,7 @@ public static class StrengthEstimator
                     break;
             }
         }
-        
+
         bool usesExtrapolation = qualifyingSpecimens.Any(
             specimen => specimen.Readings.Max(r => r.TakenAt)
                         < castAt.AddDays(28));
@@ -314,6 +330,15 @@ public static class StrengthEstimator
                 basis,
                 settings.CalibrationVersion);
         }
+
+        // Day3, Day7, Day28, and DailyCurve contain the original,
+        // unadjusted strength predictions.
+        //
+        // AdjustedDailyCurve and Day3Adjustment, Day7Adjustment,
+        // and Day28Adjustment contain the break-adjusted predictions.
+        //
+        // Consumers displaying predicted strength should use the adjusted
+        // values when an adjustment is available.
 
         return new StrengthEstimateResult
         {

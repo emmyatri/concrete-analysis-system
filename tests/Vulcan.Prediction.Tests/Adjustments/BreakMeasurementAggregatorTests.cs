@@ -1,11 +1,11 @@
-﻿using Vulcan.Prediction.Adjustments;
+using Vulcan.Prediction.Adjustments;
 using Xunit;
 
 namespace Vulcan.Prediction.Tests.Adjustments;
 
 public sealed class BreakMeasurementAggregatorTests
 {
-    private static readonly StrengthBreakMeasurement[] Measurements =
+    private static readonly StrengthBreakMeasurement[] _measurements =
     [
         new("S1", 3, 3000, false),
         new("S2", 3, 3200, false),
@@ -23,7 +23,7 @@ public sealed class BreakMeasurementAggregatorTests
         double expectedPsi)
     {
         double? result = BreakMeasurementAggregator.GetAveragePsi(
-            Measurements,
+            _measurements,
             day);
 
         Assert.Equal(expectedPsi, result);
@@ -33,12 +33,12 @@ public sealed class BreakMeasurementAggregatorTests
     public void GetAveragePsi_HistoricalDay7_UsesDay3Only()
     {
         double? day3 = BreakMeasurementAggregator.GetAveragePsi(
-            Measurements,
+            _measurements,
             day: 3,
             predictionDay: 7);
 
         double? day7 = BreakMeasurementAggregator.GetAveragePsi(
-            Measurements,
+            _measurements,
             day: 7,
             predictionDay: 7);
 
@@ -50,20 +50,20 @@ public sealed class BreakMeasurementAggregatorTests
     public void GetAveragePsi_HistoricalDay28_UsesEarlierBreaks()
     {
         Assert.Equal(3100, BreakMeasurementAggregator.GetAveragePsi(
-            Measurements, 3, predictionDay: 28));
+            _measurements, 3, predictionDay: 28));
 
         Assert.Equal(4300, BreakMeasurementAggregator.GetAveragePsi(
-            Measurements, 7, predictionDay: 28));
+            _measurements, 7, predictionDay: 28));
 
         Assert.Null(BreakMeasurementAggregator.GetAveragePsi(
-            Measurements, 28, predictionDay: 28));
+            _measurements, 28, predictionDay: 28));
     }
 
     [Fact]
     public void GetAveragePsi_NoMatchingBreaks_ReturnsNull()
     {
         double? result = BreakMeasurementAggregator.GetAveragePsi(
-            Measurements,
+            _measurements,
             day: 14);
 
         Assert.Null(result);
@@ -85,7 +85,7 @@ public sealed class BreakMeasurementAggregatorTests
         Assert.Throws<ArgumentNullException>(() =>
             BreakMeasurementAggregator.GetAveragePsi(null!, day: 3));
     }
-    
+
     [Theory]
     [InlineData(0.0)]
     [InlineData(-100.0)]
@@ -98,11 +98,11 @@ public sealed class BreakMeasurementAggregatorTests
         [
             new("S1", 3, strengthPsi, false)
         ];
-    
+
         Assert.Throws<ArgumentException>(() =>
             BreakMeasurementAggregator.GetAveragePsi(measurements, 3));
     }
-    
+
     [Fact]
     public void GetAveragePsi_DuplicateSpecimen_Throws()
     {
@@ -111,11 +111,11 @@ public sealed class BreakMeasurementAggregatorTests
             new("S1", 3, 3000, false),
             new("s1", 3, 3200, false)
         ];
-    
+
         Assert.Throws<ArgumentException>(() =>
             BreakMeasurementAggregator.GetAveragePsi(measurements, 3));
     }
-    
+
     [Theory]
     [InlineData("")]
     [InlineData(" ")]
@@ -125,11 +125,11 @@ public sealed class BreakMeasurementAggregatorTests
         [
             new(specimenId, 3, 3000, false)
         ];
-    
+
         Assert.Throws<ArgumentException>(() =>
             BreakMeasurementAggregator.GetAveragePsi(measurements, 3));
     }
-    
+
     [Theory]
     [InlineData(0)]
     [InlineData(14)]
@@ -140,11 +140,11 @@ public sealed class BreakMeasurementAggregatorTests
         [
             new("S1", day, 3000, false)
         ];
-    
+
         Assert.Throws<ArgumentException>(() =>
             BreakMeasurementAggregator.GetAveragePsi(measurements, 3));
     }
-    
+
     [Fact]
     public void GetAveragePsi_NullEntry_Throws()
     {
@@ -153,11 +153,11 @@ public sealed class BreakMeasurementAggregatorTests
             new("S1", 3, 3000, false),
             null!
         ];
-    
+
         Assert.Throws<ArgumentException>(() =>
             BreakMeasurementAggregator.GetAveragePsi(measurements, 3));
     }
-    
+
     [Fact]
     public void GetAveragePsi_InvalidLaterAge_StillThrows()
     {
@@ -166,7 +166,7 @@ public sealed class BreakMeasurementAggregatorTests
             new("S1", 3, 3000, false),
             new("S2", 7, -100, false)
         ];
-    
+
         Assert.Throws<ArgumentException>(() =>
             BreakMeasurementAggregator.GetAveragePsi(
                 measurements,

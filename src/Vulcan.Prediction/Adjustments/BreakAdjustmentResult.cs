@@ -1,4 +1,4 @@
-﻿namespace Vulcan.Prediction.Adjustments;
+namespace Vulcan.Prediction.Adjustments;
 
 public sealed record BreakAdjustmentResult(
     BreakAdjustmentStage Stage,
@@ -7,4 +7,8 @@ public sealed record BreakAdjustmentResult(
     double AdjustedA,
     double ReferenceStrengthPsi,
     string? FallbackReason
-);
+)
+{
+    /// <summary>Explains how the adjusted strength prediction was calculated.</summary>
+    public string? Basis { get; init; }
+}

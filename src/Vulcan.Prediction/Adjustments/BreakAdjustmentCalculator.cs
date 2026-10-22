@@ -1,4 +1,4 @@
-﻿namespace Vulcan.Prediction.Adjustments;
+namespace Vulcan.Prediction.Adjustments;
 
 public static class BreakAdjustmentCalculator
 {
@@ -40,7 +40,7 @@ public static class BreakAdjustmentCalculator
 
         return adjustedA;
     }
-    
+
     public static (double AdjustedA, double ReferenceStrengthPsi)?
         CalculateThreeAndSevenDayAdjustment(
             double equivalentAgeDay3,
@@ -94,7 +94,7 @@ public static class BreakAdjustmentCalculator
 
         return (adjustedA, referenceStrengthPsi);
     }
-    
+
     public static BreakAdjustmentResult Calculate(
         double equivalentAgeDays,
         double unadjustedPsi,
@@ -111,13 +111,13 @@ public static class BreakAdjustmentCalculator
         double referenceStrengthPsi = expectedFinalBreakPsi;
         BreakAdjustmentStage stage = BreakAdjustmentStage.None;
         string? fallbackReason = null;
-    
+
         bool hasDay3 = equivalentAgeDay3.HasValue &&
                        measuredDay3Psi.HasValue;
-    
+
         bool hasDay7 = equivalentAgeDay7.HasValue &&
                        measuredDay7Psi.HasValue;
-    
+
         if (hasDay3 && hasDay7)
         {
             var twoBreakFit = CalculateThreeAndSevenDayAdjustment(
@@ -126,13 +126,13 @@ public static class BreakAdjustmentCalculator
                 measuredDay3Psi!.Value,
                 measuredDay7Psi!.Value,
                 b);
-    
+
             if (twoBreakFit.HasValue)
             {
                 adjustedA = twoBreakFit.Value.AdjustedA;
                 referenceStrengthPsi =
                     twoBreakFit.Value.ReferenceStrengthPsi;
-    
+
                 stage = BreakAdjustmentStage.ThreeAndSevenDay;
             }
             else
@@ -140,7 +140,7 @@ public static class BreakAdjustmentCalculator
                 fallbackReason = "3- and 7-day adjustment could not be fitted";
             }
         }
-    
+
         if (stage == BreakAdjustmentStage.None && hasDay3)
         {
             double? threeDayA = CalculateThreeDayAdjustedA(
@@ -149,7 +149,7 @@ public static class BreakAdjustmentCalculator
                 unadjustedDay3Psi,
                 expectedFinalBreakPsi,
                 b);
-    
+
             if (threeDayA.HasValue)
             {
                 adjustedA = threeDayA.Value;
@@ -158,7 +158,7 @@ public static class BreakAdjustmentCalculator
             else
             {
                 double ratio = measuredDay3Psi!.Value / unadjustedDay3Psi;
-    
+
                 if (double.IsFinite(ratio) &&
                     (ratio < 0.7 || ratio > 1.3))
                 {
@@ -170,13 +170,13 @@ public static class BreakAdjustmentCalculator
                 }
             }
         }
-    
+
         double adjustedPsi = stage == BreakAdjustmentStage.None
             ? unadjustedPsi
             : equivalentAgeDays /
               (adjustedA + b * equivalentAgeDays) *
               referenceStrengthPsi;
-    
+
         return new BreakAdjustmentResult(
             stage,
             unadjustedPsi,

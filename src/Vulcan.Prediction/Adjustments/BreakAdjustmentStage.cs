@@ -1,4 +1,4 @@
-﻿namespace Vulcan.Prediction.Adjustments;
+namespace Vulcan.Prediction.Adjustments;
 
 public enum BreakAdjustmentStage
 {

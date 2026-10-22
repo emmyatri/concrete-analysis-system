@@ -517,7 +517,7 @@ public sealed class StrengthEstimatorTests
             6);
     }
 
-	[Fact]
+    [Fact]
     public void Estimate_WithThreeDayBreak_AdjustsCurveAndPreservesOriginal()
     {
         var specimens = new[]
@@ -579,9 +579,18 @@ public sealed class StrengthEstimatorTests
         Assert.Equal(
             baseline.Day28.EstimatedPsi,
             result.Day28Adjustment.UnadjustedPsi);
+
+        Assert.NotNull(result.Day28Adjustment.Basis);
+        Assert.Contains(
+            "Re-fit through the average 3-day breaks",
+            result.Day28Adjustment.Basis);
+
+        Assert.Contains(
+            $"{result.Day28Adjustment.ReferenceStrengthPsi:N0} PSI",
+            result.Day28Adjustment.Basis);
     }
 
-	[Fact]
+    [Fact]
     public void Estimate_WithThreeAndSevenDayBreaks_AdjustsThroughBoth()
     {
         var specimens = new[]
@@ -640,6 +649,15 @@ public sealed class StrengthEstimatorTests
 
         Assert.NotNull(result.Day28Adjustment);
 
+        Assert.NotNull(result.Day28Adjustment.Basis);
+        Assert.Contains(
+            "Re-fit through the average 3- and 7-day breaks",
+            result.Day28Adjustment.Basis);
+
+        Assert.Contains(
+            $"{result.Day28Adjustment.ReferenceStrengthPsi:N0} PSI",
+            result.Day28Adjustment.Basis);
+
         Assert.Equal(
             BreakAdjustmentStage.ThreeAndSevenDay,
             result.Day28Adjustment.Stage);
@@ -650,7 +668,7 @@ public sealed class StrengthEstimatorTests
             result.Day28Adjustment.UnadjustedPsi);
     }
 
-	[Fact]
+    [Fact]
     public void Estimate_WithoutBreaks_PreservesOriginalCurve()
     {
         var specimens = new[]
@@ -678,6 +696,10 @@ public sealed class StrengthEstimatorTests
         Assert.NotNull(result.Day3Adjustment);
         Assert.NotNull(result.Day7Adjustment);
         Assert.NotNull(result.Day28Adjustment);
+
+        Assert.Equal(
+            "No break adjustment applied; original ACI 209R-92 prediction.",
+            result.Day28Adjustment!.Basis);
 
         Assert.Equal(
             BreakAdjustmentStage.None,

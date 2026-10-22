@@ -1,4 +1,4 @@
-﻿using Vulcan.Prediction.Adjustments;
+using Vulcan.Prediction.Adjustments;
 using Xunit;
 
 namespace Vulcan.Prediction.Tests.Adjustments;
@@ -100,17 +100,17 @@ public sealed class BreakAdjustmentCalculatorTests
 
         Assert.Null(adjustedA);
     }
-    
+
     [Fact]
     public void ThreeAndSevenDayAdjustment_ValidBreaks_FitsBothMeasurements()
     {
         const double t3 = 3.0;
         const double t7 = 7.0;
         const double b = 0.85;
-    
+
         const double measuredDay3Psi = 3000.0;
         const double measuredDay7Psi = 4200.0;
-    
+
         var result =
             BreakAdjustmentCalculator.CalculateThreeAndSevenDayAdjustment(
                 t3,
@@ -118,22 +118,22 @@ public sealed class BreakAdjustmentCalculatorTests
                 measuredDay3Psi,
                 measuredDay7Psi,
                 b);
-    
+
         Assert.NotNull(result);
-    
+
         double adjustedA = result.Value.AdjustedA;
         double referenceStrengthPsi = result.Value.ReferenceStrengthPsi;
-    
+
         double fittedDay3Psi =
             t3 / (adjustedA + b * t3) * referenceStrengthPsi;
-    
+
         double fittedDay7Psi =
             t7 / (adjustedA + b * t7) * referenceStrengthPsi;
-    
+
         Assert.Equal(measuredDay3Psi, fittedDay3Psi, 6);
         Assert.Equal(measuredDay7Psi, fittedDay7Psi, 6);
     }
-    
+
     [Fact]
     public void ThreeAndSevenDayAdjustment_InvalidReferenceStrength_ReturnsNull()
     {
@@ -144,10 +144,10 @@ public sealed class BreakAdjustmentCalculatorTests
                 3000.0,
                 10000.0,
                 0.85);
-    
+
         Assert.Null(result);
     }
-    
+
     [Fact]
     public void ThreeAndSevenDayAdjustment_NonPositiveAdjustedA_ReturnsNull()
     {
@@ -158,10 +158,10 @@ public sealed class BreakAdjustmentCalculatorTests
                 4000.0,
                 4000.0,
                 0.85);
-    
+
         Assert.Null(result);
     }
-    
+
     [Theory]
     [InlineData(0.0, 7.0)]
     [InlineData(3.0, 3.0)]
@@ -179,10 +179,10 @@ public sealed class BreakAdjustmentCalculatorTests
                 3000.0,
                 4200.0,
                 0.85);
-    
+
         Assert.Null(result);
     }
-    
+
     [Theory]
     [InlineData(0.0, 4200.0)]
     [InlineData(3000.0, 0.0)]
@@ -199,10 +199,10 @@ public sealed class BreakAdjustmentCalculatorTests
                 day3Psi,
                 day7Psi,
                 0.85);
-    
+
         Assert.Null(result);
     }
-    
+
     [Fact]
     public void Calculate_NoBreaks_ReturnsUnadjustedEstimate()
     {
@@ -217,25 +217,25 @@ public sealed class BreakAdjustmentCalculatorTests
             equivalentAgeDay7: null,
             measuredDay7Psi: null,
             unadjustedDay3Psi: 2750);
-    
+
         Assert.Equal(BreakAdjustmentStage.None, result.Stage);
         Assert.Equal(6000, result.UnadjustedPsi);
         Assert.Equal(6000, result.AdjustedPsi);
         Assert.Null(result.FallbackReason);
     }
-    
+
     [Fact]
     public void Calculate_ThreeDayBreak_UsesThreeDayAdjustment()
     {
         const double originalA = 4.0;
         const double b = 0.85;
         const double expectedFinalPsi = 6000;
-    
+
         double unadjustedDay3 =
             3.0 / (originalA + b * 3.0) * expectedFinalPsi;
-    
+
         double measuredDay3 = unadjustedDay3 * 1.1;
-    
+
         var result = BreakAdjustmentCalculator.Calculate(
             equivalentAgeDays: 7,
             unadjustedPsi: 7.0 / (originalA + b * 7.0) * expectedFinalPsi,
@@ -247,12 +247,12 @@ public sealed class BreakAdjustmentCalculatorTests
             equivalentAgeDay7: null,
             measuredDay7Psi: null,
             unadjustedDay3Psi: unadjustedDay3);
-    
+
         Assert.Equal(BreakAdjustmentStage.ThreeDay, result.Stage);
         Assert.True(result.AdjustedPsi > result.UnadjustedPsi);
         Assert.Null(result.FallbackReason);
     }
-    
+
     [Fact]
     public void Calculate_TwoBreaks_UsesThreeAndSevenDayAdjustment()
     {
@@ -267,22 +267,22 @@ public sealed class BreakAdjustmentCalculatorTests
             equivalentAgeDay7: 7,
             measuredDay7Psi: 4200,
             unadjustedDay3Psi: 3000);
-    
+
         Assert.Equal(BreakAdjustmentStage.ThreeAndSevenDay, result.Stage);
         Assert.NotEqual(result.UnadjustedPsi, result.AdjustedPsi);
         Assert.Null(result.FallbackReason);
     }
-    
+
     [Fact]
     public void Calculate_InvalidTwoBreakFit_FallsBackToThreeDay()
     {
         const double originalA = 4.0;
         const double b = 0.85;
         const double expectedFinalPsi = 6000;
-    
+
         double unadjustedDay3 =
             3.0 / (originalA + b * 3.0) * expectedFinalPsi;
-    
+
         var result = BreakAdjustmentCalculator.Calculate(
             equivalentAgeDays: 28,
             unadjustedPsi: 28.0 / (originalA + b * 28.0) * expectedFinalPsi,
@@ -294,11 +294,11 @@ public sealed class BreakAdjustmentCalculatorTests
             equivalentAgeDay7: 7,
             measuredDay7Psi: unadjustedDay3,
             unadjustedDay3Psi: unadjustedDay3);
-    
+
         Assert.Equal(BreakAdjustmentStage.ThreeDay, result.Stage);
         Assert.NotNull(result.FallbackReason);
     }
-    
+
     [Fact]
     public void Calculate_Day3BreakFarFromEstimate_ReturnsUnadjusted()
     {
@@ -313,7 +313,7 @@ public sealed class BreakAdjustmentCalculatorTests
             equivalentAgeDay7: null,
             measuredDay7Psi: null,
             unadjustedDay3Psi: 3000);
-    
+
         Assert.Equal(BreakAdjustmentStage.None, result.Stage);
         Assert.Equal(result.UnadjustedPsi, result.AdjustedPsi);
         Assert.Equal(
