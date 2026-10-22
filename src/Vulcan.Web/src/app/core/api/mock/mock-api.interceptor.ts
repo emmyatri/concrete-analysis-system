@@ -21,6 +21,7 @@ import { TECHNICIAN_HEADER } from '../../session/technician.interceptor';
 import { USE_MOCKS } from '../use-mocks';
 import { MOCK_BATCH_DETAILS, mockBatchDetailFromRequest } from './mock-batch-details';
 import { MOCK_BATCHES, MOCK_SPECIFIC_GRAVITIES, MOCK_VALIDATION_LIMITS } from './mock-data';
+import { mockEarlyWarnings, mockStrength } from './mock-strength';
 
 /** Batches saved while the app is open, so a new batch shows up in the list until you reload. */
 const savedBatches: BatchSummary[] = [];
@@ -51,6 +52,7 @@ export const mockApiInterceptor: HttpInterceptorFn = (request, next) => {
   if (!inject(USE_MOCKS)) return next(request);
 
   const path = request.url.split('?')[0];
+  if (request.method === 'GET' && path === '/api/health') return ok({ status: 'ok' });
   if (request.method === 'GET' && path === '/api/validation-limits')
     return ok(MOCK_VALIDATION_LIMITS);
   if (request.method === 'GET' && path === '/api/specific-gravities')
@@ -59,12 +61,21 @@ export const mockApiInterceptor: HttpInterceptorFn = (request, next) => {
   if (request.method === 'POST' && path === '/api/batches') return createBatch(request);
   if (request.method === 'POST' && /^\/api\/batches\/[^/]+\/specimens$/.test(path))
     return createSpecimen(request, path);
+  if (request.method === 'GET' && /^\/api\/batches\/[^/]+\/strength$/.test(path))
+    return getStrength(request, path);
   if (request.method === 'GET' && path.startsWith('/api/batches/')) return getBatch(request, path);
   if (request.method === 'GET' && path === '/api/breaks/pending') return ok(pendingBreaks(request));
   if (request.method === 'POST' && /^\/api\/specimens\/\d+\/break$/.test(path))
     return createBreak(request, path);
   if (request.method === 'POST' && /^\/api\/specimens\/\d+\/readings$/.test(path))
     return createReading(request, path);
+  if (request.method === 'GET' && path === '/api/warnings/early')
+    return ok(
+      mockEarlyWarnings(
+        [...savedDetails, ...MOCK_BATCH_DETAILS],
+        request.params.get('includeSynthetic') !== 'false',
+      ),
+    );
 
   return next(request);
 };
@@ -108,6 +119,19 @@ function getBatch(request: HttpRequest<unknown>, path: string) {
         error: { title: 'Not Found', status: 404, detail: `Batch ${batchNumber} was not found.` },
       }),
   );
+}
+
+/**
+ * A batch's strength prediction, worked out from its current readings and breaks (mock-strength.ts),
+ * or a 404 like the server's.
+ */
+function getStrength(request: HttpRequest<unknown>, path: string) {
+  const batchNumber = decodeURIComponent(path.split('/')[3]);
+  const batch = [...savedDetails, ...MOCK_BATCH_DETAILS].find(
+    (row) => row.batchNumber.toLowerCase() === batchNumber.toLowerCase(),
+  );
+  if (batch) return ok(mockStrength(batch));
+  return problem(request, 404, 'Not Found', { detail: `Batch ${batchNumber} was not found.` });
 }
 
 /**
