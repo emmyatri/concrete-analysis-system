@@ -241,8 +241,25 @@
             }
           </div>
         </section>
+
+        <!-- ---------- Day 1 / Day 3 (SCRUM-175) ---------- -->
+        <section class="card" aria-labelledby="curing-summary-title">
+          <header class="card-header">
+            <i class="pi pi-clock" aria-hidden="true"></i>
+            <h2 id="curing-summary-title">Day 1 / Day 3</h2>
+            <span class="card-note">from curing readings</span>
+          </header>
+          <app-curing-summary
+            class="card-body"
+            [specimens]="batch.specimens"
+            [castAt]="batch.castAt"
+          />
+        </section>
       </div>
     </div>
+
+    <!-- ---------- 3, 7 and 28-day estimates (SCRUM-175) ---------- -->
+    <app-estimate-cards [state]="strengthState()" [batch]="batch" />
 
     <!-- ---------- Tabs ---------- -->
     <section class="card tabs-card">

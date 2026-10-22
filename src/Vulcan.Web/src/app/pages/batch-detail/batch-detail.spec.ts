@@ -356,6 +356,15 @@ describe('BatchDetailPage', () => {
     );
   });
 
+  it('shows the 3, 7 and 28-day estimates and the Day 1 / Day 3 summary', async () => {
+    await open('VM-SYN-006');
+
+    expect(
+      [...root.querySelectorAll('[data-testid="estimate-psi"]')].map((e) => e.textContent?.trim()),
+    ).toEqual(['3,208 PSI', '3,903 PSI', '4,449 PSI']);
+    expect(root.querySelector('[data-testid="curing-summary"]')).not.toBeNull();
+  });
+
   it('still shows the batch when the strength estimate fails', async () => {
     await open('VM-SYN-006', false);
     const http = TestBed.inject(HttpTestingController);

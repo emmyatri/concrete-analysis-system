@@ -13,6 +13,8 @@ import { BatchDetail, SavedWarning, Specimen } from '../../core/api/models';
 import { ReferenceDataService } from '../../core/api/reference-data.service';
 import { VulcanApiService } from '../../core/api/vulcan-api.service';
 import { AddCylinderDialog } from '../add-cylinder-dialog/add-cylinder-dialog';
+import { CuringSummary } from '../curing-summary/curing-summary';
+import { EstimateCards } from '../estimate-cards/estimate-cards';
 import { StrengthChart, StrengthLoad } from '../strength-chart/strength-chart';
 
 type LoadState =
@@ -69,6 +71,8 @@ const FIELDS: Record<string, { label: string; short?: string; digits: string }> 
     TabsModule,
     AddCylinderDialog,
     StrengthChart,
+    EstimateCards,
+    CuringSummary,
   ],
   templateUrl: './batch-detail.html',
   styleUrl: './batch-detail.scss',

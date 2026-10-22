@@ -12,6 +12,8 @@ export interface StrengthChartColors {
   minimum: string;
   text: string;
   grid: string;
+  /** The card background, for the inside of the hollow estimate markers. */
+  surface: string;
   font: string;
 }
 
@@ -35,7 +37,7 @@ const DAY_TICKS = [0, 3, 7, 14, 21, 28];
 
 /**
  * Everything p-chart needs to draw one batch (SCRUM-174, mockup M2-01): the predicted curve, the
- * curve before breaks, breaks as dots (flagged ones in orange) with a line through their mean at each
+ * curve before breaks, the 3/7/28-day estimates as hollow markers, breaks as dots (flagged ones in orange) with a line through their mean at each
  * age, and the Expected final and minimum as reference lines. Datasets are labeled by batch number.
  */
 export function strengthChartConfig(
@@ -76,6 +78,22 @@ export function strengthChartConfig(
       borderDash: [4, 4],
       pointRadius: 0,
       pointStyle: 'line',
+    });
+  }
+
+  // SCRUM-175: the 3-, 7- and 28-day estimates as hollow markers, so they can't be mistaken for breaks.
+  const estimates = strength.estimates.filter((e) => e.estimatedPsi !== null);
+  if (estimates.length > 0) {
+    datasets.push({
+      label: `${batch} estimate`,
+      data: estimates.map((e) => ({ x: e.horizonDays, y: e.estimatedPsi! })),
+      borderColor: colors.predicted,
+      backgroundColor: colors.surface,
+      borderWidth: 2,
+      showLine: false,
+      pointRadius: 6,
+      pointHoverRadius: 8,
+      pointStyle: 'circle',
     });
   }
 
