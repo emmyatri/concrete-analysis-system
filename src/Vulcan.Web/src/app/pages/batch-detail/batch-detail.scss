@@ -149,29 +149,6 @@ a.p-button {
   flex-direction: column;
 }
 
-.chart-body {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  min-height: 220px;
-  margin: 16px 17px;
-  border: 1px dashed var(--p-surface-300);
-  border-radius: 6px;
-  color: var(--p-text-muted-color);
-
-  .pi {
-    font-size: 28px;
-  }
-
-  p {
-    margin: 0;
-    font-size: 14px;
-  }
-}
-
 // Label on the left, value on the right, two to a row.
 .pairs {
   display: grid;

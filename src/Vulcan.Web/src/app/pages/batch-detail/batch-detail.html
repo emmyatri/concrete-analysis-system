@@ -164,10 +164,12 @@
           <i class="pi pi-chart-line" aria-hidden="true"></i>
           <h2 id="chart-title">{{ batch.batchNumber }} · Strength over time</h2>
         </header>
-        <div class="chart-body">
-          <i class="pi pi-chart-line" aria-hidden="true"></i>
-          <p>Strength chart — Milestone 2</p>
-        </div>
+        <app-strength-chart
+          [state]="strengthState()"
+          [castAt]="batch.castAt"
+          [minimumPsi]="minimumPsi()"
+          [flaggedSpecimenIds]="flaggedSpecimenIds()"
+        />
       </section>
 
       <div class="side">
