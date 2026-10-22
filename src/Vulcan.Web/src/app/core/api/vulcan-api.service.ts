@@ -5,6 +5,7 @@ import { CreateBatchRequest, CreateBatchResponse } from './batches';
 import {
   BatchDetail,
   BatchQuery,
+  BatchStrength,
   BatchSummary,
   CreateBreakResultRequest,
   CreateBreakResultResponse,
@@ -12,6 +13,7 @@ import {
   CreateCuringReadingResponse,
   CreateSpecimenRequest,
   CreateSpecimenResponse,
+  EarlyWarningBatch,
   PendingBreak,
   SpecificGravity,
   ValidationLimit,
@@ -86,5 +88,19 @@ export class VulcanApiService {
       `/api/batches/${encodeURIComponent(batchNumber)}/specimens`,
       request,
     );
+  }
+
+  /**
+   * The strength chart, 3/7/28-day estimates and early warnings for one batch (M2-30). Status
+   * InsufficientCuringData means no estimate yet; a 404 means there's no batch with that number.
+   */
+  getStrength(batchNumber: string) {
+    return this.http.get<BatchStrength>(`/api/batches/${encodeURIComponent(batchNumber)}/strength`);
+  }
+
+  /** Batches with at least one early warning, at-risk batches first. Follows the Synthetic data switch. */
+  getEarlyWarnings(includeSynthetic: boolean) {
+    const params = new HttpParams().set('includeSynthetic', String(includeSynthetic));
+    return this.http.get<EarlyWarningBatch[]>('/api/warnings/early', { params });
   }
 }

@@ -189,6 +189,114 @@ describe('mockApiInterceptor', () => {
     expect((error as HttpErrorResponse).status).toBe(404);
   });
 
+  it('estimates an on-track batch from its readings and breaks', async () => {
+    const api = setUp(true);
+
+    const strength = await firstValueFrom(api.getStrength('vm-syn-001'));
+
+    expect(strength).toMatchObject({ status: 'Estimated', atRisk: false, projected28DayPsi: 6408 });
+    expect(strength.curvePoints.map((p) => p.day)).toEqual(
+      Array.from({ length: 28 }, (_, i) => i + 1),
+    );
+    expect(strength.unadjustedCurvePoints).toHaveLength(28);
+    expect(strength.estimates.map((e) => [e.horizonDays, e.adjustmentStage])).toEqual([
+      [3, 'ThreeAndSevenDay'],
+      [7, 'ThreeAndSevenDay'],
+      [28, 'ThreeAndSevenDay'],
+    ]);
+    expect(strength.measuredBreaks).toHaveLength(9);
+    expect(strength.curingPoints).toHaveLength(63);
+    expect(strength.earlyWarnings).toEqual([]);
+  });
+
+  it('VM-SYN-006 looks on track until its 3- and 7-day breaks re-fit the curve', async () => {
+    const api = setUp(true);
+
+    const strength = await firstValueFrom(api.getStrength('VM-SYN-006'));
+
+    // Same values as Vulcan.Prediction's tests at the 14 °F datum (SCRUM-194).
+    expect(strength.estimates.map((e) => e.unadjustedPsi)).toEqual([3848, 5094, 6235]);
+    expect(
+      strength.curingPoints.filter((p) => p.specimenLabel === 'D28-1').at(-1)?.maturityFHours,
+    ).toBe(4730.4);
+    // After the re-fit (ADR-005 section 4.4) it's 28% short of the expected 6,200.
+    expect(strength).toMatchObject({ atRisk: true, projected28DayPsi: 4449, shortfallPsi: 1751 });
+    expect(strength.earlyWarnings.map((w) => w.limitKey)).toEqual([
+      'Prediction.ShortfallPct',
+      'Composition.WaterCementRatio',
+      'Batch.ExpectedFinalVsWcmPct',
+    ]);
+  });
+
+  it('a batch without curing readings has no estimate but keeps its batch warnings', async () => {
+    const api = setUp(true);
+
+    const strength = await firstValueFrom(api.getStrength('VM-2026-0142'));
+
+    expect(strength).toMatchObject({
+      status: 'InsufficientCuringData',
+      atRisk: false,
+      projected28DayPsi: null,
+      curvePoints: [],
+      estimates: [],
+    });
+    expect(strength.earlyWarnings.map((w) => w.limitKey)).toEqual(['Composition.WaterCementRatio']);
+  });
+
+  it('estimates a batch once a cylinder has readings a day apart', async () => {
+    const api = setUp(true);
+    const reading = {
+      internalTempF: 72,
+      ambientTempF: 70,
+      moisturePct: 93,
+      relativeHumidityPct: 95,
+      resistivityOhmPerFt: 15,
+      co2Ppm: 420,
+    };
+
+    await firstValueFrom(
+      api.createCuringReading(14201, { ...reading, takenAt: '2026-09-29T12:00:00.000Z' }),
+    );
+    await firstValueFrom(
+      api.createCuringReading(14201, { ...reading, takenAt: '2026-09-30T12:00:00.000Z' }),
+    );
+    const strength = await firstValueFrom(api.getStrength('VM-2026-0142'));
+
+    expect(strength.status).toBe('Estimated');
+    expect(strength.estimates.map((e) => e.adjustmentStage)).toEqual(['None', 'None', 'None']);
+    expect(strength.unadjustedCurvePoints).toEqual([]);
+  });
+
+  it('answers the strength of an unknown batch with a 404', async () => {
+    const api = setUp(true);
+
+    const error = await firstValueFrom(api.getStrength('VM-NOPE')).catch((e: unknown) => e);
+
+    expect((error as HttpErrorResponse).status).toBe(404);
+  });
+
+  it('lists batches with early warnings, at-risk first, and follows the Synthetic data switch', async () => {
+    const api = setUp(true);
+
+    const all = await firstValueFrom(api.getEarlyWarnings(true));
+    const real = await firstValueFrom(api.getEarlyWarnings(false));
+
+    expect(all.map((b) => [b.batchNumber, b.atRisk])).toEqual([
+      ['VM-SYN-006', true],
+      ['VM-SYN-009', false],
+      ['VM-2026-0142', false],
+    ]);
+    expect(real.map((b) => b.batchNumber)).toEqual(['VM-2026-0142']);
+  });
+
+  it('answers the health check, so the status chip is green without the server', async () => {
+    setUp(true);
+
+    const health = await firstValueFrom(TestBed.inject(HttpClient).get('/api/health'));
+
+    expect(health).toEqual({ status: 'ok' });
+  });
+
   it('talks to the real server when useMocks is false', () => {
     const api = setUp(false);
 
