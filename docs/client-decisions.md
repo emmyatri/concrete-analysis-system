@@ -202,8 +202,7 @@ Types I and II for general work and Types I and III for high-early-strength conc
 ## 9. Units and field names
 
 - Resistivity is in **ohms per foot**, as Rev 1 lists it.
-- CO₂ is in **ppm**. Rev 1 asks for "Carbon Dioxide content" but doesn't give a unit. ppm is the standard unit for CO₂
-  sensors, so we chose it.
+- - **CO₂ is measured as a percentage of total batch weight.** This supersedes our original ppm assumption following client confirmation (Don Murphy, Oct 21, 2026). The existing schema, API contract, seed data, and mocks still use the original unit and require updates under a separate ticket. See decision 13.
 - **"Sand" and "fine aggregate" are one field** (`FineAggregatePct`). Rev 1's entry list names them separately, but its
   ingredient section defines them as the same thing: "Fine Aggregate / Sand (25–30%)" and "Fine Aggregates: Clean washed
   concrete sand."
@@ -237,6 +236,146 @@ are not backfilled; the operator supplies the measurement when editing a batch.
 *Source:* Client, M1 demo (Oct 9)
 *Affects:* `Batch.CementSurfacePh`, FR-7 (extended), NFR-6; SCRUM-149
 
+---
+
+## 13. Two-tier early warning system (M2-50)
+
+The early warning system evaluates recorded batch data, curing conditions, and predicted 28-day compressive strength to identify potential problems before cylinder break testing.
+
+Warnings are informational and do not prevent valid data from being saved. Existing rejection rules remain in effect.
+
+### Tier 1 — Range verification
+
+The system checks recorded values against their configured `ValidationLimit` ranges.
+
+- Values outside a Reject range are blocked during data entry.
+- Values outside a Warn range are saved and flagged.
+- Fields without an established warning range will not receive an arbitrary threshold.
+
+Existing warning ranges cover water-cementitious ratio, cement oxides, mix water pH, cement surface pH, ambient temperature, and other previously established limits.
+
+Once a valid strength prediction is available, the system also checks whether the predicted 28-day strength falls below the client's existing 3,000 PSI minimum.
+
+**Proposed limit:** `Prediction.MinimumPsi`
+**Warning condition:** Predicted 28-day PSI < 3,000
+
+The Batch Detail strength chart will use the configured `Prediction.MinimumPsi` value for its minimum-strength reference line, rather than hard-coding 3,000 PSI in the UI.
+
+This proposed prediction rule is based on the client's existing 3,000–10,000 PSI strength range. Applying that minimum to predicted strength requires client confirmation.
+
+### Tier 2 — Projected strength shortfall
+
+The system compares the current 28-day strength estimate against the batch's `ExpectedFinalBreakPsi`. When recorded breaks are available, the estimate includes the adjustments defined in SCRUM-162. Otherwise, the original unadjusted estimate is used.
+
+```text
+ShortfallPct =
+    (ExpectedFinalBreakPsi - Current28DayEstimatePsi)
+    / ExpectedFinalBreakPsi * 100
+```
+
+A warning is generated when the predicted strength falls more than 5% below the batch's expected final strength.
+
+**Proposed limit:** `Prediction.ShortfallPct`
+**Warning condition:** ShortfallPct > 5%
+
+This threshold is proposed for Milestone 2 and requires client confirmation.
+
+### Independent prediction warnings
+
+The minimum-strength and projected-shortfall warnings are evaluated independently.
+
+If the predicted 28-day strength is below 3,000 PSI and more than 5% below `ExpectedFinalBreakPsi`, both warnings are generated.
+
+Each warning identifies its own reason and limit key. This provides operators with more specific feedback and allows the development team to distinguish minimum-strength concerns from target-strength shortfalls.
+
+### Water-cementitious ratio strength warning
+
+The system also checks whether the batch's `ExpectedFinalBreakPsi` is reasonable for its calculated water-cementitious ratio (w/cm).
+
+Using ACI 211.1-97, Table 6.3.4(a), the system linearly interpolates an approximate 28-day compressive strength for non-air-entrained concrete.
+
+```text
+ExpectedFinalVsWcmPct =
+    (ExpectedFinalBreakPsi - AciTablePsi)
+    / AciTablePsi * 100
+```
+
+A warning is generated when the expected final strength exceeds the interpolated strength by more than 30%.
+
+**Proposed limit:** `Batch.ExpectedFinalVsWcmPct`
+**Warning condition:** ExpectedFinalVsWcmPct > 30%
+
+Below a w/cm of 0.33, this check is skipped. Above 0.82, the
+2,000 PSI endpoint is used without further extrapolation.
+
+This warning is independent of the predicted-strength warnings and can be evaluated when a batch is entered, without curing readings or a strength prediction.
+
+The warning does not modify `ExpectedFinalBreakPsi` or the strength estimation equation.
+
+The 30% threshold is an application-specific proposal, not a requirement established by ACI 211.1.
+
+### Warning availability
+
+Batch-entry warnings are evaluated when a batch is created or updated.
+
+Curing warnings are evaluated as readings become available, including day-1 and day-3 measurements, using established `ValidationLimit` warning ranges.
+
+Prediction-related warnings are evaluated only when sufficient curing readings are available to produce a valid 28-day strength estimate.
+
+If insufficient curing data is available, prediction-related warnings are not generated. Existing batch-entry and curing warnings remain active.
+
+### Changes over time
+
+The system will display changes in temperature, moisture, and resistivity over time, but these trends will not independently trigger early warnings during Milestone 2.
+
+Vulcan has not provided thresholds for evaluating these changes. Milestone 3 may introduce trend-based warnings after sufficient real testing data is available.
+
+### Pending client decisions — Curing warning thresholds
+
+SLA A-3 assigns responsibility for supplying early-warning thresholds to Vulcan.
+
+Our existing `ValidationLimit` configuration includes warning ranges for several batch inputs and ambient temperature. However, some measurements currently have only rejection limits intended to prevent invalid data entry.
+
+The following warning ranges require clarification from Vulcan:
+
+| Measurement | Client-provided information | Remaining clarification |
+|---|---|---|
+| Internal temperature (°F) | Not provided | Normal curing range and hard limits |
+| Moisture (%) | 3.5–5% of total batch weight | Confirm warning versus rejection thresholds |
+| Relative humidity (%) | Below 75% | Treat 75% or above as outside the normal range; confirm warning versus rejection threshold |
+| Electrical resistance (Ω) | Below 7,000–9,000 Ω, measured end to end | Confirm exact upper threshold, testing method, and compatibility with stored resistivity (ohms/ft) |
+| CO₂ (%) | 0.5–0.7% of total batch weight | Supersedes decision 9; API, schema, contract, seed data, and mock updates tracked separately |
+| Ambient temperature (°F) | No new range provided | Confirm whether existing 60–80°F warning range applies and establish hard limits |
+
+Vulcan should also confirm whether separate warning ranges are needed for SCM percentage and aggregate proportions. These fields currently have rejection limits but no warning limits.
+
+Until the client provides these ranges, the system will continue enforcing existing rejection limits without generating additional early warnings for these measurements.
+
+Once Vulcan confirms the thresholds, they will be added as `ValidationLimit` Warn rows. Changes to the thresholds will be data changes rather than changes to the warning evaluation logic.
+
+**Status:** Partially confirmed by the client (Don Murphy, Oct 21, 2026). Normal ranges have been provided for moisture, relative humidity, electrical resistance, and CO₂. Remaining clarifications include rejection thresholds for these measurements, the exact electrical resistance upper limit, and normal and rejection ranges for internal and ambient temperatures. These outstanding questions will be included in the M2-81 client communication under SLA A-3.
+
+### Warning limit configuration
+
+The following prediction-related limits will be stored in `ValidationLimit`, subject to client approval:
+
+| Limit key | Severity | Min | Max | Unit |
+|---|---|---:|---:|---|
+| `Prediction.MinimumPsi` | Warn | 3000 | — | PSI |
+| `Prediction.ShortfallPct` | Warn | — | 5 | % |
+| `Batch.ExpectedFinalVsWcmPct` | Warn | — | 30 | % |
+
+The minimum-strength rule warns below its minimum. The percentage-based rules warn above their maximum.
+
+All three thresholds are proposed and may be adjusted following client feedback.
+
+*Sources:* Rev 1, strength ranges and early warning requirements; ACI 211.1-97, Table 6.3.4(a); ADR-005, strength estimation method; Client email, Don Murphy (Oct 21, 2026).
+
+*Affects:* `ValidationLimit`, SCRUM-181 (early warning implementation)
+*Requirements:* SLA A-3, FR-16
+
+---
+
 ## Our own defaults (not client rules)
 
 These fill gaps Rev 1 doesn't cover. They're our calls, and we'll change them if real data proves them wrong. The
@@ -256,8 +395,6 @@ numeric ones live in the `ValidationLimit` table, so changing them is a data cha
   FR-22).
 
 - **Demo data loads next to real batches.** The M1 demo hotfix (#58) is kept on purpose: `SeedSyntheticData` adds the 9 synthetic batches once, even if real batches exist, so demos work on a machine that's already in use. They stay marked synthetic and can be hidden with the Synthetic data switch.
-
----
 
 ## If something changes
 
