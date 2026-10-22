@@ -1,0 +1,43 @@
+@switch (state().status) {
+  @case ('loading') {
+    <p class="chart-message" data-testid="chart-loading">Loading the strength estimate…</p>
+  }
+  @case ('failed') {
+    <p class="chart-message" data-testid="chart-failed">
+      Couldn't load the strength estimate. {{ failure() }}
+    </p>
+  }
+}
+
+@if (strength(); as strength) {
+  <div class="chart-frame" data-testid="strength-chart">
+    @if (config(); as config) {
+      <p-chart
+        type="line"
+        [data]="config.data"
+        [options]="config.options"
+        [plugins]="plugins"
+        height="320px"
+        [ariaLabel]="summary()"
+      />
+    }
+
+    @if (strength.status === 'InsufficientCuringData') {
+      <div class="chart-overlay" data-testid="not-enough-data">
+        <strong>Not enough curing data yet</strong>
+        <span>
+          Estimates start once a cylinder has a reading at least 24 hours after cast.
+          @if (latestReadingHours() === null) {
+            No readings yet.
+          } @else {
+            Latest reading: {{ latestReadingHours() }} h.
+          }
+        </span>
+      </div>
+    }
+  </div>
+
+  @if (strength.measuredBreaks.length === 0) {
+    <p class="chart-caption" data-testid="no-breaks">No breaks recorded yet</p>
+  }
+}

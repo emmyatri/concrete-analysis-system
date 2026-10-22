@@ -1,4 +1,5 @@
 ﻿import { provideHttpClient, withInterceptors } from '@angular/common/http';
+import { Component, input } from '@angular/core';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
 import { provideRouter, withComponentInputBinding } from '@angular/router';
@@ -15,7 +16,20 @@ import { BatchDetail } from '../../core/api/models';
 import { ReferenceDataService } from '../../core/api/reference-data.service';
 import { USE_MOCKS } from '../../core/api/use-mocks';
 import { VulcanPreset } from '../../theme/vulcan-preset';
+import { StrengthChart } from '../strength-chart/strength-chart';
 import { BatchDetailPage } from './batch-detail';
+
+/** Stands in for p-chart, since jsdom can't draw on a canvas. */
+// eslint-disable-next-line @angular-eslint/component-selector -- must match PrimeNG's selector
+@Component({ selector: 'p-chart', template: '<canvas [attr.aria-label]="ariaLabel()"></canvas>' })
+class FakeChart {
+  readonly type = input<string>();
+  readonly data = input<unknown>();
+  readonly options = input<unknown>();
+  readonly plugins = input<unknown>();
+  readonly height = input<string>();
+  readonly ariaLabel = input<string>();
+}
 
 // jsdom has no ResizeObserver, and PrimeNG's tab list uses one to size its scroll buttons.
 globalThis.ResizeObserver ??= class {
@@ -43,6 +57,7 @@ describe('BatchDetailPage', () => {
         { provide: USE_MOCKS, useValue: useMocks },
       ],
     });
+    TestBed.overrideComponent(StrengthChart, { set: { imports: [FakeChart] } });
     if (useMocks) TestBed.inject(ReferenceDataService).load();
     harness = await RouterTestingHarness.create(`/batches/${batchNumber}`);
     root = harness.routeNativeElement as HTMLElement;
@@ -331,6 +346,29 @@ describe('BatchDetailPage', () => {
 
     expect(text('[data-testid="not-found"] h1')).toBe('No batch VM-NOPE-999');
     expect(root.querySelector('[data-testid="summary"]')).toBeNull();
+  });
+
+  it('shows the strength chart for the batch', async () => {
+    await open('VM-SYN-006');
+
+    expect(root.querySelector('app-strength-chart canvas')?.getAttribute('aria-label')).toContain(
+      'VM-SYN-006 strength over time. Predicted 28-day strength 4,449 PSI.',
+    );
+  });
+
+  it('still shows the batch when the strength estimate fails', async () => {
+    await open('VM-SYN-006', false);
+    const http = TestBed.inject(HttpTestingController);
+    http
+      .expectOne('/api/batches/VM-SYN-006')
+      .flush(MOCK_BATCH_DETAILS.find((b) => b.batchNumber === 'VM-SYN-006')!);
+    http
+      .expectOne('/api/batches/VM-SYN-006/strength')
+      .flush(null, { status: 500, statusText: 'Server Error' });
+    harness.detectChanges();
+
+    expect(text('h1')).toBe('VM-SYN-006');
+    expect(text('[data-testid="chart-failed"]')).toContain("Couldn't load the strength estimate.");
   });
 
   it('offers Try again when the local service fails', async () => {
