@@ -714,7 +714,7 @@ public sealed class StrengthEstimatorTests
             result.Day28Adjustment.Stage);
     }
 
-	[Fact]
+    [Fact]
     public void Estimate_ThreeDayBreakFarFromEstimate_IncludesFallbackReasonInBasis()
     {
         var specimens = new[]
