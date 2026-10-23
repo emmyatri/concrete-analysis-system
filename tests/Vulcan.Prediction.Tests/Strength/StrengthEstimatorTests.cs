@@ -586,7 +586,7 @@ public sealed class StrengthEstimatorTests
             result.Day28Adjustment.Basis);
 
         Assert.Contains(
-            $"{result.Day28Adjustment.ReferenceStrengthPsi:N0} PSI",
+            "using the original expected final strength",
             result.Day28Adjustment.Basis);
     }
 
@@ -712,5 +712,58 @@ public sealed class StrengthEstimatorTests
         Assert.Equal(
             BreakAdjustmentStage.None,
             result.Day28Adjustment.Stage);
+    }
+
+	[Fact]
+    public void Estimate_ThreeDayBreakFarFromEstimate_IncludesFallbackReasonInBasis()
+    {
+        var specimens = new[]
+        {
+            CreateSpecimen("S1", (0, 73.4), (24, 73.4))
+        };
+
+        var settings = CreateSettings();
+
+        var baseline = StrengthEstimator.Estimate(
+            _castAt,
+            CementType.TypeI,
+            6000,
+            specimens,
+            settings);
+
+        StrengthBreakMeasurement[] breaks =
+        [
+            new(
+                "S1",
+                3,
+                baseline.Day3!.EstimatedPsi * 1.50,
+                false)
+        ];
+
+        var result = StrengthEstimator.Estimate(
+            _castAt,
+            CementType.TypeI,
+            6000,
+            specimens,
+            settings,
+            breaks);
+
+        Assert.NotNull(result.Day28Adjustment);
+
+        Assert.Equal(
+            BreakAdjustmentStage.None,
+            result.Day28Adjustment.Stage);
+
+        Assert.Equal(
+            baseline.Day28!.EstimatedPsi,
+            result.Day28Adjustment.AdjustedPsi);
+
+        Assert.Equal(
+            "3-day breaks are far from the estimate",
+            result.Day28Adjustment.FallbackReason);
+
+        Assert.Contains(
+            "3-day breaks are far from the estimate",
+            result.Day28Adjustment.Basis);
     }
 }

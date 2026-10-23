@@ -264,10 +264,13 @@ public static class StrengthEstimator
                         $"(reference strength {adjustment.ReferenceStrengthPsi:N0} PSI).",
 
                     BreakAdjustmentStage.ThreeDay =>
-                        $"Re-fit through the average 3-day breaks " +
-                        $"(reference strength {adjustment.ReferenceStrengthPsi:N0} PSI).",
+                        "Re-fit through the average 3-day breaks " +
+                        "using the original expected final strength.",
 
-                    _ => "No break adjustment applied; original ACI 209R-92 prediction."
+                    _ => adjustment.FallbackReason is not null
+                        ? $"No break adjustment applied ({adjustment.FallbackReason}); " +
+                          "original ACI 209R-92 prediction."
+                        : "No break adjustment applied; original ACI 209R-92 prediction."
                 }
             };
 
