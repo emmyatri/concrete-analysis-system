@@ -1,4 +1,5 @@
 using Vulcan.Domain.Enums;
+using Vulcan.Prediction.Adjustments;
 using Vulcan.Prediction.Maturity;
 
 namespace Vulcan.Prediction.Strength;
@@ -10,10 +11,13 @@ public static class StrengthEstimator
         CementType cementType,
         double expectedFinalBreakPsi,
         IReadOnlyList<StrengthSpecimen> specimens,
-        StrengthSettings settings)
+        StrengthSettings settings,
+        IReadOnlyList<StrengthBreakMeasurement>? breakMeasurements = null)
     {
         ArgumentNullException.ThrowIfNull(specimens);
         ArgumentNullException.ThrowIfNull(settings);
+
+        breakMeasurements ??= Array.Empty<StrengthBreakMeasurement>();
 
         // Match M2-12 timestamp conventions.
         // SQLite may return UTC timestamps with an Unspecified kind.
@@ -212,6 +216,83 @@ public static class StrengthEstimator
                 estimatedPsi));
         }
 
+        // Average recorded breaks for the current adjusted curve.
+        // The aggregator validates measurements and rejects duplicates.
+        double? measuredDay3Psi = BreakMeasurementAggregator.GetAveragePsi(
+            breakMeasurements,
+            day: 3);
+
+        double? measuredDay7Psi = BreakMeasurementAggregator.GetAveragePsi(
+            breakMeasurements,
+            day: 7);
+
+        // Reuse the equivalent ages already calculated by M2-13.
+        double equivalentAgeDay3 = dailyCurve[2].EquivalentAgeDays;
+        double equivalentAgeDay7 = dailyCurve[6].EquivalentAgeDays;
+
+        // Preserve the original 3-day prediction for the ratio safeguard.
+        double unadjustedDay3Psi = dailyCurve[2].EstimatedPsi;
+
+        // Apply the same available break measurements across the
+        // current curve, preserving the original predictions.
+        var adjustedDailyCurve = new List<StrengthCurvePoint>();
+
+        BreakAdjustmentResult? day3Adjustment = null;
+        BreakAdjustmentResult? day7Adjustment = null;
+        BreakAdjustmentResult? day28Adjustment = null;
+
+        foreach (StrengthCurvePoint point in dailyCurve)
+        {
+            BreakAdjustmentResult adjustment = BreakAdjustmentCalculator.Calculate(
+                equivalentAgeDays: point.EquivalentAgeDays,
+                unadjustedPsi: point.EstimatedPsi,
+                originalA: settings.A,
+                b: settings.B,
+                expectedFinalBreakPsi: expectedFinalBreakPsi,
+                equivalentAgeDay3: equivalentAgeDay3,
+                measuredDay3Psi: measuredDay3Psi,
+                equivalentAgeDay7: equivalentAgeDay7,
+                measuredDay7Psi: measuredDay7Psi,
+                unadjustedDay3Psi: unadjustedDay3Psi);
+
+            adjustment = adjustment with
+            {
+                Basis = adjustment.Stage switch
+                {
+                    BreakAdjustmentStage.ThreeAndSevenDay =>
+                        $"Re-fit through the average 3- and 7-day breaks " +
+                        $"(reference strength {adjustment.ReferenceStrengthPsi:N0} PSI).",
+
+                    BreakAdjustmentStage.ThreeDay =>
+                        "Re-fit through the average 3-day breaks " +
+                        "using the original expected final strength.",
+
+                    _ => adjustment.FallbackReason is not null
+                        ? $"No break adjustment applied ({adjustment.FallbackReason}); " +
+                          "original ACI 209R-92 prediction."
+                        : "No break adjustment applied; original ACI 209R-92 prediction."
+                }
+            };
+
+            adjustedDailyCurve.Add(new StrengthCurvePoint(
+                point.Day,
+                point.EquivalentAgeDays,
+                adjustment.AdjustedPsi));
+
+            switch (point.Day)
+            {
+                case 3:
+                    day3Adjustment = adjustment;
+                    break;
+                case 7:
+                    day7Adjustment = adjustment;
+                    break;
+                case 28:
+                    day28Adjustment = adjustment;
+                    break;
+            }
+        }
+
         bool usesExtrapolation = qualifyingSpecimens.Any(
             specimen => specimen.Readings.Max(r => r.TakenAt)
                         < castAt.AddDays(28));
@@ -253,6 +334,15 @@ public static class StrengthEstimator
                 settings.CalibrationVersion);
         }
 
+        // Day3, Day7, Day28, and DailyCurve contain the original,
+        // unadjusted strength predictions.
+        //
+        // AdjustedDailyCurve and Day3Adjustment, Day7Adjustment,
+        // and Day28Adjustment contain the break-adjusted predictions.
+        //
+        // Consumers displaying predicted strength should use the adjusted
+        // values when an adjustment is available.
+
         return new StrengthEstimateResult
         {
             DailyCurve = dailyCurve,
@@ -261,7 +351,11 @@ public static class StrengthEstimator
             Day28 = CreateDayEstimate(dailyCurve[27]),
             Basis = basis,
             CalibrationVersion = settings.CalibrationVersion,
-            StatusMessage = null
+            StatusMessage = null,
+            AdjustedDailyCurve = adjustedDailyCurve,
+            Day3Adjustment = day3Adjustment,
+            Day7Adjustment = day7Adjustment,
+            Day28Adjustment = day28Adjustment,
         };
     }
 }

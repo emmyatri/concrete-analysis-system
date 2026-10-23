@@ -1,8 +1,8 @@
-
 using System.IO;
 using System.Linq;
 using System.Text.Json;
 using Vulcan.Domain.Enums;
+using Vulcan.Prediction.Adjustments;
 using Vulcan.Prediction.Maturity;
 using Vulcan.Prediction.Strength;
 using Xunit;
@@ -515,5 +515,255 @@ public sealed class StrengthEstimatorTests
             expectedPsi,
             result.Day7.EstimatedPsi,
             6);
+    }
+
+    [Fact]
+    public void Estimate_WithThreeDayBreak_AdjustsCurveAndPreservesOriginal()
+    {
+        var specimens = new[]
+        {
+            CreateSpecimen("S1", (0, 73.4), (24, 73.4))
+        };
+
+        var settings = CreateSettings();
+
+        // Calculate the original prediction without recorded breaks.
+        var baseline = StrengthEstimator.Estimate(
+            _castAt,
+            CementType.TypeI,
+            6000,
+            specimens,
+            settings);
+
+        // Simulate a measured 3-day strength 10% above prediction.
+        StrengthBreakMeasurement[] breaks =
+        [
+            new("S1", 3, baseline.Day3!.EstimatedPsi * 1.10, false)
+        ];
+
+        var result = StrengthEstimator.Estimate(
+            _castAt,
+            CementType.TypeI,
+            6000,
+            specimens,
+            settings,
+            breaks);
+
+        // Preserve the original unadjusted prediction.
+        Assert.Equal(
+            baseline.Day28!.EstimatedPsi,
+            result.Day28!.EstimatedPsi);
+
+        // The adjusted curve must contain 28 points.
+        Assert.NotNull(result.AdjustedDailyCurve);
+        Assert.Equal(28, result.AdjustedDailyCurve.Count);
+
+        // The adjusted curve should differ from the original.
+        Assert.NotEqual(
+            baseline.Day28.EstimatedPsi,
+            result.AdjustedDailyCurve[27].EstimatedPsi);
+
+        // The adjusted curve must pass through the recorded 3-day break.
+        Assert.Equal(
+            breaks[0].StrengthPsi,
+            result.AdjustedDailyCurve[2].EstimatedPsi,
+            precision: 6);
+
+        // Verify the adjustment metadata.
+        Assert.NotNull(result.Day28Adjustment);
+
+        Assert.Equal(
+            BreakAdjustmentStage.ThreeDay,
+            result.Day28Adjustment.Stage);
+
+        Assert.Equal(
+            baseline.Day28.EstimatedPsi,
+            result.Day28Adjustment.UnadjustedPsi);
+
+        Assert.NotNull(result.Day28Adjustment.Basis);
+        Assert.Contains(
+            "Re-fit through the average 3-day breaks",
+            result.Day28Adjustment.Basis);
+
+        Assert.Contains(
+            "using the original expected final strength",
+            result.Day28Adjustment.Basis);
+    }
+
+    [Fact]
+    public void Estimate_WithThreeAndSevenDayBreaks_AdjustsThroughBoth()
+    {
+        var specimens = new[]
+        {
+            CreateSpecimen("S1", (0, 73.4), (24, 73.4))
+        };
+
+        var settings = CreateSettings();
+
+        var baseline = StrengthEstimator.Estimate(
+            _castAt,
+            CementType.TypeI,
+            6000,
+            specimens,
+            settings);
+
+        // Use a valid curve with slightly different coefficients
+        // to generate consistent measured break strengths.
+        const double adjustedA = 4.5;
+        const double adjustedB = 0.85;
+        const double referencePsi = 6200;
+
+        double day3Psi = 3.0 /
+            (adjustedA + adjustedB * 3.0) * referencePsi;
+
+        double day7Psi = 7.0 /
+            (adjustedA + adjustedB * 7.0) * referencePsi;
+
+        StrengthBreakMeasurement[] breaks =
+        [
+            new("S1", 3, day3Psi, false),
+            new("S2", 7, day7Psi, false)
+        ];
+
+        var result = StrengthEstimator.Estimate(
+            _castAt,
+            CementType.TypeI,
+            6000,
+            specimens,
+            settings,
+            breaks);
+
+        Assert.NotNull(result.AdjustedDailyCurve);
+        Assert.Equal(28, result.AdjustedDailyCurve.Count);
+
+        // Both measured breaks must lie on the adjusted curve.
+        Assert.Equal(
+            day3Psi,
+            result.AdjustedDailyCurve[2].EstimatedPsi,
+            precision: 6);
+
+        Assert.Equal(
+            day7Psi,
+            result.AdjustedDailyCurve[6].EstimatedPsi,
+            precision: 6);
+
+        Assert.NotNull(result.Day28Adjustment);
+
+        Assert.NotNull(result.Day28Adjustment.Basis);
+        Assert.Contains(
+            "Re-fit through the average 3- and 7-day breaks",
+            result.Day28Adjustment.Basis);
+
+        Assert.Contains(
+            $"{result.Day28Adjustment.ReferenceStrengthPsi:N0} PSI",
+            result.Day28Adjustment.Basis);
+
+        Assert.Equal(
+            BreakAdjustmentStage.ThreeAndSevenDay,
+            result.Day28Adjustment.Stage);
+
+        // Preserve the unadjusted estimate for comparison.
+        Assert.Equal(
+            baseline.Day28!.EstimatedPsi,
+            result.Day28Adjustment.UnadjustedPsi);
+    }
+
+    [Fact]
+    public void Estimate_WithoutBreaks_PreservesOriginalCurve()
+    {
+        var specimens = new[]
+        {
+            CreateSpecimen("S1", (0, 73.4), (24, 73.4))
+        };
+
+        var result = StrengthEstimator.Estimate(
+            _castAt,
+            CementType.TypeI,
+            6000,
+            specimens,
+            CreateSettings());
+
+        Assert.NotNull(result.AdjustedDailyCurve);
+        Assert.Equal(28, result.AdjustedDailyCurve.Count);
+
+        for (int i = 0; i < 28; i++)
+        {
+            Assert.Equal(
+                result.DailyCurve[i].EstimatedPsi,
+                result.AdjustedDailyCurve[i].EstimatedPsi);
+        }
+
+        Assert.NotNull(result.Day3Adjustment);
+        Assert.NotNull(result.Day7Adjustment);
+        Assert.NotNull(result.Day28Adjustment);
+
+        Assert.Equal(
+            "No break adjustment applied; original ACI 209R-92 prediction.",
+            result.Day28Adjustment!.Basis);
+
+        Assert.Equal(
+            BreakAdjustmentStage.None,
+            result.Day3Adjustment.Stage);
+
+        Assert.Equal(
+            BreakAdjustmentStage.None,
+            result.Day7Adjustment.Stage);
+
+        Assert.Equal(
+            BreakAdjustmentStage.None,
+            result.Day28Adjustment.Stage);
+    }
+
+    [Fact]
+    public void Estimate_ThreeDayBreakFarFromEstimate_IncludesFallbackReasonInBasis()
+    {
+        var specimens = new[]
+        {
+            CreateSpecimen("S1", (0, 73.4), (24, 73.4))
+        };
+
+        var settings = CreateSettings();
+
+        var baseline = StrengthEstimator.Estimate(
+            _castAt,
+            CementType.TypeI,
+            6000,
+            specimens,
+            settings);
+
+        StrengthBreakMeasurement[] breaks =
+        [
+            new(
+                "S1",
+                3,
+                baseline.Day3!.EstimatedPsi * 1.50,
+                false)
+        ];
+
+        var result = StrengthEstimator.Estimate(
+            _castAt,
+            CementType.TypeI,
+            6000,
+            specimens,
+            settings,
+            breaks);
+
+        Assert.NotNull(result.Day28Adjustment);
+
+        Assert.Equal(
+            BreakAdjustmentStage.None,
+            result.Day28Adjustment.Stage);
+
+        Assert.Equal(
+            baseline.Day28!.EstimatedPsi,
+            result.Day28Adjustment.AdjustedPsi);
+
+        Assert.Equal(
+            "3-day breaks are far from the estimate",
+            result.Day28Adjustment.FallbackReason);
+
+        Assert.Contains(
+            "3-day breaks are far from the estimate",
+            result.Day28Adjustment.Basis);
     }
 }
