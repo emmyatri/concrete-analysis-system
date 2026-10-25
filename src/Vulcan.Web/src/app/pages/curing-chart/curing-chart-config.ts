@@ -1,24 +1,18 @@
-import type { ChartData, ChartDataset, ChartOptions, Plugin } from 'chart.js';
+import type { ChartData, ChartDataset, ChartOptions } from 'chart.js';
 import {CuringPoint} from '../../core/api/models';
 
 
-/** Colors for the chart, read from the theme's PrimeNG tokens (CuringChart.colors). */
+/** Theme values used by the curing chart. */
 export interface CuringChartColors {
-  flagged: string;
-  target: string;
-  minimum: string;
   text: string;
   grid: string;
-  /** The card background, for the inside of the hollow estimate markers. */
-  surface: string;
   font: string;
 }
 
-/** One point on the chart. Breaks also carry their cylinder label for the tooltip. */
+/** One point on the chart. */
 interface ChartPoint {
   x: number;
   y: number;
-  specimen?: string;
 }
 
 export type CuringMeasurement = Exclude<
@@ -26,16 +20,27 @@ export type CuringMeasurement = Exclude<
   'specimenId' | 'specimenLabel' | 'time' | 'maturityFHours'
 >;
 
-/** A line or set of dots. endLabel is drawn at the right end of the line by endLabelsPlugin. */
-type CuringDataset = ChartDataset<'line', ChartPoint[]> & { endLabel?: string };
+/** A line with markers illustrating curing readings for a cylinder. */
+type CuringDataset = ChartDataset<'line', ChartPoint[]>;
 
 export interface CuringChartConfig {
   data: ChartData<'line', ChartPoint[]>;
   options: ChartOptions<'line'>;
 }
 
-/** The mockup's x-axis: cast, the three break ages, and each week. */
+/** The mockup's x-axis matches break strength. */
 const DAY_TICKS = [0, 3, 7, 14, 21, 28];
+
+/** Human-readable labels for the units on y-axis based on selected metric.*/
+const measurementLabels: Record<CuringMeasurement, string> = {
+  internalTempF: 'Internal temperature (°F)',
+  ambientTempF: 'Ambient temperature (°F)',
+  moisturePct: 'Moisture (%)',
+  relativeHumidityPct: 'Relative humidity (%)',
+  resistivityOhmPerFt: 'Resistivity (Ω/ft)',
+  co2Ppm: 'CO₂ (ppm)',
+};
+
 
 export function curingChartConfig(
   curingPoints: CuringPoint[],
@@ -43,9 +48,8 @@ export function curingChartConfig(
   colors: CuringChartColors,
   selectedMeasurement: CuringMeasurement,
 ): CuringChartConfig {
-  /* TODO: const yAxis = set to selected measurement*/
-  /* TODO: graph label*/
 
+  const measurementLabel = measurementLabels[selectedMeasurement];
   const curve = (points:CuringPoint[]): ChartPoint[] =>
       points.map((p) => ({
       x: (Date.parse(p.time) - Date.parse(castAt)) / 86_400_000,
@@ -93,17 +97,6 @@ export function curingChartConfig(
     });
   }
 
-  /** Determine tick distance (step size) and max value for y-axis for
-   * each measurement in the selector.
-   */
-
-  const highest = datasets.length > 0
-    ? Math.max(...datasets.flatMap((d) => d.data.map((p) => p.y))): 0;
-  const lowest = datasets.length > 0
-    ? Math.min(...datasets.flatMap((d) => d.data.map((p) => p.y))): 0;
-
-
-  /* TODO: const step = contingent on selected measurement*/
   const font = { family: colors.font, size: 12 };
 
   return {
@@ -127,7 +120,7 @@ export function curingChartConfig(
           grid: { color: colors.grid },
         },
         y: {
-          title: { display: true, text: '{selected metric}', color: colors.text, font },
+          title: { display: true, text: measurementLabel, color: colors.text, font },
           ticks: {
             maxTicksLimit: 6,
             color: colors.text,
@@ -149,7 +142,7 @@ export function curingChartConfig(
             label: (item) => {
               const point = item.raw as ChartPoint;
               const day = Number.isInteger(point.x) ? point.x : point.x.toFixed(1);
-              return `${item.dataset.label}: ${point.y.toLocaleString('en-US')} {selected metric} at day ${day}`;
+              return `${item.dataset.label} | Day ${day} | ${measurementLabel}: ${point.y.toLocaleString('en-US')}`;
             },
           },
         },
