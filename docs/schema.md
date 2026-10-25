@@ -122,6 +122,14 @@ erDiagram
         string Message
         datetime CreatedAtUtc
     }
+
+    CalibrationVersion {
+        int Id PK
+        string UK Version "e.g. v1"
+        string Notes
+        string Method
+        json ParametersJson
+    }
 ```
 
 [Link to ER Diagram](schema-ERD-draft.png)
@@ -272,6 +280,77 @@ and are never added to the composition total (FR-3).
 | `Value`        | decimal     | Yes  | The value entered                                      |
 | `Message`      | string(200) | Yes  | Copied from the limit when saved                       |
 | `CreatedAtUtc` | datetime    | Yes  | When the warning was raised                            |
+
+### CalibrationVersion — versioned prediction calibration settings
+
+| Field            | Type     | Req  | Notes                  |
+|------------------|----------|------|------------------------|
+| `Id`             | int      | auto | Primary Key            |
+| `CreatedAtUtc`   | datetime | Yes  |                        |
+| `Version`        | string   | Yes  | Unique                 |
+| `Notes`          | string   | No   |                        |
+| `Method`         | string   | No   | Basis of settings      |
+| `ParametersJson` | string   | Yes  | Serialized json string |
+
+Where `ParametersJson` follows the schema:
+
+```json
+{
+    "title": "ParametersJson",
+    "type": "object",
+    "properties": {
+        "Base": {
+            "type": "object",
+            "properties": {
+                "DatumTemperatureF": {
+                    "type": "number"
+                },
+                "ReferenceTemperatureF": {
+                    "type": "number"
+                },
+                "CementTypeCalibrations": {
+                    "type": "object",
+                    "propertyNames": {
+                        "enum": ["TypeI", "TypeII", "TypeIII"]
+                    },
+                    "additionalProperties": {
+                        "type": "object",
+                        "properties": {
+                            "TypeACoefficient": {
+                                "type": "number"
+                            },
+                            "TypeBCoefficient": {
+                                "type": "number"
+                            }
+                        },
+                        "required": [
+                            "TypeACoefficient",
+                            "TypeBCoefficient"
+                        ]
+                    },
+                    "required": [
+                        "TypeI",
+                        "TypeII",
+                        "TypeIII"
+                    ]
+                }
+            },
+            "required": [
+                "DatumTemperatureF",
+                "ReferenceTemperatureF",
+                "CementTypeCalibrations"
+            ]
+        },
+        "Factors": {
+            "type": "object",
+            "additionalProperties": {
+                "type": "number"
+            }
+        }
+    },
+    "required": ["Base"]
+}
+```
 
 ---
 

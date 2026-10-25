@@ -1,6 +1,7 @@
 using System.Reflection;
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
+using Vulcan.Domain.Calibration;
 using Vulcan.Domain.Constants;
 using Vulcan.Domain.Entities;
 using Vulcan.Domain.Enums;
@@ -468,4 +469,122 @@ public class VulcanDbContextTests(DatabaseFixture dbFixture) : IClassFixture<Dat
         }
     }
 
+    [Fact]
+    public async Task Calibration_version_seed_data_covers_all_cement_types()
+    {
+        await using (var db = _dbFixture.CreateDbContext())
+        {
+            await db.Database.MigrateAsync();
+            db.SeedCalibrationVersionV1();
+            await db.SaveChangesAsync();
+        }
+
+        await using (var db = _dbFixture.CreateDbContext())
+        {
+            var calibrationVersions = db.CalibrationVersion.ToList();
+
+            List<string> cementTypes = [.. typeof(CementType).GetEnumNames()];
+            cementTypes.ForEach(type =>
+            {
+                calibrationVersions.ForEach(cv =>
+                {
+                    cv
+                        .ParametersJson
+                        .Base
+                        .CementTypeCalibrations
+                        .Keys
+                        .ShouldContain(Enum.Parse<CementType>(type));
+                });
+            });
+        }
+    }
+
+    [Fact]
+    public async Task Calibration_version_serializes_params_properly()
+    {
+        var calibrationVersion = new CalibrationVersion
+        {
+            Version = "v1",
+            ParametersJson = new CalibrationJsonParameters(
+                Base: new CalibrationBaseParameters(
+                    DatumTemperatureF: 24.4m,
+                    ReferenceTemperatureF: 74.52m,
+                    CementTypeCalibrations: new Dictionary<CementType, CementTypeCalibration>
+                    {
+                        { CementType.TypeI, new CementTypeCalibration(0.4m, 0.5m) },
+                        { CementType.TypeII, new CementTypeCalibration(0.4m, 0.5m) },
+                        { CementType.TypeIII, new CementTypeCalibration(0.4m, 0.5m) },
+                    }
+                ),
+                Factors: []
+            )
+        };
+
+        await using (var db = _dbFixture.CreateDbContext())
+        {
+            await db.Database.MigrateAsync();
+            db.Add(calibrationVersion);
+            await db.SaveChangesAsync();
+        }
+
+        await using (var db = _dbFixture.CreateDbContext())
+        {
+            var existing = db.CalibrationVersion.First(x => x.Version == "v1");
+            existing.ShouldBeEquivalentTo(calibrationVersion);
+        }
+    }
+
+    [Fact]
+    public async Task Calibration_version_is_unique()
+    {
+        var calibrationVersion = new CalibrationVersion
+        {
+            Version = "v1",
+            ParametersJson = new CalibrationJsonParameters(
+                Base: new CalibrationBaseParameters(
+                    DatumTemperatureF: 24.4m,
+                    ReferenceTemperatureF: 74.52m,
+                    CementTypeCalibrations: new Dictionary<CementType, CementTypeCalibration>
+                    {
+                        { CementType.TypeI, new CementTypeCalibration(0.4m, 0.5m) },
+                        { CementType.TypeII, new CementTypeCalibration(0.4m, 0.5m) },
+                        { CementType.TypeIII, new CementTypeCalibration(0.4m, 0.5m) },
+                    }
+                ),
+                Factors: []
+            )
+        };
+        var calibrationVersionCopy = new CalibrationVersion
+        {
+            Version = "v1",
+            ParametersJson = new CalibrationJsonParameters(
+                Base: new CalibrationBaseParameters(
+                    DatumTemperatureF: 24.4m,
+                    ReferenceTemperatureF: 74.52m,
+                    CementTypeCalibrations: new Dictionary<CementType, CementTypeCalibration>
+                    {
+                        { CementType.TypeI, new CementTypeCalibration(0.4m, 0.5m) },
+                        { CementType.TypeII, new CementTypeCalibration(0.4m, 0.5m) },
+                        { CementType.TypeIII, new CementTypeCalibration(0.4m, 0.5m) },
+                    }
+                ),
+                Factors: []
+            )
+        };
+
+        await using (var db = _dbFixture.CreateDbContext())
+        {
+            await db.Database.MigrateAsync();
+            db.Add(calibrationVersion);
+            await db.SaveChangesAsync();
+        }
+
+        await using (var db = _dbFixture.CreateDbContext())
+        {
+            db.Add(calibrationVersionCopy);
+            var ex = await Should.ThrowAsync<DbUpdateException>(
+                () => db.SaveChangesAsync());
+            ex.InnerException.ShouldBeOfType<SqliteException>();
+        }
+    }
 }

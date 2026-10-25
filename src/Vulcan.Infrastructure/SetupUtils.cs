@@ -65,6 +65,7 @@ public static class SetupUtils
 
         services.AddScoped<ILimitProvider, LimitProvider>();
         services.AddScoped<ISpecificGravityProvider, SpecificGravityProvider>();
+        services.AddScoped<ICalibrationProvider, CalibrationProvider>();
         services.AddScoped<LimitEvaluator>();
         services.AddScoped<WaterCementRatioCalculator>();
 
@@ -152,6 +153,34 @@ public static class SetupUtils
         var missing = gravities.Where(seed =>
             !existing.Contains(seed.Material));
         db.SpecificGravity.AddRange(missing);
+        db.SaveChanges();
+    }
+
+    public static CalibrationVersion LoadCalibrationVersionV1()
+    {
+        var json = (
+            typeof(SetupUtils).Assembly.GetManifestResourceStream("Vulcan.Infrastructure.Seed.calibration-v1.json")
+        ) ?? throw new InvalidOperationException(
+            "Could not find the calibration v1 file. Please ensure it is in Vulcan.Infrastructure/Seed/calibration-v1.json");
+        var calibration = JsonSerializer.Deserialize<CalibrationVersion>(json, _jsonOptions)
+                                ?? throw new JsonException("Calibration v1 seed data is malformed");
+        return calibration;
+    }
+
+    public static void SeedCalibrationVersionV1(this VulcanDbContext db)
+    {
+        var calibration = LoadCalibrationVersionV1();
+
+        var existing = db.CalibrationVersion
+            .ToList()
+            .FirstOrDefault(x => string.Equals(x.Version, calibration.Version, StringComparison.InvariantCultureIgnoreCase));
+
+        if (existing != null)
+        {
+            return;
+        }
+
+        db.Add(calibration);
         db.SaveChanges();
     }
 }

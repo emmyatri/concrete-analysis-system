@@ -133,6 +133,7 @@ public static class ApiHost
 
         seedDb.SeedValidationLimits();
         seedDb.SeedSpecificGravities();
+        seedDb.SeedCalibrationVersionV1();
 
         if (app.Configuration.GetValue<bool>("SeedSyntheticData"))
         {
