@@ -7,6 +7,7 @@ export interface CuringChartColors {
   text: string;
   grid: string;
   font: string;
+  cylinders: readonly string[];
 }
 
 /** One point on the chart. */
@@ -31,8 +32,30 @@ export interface CuringChartConfig {
 /** The mockup's x-axis matches break strength. */
 const DAY_TICKS = [0, 3, 7, 14, 21, 28];
 
+/** Distinguishable line markers for charted curing readings. */
+const CYLINDER_MARKERS = [
+  'circle',
+  'rect',
+  'triangle',
+  'rectRot',
+] as const;
+
+/** Assigns a color and marker combination to a cylinder. */
+export function cylinderAppearance(index: number, colors: readonly string[]) {
+  const color = colors[index % colors.length];
+  const marker =
+    CYLINDER_MARKERS[Math.floor(index / colors.length) % CYLINDER_MARKERS.length];
+
+  return {
+    borderColor: color,
+    backgroundColor: color,
+    pointStyle: marker,
+  };
+}
+
+
 /** Human-readable labels for the units on y-axis based on selected metric.*/
-const measurementLabels: Record<CuringMeasurement, string> = {
+export const measurementLabels: Record<CuringMeasurement, string> = {
   internalTempF: 'Internal temperature (°F)',
   ambientTempF: 'Ambient temperature (°F)',
   moisturePct: 'Moisture (%)',
@@ -47,15 +70,17 @@ export function curingChartConfig(
   castAt: string,
   colors: CuringChartColors,
   selectedMeasurement: CuringMeasurement,
+  hiddenCylinderIds: ReadonlySet<number>,
 ): CuringChartConfig {
 
   const measurementLabel = measurementLabels[selectedMeasurement];
+
   const curve = (points:CuringPoint[]): ChartPoint[] =>
       points.map((p) => ({
       x: (Date.parse(p.time) - Date.parse(castAt)) / 86_400_000,
       y: p[selectedMeasurement]}));
 
-  /** Group readings by cylinder.*/
+  /** Group curing points by cylinder.*/
   const readingsBySpecimen = new Map<number, CuringPoint[]>();
 
   for (const point of curingPoints) {
@@ -66,18 +91,19 @@ export function curingChartConfig(
     readingsBySpecimen.get(point.specimenId)!.push(point);
   }
 
-  /** Add each cylinder + respective readings as a dataset to datasets*/
+  /** Add each cylinder + points as a dataset to datasets*/
   const datasets: CuringDataset[] = [];
 
   const cylinderStyle: Partial<CuringDataset> = {
-    /** TODO: Colors */
     showLine: true,
     pointRadius: 5,
     pointHoverRadius: 7,
-    pointStyle: 'circle',
   };
 
-  for (const readings of readingsBySpecimen.values()) {
+  const sortedSpecimenIds = [...readingsBySpecimen.keys()].sort((a, b) => a - b);
+
+  for (const [index, specimenId] of sortedSpecimenIds.entries()) {
+    const readings = readingsBySpecimen.get(specimenId)!;
     const firstReading = readings[0];
     if (!firstReading) {
       continue
@@ -94,6 +120,8 @@ export function curingChartConfig(
     datasets.push({
       ...cylinderStyle,
       ...cylinderData,
+      ...cylinderAppearance(index, colors.cylinders),
+      hidden: hiddenCylinderIds.has(specimenId),
     });
   }
 
@@ -132,9 +160,7 @@ export function curingChartConfig(
       },
       plugins: {
         legend: {
-          position: 'top',
-          align: 'end',
-          labels: { usePointStyle: true, boxHeight: 6, color: colors.text, font },
+          display: false,
         },
         tooltip: {
           callbacks: {
