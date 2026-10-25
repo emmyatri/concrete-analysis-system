@@ -16,6 +16,7 @@ import { AddCylinderDialog } from '../add-cylinder-dialog/add-cylinder-dialog';
 import { CuringSummary } from '../curing-summary/curing-summary';
 import { EstimateCards } from '../estimate-cards/estimate-cards';
 import { StrengthChart, StrengthLoad } from '../strength-chart/strength-chart';
+import { CuringChart } from '../curing-chart/curing-chart';
 
 type LoadState =
   | { status: 'loading' }
@@ -71,6 +72,7 @@ const FIELDS: Record<string, { label: string; short?: string; digits: string }> 
     TabsModule,
     AddCylinderDialog,
     StrengthChart,
+    CuringChart,
     EstimateCards,
     CuringSummary,
   ],
@@ -157,6 +159,15 @@ export class BatchDetailPage {
     ),
     { initialValue: { status: 'loading' } as StrengthLoad },
   );
+
+  protected readonly curingPoints = computed(() => {
+    const state = this.strengthState();
+    if (state.status === 'loaded') {
+      return state.strength.curingPoints
+    }
+    return []
+  });
+
 
   /**
    * The chart's minimum line: Prediction.MinimumPsi once SCRUM-181 adds it, until then the break
