@@ -1,69 +1,26 @@
+ <div class="header">
+    <h1 class="chart-title">Curing readings</h1>
+    <!-- Measurement selector: displays readable labels but stores the measurement key. -->
+    <div class="measurement-selector">
+      <label for="curing-measurement">Display Measurement:</label>
+      <p-select
+        inputId="curing-measurement"
+        [options]="measurementOptions"
+        optionLabel="label"
+        optionValue="value"
+        [ngModel]="selectedMeasurement()"
+        (ngModelChange)="selectedMeasurement.set($event)"
+        scrollHeight="120px"
+      />
+    </div>
+  </div>
 
-<!-- Measurement selector: displays readable labels but stores the measurement key. -->
-<div class="measurement-selector">
-  <label for="curing-measurement">Display Measurement:</label>
-  <p-select
-    inputId="curing-measurement"
-    [options]="measurementOptions"
-    optionLabel="label"
-    optionValue="value"
-    [ngModel]="selectedMeasurement()"
-    (ngModelChange)="selectedMeasurement.set($event)"
+  <!-- The computed chart configuration updates when selectedMeasurement changes. -->
+  <p-chart
+    type="line"
+    [data]="chart().data"
+    [options]="chart().options"
+    [plugins]="guidePlugins"
+    height="120px"
   />
-</div>
 
-<!-- Cylinder selector: displays buttons for each cylinder for single/multi-selection + legend. -->
-<div class="cylinder-selector">
-  <span>Cylinders:</span>
-
-  @for (cylinder of cylinders(); track cylinder.id) {
-    <button
-      pButton
-      type="button"
-      [text]="true"
-      (click)="toggleCylinder(cylinder.id)"
-      [attr.aria-pressed]="!hiddenCylinderIds().has(cylinder.id)"
-    >
-      <!-- Show a checkmark when this cylinder is visible. -->
-      @if (!hiddenCylinderIds().has(cylinder.id)) {
-        <i class="pi pi-check" aria-hidden="true"></i>
-      }
-      <!-- Match the cylinder's chart color. -->
-      <span
-        class="cylinder-marker"
-        [style.background-color]="cylinder.appearance.backgroundColor"
-        aria-hidden="true"
-      ></span>
-      <!-- Display the cylinder's identifier. -->
-      <span pButtonLabel>{{ cylinder.label }}</span>
-    </button>
-  }
-
-  <button
-    pButton
-    type="button"
-    [text]="true"
-    (click)="showAllCylinders()"
-  >
-    <span pButtonLabel>Show all</span>
-  </button>
-
-  <button
-    pButton
-    type="button"
-    [text]="true"
-    (click)="hideAllCylinders()"
-  >
-    <span pButtonLabel>Hide all</span>
-  </button>
-</div>
-
-<!-- The computed chart configuration updates when selectedMeasurement changes. -->
-<div class="chart-frame">
-<p-chart
-  type="line"
-  [data]="chart().data"
-  [options]="chart().options"
-  height="320px"
-/>
-</div>

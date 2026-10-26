@@ -5,8 +5,9 @@ import { ButtonModule } from 'primeng/button';
 import { Component, computed, inject, input, signal } from '@angular/core';
 import { DOCUMENT } from '@angular/common';
 import { CuringPoint, CuringReading } from '../../core/api/models';
-import { type CuringMeasurement, type CuringChartColors, curingChartConfig, cylinderAppearance, measurementLabels } from './curing-chart-config';
+import { type CuringMeasurement, type CuringChartColors, curingChartConfig, measurementLabels } from './curing-chart-config';
 import { SavedWarning} from '../../core/api/models';
+import type { Plugin } from 'chart.js';
 
 /**
  * Curing reading over days since cast for one batch (SCRUM-176, FR-12, mockups M2-01 and M2-02).
@@ -39,46 +40,6 @@ export class CuringChart {
     ([value, label]) => ({ value, label }),
   );
 
-  readonly cylinders = computed(() => {
-    const unique = new Map<number, string>();
-
-    for (const point of this.curingPoints()) {
-      unique.set(point.specimenId, point.specimenLabel);
-    }
-    return [...unique.entries()]
-      .sort(([a], [b]) => a - b)
-      .map(([id, label], index) => ({
-        id,
-        label,
-        appearance: cylinderAppearance(index, this.colors().cylinders),
-      }));
-  });
-
-  readonly hiddenCylinderIds = signal<ReadonlySet<number>>(new Set<number>());
-
-  /** All cylinders displayed by default, clicking one hides/displays the cylinder.*/
-  toggleCylinder(id: number): void {
-    this.hiddenCylinderIds.update(current => {
-      const next = new Set(current);
-
-      if (next.has(id)) {
-        next.delete(id);
-      } else {
-        next.add(id);
-      }
-
-      return next;
-    });
-  }
-  showAllCylinders(): void {
-    this.hiddenCylinderIds.set(new Set<number>());
-  }
-  hideAllCylinders(): void {
-    this.hiddenCylinderIds.set(
-      new Set(this.cylinders().map(cylinder => cylinder.id))
-    );
-  }
-
   /** Maps the ambient warnings to its respective curing point for chart rendering.*/
   protected readonly flaggedReadings = computed(
     () =>
@@ -92,7 +53,6 @@ export class CuringChart {
       this.castAt(),
       this.colors(),
       this.selectedMeasurement(),
-      this.hiddenCylinderIds(),
       this.flaggedReadings(),
     ),
   );
@@ -106,13 +66,32 @@ export class CuringChart {
       text: token('--p-text-muted-color', '#696e79'),
       grid: token('--p-surface-200', '#dddfe4'),
       font: style?.getPropertyValue('font-family').trim() || 'Inter, sans-serif',
-      cylinders: [
-        token('--p-cyan-800', '#155E75'),
-        token('--p-emerald-600', '#059669'),
-        token('--p-primary-500', '#263A78'),
-        token('--p-pink-900', '#831843'),
-      ],
+      line: token('--p-primary-500', '#263A78'),
+      shade: token('--p-blue-200', '#BFDBFE'),
       flagged: token('--p-orange-500', '#F97316'),
     };
   }
+
+  protected readonly guidePlugins: Plugin<'line'>[] = [{
+    id: 'curing-day-labels',
+    afterDatasetsDraw: chart => {
+      const xAxis = chart.scales['x'];
+      if (!xAxis) return;
+
+      const { ctx, chartArea } = chart;
+
+      ctx.save();
+      const style = this.document.defaultView?.getComputedStyle(this.document.documentElement);
+      ctx.fillStyle = style?.getPropertyValue('--p-surface-950').trim() || '#171717';
+      ctx.font = `11px ${this.colors().font}`;
+      ctx.textAlign = 'left';
+
+      for (const day of [1, 3]) {
+        const x = xAxis.getPixelForValue(day);
+        ctx.fillText(`Day ${day}`, x + 8, chartArea.top + 12);
+      }
+
+      ctx.restore();
+    }
+  }];
 }

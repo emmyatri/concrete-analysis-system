@@ -187,6 +187,7 @@ export function strengthChartConfig(
       font,
       interaction: { mode: 'nearest', intersect: false },
       layout: { padding: { top: 4, right: 8 } },
+      clip: 8,
       scales: {
         x: {
           type: 'linear',
@@ -211,6 +212,9 @@ export function strengthChartConfig(
             callback: (value) => Number(value).toLocaleString('en-US'),
           },
           grid: { color: colors.grid },
+          afterFit: (scale) => {
+            scale.width = 70;
+          },
         },
       },
       plugins: {

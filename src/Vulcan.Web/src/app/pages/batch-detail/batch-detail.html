@@ -172,14 +172,8 @@
           [minimumPsi]="minimumPsi()"
           [flaggedSpecimenIds]="flaggedSpecimenIds()"
         />
-      </section>
 
       <!-- ---------- Curing chart (Milestone 2, FR-12) ---------- -->
-      <section class="card chart-card" aria-labelledby="curing-chart-title">
-        <header class="card-header">
-          <i class="pi pi-chart-line" aria-hidden="true"></i>
-          <h2 id="curing-chart-title">{{ batch.batchNumber }} · Curing conditions over time</h2>
-        </header>
 
         <app-curing-chart
           [curingPoints]="curingPoints()"

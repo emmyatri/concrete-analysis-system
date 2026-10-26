@@ -1,20 +1,32 @@
 import type {ChartData, ChartDataset, ChartOptions, ScriptableContext} from 'chart.js';
 import {CuringPoint} from '../../core/api/models';
-import {App} from '../../app';
+
 
 /** Theme values used by the curing chart. */
 export interface CuringChartColors {
   text: string;
   grid: string;
   font: string;
-  cylinders: readonly string[];
+  line: string;
+  shade: string;
   flagged: string;
 }
+
+/** x-axis gridline positions; tick labels are hidden in the chart options. (M2-42, M2 hi-fi mock). */
+const DAY_TICKS = [0, 1, 3, 7, 14, 21, 28];
 
 /** One point on the chart. */
 interface ChartPoint {
   x: number;
   y: number;
+}
+
+/** A line with markers illustrating min, max, average curing readings for a given day. */
+type CuringDataset = ChartDataset<'line', ChartPoint[]>;
+
+export interface CuringChartConfig {
+  data: ChartData<'line', ChartPoint[]>;
+  options: ChartOptions<'line'>;
 }
 
 /** Defines selectable curing measurements by excluding cylinder identifiers, timestamps, and
@@ -24,38 +36,6 @@ export type CuringMeasurement = Exclude<
   keyof CuringPoint,
   'specimenId' | 'specimenLabel' | 'time' | 'maturityFHours'
 >;
-
-/** A line with markers illustrating curing readings for a cylinder. */
-type CuringDataset = ChartDataset<'line', ChartPoint[]>;
-
-export interface CuringChartConfig {
-  data: ChartData<'line', ChartPoint[]>;
-  options: ChartOptions<'line'>;
-}
-
-/** The mockup's x-axis matches break strength. */
-const DAY_TICKS = [0, 3, 7, 14, 21, 28];
-
-/** Distinguishable line markers for charted curing readings. */
-const CYLINDER_MARKERS = [
-  'circle',
-  'rect',
-  'triangle',
-  'rectRot',
-] as const;
-
-/** Assigns a color and marker combination to a cylinder. */
-export function cylinderAppearance(index: number, colors: readonly string[]) {
-  const color = colors[index % colors.length];
-  const marker =
-    CYLINDER_MARKERS[Math.floor(index / colors.length) % CYLINDER_MARKERS.length];
-
-  return {
-    borderColor: color,
-    backgroundColor: color,
-    pointStyle: marker,
-  };
-}
 
 /** Human-readable labels for the units on y-axis based on selected metric.*/
 export const measurementLabels: Record<CuringMeasurement, string> = {
@@ -73,80 +53,115 @@ export function curingChartConfig(
   castAt: string,
   colors: CuringChartColors,
   selectedMeasurement: CuringMeasurement,
-  hiddenCylinderIds: ReadonlySet<number>,
   flaggedReadings: ReadonlySet<string>,
+
 ): CuringChartConfig {
 
   const measurementLabel = measurementLabels[selectedMeasurement];
-  const font = {family: colors.font, size: 12};
-
-  /** Group curing points by cylinder.*/
-  const readingsBySpecimen = new Map<number, CuringPoint[]>();
-
-  for (const point of curingPoints) {
-    if (!readingsBySpecimen.has(point.specimenId)) {
-      readingsBySpecimen.set(point.specimenId, []);
-    }
-
-    readingsBySpecimen.get(point.specimenId)!.push(point);
-  }
-
-  /** Convert points to a curve for the chart rendering.*/
-  const curve = (points: CuringPoint[]): ChartPoint[] =>
-    points.map((p) => ({
-      x: (Date.parse(p.time) - Date.parse(castAt)) / 86_400_000,
-      y: p[selectedMeasurement]
-    }));
-
-  /** Assemble each cylinder + points as a dataset and add to datasets.*/
-  const datasets: CuringDataset[] = [];
-
-  const cylinderStyle: Partial<CuringDataset> = {
-    showLine: true,
-    pointRadius: 5,
-    pointHoverRadius: 7,
+  const measurementUnits: Record<CuringMeasurement, string> = {
+    internalTempF: '°F',
+    ambientTempF: '°F',
+    moisturePct: '%',
+    relativeHumidityPct: '%',
+    resistivityOhmPerFt: ' Ω/ft',
+    co2Ppm: ' ppm',
   };
 
-  const sortedSpecimenIds = [...readingsBySpecimen.keys()].sort((a, b) => a - b);
+  const font = {family: colors.font, size: 12};
 
-  for (const [index, specimenId] of sortedSpecimenIds.entries()) {
-    const readings = readingsBySpecimen.get(specimenId)!;
-    const firstReading = readings[0];
-    if (!firstReading) {
-      continue
+  /** Group curing points by timestamp.*/
+  const readingsByTime = new Map<number, CuringPoint[]>();
+
+  for (const point of curingPoints) {
+    const timestamp = Date.parse(point.time);
+    if (!readingsByTime.has(timestamp)) {
+      readingsByTime.set(timestamp, []);
     }
-
-    const chartPoints = curve(readings);
-    const specimenLabel = firstReading.specimenLabel
-
-    const cylinderData = {
-      label: specimenLabel,
-      data: chartPoints,
-    }
-
-    const appearance = cylinderAppearance(index, colors.cylinders);
-
-    /** Check whether a particular reading has a warning, flag by color. */
-    const markerColor = (context: ScriptableContext<'line'>) => {
-        const reading = readings[context.dataIndex];
-        const key = `${reading.specimenLabel} | ${Date.parse(reading.time)}`;
-        if (flaggedReadings.has(key)) {
-          return colors.flagged
-        }
-        return appearance.backgroundColor;
-    };
-
-    datasets.push({
-      ...cylinderStyle,
-      ...cylinderData,
-      ...appearance,
-      pointBackgroundColor: markerColor,
-      pointBorderColor: markerColor,
-      hidden: hiddenCylinderIds.has(specimenId),
-    });
+    readingsByTime.get(timestamp)!.push(point);
   }
 
-    /** Return the curing chart instructions. */
+  /** Sort readings by timestamp. */
+  const sortedTimes = [...readingsByTime.keys()].sort((a, b) => a - b);
+
+  const averagePoints: ChartPoint[] = [];
+  const minPoints: ChartPoint[] = [];
+  const maxPoints: ChartPoint[] = [];
+
+  for (const timestamp of sortedTimes) {
+    const readings = readingsByTime.get(timestamp)!;
+
+    /* Obtain average, min, max values for given measurement. */
+    const values = readings.map(point => point[selectedMeasurement]);
+    const minValue = Math.min(...values);
+    const maxValue = Math.max(...values);
+    const avgValue = values.reduce((sum, value) => sum + value, 0) / values.length;
+
+    const day = (timestamp - Date.parse(castAt)) / 86_400_000;
+
+    /** Convert points to a curve for the chart rendering.*/
+    averagePoints.push({x: day, y: avgValue});
+    minPoints.push({x: day, y: minValue});
+    maxPoints.push({x: day, y: maxValue});
+    }
+
+  /** Check whether a particular reading has a warning, flag by color. */
+  const markerColor = (context: ScriptableContext<'line'>) => {
+    const timestamp = sortedTimes[context.dataIndex];
+    const readingsAtTime = readingsByTime.get(timestamp) ?? [];
+    const hasWarning = readingsAtTime.some(reading =>
+      flaggedReadings.has(`${reading.specimenLabel} | ${timestamp}`)
+    );
+    return selectedMeasurement === 'ambientTempF' && hasWarning
+      ? colors.flagged
+      : colors.line;
+  };
+
+  /** Assemble each dataset and add to datasets.*/
+  const datasets: CuringDataset[] = [];
+
+  const averageCurve = {
+    label: 'Average',
+    data: averagePoints,
+  }
+
+  const minCurve = {
+    label: 'Minimum',
+    data: minPoints,
+  }
+
+  const maxCurve = {
+    label: 'Maximum',
+    data: maxPoints,
+  }
+
+  datasets.push({
+    ...averageCurve,
+    borderColor: colors.line,
+    pointBackgroundColor: markerColor,
+    pointBorderColor: markerColor,
+    pointRadius: context =>
+      markerColor(context) === colors.flagged ? 5 : 0,
+    pointHoverRadius: 7,
+  });
+
+  datasets.push({
+    ...maxCurve,
+    borderWidth: 0,
+    pointRadius: 0,
+    pointHoverRadius: 0,
+    fill: '+1',
+    backgroundColor: colors.shade,
+  });
+
+  datasets.push({
+    ...minCurve,
+    borderWidth: 0,
+    pointRadius: 0,
+    pointHoverRadius: 0,
+    fill: false
+  });
+
+  /** Return the curing chart instructions. */
     return {
       data: {datasets},
       options: {
@@ -160,22 +175,34 @@ export function curingChartConfig(
             type: 'linear',
             min: 0,
             max: 28,
-            title: {display: true, text: 'Days since cast', color: colors.text, font},
-            ticks: {color: colors.text, font},
+            title: {display: false, text: 'Days since cast', color: colors.text, font},
+            ticks: {display: false, color: colors.text, font},
             afterBuildTicks: (axis) => {
               axis.ticks = DAY_TICKS.map((value) => ({value}));
             },
-            grid: {color: colors.grid},
+            grid: {
+              drawTicks: false,
+              color: context =>
+                [1, 3].includes(context.tick?.value ?? -1)
+                  ? colors.text
+                  : colors.grid,
+              lineWidth: context =>
+                [1, 3].includes(context.tick?.value ?? -1) ? 1.5 : 1,
+            },
           },
           y: {
-            title: {display: true, text: measurementLabel, color: colors.text, font},
+            title: {display: false, text: measurementLabel, color: colors.text, font},
             ticks: {
-              maxTicksLimit: 6,
+              maxTicksLimit: 3,
               color: colors.text,
               font,
-              callback: (value) => Number(value).toLocaleString('en-US'),
+              callback: value =>
+                `${Number(value).toLocaleString('en-US')}${measurementUnits[selectedMeasurement]}`,
             },
             grid: {color: colors.grid},
+            afterFit: (scale) => {
+              scale.width = 70;
+            },
           },
         },
         plugins: {
@@ -183,12 +210,28 @@ export function curingChartConfig(
             display: false,
           },
           tooltip: {
+            filter: (item) => item.datasetIndex === 0,
             callbacks: {
               title: () => '',
               label: (item) => {
                 const point = item.raw as ChartPoint;
+                const timestamp = sortedTimes[item.dataIndex];
+                /* Using the point's timestamp, determine if warnings exist when measurement is ambient Temp. */
+                const flaggedAtTime = selectedMeasurement === 'ambientTempF'
+                  ? (readingsByTime.get(timestamp) ?? []).filter(reading =>
+                    flaggedReadings.has(`${reading.specimenLabel} | ${timestamp}`)
+                  )
+                  : [];
+                /* Convert warnings to strings for tooltip rendering. */
+                const warningLines = flaggedAtTime.map(reading =>
+                  `${reading.specimenLabel}: ${reading.ambientTempF.toFixed(1)} °F outside 60-80`
+                );
                 const day = Number.isInteger(point.x) ? point.x : point.x.toFixed(1);
-                return `${item.dataset.label} | Day ${day} | ${measurementLabel}: ${point.y.toLocaleString('en-US')}`;
+                /* Tooltip message. */
+                return [
+                  `${item.dataset.label} | Day ${day} | ${measurementLabel}: ${point.y.toLocaleString('en-US')}`,
+                  ...warningLines,
+                ];
               },
             },
           },
