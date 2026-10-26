@@ -29,6 +29,16 @@ public class CalibrationVersionProviderTests(DatabaseFixture dbFixture)
         }
     }
 
+    [Fact]
+    public async Task Calibration_version_provider_throws_if_no_version_exists()
+    {
+        await using var db = dbFixture.CreateDbContext();
+        await db.Database.EnsureDeletedAsync();
+        await db.Database.MigrateAsync();
+        var provider = new CalibrationProvider(db);
+        Should.Throw<InvalidOperationException>(() => provider.Current());
+    }
+
     public static TheoryData<Func<List<CalibrationVersion>>, Func<CalibrationVersion>> CalibrationVersionTestCases => new()
     {
         {

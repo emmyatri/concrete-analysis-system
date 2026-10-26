@@ -8,6 +8,7 @@ using Vulcan.Domain.Enums;
 using Vulcan.Domain.Services;
 using Vulcan.Domain.Validation;
 using Vulcan.Infrastructure.Services;
+using Vulcan.Prediction.Strength;
 
 namespace Vulcan.Infrastructure.Tests;
 
@@ -574,6 +575,7 @@ public class VulcanDbContextTests(DatabaseFixture dbFixture) : IClassFixture<Dat
 
         await using (var db = _dbFixture.CreateDbContext())
         {
+            await db.Database.EnsureDeletedAsync();
             await db.Database.MigrateAsync();
             db.Add(calibrationVersion);
             await db.SaveChangesAsync();
@@ -586,5 +588,92 @@ public class VulcanDbContextTests(DatabaseFixture dbFixture) : IClassFixture<Dat
                 () => db.SaveChangesAsync());
             ex.InnerException.ShouldBeOfType<SqliteException>();
         }
+    }
+
+    [Fact]
+    public async Task Calibration_version_seeding_is_idempotent()
+    {
+        await using var db = _dbFixture.CreateDbContext();
+
+        await db.Database.EnsureDeletedAsync();
+        await db.Database.MigrateAsync();
+
+        db.SeedCalibrationVersionV1();
+        db.SeedCalibrationVersionV1();
+
+        var count = await db.CalibrationVersion
+            .CountAsync(x => x.Version == "v1");
+
+        count.ShouldBe(1);
+    }
+
+    [Fact]
+    public async Task Calibration_version_seed_data_is_correct()
+    {
+        await using var db = _dbFixture.CreateDbContext();
+        await db.Database.EnsureDeletedAsync();
+        await db.Database.MigrateAsync();
+
+        db.SeedCalibrationVersionV1();
+
+        var v1 = db.CalibrationVersion
+            .FirstOrDefault(x => x.Version == "v1");
+
+        v1.ShouldNotBeNull();
+        v1.Method.ShouldBe("ACI 209R-92");
+        v1.Notes.ShouldBe("Initial calibration from ADR-005");
+        v1.ParametersJson
+            .Base
+            .ShouldSatisfyAllConditions(
+                it => it.DatumTemperatureF.ShouldBe(14.0m),
+                it => it.ReferenceTemperatureF.ShouldBe(73.4m),
+                it => it.CementTypeCalibrations
+                    .ShouldSatisfyAllConditions(
+                        ct => ct.GetValueOrDefault(CementType.TypeI)
+                            .ShouldNotBeNull()
+                            .TypeACoefficient
+                            .ShouldBe(4.0m),
+                        ct => ct.GetValueOrDefault(CementType.TypeI)
+                            .ShouldNotBeNull()
+                            .TypeBCoefficient
+                            .ShouldBe(0.85m),
+                        ct => ct.GetValueOrDefault(CementType.TypeII)
+                            .ShouldNotBeNull()
+                            .TypeACoefficient
+                            .ShouldBe(4.0m),
+                        ct => ct.GetValueOrDefault(CementType.TypeII)
+                            .ShouldNotBeNull()
+                            .TypeBCoefficient
+                            .ShouldBe(0.85m),
+                        ct => ct.GetValueOrDefault(CementType.TypeIII)
+                            .ShouldNotBeNull()
+                            .TypeACoefficient
+                            .ShouldBe(2.3m),
+                        ct => ct.GetValueOrDefault(CementType.TypeIII)
+                            .ShouldNotBeNull()
+                            .TypeBCoefficient
+                            .ShouldBe(0.92m)));
+        v1.ParametersJson.Factors.ShouldBeEmpty();
+    }
+
+    [Fact]
+    public async Task Calibration_to_strength_settings_is_correct()
+    {
+        await using var db = _dbFixture.CreateDbContext();
+        await db.Database.MigrateAsync();
+
+        db.SeedCalibrationVersionV1();
+
+        var v1 = db.CalibrationVersion
+            .FirstOrDefault(x => x.Version == "v1")
+            .ShouldNotBeNull();
+
+        var ss = StrengthSettings.FromCalibration(v1, CementType.TypeIII);
+        ss.CementType.ShouldBe(CementType.TypeIII);
+        ss.A.ShouldBe(2.3);
+        ss.B.ShouldBe(0.92);
+        ss.CalibrationVersion.ShouldBe("v1");
+        ss.Maturity.DatumTempF.ShouldBe(14.0);
+        ss.Maturity.ReferenceTempF.ShouldBe(73.4);
     }
 }

@@ -11,7 +11,7 @@ using Vulcan.Infrastructure;
 namespace Vulcan.Infrastructure.Migrations
 {
     [DbContext(typeof(VulcanDbContext))]
-    [Migration("20261023165632_AddCalibrationVersion")]
+    [Migration("20261026010405_AddCalibrationVersion")]
     partial class AddCalibrationVersion
     {
         /// <inheritdoc />
@@ -125,10 +125,18 @@ namespace Vulcan.Infrastructure.Migrations
                         .IsRequired()
                         .HasColumnType("TEXT");
 
+                    b.Property<string>("Method")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
                     b.Property<DateTime?>("ModifiedAtUtc")
                         .HasColumnType("TEXT");
 
                     b.Property<string>("ModifiedBy")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Notes")
+                        .IsRequired()
                         .HasColumnType("TEXT");
 
                     b.Property<string>("ParametersJson")

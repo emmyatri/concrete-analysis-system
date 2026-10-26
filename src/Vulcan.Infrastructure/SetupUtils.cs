@@ -171,11 +171,10 @@ public static class SetupUtils
     {
         var calibration = LoadCalibrationVersionV1();
 
-        var existing = db.CalibrationVersion
-            .ToList()
-            .FirstOrDefault(x => string.Equals(x.Version, calibration.Version, StringComparison.InvariantCultureIgnoreCase));
+        var exists = db.CalibrationVersion
+            .Any(x => x.Version.ToLower() == calibration.Version.ToLower());
 
-        if (existing != null)
+        if (exists)
         {
             return;
         }

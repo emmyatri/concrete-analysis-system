@@ -125,7 +125,7 @@ erDiagram
 
     CalibrationVersion {
         int Id PK
-        string UK Version "e.g. v1"
+        string Version UK "e.g. v1"
         string Notes
         string Method
         json ParametersJson

@@ -6,9 +6,9 @@ public class CalibrationVersion : AuditableEntity
 {
     public required string Version { get; set; }
 
-    public string Notes = string.Empty;
+    public string Notes { get; set; } = string.Empty;
 
-    public string Method = string.Empty;
+    public string Method { get; set; } = string.Empty;
 
     public required CalibrationJsonParameters ParametersJson { get; set; }
 }
