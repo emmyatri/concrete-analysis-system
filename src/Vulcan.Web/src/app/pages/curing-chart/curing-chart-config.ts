@@ -1,6 +1,6 @@
-import type { ChartData, ChartDataset, ChartOptions } from 'chart.js';
+import type {ChartData, ChartDataset, ChartOptions, ScriptableContext} from 'chart.js';
 import {CuringPoint} from '../../core/api/models';
-
+import {App} from '../../app';
 
 /** Theme values used by the curing chart. */
 export interface CuringChartColors {
@@ -8,6 +8,7 @@ export interface CuringChartColors {
   grid: string;
   font: string;
   cylinders: readonly string[];
+  flagged: string;
 }
 
 /** One point on the chart. */
@@ -16,6 +17,9 @@ interface ChartPoint {
   y: number;
 }
 
+/** Defines selectable curing measurements by excluding cylinder identifiers, timestamps, and
+ * maturity from CuringPoint.
+ * */
 export type CuringMeasurement = Exclude<
   keyof CuringPoint,
   'specimenId' | 'specimenLabel' | 'time' | 'maturityFHours'
@@ -53,7 +57,6 @@ export function cylinderAppearance(index: number, colors: readonly string[]) {
   };
 }
 
-
 /** Human-readable labels for the units on y-axis based on selected metric.*/
 export const measurementLabels: Record<CuringMeasurement, string> = {
   internalTempF: 'Internal temperature (°F)',
@@ -64,21 +67,18 @@ export const measurementLabels: Record<CuringMeasurement, string> = {
   co2Ppm: 'CO₂ (ppm)',
 };
 
-
+/** The configuration instructions for the curing chart.*/
 export function curingChartConfig(
   curingPoints: CuringPoint[],
   castAt: string,
   colors: CuringChartColors,
   selectedMeasurement: CuringMeasurement,
   hiddenCylinderIds: ReadonlySet<number>,
+  flaggedReadings: ReadonlySet<string>,
 ): CuringChartConfig {
 
   const measurementLabel = measurementLabels[selectedMeasurement];
-
-  const curve = (points:CuringPoint[]): ChartPoint[] =>
-      points.map((p) => ({
-      x: (Date.parse(p.time) - Date.parse(castAt)) / 86_400_000,
-      y: p[selectedMeasurement]}));
+  const font = {family: colors.font, size: 12};
 
   /** Group curing points by cylinder.*/
   const readingsBySpecimen = new Map<number, CuringPoint[]>();
@@ -91,7 +91,14 @@ export function curingChartConfig(
     readingsBySpecimen.get(point.specimenId)!.push(point);
   }
 
-  /** Add each cylinder + points as a dataset to datasets*/
+  /** Convert points to a curve for the chart rendering.*/
+  const curve = (points: CuringPoint[]): ChartPoint[] =>
+    points.map((p) => ({
+      x: (Date.parse(p.time) - Date.parse(castAt)) / 86_400_000,
+      y: p[selectedMeasurement]
+    }));
+
+  /** Assemble each cylinder + points as a dataset and add to datasets.*/
   const datasets: CuringDataset[] = [];
 
   const cylinderStyle: Partial<CuringDataset> = {
@@ -117,67 +124,77 @@ export function curingChartConfig(
       data: chartPoints,
     }
 
+    const appearance = cylinderAppearance(index, colors.cylinders);
+
+    /** Check whether a particular reading has a warning, flag by color. */
+    const markerColor = (context: ScriptableContext<'line'>) => {
+        const reading = readings[context.dataIndex];
+        const key = `${reading.specimenLabel} | ${Date.parse(reading.time)}`;
+        if (flaggedReadings.has(key)) {
+          return colors.flagged
+        }
+        return appearance.backgroundColor;
+    };
+
     datasets.push({
       ...cylinderStyle,
       ...cylinderData,
-      ...cylinderAppearance(index, colors.cylinders),
+      ...appearance,
+      pointBackgroundColor: markerColor,
+      pointBorderColor: markerColor,
       hidden: hiddenCylinderIds.has(specimenId),
     });
   }
 
-  const font = { family: colors.font, size: 12 };
-
-  return {
-    data: { datasets },
-    options: {
-      maintainAspectRatio: false,
-      animation: false,
-      font,
-      interaction: { mode: 'nearest', intersect: false },
-      layout: { padding: { top: 4, right: 8 } },
-      scales: {
-        x: {
-          type: 'linear',
-          min: 0,
-          max: 28,
-          title: { display: true, text: 'Days since cast', color: colors.text, font },
-          ticks: { color: colors.text, font },
-          afterBuildTicks: (axis) => {
-            axis.ticks = DAY_TICKS.map((value) => ({ value }));
+    /** Return the curing chart instructions. */
+    return {
+      data: {datasets},
+      options: {
+        maintainAspectRatio: false,
+        animation: false,
+        font,
+        interaction: {mode: 'nearest', intersect: false},
+        layout: {padding: {top: 4, right: 8}},
+        scales: {
+          x: {
+            type: 'linear',
+            min: 0,
+            max: 28,
+            title: {display: true, text: 'Days since cast', color: colors.text, font},
+            ticks: {color: colors.text, font},
+            afterBuildTicks: (axis) => {
+              axis.ticks = DAY_TICKS.map((value) => ({value}));
+            },
+            grid: {color: colors.grid},
           },
-          grid: { color: colors.grid },
-        },
-        y: {
-          title: { display: true, text: measurementLabel, color: colors.text, font },
-          ticks: {
-            maxTicksLimit: 6,
-            color: colors.text,
-            font,
-            callback: (value) => Number(value).toLocaleString('en-US'),
+          y: {
+            title: {display: true, text: measurementLabel, color: colors.text, font},
+            ticks: {
+              maxTicksLimit: 6,
+              color: colors.text,
+              font,
+              callback: (value) => Number(value).toLocaleString('en-US'),
+            },
+            grid: {color: colors.grid},
           },
-          grid: { color: colors.grid },
         },
-      },
-      plugins: {
-        legend: {
-          display: false,
-        },
-        tooltip: {
-          callbacks: {
-            title: () => '',
-            label: (item) => {
-              const point = item.raw as ChartPoint;
-              const day = Number.isInteger(point.x) ? point.x : point.x.toFixed(1);
-              return `${item.dataset.label} | Day ${day} | ${measurementLabel}: ${point.y.toLocaleString('en-US')}`;
+        plugins: {
+          legend: {
+            display: false,
+          },
+          tooltip: {
+            callbacks: {
+              title: () => '',
+              label: (item) => {
+                const point = item.raw as ChartPoint;
+                const day = Number.isInteger(point.x) ? point.x : point.x.toFixed(1);
+                return `${item.dataset.label} | Day ${day} | ${measurementLabel}: ${point.y.toLocaleString('en-US')}`;
+              },
             },
           },
         },
       },
-    },
-  };
-}
-
-
-
+    };
+  }
 
 

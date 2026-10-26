@@ -4,9 +4,9 @@ import { FormsModule } from '@angular/forms';
 import { ButtonModule } from 'primeng/button';
 import { Component, computed, inject, input, signal } from '@angular/core';
 import { DOCUMENT } from '@angular/common';
-import {CuringPoint, CuringReading} from '../../core/api/models';
+import { CuringPoint, CuringReading } from '../../core/api/models';
 import { type CuringMeasurement, type CuringChartColors, curingChartConfig, cylinderAppearance, measurementLabels } from './curing-chart-config';
-
+import { SavedWarning} from '../../core/api/models';
 
 /**
  * Curing reading over days since cast for one batch (SCRUM-176, FR-12, mockups M2-01 and M2-02).
@@ -22,7 +22,7 @@ export class CuringChart {
   private readonly document = inject(DOCUMENT);
 
   /** Curing readings for the batch with warning details. */
-  readonly readings = input.required<CuringReading[]>();
+  readonly readings = input.required<{label: string, reading: CuringReading, ambientWarning: SavedWarning | undefined}[]>();
 
   /** Curing measurements for the batch, or an empty array until strength data loads. */
   readonly curingPoints = input.required<CuringPoint[]>();
@@ -30,9 +30,9 @@ export class CuringChart {
   /** The batch's cast time (ISO, UTC), for "Latest reading: 18 h". */
   readonly castAt = input.required<string>();
 
-  /** The user's selected measurement for filtering the view of curing readings.
+  /** The user's selected measurement for filtering the view of curing readings;
    * default = internal temp (M2-44).
-   */
+   * */
   readonly selectedMeasurement = signal<CuringMeasurement>('internalTempF');
 
   readonly measurementOptions = Object.entries(measurementLabels).map(
@@ -73,12 +73,17 @@ export class CuringChart {
   showAllCylinders(): void {
     this.hiddenCylinderIds.set(new Set<number>());
   }
-
   hideAllCylinders(): void {
     this.hiddenCylinderIds.set(
       new Set(this.cylinders().map(cylinder => cylinder.id))
     );
   }
+
+  /** Maps the ambient warnings to its respective curing point for chart rendering.*/
+  protected readonly flaggedReadings = computed(
+    () =>
+      new Set((this.readings()).filter((s) => s.ambientWarning)
+          .map((s) => `${s.label} | ${Date.parse(s.reading.takenAt)}`)));
 
   /** Identifies the configuration pieces for the curing chart.*/
   protected readonly chart = computed(() =>
@@ -88,6 +93,7 @@ export class CuringChart {
       this.colors(),
       this.selectedMeasurement(),
       this.hiddenCylinderIds(),
+      this.flaggedReadings(),
     ),
   );
 
@@ -101,11 +107,12 @@ export class CuringChart {
       grid: token('--p-surface-200', '#dddfe4'),
       font: style?.getPropertyValue('font-family').trim() || 'Inter, sans-serif',
       cylinders: [
-        token('--p-orange-600', '#EA580C'),
+        token('--p-cyan-800', '#155E75'),
         token('--p-emerald-600', '#059669'),
         token('--p-primary-500', '#263A78'),
         token('--p-pink-900', '#831843'),
       ],
+      flagged: token('--p-orange-500', '#F97316'),
     };
   }
 }
