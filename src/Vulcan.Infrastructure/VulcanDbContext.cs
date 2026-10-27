@@ -15,6 +15,7 @@ public class VulcanDbContext(DbContextOptions<VulcanDbContext> options) : DbCont
     public DbSet<Specimen> Specimen { get; set; }
     public DbSet<ValidationLimit> ValidationLimit { get; set; }
     public DbSet<CalibrationVersion> CalibrationVersion { get; set; }
+    public DbSet<PredictionEntity> Prediction { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

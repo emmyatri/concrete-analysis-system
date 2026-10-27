@@ -90,6 +90,7 @@ public static class SetupUtils
         services.AddScoped<CuringService>();
         services.AddScoped<SpecificGravityService>();
         services.AddScoped<ValidationLimitService>();
+        services.AddScoped<IStrengthEstimateService, StrengthEstimateService>();
 
         return services;
     }
