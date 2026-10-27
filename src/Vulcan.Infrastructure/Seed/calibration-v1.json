@@ -1,0 +1,26 @@
+{
+    "Version": "v1",
+    "Method": "ACI 209R-92",
+    "Notes": "Initial calibration from ADR-005",
+    "ParametersJson": {
+        "Base": {
+            "DatumTemperatureF": 14.0,
+            "ReferenceTemperatureF": 73.4,
+            "CementTypeCalibrations": {
+                "TypeI": {
+                    "TypeACoefficient": 4.0,
+                    "TypeBCoefficient": 0.85
+                },
+                "TypeII": {
+                    "TypeACoefficient": 4.0,
+                    "TypeBCoefficient": 0.85
+                },
+                "TypeIII": {
+                    "TypeACoefficient": 2.3,
+                    "TypeBCoefficient": 0.92
+                }
+            }
+        },
+        "Factors": {}
+    }
+}
