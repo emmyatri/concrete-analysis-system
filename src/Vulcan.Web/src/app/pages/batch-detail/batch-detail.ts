@@ -9,7 +9,8 @@ import { TabsModule } from 'primeng/tabs';
 import { catchError, map, of, startWith, switchMap } from 'rxjs';
 
 import { describeApiError } from '../../core/api/api-errors';
-import { BatchDetail, SavedWarning, Specimen } from '../../core/api/models';
+import { earlyWarningsShortfallFirst } from '../../core/api/early-warnings';
+import { BatchDetail, EarlyWarning, SavedWarning, Specimen } from '../../core/api/models';
 import { ReferenceDataService } from '../../core/api/reference-data.service';
 import { VulcanApiService } from '../../core/api/vulcan-api.service';
 import { AddCylinderDialog } from '../add-cylinder-dialog/add-cylinder-dialog';
@@ -157,6 +158,13 @@ export class BatchDetailPage {
     ),
     { initialValue: { status: 'loading' } as StrengthLoad },
   );
+
+  /** Plain-language reasons from GET strength, shortfall first. Empty when the batch is on track. */
+  protected readonly earlyWarningReasons = computed((): EarlyWarning[] => {
+    const state = this.strengthState();
+    if (state.status !== 'loaded') return [];
+    return earlyWarningsShortfallFirst(state.strength.earlyWarnings);
+  });
 
   /**
    * The chart's minimum line: Prediction.MinimumPsi once SCRUM-181 adds it, until then the break

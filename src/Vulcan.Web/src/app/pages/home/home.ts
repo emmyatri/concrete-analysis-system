@@ -1,4 +1,4 @@
-﻿import { DatePipe } from '@angular/common';
+﻿import { DatePipe, formatNumber } from '@angular/common';
 import { Component, computed, inject } from '@angular/core';
 import { toObservable, toSignal } from '@angular/core/rxjs-interop';
 import { Router, RouterLink } from '@angular/router';
@@ -7,8 +7,9 @@ import { TableModule } from 'primeng/table';
 import { catchError, map, of, startWith, switchMap } from 'rxjs';
 
 import { describeApiError } from '../../core/api/api-errors';
+import { earlyWarningsShortfallFirst } from '../../core/api/early-warnings';
 import { CEMENT_LABELS } from '../../core/api/cement-labels';
-import { BatchSummary } from '../../core/api/models';
+import { BatchSummary, EarlyWarningBatch } from '../../core/api/models';
 import { VulcanApiService } from '../../core/api/vulcan-api.service';
 import { SyntheticDataSetting } from '../../core/session/synthetic-data';
 import { DATE_GROUPS, DateGroup, dateGroup } from '../../shared/date-group/date-group';
@@ -24,6 +25,13 @@ type Recent =
   | { status: 'loading' }
   | { status: 'loaded'; batches: BatchSummary[] }
   | { status: 'failed'; message: string };
+
+type AtRisk =
+  | { status: 'loading' }
+  | { status: 'loaded'; batches: EarlyWarningBatch[] }
+  | { status: 'failed'; message: string };
+
+type AtRiskRow = EarlyWarningBatch & { shortfall: string; topReason: string };
 
 /**
  * Where the operator lands after signing in (M1-64, mockup "02 · Home"): a greeting, the three
@@ -82,6 +90,42 @@ export class HomePage {
     });
   });
 
+  /** At-risk batches only (FR-16). Follows the Synthetic data switch. */
+  protected readonly atRisk = toSignal(
+    toObservable(this.synthetic.show).pipe(
+      switchMap((includeSynthetic) =>
+        this.api.getEarlyWarnings(includeSynthetic).pipe(
+          map((batches): AtRisk => ({
+            status: 'loaded',
+            batches: batches.filter((batch) => batch.atRisk),
+          })),
+          catchError((error: unknown) =>
+            of<AtRisk>({ status: 'failed', message: describeApiError(error).message }),
+          ),
+          startWith<AtRisk>({ status: 'loading' }),
+        ),
+      ),
+    ),
+    { initialValue: { status: 'loading' } as AtRisk },
+  );
+
+  protected readonly atRiskRows = computed((): AtRiskRow[] => {
+    const atRisk = this.atRisk();
+    if (atRisk.status !== 'loaded') return [];
+    return atRisk.batches.map((batch) => ({
+      ...batch,
+      shortfall: shortfallLabel(batch),
+      topReason: earlyWarningsShortfallFirst(batch.earlyWarnings)[0]?.warning ?? '',
+    }));
+  });
+
+  protected readonly atRiskMessage = computed(() => {
+    const atRisk = this.atRisk();
+    if (atRisk.status === 'loading') return 'Loading batches at risk…';
+    if (atRisk.status === 'failed') return atRisk.message;
+    return atRisk.batches.length === 0 ? 'No batches at risk.' : '';
+  });
+
   /** "Loading…" or the error, while there's no list to show. */
   protected readonly message = computed(() => {
     const recent = this.recent();
@@ -92,7 +136,12 @@ export class HomePage {
       : '';
   });
 
-  protected open(batch: BatchSummary): void {
+  protected open(batch: BatchSummary | EarlyWarningBatch): void {
     this.router.navigate(['/batches', batch.batchNumber]);
   }
+}
+
+function shortfallLabel(batch: EarlyWarningBatch): string {
+  if (batch.shortfallPsi == null) return '';
+  return `${formatNumber(batch.shortfallPsi, 'en-US', '1.0-0')} PSI short of target`;
 }

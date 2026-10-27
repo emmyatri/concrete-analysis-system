@@ -157,6 +157,20 @@
       </div>
     </dl>
 
+    @if (earlyWarningReasons().length > 0) {
+      <div class="early-warning-banner" role="status" data-testid="early-warnings">
+        <i class="pi pi-exclamation-triangle" aria-hidden="true"></i>
+        <div>
+          <p class="early-warning-title">Early warning</p>
+          <ul>
+            @for (reason of earlyWarningReasons(); track reason.limitKey + reason.warning) {
+              <li [attr.data-limit-key]="reason.limitKey">{{ reason.warning }}</li>
+            }
+          </ul>
+        </div>
+      </div>
+    }
+
     <div class="columns">
       <!-- ---------- Chart (Milestone 2, FR-11) ---------- -->
       <section class="card chart-card" aria-labelledby="chart-title">

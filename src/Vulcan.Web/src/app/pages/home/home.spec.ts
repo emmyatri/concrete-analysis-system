@@ -107,6 +107,41 @@ describe('HomePage', () => {
     expect(TestBed.inject(Router).url).toBe('/batches/VM-2026-0142');
   });
 
+  const flushWarnings = (body: object[] = []) => {
+    TestBed.inject(HttpTestingController)
+      .expectOne((r) => r.url.startsWith('/api/warnings/early'))
+      .flush(body);
+  };
+
+  it('lists only at-risk batches with shortfall and the top reason', async () => {
+    await open();
+
+    const numbers = [...root.querySelectorAll('[data-testid="at-risk"] tbody .batch-number')].map(
+      (el) => el.textContent?.trim(),
+    );
+    expect(numbers).toEqual(['VM-SYN-006']);
+    expect(text('[data-testid="at-risk"] tbody tr')).toContain('1,751 PSI short of target');
+    expect(text('[data-testid="at-risk"] tbody tr')).toContain('Projected 28-day strength');
+  });
+
+  it('hides synthetic at-risk batches when the switch is off', async () => {
+    await open();
+    TestBed.inject(SyntheticDataSetting).show.set(false);
+    await harness.fixture.whenStable();
+    harness.detectChanges();
+
+    expect(text('[data-testid="at-risk-message"]')).toBe('No batches at risk.');
+    expect(root.querySelector('[data-testid="at-risk"]')).toBeNull();
+  });
+
+  it('opens Batch Detail from an at-risk row', async () => {
+    await open();
+    root.querySelector<HTMLElement>('[data-testid="at-risk"] tbody tr.row-link')!.click();
+    await harness.fixture.whenStable();
+
+    expect(TestBed.inject(Router).url).toBe('/batches/VM-SYN-006');
+  });
+
   it('groups the batches under date headings, newest first', async () => {
     await open(false);
     const batch = (batchNumber: string, castAt: Date) => ({
@@ -125,6 +160,7 @@ describe('HomePage', () => {
         batch('B-1', new Date(2020, 0, 1)),
         batch('B-0', new Date(2019, 5, 1)),
       ]);
+    flushWarnings();
     harness.detectChanges();
 
     const headings = [...root.querySelectorAll('[data-testid="date-group"]')].map((el) =>
@@ -139,6 +175,7 @@ describe('HomePage', () => {
     TestBed.inject(HttpTestingController)
       .expectOne((r) => r.url === '/api/batches')
       .flush([]);
+    flushWarnings();
     harness.detectChanges();
 
     expect(text('[data-testid="recent-message"]')).toBe(
@@ -151,6 +188,7 @@ describe('HomePage', () => {
     TestBed.inject(HttpTestingController)
       .expectOne((r) => r.url === '/api/batches')
       .flush(null, { status: 0, statusText: 'Unknown Error' });
+    flushWarnings();
     harness.detectChanges();
 
     expect(text('[data-testid="recent-message"]')).not.toBe('');
