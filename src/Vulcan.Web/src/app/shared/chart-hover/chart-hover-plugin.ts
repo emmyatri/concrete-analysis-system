@@ -3,13 +3,13 @@ import type { Plugin } from 'chart.js';
 /** Hovered days are highlighted on both charts (M2-42, M2 hi-fi mock). */
 export function chartHoverPlugin(
   getHoveredDay: () => number | null,
-  reportHoveredDay: (day: number | null) => void
+  reportHoveredDay: (day: number | null) => void,
 ): Plugin<'line'> {
   return {
     /** Receives the hovered day. */
     id: 'shared-chart-hover',
-    afterEvent: (chart,args) =>{
-      if(!args.inChartArea) {
+    afterEvent: (chart, args) => {
+      if (!args.inChartArea) {
         if (getHoveredDay() !== null) {
           reportHoveredDay(null);
         }
@@ -40,7 +40,7 @@ export function chartHoverPlugin(
     },
 
     /** Renders hovered day. */
-    afterDatasetsDraw: chart => {
+    afterDatasetsDraw: (chart) => {
       const day = getHoveredDay();
       if (day === null) {
         return;

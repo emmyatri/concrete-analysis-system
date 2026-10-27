@@ -190,9 +190,9 @@ export class BatchDetailPage {
   protected readonly curingPoints = computed(() => {
     const state = this.strengthState();
     if (state.status === 'loaded') {
-      return state.strength.curingPoints
+      return state.strength.curingPoints;
     }
-    return []
+    return [];
   });
 
   // ---------- Shared chart interaction ----------

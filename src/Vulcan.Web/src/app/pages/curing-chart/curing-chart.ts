@@ -1,18 +1,27 @@
-import {ChartModule, UIChart} from 'primeng/chart';
-import {SelectModule} from 'primeng/select';
-import {FormsModule} from '@angular/forms';
-import {ButtonModule} from 'primeng/button';
-import {Component, computed, effect, inject, input, output, signal, viewChild} from '@angular/core';
-import {DOCUMENT} from '@angular/common';
-import {CuringPoint, CuringReading, SavedWarning} from '../../core/api/models';
+import { ChartModule, UIChart } from 'primeng/chart';
+import { SelectModule } from 'primeng/select';
+import { FormsModule } from '@angular/forms';
+import { ButtonModule } from 'primeng/button';
+import {
+  Component,
+  computed,
+  effect,
+  inject,
+  input,
+  output,
+  signal,
+  viewChild,
+} from '@angular/core';
+import { DOCUMENT } from '@angular/common';
+import { CuringPoint, CuringReading, SavedWarning } from '../../core/api/models';
 import {
   type CuringChartColors,
   curingChartConfig,
   type CuringMeasurement,
-  measurementLabels
+  measurementLabels,
 } from './curing-chart-config';
-import type {Plugin} from 'chart.js';
-import {chartHoverPlugin} from '../../shared/chart-hover/chart-hover-plugin';
+import type { Plugin } from 'chart.js';
+import { chartHoverPlugin } from '../../shared/chart-hover/chart-hover-plugin';
 
 /**
  * Curing reading over days since cast for one batch (SCRUM-176, FR-12, mockups M2-01 and M2-02).
@@ -22,17 +31,19 @@ import {chartHoverPlugin} from '../../shared/chart-hover/chart-hover-plugin';
   selector: 'app-curing-chart',
   imports: [ChartModule, SelectModule, FormsModule, ButtonModule],
   templateUrl: './curing-chart.html',
-  styleUrl: './curing-chart.scss'
+  styleUrl: './curing-chart.scss',
 })
 export class CuringChart {
   private readonly document = inject(DOCUMENT);
 
   /** Curing readings for the batch with warning details. */
-  readonly readings = input.required<{
-    label: string,
-    reading: CuringReading,
-    ambientWarning: SavedWarning | undefined
-  }[]>();
+  readonly readings = input.required<
+    {
+      label: string;
+      reading: CuringReading;
+      ambientWarning: SavedWarning | undefined;
+    }[]
+  >();
 
   /** Curing measurements for the batch, or an empty array until strength data loads. */
   readonly curingPoints = input.required<CuringPoint[]>();
@@ -48,26 +59,29 @@ export class CuringChart {
    * default = internal temp (M2-44).
    * */
   readonly selectedMeasurement = signal<CuringMeasurement>('internalTempF');
-  readonly measurementOptions = Object.entries(measurementLabels).map(
-    ([value, label]) => ({value, label}),
-  );
+  readonly measurementOptions = Object.entries(measurementLabels).map(([value, label]) => ({
+    value,
+    label,
+  }));
 
   /** Maps the ambient warnings to its respective curing point for chart rendering.*/
   protected readonly flaggedReadings = computed(
     () =>
-      new Map((this.readings()).filter((s) => s.ambientWarning)
-        .map((s) => [`${s.label} | ${Date.parse(s.reading.takenAt)}`,
-          s.ambientWarning!.message
-          ] as const
-        )
-      )
+      new Map(
+        this.readings()
+          .filter((s) => s.ambientWarning)
+          .map(
+            (s) =>
+              [`${s.label} | ${Date.parse(s.reading.takenAt)}`, s.ambientWarning!.message] as const,
+          ),
+      ),
   );
 
   /** Caption inside the strip: "Line = average of 9 cylinders · band = lowest to highest ·
    * readings so far: 0–72 h" (use the real cylinder count and hours). (M2-42)
    * */
-  protected readonly cylinderCount = computed(() =>
-    new Set(this.readings().map(s => s.label)).size
+  protected readonly cylinderCount = computed(
+    () => new Set(this.readings().map((s) => s.label)).size,
   );
 
   readonly readingCaption = computed(() => {
@@ -85,10 +99,10 @@ export class CuringChart {
     if (hours.length === 1) {
       return `${hours.length} reading so far (${firstHour} h)`;
     }
-    if (hours.length === 2 ) {
+    if (hours.length === 2) {
       return `${hours.length} readings so far (${firstHour} h and ${lastHour} h)`;
     }
-    return `Line = average of ${cylinders} cylinders · band = lowest to highest · readings so far: ${firstHour}–${lastHour}h`
+    return `Line = average of ${cylinders} cylinders · band = lowest to highest · readings so far: ${firstHour}–${lastHour}h`;
   });
 
   /** Identifies the configuration pieces for the curing chart.*/
@@ -117,36 +131,36 @@ export class CuringChart {
     };
   }
 
-  protected readonly guidePlugins: Plugin<'line'>[] = [{
+  protected readonly guidePlugins: Plugin<'line'>[] = [
+    {
+      /** Faint vertical lines at Day 1 and Day 3, labeled "Day 1" / "Day 3" (M2-42, M2 hi-fi mock). */
+      id: 'curing-day-labels',
+      afterDatasetsDraw: (chart) => {
+        const xAxis = chart.scales['x'];
+        if (!xAxis) return;
 
-    /** Faint vertical lines at Day 1 and Day 3, labeled "Day 1" / "Day 3" (M2-42, M2 hi-fi mock). */
-    id: 'curing-day-labels',
-    afterDatasetsDraw: chart => {
-      const xAxis = chart.scales['x'];
-      if (!xAxis) return;
+        const { ctx, chartArea } = chart;
 
-      const {ctx, chartArea} = chart;
+        ctx.save();
+        const style = this.document.defaultView?.getComputedStyle(this.document.documentElement);
+        ctx.fillStyle = style?.getPropertyValue('--p-surface-950').trim() || '#171717';
+        ctx.font = `11px ${this.colors().font}`;
+        ctx.textAlign = 'left';
 
-      ctx.save();
-      const style = this.document.defaultView?.getComputedStyle(this.document.documentElement);
-      ctx.fillStyle = style?.getPropertyValue('--p-surface-950').trim() || '#171717';
-      ctx.font = `11px ${this.colors().font}`;
-      ctx.textAlign = 'left';
+        for (const day of [1, 3]) {
+          const x = xAxis.getPixelForValue(day);
+          ctx.fillText(`Day ${day}`, x + 8, chartArea.top + 12);
+        }
 
-      for (const day of [1, 3]) {
-        const x = xAxis.getPixelForValue(day);
-        ctx.fillText(`Day ${day}`, x + 8, chartArea.top + 12);
-      }
-
-      ctx.restore();
+        ctx.restore();
+      },
     },
-  },
 
     /** Hovered day plugin (M2-42, M2 hi-fi mock). */
     chartHoverPlugin(
       () => this.hoveredDay(),
-      day => this.hoveredDayChange.emit(day)
-    )
+      (day) => this.hoveredDayChange.emit(day),
+    ),
   ];
 
   private readonly redrawOnHover = effect(() => {

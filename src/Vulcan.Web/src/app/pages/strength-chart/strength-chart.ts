@@ -1,5 +1,5 @@
 import { DOCUMENT } from '@angular/common';
-import {Component, computed, effect, inject, input, output, viewChild} from '@angular/core';
+import { Component, computed, effect, inject, input, output, viewChild } from '@angular/core';
 import { ChartModule, UIChart } from 'primeng/chart';
 import type { Plugin } from 'chart.js';
 import { BatchStrength } from '../../core/api/models';
@@ -25,7 +25,6 @@ export type StrengthLoad =
 export class StrengthChart {
   private readonly document = inject(DOCUMENT);
 
-
   readonly state = input.required<StrengthLoad>();
   /** The batch's cast time (ISO, UTC), for "Latest reading: 18 h". */
   readonly castAt = input.required<string>();
@@ -35,7 +34,7 @@ export class StrengthChart {
   readonly flaggedSpecimenIds = input<ReadonlySet<number>>(new Set());
 
   /** Day hovered over by either strength or curing charts. (M2-42) */
-  readonly hoveredDay= input<number | null>(null);
+  readonly hoveredDay = input<number | null>(null);
   readonly hoveredDayChange = output<number | null>();
   private readonly chartWidget = viewChild(UIChart);
 
@@ -44,7 +43,7 @@ export class StrengthChart {
     /** Hovered day plugin (M2-42, M2 hi-fi mock). */
     chartHoverPlugin(
       () => this.hoveredDay(),
-      day => this.hoveredDayChange.emit(day)
+      (day) => this.hoveredDayChange.emit(day),
     ),
   ];
 

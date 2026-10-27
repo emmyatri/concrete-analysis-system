@@ -1,6 +1,5 @@
-import type {ChartData, ChartDataset, ChartOptions, ScriptableContext} from 'chart.js';
-import {CuringPoint} from '../../core/api/models';
-
+import type { ChartData, ChartDataset, ChartOptions, ScriptableContext } from 'chart.js';
+import { CuringPoint } from '../../core/api/models';
 
 /** Theme values used by the curing chart. */
 export interface CuringChartColors {
@@ -55,9 +54,7 @@ export function curingChartConfig(
   colors: CuringChartColors,
   selectedMeasurement: CuringMeasurement,
   flaggedReadings: ReadonlyMap<string, string>,
-
 ): CuringChartConfig {
-
   const measurementLabel = measurementLabels[selectedMeasurement];
   const measurementUnits: Record<CuringMeasurement, string> = {
     internalTempF: ' °F',
@@ -68,7 +65,7 @@ export function curingChartConfig(
     co2Ppm: ' ppm',
   };
 
-  const font = {family: colors.font, size: 12};
+  const font = { family: colors.font, size: 12 };
 
   /** Group curing points by timestamp.*/
   const readingsByTime = new Map<number, CuringPoint[]>();
@@ -92,7 +89,7 @@ export function curingChartConfig(
     const readings = readingsByTime.get(timestamp)!;
 
     /* Obtain average, min, max values for given measurement. */
-    const values = readings.map(point => point[selectedMeasurement]);
+    const values = readings.map((point) => point[selectedMeasurement]);
     const minValue = Math.min(...values);
     const maxValue = Math.max(...values);
     const avgValue = values.reduce((sum, value) => sum + value, 0) / values.length;
@@ -100,21 +97,19 @@ export function curingChartConfig(
     const day = (timestamp - Date.parse(castAt)) / 86_400_000;
 
     /** Convert points to a curve for the chart rendering.*/
-    averagePoints.push({x: day, y: avgValue});
-    minPoints.push({x: day, y: minValue});
-    maxPoints.push({x: day, y: maxValue});
-    }
+    averagePoints.push({ x: day, y: avgValue });
+    minPoints.push({ x: day, y: minValue });
+    maxPoints.push({ x: day, y: maxValue });
+  }
 
   /** Check whether a particular reading has a warning, flag by color. */
   const markerColor = (context: ScriptableContext<'line'>) => {
     const timestamp = sortedTimes[context.dataIndex];
     const readingsAtTime = readingsByTime.get(timestamp) ?? [];
-    const hasWarning = readingsAtTime.some(reading =>
-      flaggedReadings.has(`${reading.specimenLabel} | ${timestamp}`)
+    const hasWarning = readingsAtTime.some((reading) =>
+      flaggedReadings.has(`${reading.specimenLabel} | ${timestamp}`),
     );
-    return selectedMeasurement === 'ambientTempF' && hasWarning
-      ? colors.flagged
-      : colors.line;
+    return selectedMeasurement === 'ambientTempF' && hasWarning ? colors.flagged : colors.line;
   };
 
   /** Assemble each dataset and add to datasets.*/
@@ -123,25 +118,24 @@ export function curingChartConfig(
   const averageCurve = {
     label: 'Average',
     data: averagePoints,
-  }
+  };
 
   const minCurve = {
     label: 'Minimum',
     data: minPoints,
-  }
+  };
 
   const maxCurve = {
     label: 'Maximum',
     data: maxPoints,
-  }
+  };
 
   datasets.push({
     ...averageCurve,
     borderColor: colors.line,
     pointBackgroundColor: markerColor,
     pointBorderColor: markerColor,
-    pointRadius: context =>
-      markerColor(context) === colors.flagged ? 5 : 0,
+    pointRadius: (context) => (markerColor(context) === colors.flagged ? 5 : 0),
     pointHoverRadius: 7,
   });
 
@@ -159,90 +153,85 @@ export function curingChartConfig(
     borderWidth: 0,
     pointRadius: 0,
     pointHoverRadius: 0,
-    fill: false
+    fill: false,
   });
 
   /** Return the curing chart instructions + reading hours for caption (M2-42). */
-    return {
-      data: {datasets},
-      readingHours: sortedTimes.map(
-        timestamp => (timestamp - Date.parse(castAt)) / 3_600_000
-      ),
-      options: {
-        maintainAspectRatio: false,
-        animation: false,
-        font,
-        interaction: {mode: 'nearest', intersect: false},
-        layout: {padding: {top: 4, right: 8}},
-        scales: {
-          x: {
-            type: 'linear',
-            min: 0,
-            max: 28,
-            title: {display: false, text: 'Days since cast', color: colors.text, font},
-            ticks: {display: false, color: colors.text, font},
-            afterBuildTicks: (axis) => {
-              axis.ticks = DAY_TICKS.map((value) => ({value}));
-            },
-            grid: {
-              drawTicks: false,
-              color: context =>
-                [1, 3].includes(context.tick?.value ?? -1)
-                  ? colors.text
-                  : colors.grid,
-              lineWidth: context =>
-                [1, 3].includes(context.tick?.value ?? -1) ? 1.5 : 1,
-            },
+  return {
+    data: { datasets },
+    readingHours: sortedTimes.map((timestamp) => (timestamp - Date.parse(castAt)) / 3_600_000),
+    options: {
+      maintainAspectRatio: false,
+      animation: false,
+      font,
+      interaction: { mode: 'nearest', intersect: false },
+      layout: { padding: { top: 4, right: 8 } },
+      scales: {
+        x: {
+          type: 'linear',
+          min: 0,
+          max: 28,
+          title: { display: false, text: 'Days since cast', color: colors.text, font },
+          ticks: { display: false, color: colors.text, font },
+          afterBuildTicks: (axis) => {
+            axis.ticks = DAY_TICKS.map((value) => ({ value }));
           },
-          y: {
-            title: {display: false, text: measurementLabel, color: colors.text, font},
-            ticks: {
-              maxTicksLimit: 3,
-              color: colors.text,
-              font,
-              callback: value =>
-                `${Number(value).toLocaleString('en-US')}${measurementUnits[selectedMeasurement]}`,
-            },
-            grid: {color: colors.grid},
-            afterFit: (scale) => {
-              scale.width = 70;
-            },
+          grid: {
+            drawTicks: false,
+            color: (context) =>
+              [1, 3].includes(context.tick?.value ?? -1) ? colors.text : colors.grid,
+            lineWidth: (context) => ([1, 3].includes(context.tick?.value ?? -1) ? 1.5 : 1),
           },
         },
-        plugins: {
-          legend: {
-            display: false,
+        y: {
+          title: { display: false, text: measurementLabel, color: colors.text, font },
+          ticks: {
+            maxTicksLimit: 3,
+            color: colors.text,
+            font,
+            callback: (value) =>
+              `${Number(value).toLocaleString('en-US')}${measurementUnits[selectedMeasurement]}`,
           },
-          tooltip: {
-            filter: (item) => item.datasetIndex === 0,
-            callbacks: {
-              title: () => '',
-              label: (item) => {
-                const point = item.raw as ChartPoint;
-                const timestamp = sortedTimes[item.dataIndex];
-                /* Using the point's timestamp, determine if warnings exist when measurement is ambient Temp. */
-                const flaggedAtTime = selectedMeasurement === 'ambientTempF'
-                  ? (readingsByTime.get(timestamp) ?? []).filter(reading =>
-                    flaggedReadings.has(`${reading.specimenLabel} | ${timestamp}`)
-                  )
+          grid: { color: colors.grid },
+          afterFit: (scale) => {
+            scale.width = 70;
+          },
+        },
+      },
+      plugins: {
+        legend: {
+          display: false,
+        },
+        tooltip: {
+          filter: (item) => item.datasetIndex === 0,
+          callbacks: {
+            title: () => '',
+            label: (item) => {
+              const point = item.raw as ChartPoint;
+              const timestamp = sortedTimes[item.dataIndex];
+              /* Using the point's timestamp, determine if warnings exist when measurement is ambient Temp. */
+              const flaggedAtTime =
+                selectedMeasurement === 'ambientTempF'
+                  ? (readingsByTime.get(timestamp) ?? []).filter((reading) =>
+                      flaggedReadings.has(`${reading.specimenLabel} | ${timestamp}`),
+                    )
                   : [];
-                /* Convert warnings to strings for tooltip rendering. */
-                const warningLines = flaggedAtTime.map(reading =>
+              /* Convert warnings to strings for tooltip rendering. */
+              const warningLines = flaggedAtTime.map(
+                (reading) =>
                   `${reading.specimenLabel}: ${reading.ambientTempF.toFixed(1)}
-°F — ${flaggedReadings.get(`${reading.specimenLabel} | ${timestamp}`)}`
-                );
-                const day = Number.isInteger(point.x) ? point.x : point.x.toFixed(1);
-                /* Tooltip message. */
-                if (warningLines.length > 0) {
-                  return warningLines;
-                }
-                return `${item.dataset.label}: ${point.y.toLocaleString('en-US')}${measurementUnits[selectedMeasurement]} at day ${day}`;
-              },
+°F — ${flaggedReadings.get(`${reading.specimenLabel} | ${timestamp}`)}`,
+              );
+              const day = Number.isInteger(point.x) ? point.x : point.x.toFixed(1);
+              /* Tooltip message. */
+              if (warningLines.length > 0) {
+                return warningLines;
+              }
+              return `${item.dataset.label}: ${point.y.toLocaleString('en-US')}${measurementUnits[selectedMeasurement]} at day ${day}`;
             },
           },
         },
       },
-    };
-  }
-
-
+    },
+  };
+}
