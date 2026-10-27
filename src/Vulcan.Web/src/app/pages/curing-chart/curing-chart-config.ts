@@ -26,6 +26,7 @@ type CuringDataset = ChartDataset<'line', ChartPoint[]>;
 
 export interface CuringChartConfig {
   data: ChartData<'line', ChartPoint[]>;
+  readingHours: number[];
   options: ChartOptions<'line'>;
 }
 
@@ -53,14 +54,14 @@ export function curingChartConfig(
   castAt: string,
   colors: CuringChartColors,
   selectedMeasurement: CuringMeasurement,
-  flaggedReadings: ReadonlySet<string>,
+  flaggedReadings: ReadonlyMap<string, string>,
 
 ): CuringChartConfig {
 
   const measurementLabel = measurementLabels[selectedMeasurement];
   const measurementUnits: Record<CuringMeasurement, string> = {
-    internalTempF: '°F',
-    ambientTempF: '°F',
+    internalTempF: ' °F',
+    ambientTempF: ' °F',
     moisturePct: '%',
     relativeHumidityPct: '%',
     resistivityOhmPerFt: ' Ω/ft',
@@ -161,9 +162,12 @@ export function curingChartConfig(
     fill: false
   });
 
-  /** Return the curing chart instructions. */
+  /** Return the curing chart instructions + reading hours for caption (M2-42). */
     return {
       data: {datasets},
+      readingHours: sortedTimes.map(
+        timestamp => (timestamp - Date.parse(castAt)) / 3_600_000
+      ),
       options: {
         maintainAspectRatio: false,
         animation: false,
@@ -224,14 +228,15 @@ export function curingChartConfig(
                   : [];
                 /* Convert warnings to strings for tooltip rendering. */
                 const warningLines = flaggedAtTime.map(reading =>
-                  `${reading.specimenLabel}: ${reading.ambientTempF.toFixed(1)} °F outside 60-80`
+                  `${reading.specimenLabel}: ${reading.ambientTempF.toFixed(1)}
+°F — ${flaggedReadings.get(`${reading.specimenLabel} | ${timestamp}`)}`
                 );
                 const day = Number.isInteger(point.x) ? point.x : point.x.toFixed(1);
                 /* Tooltip message. */
-                return [
-                  `${item.dataset.label} | Day ${day} | ${measurementLabel}: ${point.y.toLocaleString('en-US')}`,
-                  ...warningLines,
-                ];
+                if (warningLines.length > 0) {
+                  return warningLines;
+                }
+                return `${item.dataset.label}: ${point.y.toLocaleString('en-US')}${measurementUnits[selectedMeasurement]} at day ${day}`;
               },
             },
           },

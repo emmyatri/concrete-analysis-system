@@ -160,15 +160,6 @@ export class BatchDetailPage {
     { initialValue: { status: 'loading' } as StrengthLoad },
   );
 
-  protected readonly curingPoints = computed(() => {
-    const state = this.strengthState();
-    if (state.status === 'loaded') {
-      return state.strength.curingPoints
-    }
-    return []
-  });
-
-
   /**
    * The chart's minimum line: Prediction.MinimumPsi once SCRUM-181 adds it, until then the break
    * strength Warn limit (both 3,000 PSI, the client's minimum).
@@ -193,6 +184,21 @@ export class BatchDetailPage {
           .map((s) => s.id),
       ),
   );
+
+  // ---------- Curing chart ----------
+
+  protected readonly curingPoints = computed(() => {
+    const state = this.strengthState();
+    if (state.status === 'loaded') {
+      return state.strength.curingPoints
+    }
+    return []
+  });
+
+  // ---------- Shared chart interaction ----------
+
+  /** Days hovered over in either strength or curing charts are highlighted in both charts (M2-42). */
+  protected readonly hoveredDay = signal<number | null>(null);
 
   // ---------- Saved warnings ----------
 
