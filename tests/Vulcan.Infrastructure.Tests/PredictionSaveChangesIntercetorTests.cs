@@ -834,7 +834,7 @@ public sealed class PredictionSaveChangesInterceptorTests()
         using var connection = new SqliteConnection("Filename=:memory:");
         await connection.OpenAsync();
 
-        using var db = new VulcanDbContext(GetDbOptions(connection, estimate, _calibrationVersion, enableIntercept: false));
+        using var db = new VulcanDbContext(GetDbOptions(connection, estimate, _calibrationVersion, enableIntercept: true));
         await db.Database.EnsureCreatedAsync();
         SyntheticDataSeeder.Seed(db);
 
