@@ -11,7 +11,7 @@ export interface CuringChartColors {
   flagged: string;
 }
 
-/** x-axis gridline positions; tick labels are hidden in the chart options. (M2-42, M2 hi-fi mock). */
+/** x-axis gridline positions; tick labels are hidden in the chart options. (M2-44, M2 hi-fi mock). */
 const DAY_TICKS = [0, 1, 3, 7, 14, 21, 28];
 
 /** One point on the chart. */
@@ -109,7 +109,7 @@ export function curingChartConfig(
     const hasWarning = readingsAtTime.some((reading) =>
       flaggedReadings.has(`${reading.specimenLabel} | ${timestamp}`),
     );
-    return selectedMeasurement === 'ambientTempF' && hasWarning ? colors.flagged : colors.line;
+    return hasWarning ? colors.flagged : colors.line;
   };
 
   /** Assemble each dataset and add to datasets.*/
@@ -156,7 +156,7 @@ export function curingChartConfig(
     fill: false,
   });
 
-  /** Return the curing chart instructions + reading hours for caption (M2-42). */
+  /** Return the curing chart instructions + reading hours for caption (M2-44). */
   return {
     data: { datasets },
     readingHours: sortedTimes.map((timestamp) => (timestamp - Date.parse(castAt)) / 3_600_000),
@@ -209,18 +209,14 @@ export function curingChartConfig(
             label: (item) => {
               const point = item.raw as ChartPoint;
               const timestamp = sortedTimes[item.dataIndex];
-              /* Using the point's timestamp, determine if warnings exist when measurement is ambient Temp. */
-              const flaggedAtTime =
-                selectedMeasurement === 'ambientTempF'
-                  ? (readingsByTime.get(timestamp) ?? []).filter((reading) =>
-                      flaggedReadings.has(`${reading.specimenLabel} | ${timestamp}`),
-                    )
-                  : [];
+              /* The cylinders whose reading at this time was flagged for the selected measurement. */
+              const flaggedAtTime = (readingsByTime.get(timestamp) ?? []).filter((reading) =>
+                flaggedReadings.has(`${reading.specimenLabel} | ${timestamp}`),
+              );
               /* Convert warnings to strings for tooltip rendering. */
               const warningLines = flaggedAtTime.map(
                 (reading) =>
-                  `${reading.specimenLabel}: ${reading.ambientTempF.toFixed(1)}
-°F — ${flaggedReadings.get(`${reading.specimenLabel} | ${timestamp}`)}`,
+                  `${reading.specimenLabel}: ${reading[selectedMeasurement].toLocaleString('en-US')}${measurementUnits[selectedMeasurement]} ⚠ ${flaggedReadings.get(`${reading.specimenLabel} | ${timestamp}`)}`,
               );
               const day = Number.isInteger(point.x) ? point.x : point.x.toFixed(1);
               /* Tooltip message. */

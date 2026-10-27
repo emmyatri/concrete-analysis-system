@@ -85,6 +85,16 @@ describe('curingChartConfig', () => {
     expect(markerColor({ dataIndex: 0 } as ScriptableContext<'line'>, {})).toBe(COLORS.flagged);
   });
 
+  it('leaves points unmarked when no reading at that time was flagged', () => {
+    const { data } = curingChartConfig(points, castAt, COLORS, 'internalTempF', new Map());
+
+    const markerColor = data.datasets[0].pointBackgroundColor;
+    if (typeof markerColor !== 'function') {
+      throw new Error('Expected a point color callback');
+    }
+    expect(markerColor({ dataIndex: 0 } as ScriptableContext<'line'>, {})).toBe(COLORS.line);
+  });
+
   /** Parameterized test; tests the six curing measurements numeric outputs and respective unit. */
   it.each([
     ['internalTempF', 78.8889, '°F'],

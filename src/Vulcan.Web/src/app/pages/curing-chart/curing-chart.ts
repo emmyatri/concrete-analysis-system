@@ -23,6 +23,16 @@ import {
 import type { Plugin } from 'chart.js';
 import { chartHoverPlugin } from '../../shared/chart-hover/chart-hover-plugin';
 
+/** The ValidationLimit key that flags each measurement (schema.md section 4). */
+const MEASUREMENT_LIMIT_KEYS: Record<CuringMeasurement, string> = {
+  internalTempF: 'Curing.InternalTempF',
+  ambientTempF: 'Curing.AmbientTempF',
+  moisturePct: 'Curing.MoisturePct',
+  relativeHumidityPct: 'Curing.RelativeHumidityPct',
+  resistivityOhmPerFt: 'Curing.ResistivityOhmPerFt',
+  co2Ppm: 'Curing.Co2Ppm',
+};
+
 /**
  * Curing reading over days since cast for one batch (SCRUM-176, FR-12, mockups M2-01 and M2-02).
  * Its own component so chart.js and its styles stay out of Batch Detail.
@@ -36,21 +46,23 @@ import { chartHoverPlugin } from '../../shared/chart-hover/chart-hover-plugin';
 export class CuringChart {
   private readonly document = inject(DOCUMENT);
 
-  /** Curing readings for the batch with warning details. */
+  /** Curing readings for the batch, with each reading's cylinder label. */
   readonly readings = input.required<
     {
       label: string;
       reading: CuringReading;
-      ambientWarning: SavedWarning | undefined;
     }[]
   >();
+
+  /** Every saved warning for the batch; only curing-reading warnings are used here. */
+  readonly warnings = input<SavedWarning[]>([]);
 
   /** Curing measurements for the batch, or an empty array until strength data loads. */
   readonly curingPoints = input.required<CuringPoint[]>();
   /** The batch's cast time (ISO, UTC), for "Latest reading: 18 h". */
   readonly castAt = input.required<string>();
 
-  /** Day hovered over by either strength or curing charts. (M2-42) */
+  /** Day hovered over by either strength or curing charts. (M2-44) */
   readonly hoveredDay = input<number | null>(null);
   readonly hoveredDayChange = output<number | null>();
   private readonly chartWidget = viewChild(UIChart);
@@ -64,21 +76,33 @@ export class CuringChart {
     label,
   }));
 
-  /** Maps the ambient warnings to its respective curing point for chart rendering.*/
-  protected readonly flaggedReadings = computed(
-    () =>
-      new Map(
-        this.readings()
-          .filter((s) => s.ambientWarning)
-          .map(
-            (s) =>
-              [`${s.label} | ${Date.parse(s.reading.takenAt)}`, s.ambientWarning!.message] as const,
-          ),
-      ),
-  );
+  /**
+   * Readings saved with a warning for the selected measurement, keyed "label | time" like the
+   * curing points. Matched by reading id and limit key, so every measurement with a Warn limit
+   * is marked, not just ambient (SCRUM-176 step 3).
+   */
+  readonly flaggedReadings = computed(() => {
+    const limitKey = MEASUREMENT_LIMIT_KEYS[this.selectedMeasurement()];
+    const messages = new Map(
+      this.warnings()
+        .filter((w) => w.entityType === 'CuringReading' && w.limitKey === limitKey)
+        .map((w) => [w.entityId, w.message] as const),
+    );
+    return new Map<string, string>(
+      this.readings()
+        .filter((row) => messages.has(row.reading.id))
+        .map(
+          (row) =>
+            [
+              `${row.label} | ${Date.parse(row.reading.takenAt)}`,
+              messages.get(row.reading.id)!,
+            ] as const,
+        ),
+    );
+  });
 
   /** Caption inside the strip: "Line = average of 9 cylinders · band = lowest to highest ·
-   * readings so far: 0–72 h" (use the real cylinder count and hours). (M2-42)
+   * readings so far: 0–72 h" (use the real cylinder count and hours). (M2-44)
    * */
   protected readonly cylinderCount = computed(
     () => new Set(this.readings().map((s) => s.label)).size,
@@ -86,13 +110,13 @@ export class CuringChart {
 
   readonly readingCaption = computed(() => {
     const hours = this.chart().readingHours;
-    const cylinders = this.cylinderCount();
-    const firstHour = Math.round(hours[0]);
-    const lastHour = Math.round(hours[hours.length - 1]);
-
     if (hours.length === 0) {
       return 'No curing readings yet';
     }
+
+    const cylinders = this.cylinderCount();
+    const firstHour = Math.round(hours[0]);
+    const lastHour = Math.round(hours[hours.length - 1]);
     /** Could have multiple readings across cylinders (9 cylinders x 2 readings).
      * Count based on hours in array not individual cylinders' readings.
      */
@@ -102,7 +126,7 @@ export class CuringChart {
     if (hours.length === 2) {
       return `${hours.length} readings so far (${firstHour} h and ${lastHour} h)`;
     }
-    return `Line = average of ${cylinders} cylinders · band = lowest to highest · readings so far: ${firstHour}–${lastHour}h`;
+    return `Line = average of ${cylinders} ${cylinders === 1 ? 'cylinder' : 'cylinders'} · band = lowest to highest · readings so far: ${firstHour}–${lastHour}h`;
   });
 
   /** Identifies the configuration pieces for the curing chart.*/
@@ -133,7 +157,7 @@ export class CuringChart {
 
   protected readonly guidePlugins: Plugin<'line'>[] = [
     {
-      /** Faint vertical lines at Day 1 and Day 3, labeled "Day 1" / "Day 3" (M2-42, M2 hi-fi mock). */
+      /** Faint vertical lines at Day 1 and Day 3, labeled "Day 1" / "Day 3" (M2-44, M2 hi-fi mock). */
       id: 'curing-day-labels',
       afterDatasetsDraw: (chart) => {
         const xAxis = chart.scales['x'];
@@ -156,7 +180,7 @@ export class CuringChart {
       },
     },
 
-    /** Hovered day plugin (M2-42, M2 hi-fi mock). */
+    /** Hovered day plugin (M2-44, M2 hi-fi mock). */
     chartHoverPlugin(
       () => this.hoveredDay(),
       (day) => this.hoveredDayChange.emit(day),

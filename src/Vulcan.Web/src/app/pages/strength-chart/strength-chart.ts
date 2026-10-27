@@ -33,14 +33,14 @@ export class StrengthChart {
   /** Cylinders whose break was saved with a warning, drawn in orange. */
   readonly flaggedSpecimenIds = input<ReadonlySet<number>>(new Set());
 
-  /** Day hovered over by either strength or curing charts. (M2-42) */
+  /** Day hovered over by either strength or curing charts. (M2-44) */
   readonly hoveredDay = input<number | null>(null);
   readonly hoveredDayChange = output<number | null>();
   private readonly chartWidget = viewChild(UIChart);
 
   protected readonly plugins: Plugin<'line'>[] = [
     endLabelsPlugin,
-    /** Hovered day plugin (M2-42, M2 hi-fi mock). */
+    /** Hovered day plugin (M2-44, M2 hi-fi mock). */
     chartHoverPlugin(
       () => this.hoveredDay(),
       (day) => this.hoveredDayChange.emit(day),

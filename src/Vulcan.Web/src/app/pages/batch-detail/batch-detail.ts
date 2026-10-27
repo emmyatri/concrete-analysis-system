@@ -197,7 +197,7 @@ export class BatchDetailPage {
 
   // ---------- Shared chart interaction ----------
 
-  /** Days hovered over in either strength or curing charts are highlighted in both charts (M2-42). */
+  /** Days hovered over in either strength or curing charts are highlighted in both charts (M2-44). */
   protected readonly hoveredDay = signal<number | null>(null);
 
   // ---------- Saved warnings ----------

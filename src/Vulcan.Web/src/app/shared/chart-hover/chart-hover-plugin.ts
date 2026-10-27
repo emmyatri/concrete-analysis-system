@@ -1,6 +1,6 @@
 import type { Plugin } from 'chart.js';
 
-/** Hovered days are highlighted on both charts (M2-42, M2 hi-fi mock). */
+/** Hovered days are highlighted on both charts (M2-44, M2 hi-fi mock). */
 export function chartHoverPlugin(
   getHoveredDay: () => number | null,
   reportHoveredDay: (day: number | null) => void,
