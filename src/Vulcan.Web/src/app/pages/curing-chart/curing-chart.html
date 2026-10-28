@@ -1,0 +1,26 @@
+<div class="header">
+  <h3 class="chart-title">Curing readings</h3>
+  <!-- Measurement selector: displays readable labels but stores the measurement key. -->
+  <div class="measurement-selector">
+    <label for="curing-measurement">Display measurement:</label>
+    <p-select
+      inputId="curing-measurement"
+      [options]="measurementOptions"
+      optionLabel="label"
+      optionValue="value"
+      [ngModel]="selectedMeasurement()"
+      (ngModelChange)="selectedMeasurement.set($event)"
+      scrollHeight="120px"
+    />
+  </div>
+</div>
+
+<!-- The computed chart configuration updates when selectedMeasurement changes. -->
+<p-chart
+  type="line"
+  [data]="chart().data"
+  [options]="chart().options"
+  [plugins]="guidePlugins"
+  height="120px"
+/>
+<small class="curing-caption">{{ readingCaption() }}</small>

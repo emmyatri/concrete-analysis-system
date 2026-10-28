@@ -9,13 +9,15 @@ import { TabsModule } from 'primeng/tabs';
 import { catchError, map, of, startWith, switchMap } from 'rxjs';
 
 import { describeApiError } from '../../core/api/api-errors';
-import { BatchDetail, SavedWarning, Specimen } from '../../core/api/models';
+import { earlyWarningsShortfallFirst } from '../../core/api/early-warnings';
+import { BatchDetail, EarlyWarning, SavedWarning, Specimen } from '../../core/api/models';
 import { ReferenceDataService } from '../../core/api/reference-data.service';
 import { VulcanApiService } from '../../core/api/vulcan-api.service';
 import { AddCylinderDialog } from '../add-cylinder-dialog/add-cylinder-dialog';
 import { CuringSummary } from '../curing-summary/curing-summary';
 import { EstimateCards } from '../estimate-cards/estimate-cards';
 import { StrengthChart, StrengthLoad } from '../strength-chart/strength-chart';
+import { CuringChart } from '../curing-chart/curing-chart';
 
 type LoadState =
   | { status: 'loading' }
@@ -71,6 +73,7 @@ const FIELDS: Record<string, { label: string; short?: string; digits: string }> 
     TabsModule,
     AddCylinderDialog,
     StrengthChart,
+    CuringChart,
     EstimateCards,
     CuringSummary,
   ],
@@ -158,6 +161,21 @@ export class BatchDetailPage {
     { initialValue: { status: 'loading' } as StrengthLoad },
   );
 
+  /** Plain-language reasons from GET strength, shortfall first. Empty when the batch is on track. */
+  protected readonly earlyWarningReasons = computed((): EarlyWarning[] => {
+    const state = this.strengthState();
+    if (state.status !== 'loaded') return [];
+    return earlyWarningsShortfallFirst(state.strength.earlyWarnings);
+  });
+
+  /** "VM-SYN-006 is at risk of missing its target" when the prediction says so (mockup M2-01). */
+  protected readonly earlyWarningTitle = computed(() => {
+    const state = this.strengthState();
+    return state.status === 'loaded' && state.strength.atRisk
+      ? `${state.strength.batchNumber} is at risk of missing its target`
+      : 'Early warning';
+  });
+
   /**
    * The chart's minimum line: Prediction.MinimumPsi once SCRUM-181 adds it, until then the break
    * strength Warn limit (both 3,000 PSI, the client's minimum).
@@ -182,6 +200,21 @@ export class BatchDetailPage {
           .map((s) => s.id),
       ),
   );
+
+  // ---------- Curing chart ----------
+
+  protected readonly curingPoints = computed(() => {
+    const state = this.strengthState();
+    if (state.status === 'loaded') {
+      return state.strength.curingPoints;
+    }
+    return [];
+  });
+
+  // ---------- Shared chart interaction ----------
+
+  /** Days hovered over in either strength or curing charts are highlighted in both charts (M2-44). */
+  protected readonly hoveredDay = signal<number | null>(null);
 
   // ---------- Saved warnings ----------
 

@@ -1,0 +1,194 @@
+import { ChartModule, UIChart } from 'primeng/chart';
+import { SelectModule } from 'primeng/select';
+import { FormsModule } from '@angular/forms';
+import { ButtonModule } from 'primeng/button';
+import {
+  Component,
+  computed,
+  effect,
+  inject,
+  input,
+  output,
+  signal,
+  viewChild,
+} from '@angular/core';
+import { DOCUMENT } from '@angular/common';
+import { CuringPoint, CuringReading, SavedWarning } from '../../core/api/models';
+import {
+  type CuringChartColors,
+  curingChartConfig,
+  type CuringMeasurement,
+  measurementLabels,
+} from './curing-chart-config';
+import type { Plugin } from 'chart.js';
+import { chartHoverPlugin } from '../../shared/chart-hover/chart-hover-plugin';
+
+/** The ValidationLimit key that flags each measurement (schema.md section 4). */
+const MEASUREMENT_LIMIT_KEYS: Record<CuringMeasurement, string> = {
+  internalTempF: 'Curing.InternalTempF',
+  ambientTempF: 'Curing.AmbientTempF',
+  moisturePct: 'Curing.MoisturePct',
+  relativeHumidityPct: 'Curing.RelativeHumidityPct',
+  resistivityOhmPerFt: 'Curing.ResistivityOhmPerFt',
+  co2Ppm: 'Curing.Co2Ppm',
+};
+
+/**
+ * Curing reading over days since cast for one batch (SCRUM-176, FR-12, mockups M2-01 and M2-02).
+ * Its own component so chart.js and its styles stay out of Batch Detail.
+ */
+@Component({
+  selector: 'app-curing-chart',
+  imports: [ChartModule, SelectModule, FormsModule, ButtonModule],
+  templateUrl: './curing-chart.html',
+  styleUrl: './curing-chart.scss',
+})
+export class CuringChart {
+  private readonly document = inject(DOCUMENT);
+
+  /** Curing readings for the batch, with each reading's cylinder label. */
+  readonly readings = input.required<
+    {
+      label: string;
+      reading: CuringReading;
+    }[]
+  >();
+
+  /** Every saved warning for the batch; only curing-reading warnings are used here. */
+  readonly warnings = input<SavedWarning[]>([]);
+
+  /** Curing measurements for the batch, or an empty array until strength data loads. */
+  readonly curingPoints = input.required<CuringPoint[]>();
+  /** The batch's cast time (ISO, UTC), for "Latest reading: 18 h". */
+  readonly castAt = input.required<string>();
+
+  /** Day hovered over by either strength or curing charts. (M2-44) */
+  readonly hoveredDay = input<number | null>(null);
+  readonly hoveredDayChange = output<number | null>();
+  private readonly chartWidget = viewChild(UIChart);
+
+  /** The user's selected measurement for filtering the view of curing readings;
+   * default = internal temp (M2-44).
+   * */
+  readonly selectedMeasurement = signal<CuringMeasurement>('internalTempF');
+  readonly measurementOptions = Object.entries(measurementLabels).map(([value, label]) => ({
+    value,
+    label,
+  }));
+
+  /**
+   * Readings saved with a warning for the selected measurement, keyed "label | time" like the
+   * curing points. Matched by reading id and limit key, so every measurement with a Warn limit
+   * is marked, not just ambient (SCRUM-176 step 3).
+   */
+  readonly flaggedReadings = computed(() => {
+    const limitKey = MEASUREMENT_LIMIT_KEYS[this.selectedMeasurement()];
+    const messages = new Map(
+      this.warnings()
+        .filter((w) => w.entityType === 'CuringReading' && w.limitKey === limitKey)
+        .map((w) => [w.entityId, w.message] as const),
+    );
+    return new Map<string, string>(
+      this.readings()
+        .filter((row) => messages.has(row.reading.id))
+        .map(
+          (row) =>
+            [
+              `${row.label} | ${Date.parse(row.reading.takenAt)}`,
+              messages.get(row.reading.id)!,
+            ] as const,
+        ),
+    );
+  });
+
+  /** Caption inside the strip: "Line = average of 9 cylinders · band = lowest to highest ·
+   * readings so far: 0–72 h" (use the real cylinder count and hours). (M2-44)
+   * */
+  protected readonly cylinderCount = computed(
+    () => new Set(this.readings().map((s) => s.label)).size,
+  );
+
+  readonly readingCaption = computed(() => {
+    const hours = this.chart().readingHours;
+    if (hours.length === 0) {
+      return 'No curing readings yet';
+    }
+
+    const cylinders = this.cylinderCount();
+    const firstHour = Math.round(hours[0]);
+    const lastHour = Math.round(hours[hours.length - 1]);
+    /** Could have multiple readings across cylinders (9 cylinders x 2 readings).
+     * Count based on hours in array not individual cylinders' readings.
+     */
+    if (hours.length === 1) {
+      return `${hours.length} reading so far (${firstHour} h)`;
+    }
+    if (hours.length === 2) {
+      return `${hours.length} readings so far (${firstHour} h and ${lastHour} h)`;
+    }
+    return `Line = average of ${cylinders} ${cylinders === 1 ? 'cylinder' : 'cylinders'} · band = lowest to highest · readings so far: ${firstHour}–${lastHour}h`;
+  });
+
+  /** Identifies the configuration pieces for the curing chart.*/
+  protected readonly chart = computed(() =>
+    curingChartConfig(
+      this.curingPoints(),
+      this.castAt(),
+      this.colors(),
+      this.selectedMeasurement(),
+      this.flaggedReadings(),
+    ),
+  );
+
+  /** The theme's colors (vulcan-preset.ts), so the chart follows the theme like the rest of the app. */
+  private colors(): CuringChartColors {
+    const style = this.document.defaultView?.getComputedStyle(this.document.documentElement);
+    const token = (name: string, fallback: string) =>
+      style?.getPropertyValue(name).trim() || fallback;
+    return {
+      text: token('--p-text-muted-color', '#696e79'),
+      grid: token('--p-surface-200', '#dddfe4'),
+      font: style?.getPropertyValue('font-family').trim() || 'Inter, sans-serif',
+      line: token('--p-primary-500', '#263A78'),
+      shade: token('--p-blue-200', '#BFDBFE'),
+      flagged: token('--p-orange-500', '#F97316'),
+    };
+  }
+
+  protected readonly guidePlugins: Plugin<'line'>[] = [
+    {
+      /** Faint vertical lines at Day 1 and Day 3, labeled "Day 1" / "Day 3" (M2-44, M2 hi-fi mock). */
+      id: 'curing-day-labels',
+      afterDatasetsDraw: (chart) => {
+        const xAxis = chart.scales['x'];
+        if (!xAxis) return;
+
+        const { ctx, chartArea } = chart;
+
+        ctx.save();
+        const style = this.document.defaultView?.getComputedStyle(this.document.documentElement);
+        ctx.fillStyle = style?.getPropertyValue('--p-surface-950').trim() || '#171717';
+        ctx.font = `11px ${this.colors().font}`;
+        ctx.textAlign = 'left';
+
+        for (const day of [1, 3]) {
+          const x = xAxis.getPixelForValue(day);
+          ctx.fillText(`Day ${day}`, x + 8, chartArea.top + 12);
+        }
+
+        ctx.restore();
+      },
+    },
+
+    /** Hovered day plugin (M2-44, M2 hi-fi mock). */
+    chartHoverPlugin(
+      () => this.hoveredDay(),
+      (day) => this.hoveredDayChange.emit(day),
+    ),
+  ];
+
+  private readonly redrawOnHover = effect(() => {
+    this.hoveredDay();
+    this.chartWidget()?.chart?.draw();
+  });
+}
