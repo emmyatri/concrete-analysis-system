@@ -2373,11 +2373,9 @@ The evaluator is responsible for reading stored predictions and saved warnings.
 Results include batches with at least one triggered reason. Missing predictions
 remain null, so input warnings can be returned before a prediction is available.
 
-Pending team confirmation, sorting uses descending shortfall percentage, then
-descending distinct non-prediction limit-key count, then batch number for stable
-ties. These choices, the evaluator contract, and real synthetic-batch assertions
-must be confirmed before this draft is ready to merge. SCRUM-166 supplies the
-regenerated demo data through its separate PR; no dataset changes belong here.
+Sorting: descending shortfall percentage, then descending count of distinct
+non-prediction limit keys, then batch number. Assertions against the synthetic
+batches are added with SCRUM-181.
 
 Use to get the batches that are predicted to be at-risk.
 
