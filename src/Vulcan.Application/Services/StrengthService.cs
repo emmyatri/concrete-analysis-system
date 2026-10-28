@@ -222,8 +222,6 @@ public sealed class StrengthService(
                 / batch.ExpectedFinalBreakPsi * 100m)
             : null;
 
-        bool atRisk = shortfallPct.HasValue && shortfallPct.Value > 5.0;
-
         return new GetBatchStrengthResponse
         {
             Id = batch.Id,
@@ -237,7 +235,7 @@ public sealed class StrengthService(
                 ? "Estimated"
                 : "InsufficientCuringData",
 
-            AtRisk = warningEvaluation?.AtRisk ?? atRisk,
+            AtRisk = warningEvaluation?.AtRisk ?? false,
 
             Projected28DayPsi = warningEvaluation is not null
                 ? warningEvaluation.Projected28DayPsi is double projected
