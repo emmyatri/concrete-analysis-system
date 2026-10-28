@@ -73,6 +73,23 @@
       </div>
     </header>
 
+    <!-- ---------- Early warnings (SCRUM-177, mockup M2-01) ---------- -->
+    @if (earlyWarningReasons().length > 0) {
+      <div class="early-warning-banner" role="status" data-testid="early-warnings">
+        <i class="pi pi-exclamation-triangle" aria-hidden="true"></i>
+        <div>
+          <p class="early-warning-title" data-testid="early-warning-title">
+            {{ earlyWarningTitle() }}
+          </p>
+          <ul>
+            @for (reason of earlyWarningReasons(); track reason.limitKey + reason.warning) {
+              <li [attr.data-limit-key]="reason.limitKey">{{ reason.warning }}</li>
+            }
+          </ul>
+        </div>
+      </div>
+    }
+
     <!-- ---------- Summary strip ---------- -->
     <dl class="card summary" data-testid="summary">
       <div class="summary-item">

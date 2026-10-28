@@ -120,10 +120,18 @@ public static class ApiHost
     {
         using var scope = app.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<VulcanDbContext>();
+        var strengthEstimatorService = scope.ServiceProvider.GetRequiredService<IStrengthEstimateService>();
+        var calibrationProvider = scope.ServiceProvider.GetRequiredService<ICalibrationProvider>();
+        var logger = scope.ServiceProvider.GetRequiredService<ILogger<PredictionSaveChangesInterceptor>>();
 
         var options = new DbContextOptionsBuilder<VulcanDbContext>()
                     .UseSqlite(db.Database.GetDbConnection())
                     .AddInterceptors(
+                        new PredictionSaveChangesInterceptor(
+                            _ => calibrationProvider,
+                            strengthEstimatorService,
+                            logger),
+                        // add audit changes last
                         new AuditSaveChangesInterceptor(
                             new SystemTechnician(),
                             scope.ServiceProvider.GetRequiredService<IClock>()))
@@ -139,6 +147,5 @@ public static class ApiHost
         {
             SyntheticDataSeeder.Seed(seedDb);
         }
-
     }
 }

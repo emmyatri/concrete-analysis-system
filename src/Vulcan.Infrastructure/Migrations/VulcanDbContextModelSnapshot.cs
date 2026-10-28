@@ -293,6 +293,63 @@ namespace Vulcan.Infrastructure.Migrations
                     b.ToTable("CuringReading");
                 });
 
+            modelBuilder.Entity("Vulcan.Domain.Entities.PredictionEntity", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("AdjustmentStage")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Basis")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("BatchId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("CalibrationVersion")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("CreatedBy")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<decimal?>("EquivalentAgeDays")
+                        .HasColumnType("TEXT");
+
+                    b.Property<decimal?>("EstimatedPsi")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("HorizonDays")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("IsSynthetic")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime?>("ModifiedAtUtc")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("ModifiedBy")
+                        .HasColumnType("TEXT");
+
+                    b.Property<decimal?>("UnadjustedPsi")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("BatchId");
+
+                    b.HasIndex("CalibrationVersion");
+
+                    b.ToTable("Prediction");
+                });
+
             modelBuilder.Entity("Vulcan.Domain.Entities.RecordWarning", b =>
                 {
                     b.Property<int>("Id")
@@ -512,6 +569,26 @@ namespace Vulcan.Infrastructure.Migrations
                         .IsRequired();
 
                     b.Navigation("Specimen");
+                });
+
+            modelBuilder.Entity("Vulcan.Domain.Entities.PredictionEntity", b =>
+                {
+                    b.HasOne("Vulcan.Domain.Entities.Batch", "Batch")
+                        .WithMany()
+                        .HasForeignKey("BatchId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Vulcan.Domain.Entities.CalibrationVersion", "CalibrationVersionEntity")
+                        .WithMany()
+                        .HasForeignKey("CalibrationVersion")
+                        .HasPrincipalKey("Version")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Batch");
+
+                    b.Navigation("CalibrationVersionEntity");
                 });
 
             modelBuilder.Entity("Vulcan.Domain.Entities.Specimen", b =>
