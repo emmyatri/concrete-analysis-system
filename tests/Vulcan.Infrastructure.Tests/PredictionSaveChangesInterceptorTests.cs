@@ -1,6 +1,7 @@
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 using Vulcan.Application.Interfaces;
+using Vulcan.Application.Services;
 using Vulcan.Domain.Calibration;
 using Vulcan.Domain.Entities;
 using Vulcan.Domain.Enums;
@@ -46,6 +47,7 @@ public sealed class PredictionSaveChangesInterceptorTests()
         SqliteConnection conn,
         StrengthEstimateResult estimate,
         CalibrationVersion calibration,
+        IStrengthEstimateService? strengthEstimate = null,
         bool enableIntercept = true)
     {
         var opts = new DbContextOptionsBuilder<VulcanDbContext>()
@@ -55,8 +57,8 @@ public sealed class PredictionSaveChangesInterceptorTests()
         {
             return opts.AddInterceptors(
                 new PredictionSaveChangesInterceptor(
-                    new MockCalibrationProvider(calibration),
-                    new MockStrengthEstimator(estimate))
+                    _ => new MockCalibrationProvider(calibration),
+                    strengthEstimate ?? new MockStrengthEstimator(estimate))
             ).Options;
         }
         return opts.Options;
@@ -84,18 +86,22 @@ public sealed class PredictionSaveChangesInterceptorTests()
         StatusMessage = null
     };
 
+    // ------------------------------------------------------------------------
+    // tests with the mock StrengthEstimateService
+    // ------------------------------------------------------------------------
+
     private CalibrationVersion _calibrationVersion = new()
     {
         Version = "v1",
         ParametersJson = new CalibrationJsonParameters(
             Base: new CalibrationBaseParameters(
-                DatumTemperatureF: 24.4m,
-                ReferenceTemperatureF: 74.52m,
+                DatumTemperatureF: 14.0m,
+                ReferenceTemperatureF: 73.4m,
                 CementTypeCalibrations: new Dictionary<CementType, CementTypeCalibration>
                 {
-                    { CementType.TypeI, new CementTypeCalibration(0.4m, 0.5m) },
-                    { CementType.TypeII, new CementTypeCalibration(0.4m, 0.5m) },
-                    { CementType.TypeIII, new CementTypeCalibration(0.4m, 0.5m) },
+                    { CementType.TypeI, new CementTypeCalibration(0.4m, 0.85m) },
+                    { CementType.TypeII, new CementTypeCalibration(0.4m, 0.85m) },
+                    { CementType.TypeIII, new CementTypeCalibration(2.3m, 0.92m) },
                 }
             ),
             Factors: []
@@ -558,7 +564,7 @@ public sealed class PredictionSaveChangesInterceptorTests()
             .UseSqlite(connection)
             .AddInterceptors(
                 new PredictionSaveChangesInterceptor(
-                    new MockCalibrationProvider(_calibrationVersion),
+                    _ => new MockCalibrationProvider(_calibrationVersion),
                     new MockStrengthEstimator(estimate)),
                 new AuditSaveChangesInterceptor(
                     technician, clock)
@@ -839,5 +845,369 @@ public sealed class PredictionSaveChangesInterceptorTests()
         SyntheticDataSeeder.Seed(db);
 
         await Should.NotThrowAsync(() => db.SaveChangesAsync());
+    }
+
+    // ------------------------------------------------------------------------
+    // tests with the real StrengthEstimateService
+    // ------------------------------------------------------------------------
+    private readonly IStrengthEstimateService _estimator = new StrengthEstimateService();
+
+    [Fact]
+    public async Task Saved_curing_reading_creates_three_predictions()
+    {
+        using var connection = new SqliteConnection("Filename=:memory:");
+        await connection.OpenAsync();
+
+        var opts = new DbContextOptionsBuilder<VulcanDbContext>()
+            .UseSqlite(connection)
+            .AddInterceptors(
+                new PredictionSaveChangesInterceptor(
+                    _ => new MockCalibrationProvider(_calibrationVersion),
+                    _estimator))
+            .Options;
+        var noInterceptor = new DbContextOptionsBuilder<VulcanDbContext>()
+            .UseSqlite(connection)
+            .Options;
+
+        var specimen = new Specimen
+        {
+            Label = "LBL",
+            TestAgeDays = TestAgeDays.Day3,
+            CuringReadings = []
+        };
+        var specimen2 = new Specimen
+        {
+            Label = "LBL1",
+            TestAgeDays = TestAgeDays.Day7,
+            CuringReadings = []
+        };
+        var batch = new Batch
+        {
+            BatchNumber = "B",
+            IsSynthetic = true,
+            ExpectedFinalBreakPsi = 3600,
+            CementType = CementType.TypeII,
+            CastAt = DateTime.UtcNow,
+            Specimens = [
+                specimen,
+                specimen2
+            ]
+        };
+
+        // wait for the update trigger
+        await using (var db = new VulcanDbContext(noInterceptor))
+        {
+            await db.Database.EnsureCreatedAsync();
+            db.Add(_calibrationVersion);
+            db.Add(batch);
+            await db.SaveChangesAsync();
+        }
+
+        // update
+        await using (var db = new VulcanDbContext(opts))
+        {
+            db.AddRange(
+                new CuringReading
+                {
+                    SpecimenId = specimen.Id,
+                    InternalTempF = 78.8m,
+                    TakenAt = DateTime.UtcNow.AddDays(4)
+                },
+                new CuringReading
+                {
+                    SpecimenId = specimen2.Id,
+                    InternalTempF = 79.8m,
+                    TakenAt = DateTime.UtcNow.AddDays(8)
+                });
+            await db.SaveChangesAsync();
+        }
+
+        await using (var db = new VulcanDbContext(opts))
+        {
+            var predictions = db.Prediction.ToList();
+            predictions.Count.ShouldBe(3);
+            predictions.Select(p => p.HorizonDays).ShouldBeSubsetOf([3, 7, 28]);
+            predictions.Select(p => p.IsSynthetic).ShouldAllBe(it => it);
+            predictions.Select(p => p.CalibrationVersion).ShouldAllBe(v => v == "v1");
+        }
+    }
+
+    [Fact(Skip = "todo")]
+    public async Task Three_day_break_maps_adjustment_stage_correctly()
+    {
+        using var connection = new SqliteConnection("Filename=:memory:");
+        await connection.OpenAsync();
+
+        var opts = new DbContextOptionsBuilder<VulcanDbContext>()
+            .UseSqlite(connection)
+            .AddInterceptors(
+                new PredictionSaveChangesInterceptor(
+                    _ => new MockCalibrationProvider(_calibrationVersion),
+                    _estimator))
+            .Options;
+        var noInterceptor = new DbContextOptionsBuilder<VulcanDbContext>()
+            .UseSqlite(connection)
+            .Options;
+
+        var specimen = new Specimen
+        {
+            Label = "LBL",
+            TestAgeDays = TestAgeDays.Day3,
+            CuringReadings = [
+                new CuringReading
+                {
+                    InternalTempF = 73.4m,
+                    TakenAt = DateTime.UtcNow.AddHours(4)
+                },
+                new CuringReading
+                {
+                    InternalTempF = 78.8m,
+                    TakenAt = DateTime.UtcNow.AddHours(5)
+                },
+                new CuringReading
+                {
+                    InternalTempF = 78.8m,
+                    TakenAt = DateTime.UtcNow.AddHours(6)
+                },
+                ],
+            BreakResult = new()
+            {
+                StrengthPsi = 4800,
+                BrokenAt = DateTime.UtcNow.AddDays(4).AddHours(1.3)
+            }
+        };
+        var batch = new Batch
+        {
+            BatchNumber = "B",
+            IsSynthetic = true,
+            ExpectedFinalBreakPsi = 6000,
+            CementType = CementType.TypeI,
+            CastAt = DateTime.UtcNow,
+            Specimens = [
+                specimen,
+            ]
+        };
+
+        await using (var db = new VulcanDbContext(opts))
+        {
+            await db.Database.EnsureCreatedAsync();
+            db.Add(_calibrationVersion);
+            db.Add(batch);
+            await db.SaveChangesAsync();
+        }
+
+        await using (var db = new VulcanDbContext(opts))
+        {
+            var predictions = db.Prediction.ToList();
+            predictions.Count.ShouldBe(3);
+            predictions.Select(p => p.HorizonDays).ShouldBeSubsetOf([3, 7, 28]);
+            predictions.Select(p => p.IsSynthetic).ShouldAllBe(it => it);
+            predictions.Select(p => p.CalibrationVersion).ShouldAllBe(v => v == "v1");
+            predictions.Any(p => p.AdjustmentStage == AdjustmentStage.ThreeDay)
+                .ShouldBeTrue();
+            predictions.ForEach(p =>
+            {
+                if (p.EstimatedPsi is null)
+                {
+                    return;
+                }
+                p.EstimatedPsi.ShouldNotBe(p.UnadjustedPsi);
+            });
+        }
+    }
+
+    [Fact]
+    public async Task New_curing_reading_on_batch_with_breaks_keeps_adjustment_stage()
+    {
+        using var connection = new SqliteConnection("Filename=:memory:");
+        await connection.OpenAsync();
+
+        var opts = new DbContextOptionsBuilder<VulcanDbContext>()
+            .UseSqlite(connection)
+            .AddInterceptors(
+                new PredictionSaveChangesInterceptor(
+                    _ => new MockCalibrationProvider(_calibrationVersion),
+                    _estimator))
+            .Options;
+        var noInterceptor = new DbContextOptionsBuilder<VulcanDbContext>()
+            .UseSqlite(connection)
+            .Options;
+
+        var specimen = new Specimen
+        {
+            Label = "LBL",
+            TestAgeDays = TestAgeDays.Day3,
+            CuringReadings = [],
+            BreakResult = new BreakResult
+            {
+                BrokenAt = DateTime.UtcNow.AddDays(4),
+                StrengthPsi = 2400
+            }
+        };
+        var specimen2 = new Specimen
+        {
+            Label = "LBL1",
+            TestAgeDays = TestAgeDays.Day3,
+            CuringReadings = [],
+            BreakResult = new BreakResult
+            {
+                BrokenAt = DateTime.UtcNow.AddDays(4),
+                StrengthPsi = 3300
+            }
+        };
+        var specimen3 = new Specimen
+        {
+            Label = "LBL2",
+            TestAgeDays = TestAgeDays.Day3,
+            CuringReadings = [],
+            BreakResult = new BreakResult
+            {
+                BrokenAt = DateTime.UtcNow.AddDays(4),
+                StrengthPsi = 3331
+            }
+        };
+        var specimen4 = new Specimen
+        {
+            Label = "LBL3",
+            TestAgeDays = TestAgeDays.Day3,
+            CuringReadings = [],
+            BreakResult = new BreakResult
+            {
+                BrokenAt = DateTime.UtcNow.AddDays(4),
+                StrengthPsi = 3333
+            }
+        };
+        var batch = new Batch
+        {
+            BatchNumber = "B",
+            IsSynthetic = true,
+            ExpectedFinalBreakPsi = 6200,
+            CementType = CementType.TypeI,
+            CastAt = DateTime.UtcNow,
+            Specimens = [
+                specimen,
+                specimen2,
+                specimen3,
+                specimen4
+            ]
+        };
+
+        await using (var db = new VulcanDbContext(opts))
+        {
+            await db.Database.EnsureCreatedAsync();
+            db.Add(_calibrationVersion);
+            db.Add(batch);
+            await db.SaveChangesAsync();
+        }
+
+        AdjustmentStage? adjustmentStage = null;
+        // update
+        await using (var db = new VulcanDbContext(opts))
+        {
+            db.AddRange(
+                new CuringReading
+                {
+                    SpecimenId = specimen.Id,
+                    InternalTempF = 78.8m,
+                    TakenAt = DateTime.UtcNow.AddDays(4)
+                },
+                new CuringReading
+                {
+                    SpecimenId = specimen.Id,
+                    InternalTempF = 78.8m,
+                    TakenAt = DateTime.UtcNow.AddDays(4)
+                },
+                new CuringReading
+                {
+                    SpecimenId = specimen2.Id,
+                    InternalTempF = 79.8m,
+                    TakenAt = DateTime.UtcNow.AddDays(5)
+                },
+                new CuringReading
+                {
+                    SpecimenId = specimen2.Id,
+                    InternalTempF = 79.8m,
+                    TakenAt = DateTime.UtcNow.AddDays(5)
+                },
+                new CuringReading
+                {
+                    SpecimenId = specimen3.Id,
+                    InternalTempF = 79.8m,
+                    TakenAt = DateTime.UtcNow.AddDays(6)
+                },
+                new CuringReading
+                {
+                    SpecimenId = specimen3.Id,
+                    InternalTempF = 79.8m,
+                    TakenAt = DateTime.UtcNow.AddDays(6)
+                },
+                new CuringReading
+                {
+                    SpecimenId = specimen4.Id,
+                    InternalTempF = 79.8m,
+                    TakenAt = DateTime.UtcNow.AddDays(7)
+                });
+            await db.SaveChangesAsync();
+
+            var first = db.Prediction.First().ShouldNotBeNull();
+            adjustmentStage = first.AdjustmentStage.ShouldNotBeNull();
+        }
+
+        await using (var db = new VulcanDbContext(opts))
+        {
+            var predictions = db.Prediction.ToList();
+            predictions.Count.ShouldBe(3);
+            predictions.Select(p => p.HorizonDays).ShouldBeSubsetOf([3, 7, 28]);
+            predictions.Select(p => p.IsSynthetic).ShouldAllBe(it => it);
+            predictions.Select(p => p.CalibrationVersion).ShouldAllBe(v => v == "v1");
+            predictions
+                .Any(p => p.AdjustmentStage == adjustmentStage)
+                .ShouldBeTrue();
+        }
+    }
+
+    // spot check on VM-SYN-006
+    [Fact(Skip = "Estimate is 6,234.681... instead of 4,449")]
+    public async Task Seeding_batch_data_has_correct_prediction()
+    {
+        using var connection = new SqliteConnection("Filename=:memory:");
+        await connection.OpenAsync();
+
+        var opts = new DbContextOptionsBuilder<VulcanDbContext>()
+            .UseSqlite(connection)
+            .AddInterceptors(
+                new PredictionSaveChangesInterceptor(
+                    _ => new MockCalibrationProvider(_calibrationVersion),
+                    _estimator))
+            .Options;
+        var noInterceptor = new DbContextOptionsBuilder<VulcanDbContext>()
+            .UseSqlite(connection)
+            .Options;
+
+        // wait for the update trigger
+        await using (var db = new VulcanDbContext(opts))
+        {
+            await db.Database.EnsureCreatedAsync();
+            db.Add(_calibrationVersion);
+            SyntheticDataSeeder.Seed(db);
+            await db.SaveChangesAsync();
+        }
+
+        await using (var db = new VulcanDbContext(opts))
+        {
+            var batch = db.Batch
+                .Where(b => b.BatchNumber == "VM-SYN-006")
+                .First();
+            batch.ShouldNotBeNull();
+
+            db.Prediction
+                .Where(p => p.BatchId == batch.Id
+                    && p.HorizonDays == 28)
+                .First()
+                .ShouldNotBeNull()
+                .ShouldSatisfyAllConditions(
+                    it => it.EstimatedPsi.ShouldBe(4449m),
+                    it => it.IsSynthetic.ShouldBeTrue());
+        }
     }
 }

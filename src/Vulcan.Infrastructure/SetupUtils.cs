@@ -40,29 +40,6 @@ public static class SetupUtils
             cs = $"Data Source={Path.Combine(dir, "vulcan.db")}";
         }
 
-
-        if (cs.Contains(":memory:", StringComparison.OrdinalIgnoreCase))
-        {
-            // An in-memory database only lives while a connection is open, so keep one open for the app's lifetime (tests).
-            services.AddSingleton(_ =>
-            {
-                var connection = new SqliteConnection(cs);
-                connection.Open();
-                return connection;
-            });
-            services.AddDbContext<VulcanDbContext>((provider, options) =>
-                options.UseSqlite(provider.GetRequiredService<SqliteConnection>())
-                    .AddInterceptors(
-                        provider.GetRequiredService<AuditSaveChangesInterceptor>()));
-        }
-        else
-        {
-            services.AddDbContext<VulcanDbContext>((provider, options) =>
-                options.UseSqlite(cs)
-                    .AddInterceptors(
-                        provider.GetRequiredService<AuditSaveChangesInterceptor>()));
-        }
-
         services.AddScoped<ILimitProvider, LimitProvider>();
         services.AddScoped<ISpecificGravityProvider, SpecificGravityProvider>();
         services.AddScoped<ICalibrationProvider, CalibrationProvider>();
@@ -91,6 +68,36 @@ public static class SetupUtils
         services.AddScoped<SpecificGravityService>();
         services.AddScoped<ValidationLimitService>();
         services.AddScoped<IStrengthEstimateService, StrengthEstimateService>();
+
+        if (cs.Contains(":memory:", StringComparison.OrdinalIgnoreCase))
+        {
+            // An in-memory database only lives while a connection is open, so keep one open for the app's lifetime (tests).
+            services.AddSingleton(_ =>
+            {
+                var connection = new SqliteConnection(cs);
+                connection.Open();
+                return connection;
+            });
+            services.AddDbContext<VulcanDbContext>((provider, options) =>
+                options.UseSqlite(provider.GetRequiredService<SqliteConnection>())
+                    .AddInterceptors(
+                        new PredictionSaveChangesInterceptor(
+                            (db) => new CalibrationProvider(db),
+                            new StrengthEstimateService()),
+                        // add audit changes last
+                        provider.GetRequiredService<AuditSaveChangesInterceptor>()));
+        }
+        else
+        {
+            services.AddDbContext<VulcanDbContext>((provider, options) =>
+                options.UseSqlite(cs)
+                    .AddInterceptors(
+                        new PredictionSaveChangesInterceptor(
+                            (db) => new CalibrationProvider(db),
+                            new StrengthEstimateService()),
+                        // add audit changes last
+                        provider.GetRequiredService<AuditSaveChangesInterceptor>()));
+        }
 
         return services;
     }

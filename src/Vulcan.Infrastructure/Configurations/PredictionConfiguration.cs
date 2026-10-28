@@ -1,3 +1,4 @@
+using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using Vulcan.Domain.Entities;
 using Vulcan.Domain.Enums;
@@ -22,7 +23,8 @@ public class PredictionConfiguration : AuditableEntityConfiguration<PredictionEn
             .WithMany()
             .HasForeignKey(x => x.CalibrationVersion)
             // use version instead of the id
-            .HasPrincipalKey(cv => cv.Version);
+            .HasPrincipalKey(cv => cv.Version)
+            .OnDelete(DeleteBehavior.Restrict);
 
         builder.Property(x => x.AdjustmentStage)
             .HasConversion(

@@ -12,7 +12,7 @@ using Vulcan.Prediction.Strength;
 namespace Vulcan.Infrastructure.Interceptors;
 
 public sealed class PredictionSaveChangesInterceptor(
-    ICalibrationProvider calibrationProvider,
+    Func<VulcanDbContext, ICalibrationProvider> calibrationProviderFactory,
     IStrengthEstimateService strengthEstimateService
 ) : SaveChangesInterceptor
 {
@@ -52,11 +52,23 @@ public sealed class PredictionSaveChangesInterceptor(
 
         var changedBreakResults = context.ChangeTracker.Entries<BreakResult>()
             .Where(entry => entry.State is EntityState.Added
-            or EntityState.Modified)
+                or EntityState.Modified)
+            .ToList();
+
+        var addedBatches = context.ChangeTracker.Entries<Batch>()
+            // prefer curing readings or break results. This is to accommodate seed data
+            .Where(entry => entry.State is EntityState.Added)
+            .ToList();
+
+        var addedSpecimens = context.ChangeTracker.Entries<Specimen>()
+            .Where(entry => entry.State is EntityState.Added)
             .ToList();
 
         // nothing to change; exit
-        if (changedCuringReadings.Count == 0 && changedBreakResults.Count == 0)
+        if (changedCuringReadings.Count == 0
+            && changedBreakResults.Count == 0
+            && addedBatches.Count == 0
+            && addedSpecimens.Count == 0)
         {
             return;
         }
@@ -64,7 +76,7 @@ public sealed class PredictionSaveChangesInterceptor(
         CalibrationVersion calibration = null!;
         try
         {
-            calibration = calibrationProvider.Current();
+            calibration = calibrationProviderFactory((VulcanDbContext)context).Current();
         }
         catch (InvalidOperationException)
         {
@@ -76,32 +88,61 @@ public sealed class PredictionSaveChangesInterceptor(
 
         // get batch ids of changed resources
         var changedSpecimenIds = changedCuringReadings
-            .Select(cr => cr?.Entity?.SpecimenId)
+            .Select(cr => cr.Entity.SpecimenId)
             .Concat(changedBreakResults
-                .Select(br => br?.Entity?.SpecimenId))
-            .Where(id => id != null)
+                .Select(br => br.Entity.SpecimenId))
+            .Where(id => id != 0)
             .Distinct()
             .ToList();
+
+        var changedSpecimens = context.ChangeTracker.Entries<Specimen>()
+            .Select(entry => entry.Entity)
+            .Where(s => changedSpecimenIds.Contains(s.Id)
+                || addedSpecimens.Any(a => ReferenceEquals(a.Entity, s)))
+            .ToList();
+
         var changedBatchIds = context.Set<Specimen>()
             .Where(s => changedSpecimenIds.Contains(s.Id))
             .Select(s => s.BatchId)
+            .Distinct()
             .ToList();
-
-        if (changedBatchIds is null)
-        {
-            return;
-        }
 
         var changedBatches = context.Set<Batch>()
             .Where(b => changedBatchIds.Contains(b.Id))
             .Include(b => b.Specimens)
             .ThenInclude(s => s.CuringReadings)
             .Include(b => b.Specimens)
-            .ThenInclude(s => s.CuringReadings);
+            .ThenInclude(s => s.BreakResult)
+            .ToList();
 
-        if (changedBatches is null)
+        foreach (var entry in addedBatches)
         {
-            return;
+            if (!changedBatches.Any(b => ReferenceEquals(b, entry.Entity)))
+            {
+                changedBatches.Add(entry.Entity);
+            }
+        }
+
+        foreach (var specimen in changedSpecimens)
+        {
+            var batch = specimen.Batch;
+
+            if (batch is null && specimen.BatchId != 0)
+            {
+                batch = changedBatches.FirstOrDefault(b =>
+                    b.Id == specimen.BatchId);
+
+                batch ??= context.ChangeTracker.Entries<Batch>()
+                    .Select(entry => entry.Entity)
+                    .FirstOrDefault(b => b.Id == specimen.BatchId);
+            }
+
+            if (batch is not null
+                && !changedBatches.Any(b => ReferenceEquals(b, batch)
+                    || (batch.Id != 0 && b.Id == batch.Id)))
+            {
+                changedBatches.Add(batch);
+            }
         }
 
         // build lookup table for below queries
@@ -109,19 +150,33 @@ public sealed class PredictionSaveChangesInterceptor(
             .Where(s => changedSpecimenIds.Contains(s.Id))
             .ToDictionary(s => s.Id, s => s.BatchId);
 
+        foreach (var specimen in changedSpecimens)
+        {
+            if (specimen.Id != 0 && !specimenBatchIds.ContainsKey(specimen.Id))
+            {
+                specimenBatchIds[specimen.Id] = specimen.BatchId;
+            }
+        }
+
         foreach (var batch in changedBatches)
         {
-            var batchChangedReadings = changedCuringReadings
-                .Where(cr => cr?.Entity != null
-                    && specimenBatchIds.TryGetValue(
-                        cr.Entity.SpecimenId, out var batchId)
-                    && batchId == batch.Id)
+            var batchSpecimens = batch.Specimens
+                .Concat(changedSpecimens.Where(s =>
+                    ReferenceEquals(s.Batch, batch)
+                    || (batch.Id != 0 && s.BatchId == batch.Id)))
+                .Distinct()
                 .ToList();
+
+            var batchChangedReadings = changedCuringReadings
+                .Where(cr => batchSpecimens.Any(s =>
+                    ReferenceEquals(cr.Entity.Specimen, s)
+                    || (s.Id != 0 && cr.Entity.SpecimenId == s.Id)))
+                .ToList();
+
             var batchChangedBreaks = changedBreakResults
-                .Where(br => br?.Entity != null
-                    && specimenBatchIds.TryGetValue(
-                        br.Entity.SpecimenId, out var batchId)
-                    && batchId == batch.Id)
+                .Where(br => batchSpecimens.Any(s =>
+                    ReferenceEquals(br.Entity.Specimen, s)
+                    || (s.Id != 0 && br.Entity.SpecimenId == s.Id)))
                 .ToList();
 
             UpdateBatchPredictions(
@@ -152,37 +207,24 @@ public sealed class PredictionSaveChangesInterceptor(
         var existingCuringReadings = batch.Specimens
             .SelectMany(x => x.CuringReadings)
             .ToList();
+
         var existingBreakResults = batch.Specimens
             .Select(s => s.BreakResult)
             .OfType<BreakResult>()
             .ToList();
 
         // merge (pending + existing). Baseline is current store
-        var allReadings = existingCuringReadings.ToDictionary(cr => cr.Id);
-        var allBreakResults = existingBreakResults.ToDictionary(br => br.Id);
+        var allReadings = existingCuringReadings
+            .Concat(changedCuringReadings.Select(entry => entry.Entity))
+            .Distinct()
+            .ToList();
 
-        // overwrite / add pending changes
-        foreach (var curingReading in changedCuringReadings)
-        {
-            if (curingReading is null)
-            {
-                continue;
-            }
-
-            allReadings[curingReading.Entity.Id] = curingReading.Entity;
-        }
-        foreach (var breakResult in changedBreakResults)
-        {
-            if (breakResult is null)
-            {
-                continue;
-            }
-
-            allBreakResults[breakResult.Entity.Id] = breakResult.Entity;
-        }
+        var allBreakResults = existingBreakResults
+            .Concat(changedBreakResults.Select(entry => entry.Entity))
+            .Distinct()
+            .ToList();
 
         var strengthSpecimens = allReadings
-            .Values
             // strength specimen contains many readings
             .GroupBy(cr => cr.Specimen.Label)
             .Select(crs =>
@@ -198,7 +240,6 @@ public sealed class PredictionSaveChangesInterceptor(
                 });
 
         var strengthBreakMeasurements = allBreakResults
-            .Values
             // strength break measurement contains one break result
             .Select(br =>
                 // specimen + break result -> strength break measurement
@@ -226,15 +267,16 @@ public sealed class PredictionSaveChangesInterceptor(
 
         var predictions = new List<PredictionEntity>();
 
-        void AddEstimate(StrengthDayEstimate day, BreakAdjustmentResult? adjustment)
+        void AddEstimate(int dayNum, StrengthDayEstimate? day, BreakAdjustmentResult? adjustment)
             => predictions.Add(new()
             {
+                Batch = batch, // required if batch is new (won't have an id yet)
                 BatchId = batch.Id,
                 CalibrationVersion = calibration.Version,
                 IsSynthetic = batch.IsSynthetic,
 
-                Basis = estimate.Basis,
-                HorizonDays = day.Day,
+                Basis = $"{estimate.Basis} {adjustment?.Basis}".Trim(),
+                HorizonDays = dayNum,
                 EstimatedPsi = (decimal?)day?.EstimatedPsi,
                 EquivalentAgeDays = (decimal?)day?.EquivalentAgeDays,
                 AdjustmentStage = adjustment?.Stage switch
@@ -247,22 +289,16 @@ public sealed class PredictionSaveChangesInterceptor(
                 UnadjustedPsi = (decimal?)adjustment?.UnadjustedPsi,
             });
 
-        if (estimate.Day3 is not null)
-        {
-            AddEstimate(estimate.Day3, estimate.Day3Adjustment);
-        }
-        if (estimate.Day7 is not null)
-        {
-            AddEstimate(estimate.Day7, estimate.Day7Adjustment);
-        }
-        if (estimate.Day28 is not null)
-        {
-            AddEstimate(estimate.Day28, estimate.Day28Adjustment);
-        }
+        // add three predictions to represent it was attempted
+        AddEstimate(3, estimate.Day3, estimate.Day3Adjustment);
+        AddEstimate(7, estimate.Day7, estimate.Day7Adjustment);
+        AddEstimate(28, estimate.Day28, estimate.Day28Adjustment);
 
-        var existingPredictions = context.Set<PredictionEntity>()
-            .Where(p => p.BatchId == batch.Id)
-            .ToList();
+        var existingPredictions = batch.Id == 0
+            ? [] // new batch doesn't have predictions
+            : context.Set<PredictionEntity>()
+                .Where(p => p.BatchId == batch.Id)
+                .ToList();
 
         existingPredictions.ForEach(old =>
         {
@@ -282,14 +318,8 @@ public sealed class PredictionSaveChangesInterceptor(
         var toAdd = predictions
             .Where(p => !existingPredictions.Any(e => e.HorizonDays == p.HorizonDays))
             .ToList();
-        // not updated, and not in predictions, so delete
-        var toDelete = existingPredictions
-            .Where(e => !predictions.Any(p => e.HorizonDays == p.HorizonDays))
-            .ToList();
-
         // tracking is not ignored here so that changes fall through to the audit interceptor
         context.AddRange(toAdd);
-        context.RemoveRange(toDelete);
 
         // existingPredictions should be updated automatically since it was queried with tracking
     }
