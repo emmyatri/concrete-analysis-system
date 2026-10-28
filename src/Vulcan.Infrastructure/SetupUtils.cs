@@ -83,7 +83,7 @@ public static class SetupUtils
                     .AddInterceptors(
                         new PredictionSaveChangesInterceptor(
                             (db) => new CalibrationProvider(db),
-                            new StrengthEstimateService(),
+                            provider.GetRequiredService<IStrengthEstimateService>(),
                             provider.GetRequiredService<ILogger<PredictionSaveChangesInterceptor>>()),
                         // add audit changes last
                         provider.GetRequiredService<AuditSaveChangesInterceptor>()));
@@ -95,7 +95,7 @@ public static class SetupUtils
                     .AddInterceptors(
                         new PredictionSaveChangesInterceptor(
                             (db) => new CalibrationProvider(db),
-                            new StrengthEstimateService(),
+                            provider.GetRequiredService<IStrengthEstimateService>(),
                             provider.GetRequiredService<ILogger<PredictionSaveChangesInterceptor>>()),
                         // add audit changes last
                         provider.GetRequiredService<AuditSaveChangesInterceptor>()));

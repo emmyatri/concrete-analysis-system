@@ -167,7 +167,8 @@ public sealed class PredictionSaveChangesInterceptorTests()
             var prediction = db.Prediction.FirstOrDefault(p => p.HorizonDays == 3).ShouldNotBeNull();
             prediction.CalibrationVersion.ShouldBe("v1");
             prediction.HorizonDays.ShouldBe(3);
-            prediction.EstimatedPsi.ShouldBe(4500);
+            prediction.EstimatedPsi.ShouldBe(2600);
+            prediction.UnadjustedPsi.ShouldBe(2500);
             prediction.AdjustmentStage.ShouldBe(AdjustmentStage.None);
         }
     }
@@ -232,7 +233,8 @@ public sealed class PredictionSaveChangesInterceptorTests()
             db.Prediction.Count().ShouldBe(3);
             var prediction = db.Prediction.FirstOrDefault(p => p.HorizonDays == 7).ShouldNotBeNull();
             prediction.CalibrationVersion.ShouldBe("v1");
-            prediction.EstimatedPsi.ShouldBe(4500);
+            prediction.EstimatedPsi.ShouldBe(2600);
+            prediction.UnadjustedPsi.ShouldBe(2500);
             prediction.AdjustmentStage.ShouldBe(AdjustmentStage.ThreeDay);
         }
     }
@@ -1024,7 +1026,7 @@ public sealed class PredictionSaveChangesInterceptorTests()
                 .ShouldNotBeNull()
                 .ShouldSatisfyAllConditions(
                     it => it.AdjustmentStage.ShouldBe(AdjustmentStage.ThreeDay),
-                    it => it.EstimatedPsi.ShouldBe(it.UnadjustedPsi),
+                    it => it.EstimatedPsi.ShouldNotBe(it.UnadjustedPsi),
                     it => it.Basis.ShouldContain("Re-fit through the average 3-day breaks"));
         }
     }
@@ -1223,7 +1225,9 @@ public sealed class PredictionSaveChangesInterceptorTests()
                 .First()
                 .ShouldNotBeNull()
                 .ShouldSatisfyAllConditions(
-                    it => it.EstimatedPsi.ShouldNotBeNull().ShouldBeInRange(6234m, 6236m),
+                    it => it.EstimatedPsi.ShouldNotBeNull().ShouldBeInRange(4448m, 4450m),
+                    it => it.UnadjustedPsi.ShouldNotBeNull().ShouldBeInRange(6234m, 6236m),
+                    it => it.AdjustmentStage.ShouldBe(AdjustmentStage.ThreeAndSevenDay),
                     it => it.IsSynthetic.ShouldBeTrue());
         }
     }

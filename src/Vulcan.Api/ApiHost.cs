@@ -44,7 +44,6 @@ public static class ApiHost
 
 
         builder.Services
-            .AddLogging()
             .AddDatabase(builder.Configuration)
             .AddSingleton<TechnicianSettings>()
             .AddHttpContextAccessor()
