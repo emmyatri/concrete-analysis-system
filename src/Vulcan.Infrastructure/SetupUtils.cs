@@ -51,6 +51,7 @@ public static class SetupUtils
         services.AddScoped<IBatchRepository, BatchRepository>();
         services.AddScoped<ISpecimenRepository, SpecimenRepository>();
         services.AddScoped<ICuringRepository, CuringRepository>();
+		services.AddScoped<IPredictionRepository, PredictionRepository>();
         services.AddScoped<IRecordWarningRepository, RecordWarningRepository>();
         services.AddScoped<ISpecificGravityRepository, SpecificGravityRepository>();
         services.AddScoped<IValidationLimitRepository, ValidationLimitRepository>();
