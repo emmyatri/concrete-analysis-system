@@ -158,18 +158,33 @@
     </dl>
 
     <div class="columns">
-      <!-- ---------- Chart (Milestone 2, FR-11) ---------- -->
+      <!-- ---------- Strength chart (Milestone 2, FR-11) ---------- -->
       <section class="card chart-card" aria-labelledby="chart-title">
         <header class="card-header">
           <i class="pi pi-chart-line" aria-hidden="true"></i>
           <h2 id="chart-title">{{ batch.batchNumber }} · Strength over time</h2>
         </header>
+
         <app-strength-chart
           [state]="strengthState()"
           [castAt]="batch.castAt"
           [minimumPsi]="minimumPsi()"
           [flaggedSpecimenIds]="flaggedSpecimenIds()"
+          [hoveredDay]="hoveredDay()"
+          (hoveredDayChange)="hoveredDay.set($event)"
         />
+
+        <!-- ---------- Curing chart (Milestone 2, FR-12) ---------- -->
+        @if (strengthState().status === 'loaded') {
+          <app-curing-chart
+            [curingPoints]="curingPoints()"
+            [readings]="readings()"
+            [warnings]="batch.warnings"
+            [castAt]="batch.castAt"
+            [hoveredDay]="hoveredDay()"
+            (hoveredDayChange)="hoveredDay.set($event)"
+          />
+        }
       </section>
 
       <div class="side">

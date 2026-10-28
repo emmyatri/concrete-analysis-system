@@ -1,9 +1,10 @@
 import { DOCUMENT } from '@angular/common';
-import { Component, computed, inject, input } from '@angular/core';
-import { ChartModule } from 'primeng/chart';
-
+import { Component, computed, effect, inject, input, output, viewChild } from '@angular/core';
+import { ChartModule, UIChart } from 'primeng/chart';
+import type { Plugin } from 'chart.js';
 import { BatchStrength } from '../../core/api/models';
 import { StrengthChartColors, endLabelsPlugin, strengthChartConfig } from './strength-chart-config';
+import { chartHoverPlugin } from '../../shared/chart-hover/chart-hover-plugin';
 
 /** The strength request, as Batch Detail tracks it. */
 export type StrengthLoad =
@@ -32,7 +33,24 @@ export class StrengthChart {
   /** Cylinders whose break was saved with a warning, drawn in orange. */
   readonly flaggedSpecimenIds = input<ReadonlySet<number>>(new Set());
 
-  protected readonly plugins = [endLabelsPlugin];
+  /** Day hovered over by either strength or curing charts. (M2-44) */
+  readonly hoveredDay = input<number | null>(null);
+  readonly hoveredDayChange = output<number | null>();
+  private readonly chartWidget = viewChild(UIChart);
+
+  protected readonly plugins: Plugin<'line'>[] = [
+    endLabelsPlugin,
+    /** Hovered day plugin (M2-44, M2 hi-fi mock). */
+    chartHoverPlugin(
+      () => this.hoveredDay(),
+      (day) => this.hoveredDayChange.emit(day),
+    ),
+  ];
+
+  private readonly redrawOnHover = effect(() => {
+    this.hoveredDay();
+    this.chartWidget()?.chart?.draw();
+  });
 
   protected readonly strength = computed(() => {
     const state = this.state();
