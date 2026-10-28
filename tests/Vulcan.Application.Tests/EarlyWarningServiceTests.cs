@@ -87,10 +87,6 @@ public class EarlyWarningServiceTests()
     }
 
     [Fact]
-    public void Cold_cured_batch_is_at_risk_for_low_temp()
-    { }
-
-    [Fact]
     public async Task Synthetic_batch_vm_syn_006_is_flagged_for_wcm()
     {
         using var connection = new SqliteConnection("Filename=:memory:");
@@ -171,31 +167,90 @@ public class EarlyWarningServiceTests()
     [Fact]
     public async Task On_track_batch_is_not_flagged()
     {
-        var castAt = DateTime.UtcNow;
-        var onTrackBatch = CreateValidBatch();
-        // var onTrackSpecimens = [];
-        // var onTrackBreakResults = [];
-        // var onTrackCuringReadings = [];
+        var castAt = new DateTime(2026, 10, 5, 17, 0, 0, DateTimeKind.Utc);
+        var onTrackBatch = CreateOnTrackBatch(castAt);
 
         using var connection = new SqliteConnection("Filename=:memory:");
         await connection.OpenAsync();
         var db = GetDbContext(connection);
         await InitTestDb(db);
 
+        // use respective services to pass through validation checks
         var batchService = SetupBatchService(db);
         var specimenService = SetupSpecimenService(db);
         var curingService = SetupCuringService(db);
 
         await batchService.CreateAsync(onTrackBatch);
+
+        var savedBatch = await db.Batch
+            .Include(b => b.Composition)
+            .Include(b => b.CementOxideAnalysis)
+            .FirstAsync(b => b.BatchNumber == "VM-TEST-001");
+        savedBatch.ShouldNotBeNull();
+
+        var specimen = new Specimen
+        {
+            Label = "D28-1",
+            LengthIn = 12m,
+            WidthIn = 5.94m,
+            TestAgeDays = TestAgeDays.Day28,
+            IsSynthetic = false
+        };
+        await specimenService.AddAsync(savedBatch.Id, specimen);
+
+        await curingService.AddReadingAsync(specimen.Id, new CuringReading
+        {
+            TakenAt = castAt.AddDays(1),
+            InternalTempF = 75m,
+            AmbientTempF = 70m,
+            MoisturePct = 90m,
+            RelativeHumidityPct = 95m,
+            ResistivityOhmPerFt = 20m,
+            Co2Ppm = 400m
+        });
+
+        await curingService.AddReadingAsync(specimen.Id, new CuringReading
+        {
+            TakenAt = castAt.AddDays(2),
+            InternalTempF = 75m,
+            AmbientTempF = 70m,
+            MoisturePct = 90m,
+            RelativeHumidityPct = 95m,
+            ResistivityOhmPerFt = 20m,
+            Co2Ppm = 400m
+        });
+
+        await specimenService.RecordBreakAsync(specimen.Id, new BreakResult
+        {
+            BrokenAt = castAt.AddDays(2),
+            StrengthPsi = 5000
+        });
+
+        var batchWithPredictions = await db.Batch
+            .Include(b => b.Specimens)
+                .ThenInclude(s => s.CuringReadings)
+            .Include(b => b.Specimens)
+                .ThenInclude(s => s.BreakResult)
+            .FirstAsync(b => b.BatchNumber == "VM-TEST-001");
+
+        var evaluator = SetupEarlyWarningService(db);
+        var result = await evaluator.Evaluate(batchWithPredictions);
+
+        result.AtRisk.ShouldBeFalse();
+        result.EarlyWarnings
+            .Any(ew =>
+                ew.LimitKey == LimitKeys.PredictionShortfallPct
+                || ew.LimitKey == LimitKeys.PredictionMinimumPsi
+                || ew.LimitKey == LimitKeys.ExpectedFinalVsWcmPct)
+            .ShouldBeFalse();
     }
 
-    private static Batch CreateValidBatch()
+    private static Batch CreateOnTrackBatch(DateTime castAt)
     {
         return new Batch
         {
             BatchNumber = "VM-TEST-001",
-            CastAt = new DateTime(
-                2026, 10, 5, 17, 0, 0, DateTimeKind.Utc),
+            CastAt = castAt,
             FinalWeightLb = 30m,
             ExpectedFinalBreakPsi = 5000,
             CementType = CementType.TypeI,
