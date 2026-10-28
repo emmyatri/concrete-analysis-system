@@ -16,6 +16,44 @@
     </a>
   </nav>
 
+  <section class="card" aria-labelledby="at-risk-title">
+    <header class="card-header">
+      <i class="pi pi-exclamation-triangle" aria-hidden="true"></i>
+      <h2 id="at-risk-title">Batches at risk</h2>
+      <span class="card-note">Largest shortfall first</span>
+    </header>
+
+    @if (atRiskMessage()) {
+      <p class="message" data-testid="at-risk-message">{{ atRiskMessage() }}</p>
+    } @else {
+      <p-table [value]="atRiskRows()" data-testid="at-risk">
+        <ng-template #header>
+          <tr>
+            <th>Batch number</th>
+            <th>Projected 28-day</th>
+            <th>Target</th>
+            <th>Shortfall</th>
+            <th>Top reason</th>
+          </tr>
+        </ng-template>
+        <ng-template #body let-batch>
+          <tr class="row-link" tabindex="0" (click)="open(batch)" (keydown.enter)="open(batch)">
+            <td>
+              <span class="batch-number">{{ batch.batchNumber }}</span>
+              @if (batch.isSynthetic) {
+                <span class="badge-synthetic">SYNTHETIC</span>
+              }
+            </td>
+            <td>{{ batch.projected }}</td>
+            <td>{{ batch.target }}</td>
+            <td>{{ batch.shortfall }}</td>
+            <td class="reason">{{ batch.topReason }}</td>
+          </tr>
+        </ng-template>
+      </p-table>
+    }
+  </section>
+
   <section class="card" aria-labelledby="recent-title">
     <header class="card-header">
       <i class="pi pi-clock" aria-hidden="true"></i>
