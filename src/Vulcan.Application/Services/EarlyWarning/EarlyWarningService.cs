@@ -97,11 +97,16 @@ public class EarlyWarningService(
             // don't check wcm below 0.33; ADR-005, section 4.5
             if (waterCementRatio is { } wcm && wcm >= 0.33m)
             {
+                var aciTablePsi = CalculateAciTablePsi((double)wcm);
+                if (aciTablePsi == 0)
+                {
+                    return (shortfallPct, shortfallPsi, warnings);
+                }
                 var expectedFinalVsWcmWarning = Check(
                     LimitKeys.ExpectedFinalVsWcmPct,
                     CalculateExpectedFinalVsWcmPct(
                         batch.ExpectedFinalBreakPsi,
-                        0),
+                        aciTablePsi),
                     nameof(Batch.ExpectedFinalBreakPsi));
 
                 if (expectedFinalVsWcmWarning is not null)
@@ -205,7 +210,7 @@ public class EarlyWarningService(
     // based on ACI 211.1-97, Table 6.3.4(a)
     private static double CalculateExpectedFinalVsWcmPct(
         int expectedFinalBreakPsi,
-        int aciTablePsi)
+        double aciTablePsi)
         => (expectedFinalBreakPsi - aciTablePsi)
             / aciTablePsi * 100;
 }

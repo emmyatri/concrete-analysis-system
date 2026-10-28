@@ -8,6 +8,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Vulcan.Application.Interfaces;
 using Vulcan.Application.Services;
+using Vulcan.Application.Services.EarlyWarning;
 using Vulcan.Domain.Entities;
 using Vulcan.Domain.Interfaces;
 using Vulcan.Domain.Services;
