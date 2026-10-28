@@ -82,9 +82,20 @@ public sealed class StrengthService(
             breakMeasurements
         );
 
-        var selectedCurve = estimate.AdjustedDailyCurve ?? estimate.DailyCurve;
+        var wasAdjusted = new[]
+        {
+            estimate.Day3Adjustment,
+            estimate.Day7Adjustment,
+            estimate.Day28Adjustment
+        }.Any(adjustment =>
+            adjustment is not null &&
+            adjustment.Stage != BreakAdjustmentStage.None);
 
-        var unadjustedCurve = estimate.AdjustedDailyCurve is not null
+        var selectedCurve = wasAdjusted && estimate.AdjustedDailyCurve is not null
+            ? estimate.AdjustedDailyCurve
+            : estimate.DailyCurve;
+
+        IReadOnlyList<StrengthCurvePoint> unadjustedCurve = wasAdjusted
             ? estimate.DailyCurve
             : [];
 

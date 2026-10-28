@@ -198,6 +198,7 @@ public class StrengthControllerTests
         content.ExpectedFinalBreakPsi.ShouldBe(4500);
 
         content.CurvePoints.Count.ShouldBe(28);
+        content.UnadjustedCurvePoints.ShouldBeEmpty();
         content.Estimates.Count.ShouldBe(3);
         content.CuringPoints.Count.ShouldBe(7);
 
