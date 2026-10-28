@@ -2361,6 +2361,22 @@ Status code: `200`
 
 ### Get At-Risk Batches
 
+**Draft integration (SCRUM-170):** The endpoint is mapped only when an
+`IEarlyWarningEvaluator` implementation is registered. SCRUM-181 supplies the
+evaluation and SCRUM-182 supplies its plain-language messages. Without that
+registration, the existing API 404 response remains; this draft does not claim
+that no batches are at risk. Endpoint tests register a test-only evaluator.
+
+The query reads every eligible batch, including its composition, oxides,
+specimens, breaks, and curing readings. It does not use paginated Search.
+The evaluator is responsible for reading stored predictions and saved warnings.
+Results include batches with at least one triggered reason. Missing predictions
+remain null, so input warnings can be returned before a prediction is available.
+
+Sorting: descending shortfall percentage, then descending count of distinct
+non-prediction limit keys, then batch number. Assertions against the synthetic
+batches are added with SCRUM-181.
+
 Use to get the batches that are predicted to be at-risk.
 
 **Endpoint:** `GET /api/warnings/early`
