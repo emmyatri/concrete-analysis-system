@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc;
 using Vulcan.Application.Services;
 
 namespace Vulcan.Api.Controllers;

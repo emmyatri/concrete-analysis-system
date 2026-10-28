@@ -1,4 +1,4 @@
-﻿using Vulcan.Application.Contracts;
+using Vulcan.Application.Contracts;
 using Vulcan.Application.Interfaces;
 using Vulcan.Domain.Enums;
 using Vulcan.Domain.Interfaces;
@@ -12,7 +12,8 @@ public sealed class StrengthService(
     IBatchRepository batchRepository,
     IPredictionRepository predictionRepository,
     IStrengthEstimateService strengthEstimateService,
-    ICalibrationProvider calibrationProvider)
+    ICalibrationProvider calibrationProvider,
+    IEarlyWarningEvaluator? earlyWarningEvaluator = null)
 {
     public async Task<GetBatchStrengthResponse?> GetByBatchNumberAsync(
         string batchNumber)
@@ -24,8 +25,14 @@ public sealed class StrengthService(
             return null;
         }
 
+        var warningEvaluation = earlyWarningEvaluator is not null
+            ? await earlyWarningEvaluator.EvaluateAsync(
+                batch,
+                CancellationToken.None)
+            : null;
+
         var predictions = await predictionRepository.GetByBatchIdAsync(batch.Id);
-        
+
         var strengthSpecimens = batch.Specimens
             .Select(specimen => new StrengthSpecimen
             {
@@ -56,14 +63,14 @@ public sealed class StrengthService(
                 IsSynthetic: specimen.IsSynthetic
             ))
             .ToList();
-        
+
         var calibration = calibrationProvider.Current();
 
         var settings = StrengthSettings.FromCalibration(
             calibration,
             batch.CementType
         );
-        
+
         var maturitySettings = settings.Maturity;
 
         var estimate = strengthEstimateService.Estimate(
@@ -74,13 +81,13 @@ public sealed class StrengthService(
             settings,
             breakMeasurements
         );
-        
+
         var selectedCurve = estimate.AdjustedDailyCurve ?? estimate.DailyCurve;
 
         var unadjustedCurve = estimate.AdjustedDailyCurve is not null
             ? estimate.DailyCurve
             : [];
-        
+
         var curvePoints = selectedCurve
             .Select(point => new StrengthCurvePointDTO
             {
@@ -102,7 +109,7 @@ public sealed class StrengthService(
                     MidpointRounding.AwayFromZero)
             })
             .ToList();
-        
+
         var strengthEstimates = predictions
             .OrderBy(prediction => prediction.HorizonDays)
             .Select(prediction => new StrengthEstimateDTO
@@ -137,7 +144,7 @@ public sealed class StrengthService(
                 ModifiedBy = prediction.ModifiedBy
             })
             .ToList();
-        
+
         var measuredBreaks = batch.Specimens
             .Where(specimen => specimen.BreakResult is not null)
             .Select(specimen => new MeasuredBreakDTO
@@ -160,7 +167,7 @@ public sealed class StrengthService(
             .OrderBy(result => result.AgeDays)
             .ThenBy(result => result.SpecimenLabel)
             .ToList();
-        
+
         var curingPoints = batch.Specimens
             .SelectMany(specimen => specimen.CuringReadings
                 .Select(reading => new CuringPointDTO
@@ -192,7 +199,8 @@ public sealed class StrengthService(
             .OrderBy(point => point.SpecimenLabel)
             .ThenBy(point => point.Time)
             .ToList();
-        
+
+        // Fallback calculations until SCRUM-181 provides the evaluator.
         var day28Prediction = predictions
             .FirstOrDefault(prediction => prediction.HorizonDays == 28);
 
@@ -210,14 +218,12 @@ public sealed class StrengthService(
             : null;
 
         double? shortfallPct = projected28DayPsiRaw.HasValue
-            ? (double)(
-                (batch.ExpectedFinalBreakPsi - projected28DayPsiRaw.Value)
-                / batch.ExpectedFinalBreakPsi
-                * 100m)
+            ? (double)((batch.ExpectedFinalBreakPsi - projected28DayPsiRaw.Value)
+                / batch.ExpectedFinalBreakPsi * 100m)
             : null;
-        
+
         bool atRisk = shortfallPct.HasValue && shortfallPct.Value > 5.0;
-        
+
         return new GetBatchStrengthResponse
         {
             Id = batch.Id,
@@ -226,20 +232,40 @@ public sealed class StrengthService(
             ExpectedFinalBreakPsi = batch.ExpectedFinalBreakPsi,
             CementType = batch.CementType,
 
-            Status = projected28DayPsi.HasValue
+            Status = (warningEvaluation?.Projected28DayPsi
+                      ?? projected28DayPsi) is not null
                 ? "Estimated"
                 : "InsufficientCuringData",
 
-            AtRisk = atRisk,
-            Projected28DayPsi = projected28DayPsi,
-            ShortfallPsi = shortfallPsi,
-            ShortfallPct = shortfallPct,
+            AtRisk = warningEvaluation?.AtRisk ?? atRisk,
+
+            Projected28DayPsi = warningEvaluation is not null
+                ? warningEvaluation.Projected28DayPsi is double projected
+                    ? (int)Math.Round(
+                        projected,
+                        0,
+                        MidpointRounding.AwayFromZero)
+                    : null
+                : projected28DayPsi,
+
+            ShortfallPsi = warningEvaluation is not null
+                ? warningEvaluation.ShortfallPsi is double shortfall
+                    ? (int)Math.Round(
+                        shortfall,
+                        0,
+                        MidpointRounding.AwayFromZero)
+                    : null
+                : shortfallPsi,
+
+            ShortfallPct = warningEvaluation is not null
+                ? warningEvaluation.ShortfallPct
+                : shortfallPct,
 
             CurvePoints = curvePoints,
             UnadjustedCurvePoints = unadjustedCurvePoints,
             Estimates = strengthEstimates,
             MeasuredBreaks = measuredBreaks,
-            EarlyWarnings = [],
+            EarlyWarnings = warningEvaluation?.EarlyWarnings.ToList() ?? [],
             CuringPoints = curingPoints
         };
     }

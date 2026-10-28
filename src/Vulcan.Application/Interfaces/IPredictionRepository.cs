@@ -1,4 +1,4 @@
-﻿using Vulcan.Domain.Entities;
+using Vulcan.Domain.Entities;
 
 namespace Vulcan.Application.Interfaces;
 

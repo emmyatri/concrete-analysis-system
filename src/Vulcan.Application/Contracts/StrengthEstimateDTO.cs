@@ -1,4 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations;
 using Vulcan.Domain.Enums;
 
 namespace Vulcan.Application.Contracts;

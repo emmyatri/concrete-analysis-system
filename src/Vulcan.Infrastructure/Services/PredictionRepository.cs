@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using Vulcan.Application.Interfaces;
 using Vulcan.Domain.Entities;
 
