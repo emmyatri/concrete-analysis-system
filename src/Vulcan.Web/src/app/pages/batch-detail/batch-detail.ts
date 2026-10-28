@@ -166,6 +166,14 @@ export class BatchDetailPage {
     return earlyWarningsShortfallFirst(state.strength.earlyWarnings);
   });
 
+  /** "VM-SYN-006 is at risk of missing its target" when the prediction says so (mockup M2-01). */
+  protected readonly earlyWarningTitle = computed(() => {
+    const state = this.strengthState();
+    return state.status === 'loaded' && state.strength.atRisk
+      ? `${state.strength.batchNumber} is at risk of missing its target`
+      : 'Early warning';
+  });
+
   /**
    * The chart's minimum line: Prediction.MinimumPsi once SCRUM-181 adds it, until then the break
    * strength Warn limit (both 3,000 PSI, the client's minimum).

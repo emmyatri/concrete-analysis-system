@@ -120,8 +120,24 @@ describe('HomePage', () => {
       (el) => el.textContent?.trim(),
     );
     expect(numbers).toEqual(['VM-SYN-006']);
-    expect(text('[data-testid="at-risk"] tbody tr')).toContain('1,751 PSI short of target');
+    const row = text('[data-testid="at-risk"] tbody tr');
+    expect(row).toContain('4,449 PSI');
+    expect(row).toContain('6,200 PSI');
+    expect(row).toContain('−1,751 (28%)');
     expect(text('[data-testid="at-risk"] tbody tr')).toContain('Projected 28-day strength');
+  });
+
+  it('says early warnings are not available when the API has no endpoint for them yet', async () => {
+    await open(false);
+    TestBed.inject(HttpTestingController)
+      .expectOne((r) => r.url === '/api/batches')
+      .flush([]);
+    TestBed.inject(HttpTestingController)
+      .expectOne((r) => r.url.startsWith('/api/warnings/early'))
+      .flush(null, { status: 404, statusText: 'Not Found' });
+    harness.detectChanges();
+
+    expect(text('[data-testid="at-risk-message"]')).toBe("Early warnings aren't available yet.");
   });
 
   it('hides synthetic at-risk batches when the switch is off', async () => {

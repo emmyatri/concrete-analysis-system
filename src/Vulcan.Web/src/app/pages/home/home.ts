@@ -1,4 +1,5 @@
 ﻿import { DatePipe, formatNumber } from '@angular/common';
+import { HttpErrorResponse } from '@angular/common/http';
 import { Component, computed, inject } from '@angular/core';
 import { toObservable, toSignal } from '@angular/core/rxjs-interop';
 import { Router, RouterLink } from '@angular/router';
@@ -31,7 +32,12 @@ type AtRisk =
   | { status: 'loaded'; batches: EarlyWarningBatch[] }
   | { status: 'failed'; message: string };
 
-type AtRiskRow = EarlyWarningBatch & { shortfall: string; topReason: string };
+type AtRiskRow = EarlyWarningBatch & {
+  projected: string;
+  target: string;
+  shortfall: string;
+  topReason: string;
+};
 
 /**
  * Where the operator lands after signing in (M1-64, mockup "02 · Home"): a greeting, the three
@@ -100,7 +106,14 @@ export class HomePage {
             batches: batches.filter((batch) => batch.atRisk),
           })),
           catchError((error: unknown) =>
-            of<AtRisk>({ status: 'failed', message: describeApiError(error).message }),
+            of<AtRisk>({
+              status: 'failed',
+              // A 404 means this build of the local API doesn't have early warnings yet (SCRUM-170).
+              message:
+                error instanceof HttpErrorResponse && error.status === 404
+                  ? "Early warnings aren't available yet."
+                  : describeApiError(error).message,
+            }),
           ),
           startWith<AtRisk>({ status: 'loading' }),
         ),
@@ -114,6 +127,12 @@ export class HomePage {
     if (atRisk.status !== 'loaded') return [];
     return atRisk.batches.map((batch) => ({
       ...batch,
+      projected: psi(batch.projected28DayPsi),
+      // shortfallPsi is ExpectedFinalBreakPsi minus the projection (API contract), so this is the target.
+      target:
+        batch.projected28DayPsi == null || batch.shortfallPsi == null
+          ? '—'
+          : psi(batch.projected28DayPsi + batch.shortfallPsi),
       shortfall: shortfallLabel(batch),
       topReason: earlyWarningsShortfallFirst(batch.earlyWarnings)[0]?.warning ?? '',
     }));
@@ -141,7 +160,13 @@ export class HomePage {
   }
 }
 
+function psi(value: number | null): string {
+  return value == null ? '—' : `${formatNumber(value, 'en-US', '1.0-0')} PSI`;
+}
+
+/** "−1,751 (28%)", as in the M2-03 mockup. */
 function shortfallLabel(batch: EarlyWarningBatch): string {
-  if (batch.shortfallPsi == null) return '';
-  return `${formatNumber(batch.shortfallPsi, 'en-US', '1.0-0')} PSI short of target`;
+  if (batch.shortfallPsi == null) return '—';
+  const pct = batch.shortfallPct == null ? '' : ` (${Math.round(batch.shortfallPct)}%)`;
+  return `−${formatNumber(batch.shortfallPsi, 'en-US', '1.0-0')}${pct}`;
 }

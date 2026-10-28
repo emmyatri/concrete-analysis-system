@@ -367,6 +367,15 @@ describe('BatchDetailPage', () => {
     ]);
     expect(reasons[0].textContent).toContain('Projected 28-day strength');
     expect(reasons[0].textContent).toContain('4,449 PSI');
+    expect(text('[data-testid="early-warning-title"]')).toBe(
+      'VM-SYN-006 is at risk of missing its target',
+    );
+  });
+
+  it('titles the banner "Early warning" when the batch has warnings but is on track', async () => {
+    await open('VM-SYN-009');
+
+    expect(text('[data-testid="early-warning-title"]')).toBe('Early warning');
   });
 
   it('hides the early-warning banner when the batch is on track', async () => {
