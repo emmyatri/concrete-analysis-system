@@ -1,6 +1,6 @@
 ﻿# Synthetic concrete batch dataset
 
-**Status:** Approved — Amelia Black, 2026-09-2
+**Status:** M1 dataset approved — Amelia Black, 2026-09-2; M2 revision pending review
 **Requirements:** FR-20, A-2
 **Source of truth:** Approved M1-02 `docs/schema.md` (2026-09-28)
 **Data file:** `data/synthetic/batches.json`
@@ -71,7 +71,7 @@ These values provide visible variation between SCM types while remaining compati
 
 ## Composition variation
 
-The synthetic compositions were varied so data entry, validation, and review can be demonstrated across different mixes. Outside VM-SYN-006, break strengths were set relative to each batch's expected final break rather than derived from composition, so this dataset does not demonstrate composition-to-strength relationships. A revised dataset for strength prediction is planned for Milestone 2.
+The synthetic compositions were varied so data entry, validation, and review can be demonstrated across different mixes.
 
 Across the dataset:
 
@@ -88,18 +88,57 @@ The approved coarse aggregate validation range extends to 55%; however, the comp
 | Batch | Cement | SCM | Coarse | Fine | Water | Total | Air/other | Calculated w/cm | Intended scenario |
 |---|---|---|---:|---:|---:|---:|---:|---:|---|
 | VM-SYN-001 | TypeI | None | 40.0 | 30.0 | 15.0 | 95.0 | 5.0 | 0.476 | High-fine, no-SCM control |
-| VM-SYN-002 | TypeII | FlyAsh (2.1%) | 41.0 | 25.0 | 16.0 | 94.1 | 5.9 | 0.439 | Lower fly-ash scenario |
-| VM-SYN-003 | TypeIII | Slag (2.72%) | 40.5 | 25.0 | 16.5 | 94.72 | 5.28 | 0.419 | Lower slag scenario |
+| VM-SYN-002 | TypeII | FlyAsh (2.1%) | 41.0 | 25.0 | 16.0 | 94.1 | 5.9 | 0.439 | Cold-cured; lower fly-ash scenario |
+| VM-SYN-003 | TypeIII | Slag (2.72%) | 40.5 | 25.0 | 16.5 | 94.72 | 5.28 | 0.419 | Moisture loss; lower slag scenario |
 | VM-SYN-004 | TypeI | SilicaFume (0.9%) | 41.0 | 25.0 | 16.0 | 93.9 | 6.1 | 0.435 | Lower silica-fume scenario; near lower alumina normal limit |
 | VM-SYN-005 | TypeII | None | 45.0 | 25.0 | 15.0 | 95.0 | 5.0 | 0.476 | High-coarse, no-SCM scenario; near upper magnesium oxide normal limit |
-| VM-SYN-006 | TypeIII | None | 40.0 | 25.0 | 19.0 | 94.0 | 6.0 | 0.603 | High-water scenario: w/cm warning, one Day-3 break below 3,000 PSI (warning), and intentionally misses expected 28-day strength |
+| VM-SYN-006 | TypeIII | None | 40.0 | 25.0 | 19.0 | 94.0 | 6.0 | 0.603 | High-water scenario: w/cm warning and intentionally misses expected 28-day strength |
 | VM-SYN-007 | TypeI | Slag (3.4%) | 40.0 | 25.0 | 16.6 | 95.0 | 5.0 | 0.401 | Higher slag scenario |
 | VM-SYN-008 | TypeII | SilicaFume (1.3%) | 42.0 | 25.0 | 15.5 | 94.3 | 5.7 | 0.429 | Higher silica-fume scenario |
 | VM-SYN-009 | TypeIII | FlyAsh (3.2%) | 40.0 | 25.0 | 16.0 | 94.2 | 5.8 | 0.410 | Higher fly-ash scenario; **mix-water pH warning at 7.6** |
 
-VM-SYN-006 is intentionally designed as the high-water demonstration case. Its calculated w/cm ratio is approximately 0.603, the highest in the dataset and just above the 0.60 warning threshold. Specimen D3-1 breaks at 2,950 PSI, which is saved with a low-break warning per Decision 3. Its mean 28-day strength is approximately 4,461 PSI against an expected final break strength of 6,200 PSI. This provides a synthetic example in which increased water content is associated with reduced final strength and a missed expected-strength target.
+## M2 synthetic curing and strength data
 
-The strength trajectories also vary by cement type. Type I batches reach approximately 50% of their Day-28 strength by Day 3, while Type III batches reach approximately 75%. This makes the faster early-strength development of Type III visibly distinguishable in the demonstration data rather than giving all cement types the same early-strength trajectory.
+These measurements and strength effects are fabricated for testing purposes. These are not real Vulcan data, validated relationships, or actual engineering predictions.
+
+The dataset retains 9 batches, 81 specimens, 81 break results, and 567 curing readings. Existing batch identities, compositions, chemistry, pH values, specimen dimensions, and timestamps are preserved.
+
+### How strength is generated
+
+The generator starts with the ADR-005 maturity and strength equations. Internal curing temperature determines equivalent age, which feeds the ACI strength equation using the batch’s cement type and expected final strength.
+
+It then applies three fabricated effects:
+
+- **Water-to-cementitious-material ratio:** Above 0.50, each additional 0.01 reduces strength by 2%. This multiplier cannot fall below 0.50.
+- **Moisture loss:** Each percentage point lost between day 1 and day 3 reduces later strength by 12%. The effect increases proportionally through day 7, then remains constant. This multiplier also cannot fall below 0.50.
+- **SCM content:** Early strength is reduced according to SCM’s share of cementitious-material mass. At day 3, the reduction equals half that share. It decreases linearly to zero at day 28. This simplified effect applies to every represented SCM type.
+
+Each specimen’s result receives deterministic random scatter between -5% and +5%, then rounds to whole PSI. The fixed seed makes regeneration reproducible.
+
+### Demo cases
+
+| Batch | Intended case |
+|---|---|
+| VM-SYN-001 | On track: reference-temperature curing and no moisture loss |
+| VM-SYN-002 | Cold-cured: lower temperatures reduce maturity and strength |
+| VM-SYN-003 | Moisture loss: moisture falls from 4.5% to 2.5% between days 1 and 3 |
+| VM-SYN-006 | High w/c: retains the existing composition and a calculated w/cm of approximately 0.603 |
+
+The three problem cases have lower measured final strengths relative to their targets. Confirming their automatic early-warning flags requires the warning evaluator and its configured rules.
+
+### Regeneration and loading
+
+From the repository root:
+
+`node data/synthetic/generate.mjs`
+
+To check reproducibility and configured rejection limits without rewriting the dataset:
+
+`node data/synthetic/generate.mjs --check`
+
+The existing seeder loads the regenerated JSON. Databases that already contain synthetic batches retain their existing demo data.
+
+This change does not automatically replace it.
 
 ## Curing environment convention
 
@@ -116,8 +155,6 @@ All timestamps use UTC ISO 8601 with a `Z` suffix. Synthetic casts occur in June
 **Important schema distinction:** The approved schema has `Batch.MixWaterPh` but **does not contain** `CuringReading.Ph`. Consequently, the ticket's request for pH mostly 7.0–7.5 is represented by batch-level mix-water pH rather than invented per-reading pH fields.
 
 Most synthetic batches use mix-water pH values within the normal 7.0–7.5 range. VM-SYN-009 intentionally uses a `MixWaterPh` of **7.6**, which remains within the accepted 1–9 range but is slightly outside the normal range. This provides a demonstration case for the application's pH warning behavior.
-
-Intentional warnings in this dataset: exactly three, all by design. VM-SYN-006 w/cm (0.603), VM-SYN-006 D3-1 break (2,950 PSI), and VM-SYN-009 mix-water pH (7.6). Any other warning raised on import indicates a validation or data error.
 
 If the Project Lead requires pH at every curing interval, a schema change to M1-02 must be approved first; per-reading pH fields should not be silently added to the dataset.
 

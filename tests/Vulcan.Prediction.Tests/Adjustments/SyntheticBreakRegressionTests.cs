@@ -173,15 +173,15 @@ public class SyntheticBreakRegressionTests
         // These verify regression consistency, not real-world prediction accuracy.
         var expected7DayPsi = new Dictionary<string, double>
         {
-            ["VM-SYN-001"] = 4852,
-            ["VM-SYN-002"] = 4558,
-            ["VM-SYN-003"] = 5590,
-            ["VM-SYN-004"] = 4461,
-            ["VM-SYN-005"] = 4698,
-            ["VM-SYN-006"] = 4574,
-            ["VM-SYN-007"] = 4673,
-            ["VM-SYN-008"] = 4683,
-            ["VM-SYN-009"] = 5105
+            ["VM-SYN-001"] = 4339,
+            ["VM-SYN-002"] = 2139,
+            ["VM-SYN-003"] = 4221,
+            ["VM-SYN-004"] = 4058,
+            ["VM-SYN-005"] = 4021,
+            ["VM-SYN-006"] = 4279,
+            ["VM-SYN-007"] = 3880,
+            ["VM-SYN-008"] = 3945,
+            ["VM-SYN-009"] = 4168
         };
 
         foreach (var batch in batches)
@@ -254,19 +254,18 @@ public class SyntheticBreakRegressionTests
 
         Assert.Equal(9, batches.Count);
 
-        // Regression values independently verified against the TypeScript model.
         // These verify calculation consistency, not real-world prediction accuracy.
         var expected28DayPsi = new Dictionary<string, double>
         {
-            ["VM-SYN-001"] = 6408,
-            ["VM-SYN-002"] = 5533,
-            ["VM-SYN-003"] = 6037,
-            ["VM-SYN-004"] = 5858,
-            ["VM-SYN-005"] = 5613,
-            ["VM-SYN-006"] = 4449,
-            ["VM-SYN-007"] = 6436,
-            ["VM-SYN-008"] = 5577,
-            ["VM-SYN-009"] = 5511
+            ["VM-SYN-001"] = 6226,
+            ["VM-SYN-002"] = 4402,
+            ["VM-SYN-003"] = 3749,
+            ["VM-SYN-004"] = 5661,
+            ["VM-SYN-005"] = 5455,
+            ["VM-SYN-006"] = 4781,
+            ["VM-SYN-007"] = 5840,
+            ["VM-SYN-008"] = 5679,
+            ["VM-SYN-009"] = 4906
         };
 
         foreach (var batch in batches)

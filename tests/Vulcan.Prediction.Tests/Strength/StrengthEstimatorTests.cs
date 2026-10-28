@@ -418,9 +418,9 @@ public sealed class StrengthEstimatorTests
 
         // M2-15: Updated regression expectations using the 14°F
         // Nurse–Saul datum using the VM-SYN-006 fixture.
-        Assert.InRange(result.Day3!.EstimatedPsi, 3847, 3849);
-        Assert.InRange(result.Day7!.EstimatedPsi, 5093, 5095);
-        Assert.InRange(result.Day28!.EstimatedPsi, 6234, 6236);
+        Assert.InRange(result.Day3!.EstimatedPsi, 3675, 3677);
+        Assert.InRange(result.Day7!.EstimatedPsi, 4965, 4967);
+        Assert.InRange(result.Day28!.EstimatedPsi, 6186, 6188);
 
         Assert.True(result.Day3.EstimatedPsi > 0);
         Assert.True(result.Day7.EstimatedPsi > result.Day3.EstimatedPsi);
