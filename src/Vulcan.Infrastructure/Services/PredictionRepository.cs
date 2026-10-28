@@ -1,13 +1,18 @@
+using Microsoft.EntityFrameworkCore;
 using Vulcan.Application.Interfaces;
 using Vulcan.Domain.Entities;
 
 namespace Vulcan.Infrastructure.Services;
 
-public class PredictionRepository(VulcanDbContext db) : IPredictionRepository
+public sealed class PredictionRepository(VulcanDbContext dbContext)
+    : IPredictionRepository
 {
-    public List<PredictionEntity> GetPredictions(int batchId)
+    public async Task<IReadOnlyList<PredictionEntity>> GetByBatchIdAsync(int batchId)
     {
-        return [..db.Prediction
-            .Where(p => p.BatchId == batchId)];
+        return await dbContext.Prediction
+            .AsNoTracking()
+            .Where(p => p.BatchId == batchId)
+            .OrderBy(p => p.HorizonDays)
+            .ToListAsync();
     }
 }

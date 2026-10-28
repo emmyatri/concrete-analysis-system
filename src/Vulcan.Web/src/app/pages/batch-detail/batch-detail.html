@@ -73,6 +73,23 @@
       </div>
     </header>
 
+    <!-- ---------- Early warnings (SCRUM-177, mockup M2-01) ---------- -->
+    @if (earlyWarningReasons().length > 0) {
+      <div class="early-warning-banner" role="status" data-testid="early-warnings">
+        <i class="pi pi-exclamation-triangle" aria-hidden="true"></i>
+        <div>
+          <p class="early-warning-title" data-testid="early-warning-title">
+            {{ earlyWarningTitle() }}
+          </p>
+          <ul>
+            @for (reason of earlyWarningReasons(); track reason.limitKey + reason.warning) {
+              <li [attr.data-limit-key]="reason.limitKey">{{ reason.warning }}</li>
+            }
+          </ul>
+        </div>
+      </div>
+    }
+
     <!-- ---------- Summary strip ---------- -->
     <dl class="card summary" data-testid="summary">
       <div class="summary-item">
@@ -158,18 +175,33 @@
     </dl>
 
     <div class="columns">
-      <!-- ---------- Chart (Milestone 2, FR-11) ---------- -->
+      <!-- ---------- Strength chart (Milestone 2, FR-11) ---------- -->
       <section class="card chart-card" aria-labelledby="chart-title">
         <header class="card-header">
           <i class="pi pi-chart-line" aria-hidden="true"></i>
           <h2 id="chart-title">{{ batch.batchNumber }} · Strength over time</h2>
         </header>
+
         <app-strength-chart
           [state]="strengthState()"
           [castAt]="batch.castAt"
           [minimumPsi]="minimumPsi()"
           [flaggedSpecimenIds]="flaggedSpecimenIds()"
+          [hoveredDay]="hoveredDay()"
+          (hoveredDayChange)="hoveredDay.set($event)"
         />
+
+        <!-- ---------- Curing chart (Milestone 2, FR-12) ---------- -->
+        @if (strengthState().status === 'loaded') {
+          <app-curing-chart
+            [curingPoints]="curingPoints()"
+            [readings]="readings()"
+            [warnings]="batch.warnings"
+            [castAt]="batch.castAt"
+            [hoveredDay]="hoveredDay()"
+            (hoveredDayChange)="hoveredDay.set($event)"
+          />
+        }
       </section>
 
       <div class="side">

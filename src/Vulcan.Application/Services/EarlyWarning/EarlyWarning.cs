@@ -1,3 +1,4 @@
+using Vulcan.Application.Contracts;
 using Vulcan.Domain.Entities;
 
 namespace Vulcan.Application.Services.EarlyWarning;
@@ -33,4 +34,14 @@ public class EarlyWarning
             LimitKey = rw.LimitKey,
             Limit = 0.0
         };
+
+    public EarlyWarningDTO ToDTO()
+        => new
+        (
+            Warning,
+            Field,
+            Value,
+            LimitKey,
+            Limit
+        );
 }

@@ -272,7 +272,7 @@ public sealed class PredictionSaveChangesInterceptor(
         }
         catch (Exception ex)
         {
-            logger.LogWarning($"Strength estimator failed to make calculate predictions on this save. Reason: {ex.Message}");
+            logger.LogWarning(ex, "Strength estimate failed for batch {BatchNumber}; predictions not updated.", batch.BatchNumber);
             return;
         }
 
@@ -288,7 +288,7 @@ public sealed class PredictionSaveChangesInterceptor(
 
                 Basis = $"{estimate.Basis} {adjustment?.Basis}".Trim(),
                 HorizonDays = dayNum,
-                EstimatedPsi = (decimal?)day?.EstimatedPsi,
+                EstimatedPsi = (decimal?)(adjustment?.AdjustedPsi ?? day?.EstimatedPsi),
                 EquivalentAgeDays = (decimal?)day?.EquivalentAgeDays,
                 AdjustmentStage = adjustment?.Stage switch
                 {
@@ -297,7 +297,7 @@ public sealed class PredictionSaveChangesInterceptor(
                     BreakAdjustmentStage.ThreeAndSevenDay => AdjustmentStage.ThreeAndSevenDay,
                     _ => null,
                 },
-                UnadjustedPsi = (decimal?)adjustment?.UnadjustedPsi,
+                UnadjustedPsi = (decimal?)(adjustment?.UnadjustedPsi ?? day?.EstimatedPsi),
             });
 
         // add three predictions to represent it was attempted

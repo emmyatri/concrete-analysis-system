@@ -1,3 +1,4 @@
+using Vulcan.Application.Contracts;
 using Vulcan.Application.Interfaces;
 using Vulcan.Domain.Constants;
 using Vulcan.Domain.Entities;
@@ -12,9 +13,9 @@ public class EarlyWarningService(
     ILimitProvider limitProvider,
     WaterCementRatioCalculator wcrCalculator)
 {
-    public async Task<EarlyWarningResult> Evaluate(Batch batch)
+    public async Task<EarlyWarningEvaluation> Evaluate(Batch batch)
     {
-        var predictions = prediction.GetPredictions(batch.Id);
+        var predictions = await prediction.GetByBatchIdAsync(batch.Id);
         var batchRecordWarnings = await recordWarning
             .GetForBatchesAsync([batch]);
         var existingBatchWarnings = batchRecordWarnings
@@ -27,30 +28,37 @@ public class EarlyWarningService(
         //     warnings.AddRange(EvaluatePrediction(p));
         // }
 
-        var (shortfallPct, shortfallPsi, warnings) = EvaluateBatch(batch, predictions);
+        var (
+            shortfallPct,
+            shortfallPsi,
+            projected28DayPsi,
+            warnings
+        ) = EvaluateBatch(batch, predictions);
 
-        return new EarlyWarningResult
-        {
-            AtRisk = warnings.Count > 0,
-            ShortfallPsi = shortfallPsi,
-            ShortfallPct = shortfallPct,
-            EarlyWarnings = [.. warnings.Concat(existingBatchWarnings)]
-        };
+        return new EarlyWarningEvaluation
+        (
+            AtRisk: warnings.Count > 0,
+            ShortfallPsi: shortfallPsi,
+            ShortfallPct: shortfallPct,
+            Projected28DayPsi: projected28DayPsi,
+            EarlyWarnings: [.. warnings.Concat(existingBatchWarnings).Select(w => w.ToDTO())]
+        );
     }
 
     /// <summary>
-    /// Returns (shortfall percent?, shortfall PSI?, list of early warnings)
+    /// Returns (shortfall percent?, shortfall PSI?, projected 28 day psi, list of early warnings)
     /// </summary>
     /// <param name="batch"></param>
     /// <param name="predictions"></param>
     /// <returns></returns>
-    private (double?, int?, List<EarlyWarning>) EvaluateBatch(
+    private (double?, int?, double?, List<EarlyWarning>) EvaluateBatch(
         Batch batch,
         IEnumerable<PredictionEntity> predictions)
     {
         var warnings = new List<EarlyWarning>();
         double? shortfallPct = null;
         int? shortfallPsi = null;
+        double? projected28DayPsi = null;
 
         foreach (var p in predictions)
         {
@@ -74,6 +82,7 @@ public class EarlyWarningService(
                 // set return results
                 shortfallPct = batchShortfallPct;
                 shortfallPsi = (int)(batch.ExpectedFinalBreakPsi - current28DayEstimate);
+                projected28DayPsi = (double?)p.EstimatedPsi;
 
                 // check minimum psi
                 var minimumPsiWarning = Check(
@@ -100,7 +109,7 @@ public class EarlyWarningService(
                 var aciTablePsi = CalculateAciTablePsi((double)wcm);
                 if (aciTablePsi == 0)
                 {
-                    return (shortfallPct, shortfallPsi, warnings);
+                    return (shortfallPct, shortfallPsi, projected28DayPsi, warnings);
                 }
                 var expectedFinalVsWcmWarning = Check(
                     LimitKeys.ExpectedFinalVsWcmPct,
@@ -116,7 +125,7 @@ public class EarlyWarningService(
             }
         }
 
-        return (shortfallPct, shortfallPsi, warnings);
+        return (shortfallPct, shortfallPsi, projected28DayPsi, warnings);
     }
 
     // private List<EarlyWarning> EvaluatePrediction(PredictionEntity prediction)

@@ -4,5 +4,5 @@ namespace Vulcan.Application.Interfaces;
 
 public interface IPredictionRepository
 {
-    public List<PredictionEntity> GetPredictions(int batchId);
+    Task<IReadOnlyList<PredictionEntity>> GetByBatchIdAsync(int batchId);
 }
