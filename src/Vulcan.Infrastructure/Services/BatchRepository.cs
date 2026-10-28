@@ -55,6 +55,24 @@ public sealed class BatchRepository(VulcanDbContext dbContext) : IBatchRepositor
             .SingleOrDefaultAsync(x => x.BatchNumber == batchNumber);
     }
 
+    public async Task<IReadOnlyList<Batch>> GetEarlyWarningCandidatesAsync(
+        bool includeSynthetic,
+        CancellationToken cancellationToken)
+    {
+        return await dbContext.Batch
+            .AsNoTracking()
+            .AsSplitQuery()
+            .Include(batch => batch.Composition)
+            .Include(batch => batch.CementOxideAnalysis)
+            .Include(batch => batch.Specimens)
+                .ThenInclude(specimen => specimen.BreakResult)
+            .Include(batch => batch.Specimens)
+                .ThenInclude(specimen => specimen.CuringReadings)
+            .Where(batch => includeSynthetic || !batch.IsSynthetic)
+            .OrderBy(batch => batch.Id)
+            .ToListAsync(cancellationToken);
+    }
+
     public async Task<bool> ExistsAsync(string batchNumber)
     {
         return await dbContext.Batch

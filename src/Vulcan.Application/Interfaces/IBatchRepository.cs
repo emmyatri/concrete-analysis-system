@@ -12,6 +12,10 @@ public interface IBatchRepository
     Task<Batch?> GetByNumberAsync(string batchNumber);
     Task<bool> ExistsAsync(string batchNumber);
 
+    Task<IReadOnlyList<Batch>> GetEarlyWarningCandidatesAsync(
+        bool includeSynthetic,
+        CancellationToken cancellationToken);
+
     Task<IReadOnlyList<Batch>> SearchAsync(
         string search,
         DateTime? castFrom,
