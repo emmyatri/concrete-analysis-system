@@ -69,6 +69,7 @@ public static class SetupUtils
         services.AddScoped<SpecificGravityService>();
         services.AddScoped<ValidationLimitService>();
         services.AddScoped<IStrengthEstimateService, StrengthEstimateService>();
+		services.AddScoped<StrengthService>();
 
         if (cs.Contains(":memory:", StringComparison.OrdinalIgnoreCase))
         {
