@@ -11,7 +11,7 @@ using Vulcan.Infrastructure;
 namespace Vulcan.Infrastructure.Migrations
 {
     [DbContext(typeof(VulcanDbContext))]
-    [Migration("20261026203734_AddPrediction")]
+    [Migration("20261028180234_AddPrediction")]
     partial class AddPrediction
     {
         /// <inheritdoc />
@@ -586,7 +586,7 @@ namespace Vulcan.Infrastructure.Migrations
                         .WithMany()
                         .HasForeignKey("CalibrationVersion")
                         .HasPrincipalKey("Version")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.Navigation("Batch");

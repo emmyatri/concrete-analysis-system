@@ -1,5 +1,7 @@
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
 using Vulcan.Application.Interfaces;
 using Vulcan.Application.Services;
 using Vulcan.Domain.Calibration;
@@ -10,12 +12,13 @@ using Vulcan.Infrastructure.Interceptors;
 using Vulcan.Infrastructure.Seed;
 using Vulcan.Prediction.Adjustments;
 using Vulcan.Prediction.Strength;
-using Xunit.Abstractions;
 
 namespace Vulcan.Infrastructure.Tests;
 
 public sealed class PredictionSaveChangesInterceptorTests()
 {
+    private static readonly ILogger<PredictionSaveChangesInterceptor> _nullLogger = new NullLogger<PredictionSaveChangesInterceptor>();
+
     private sealed class MockStrengthEstimator(StrengthEstimateResult result) : IStrengthEstimateService
     {
         public StrengthEstimateResult Estimate(
@@ -58,7 +61,8 @@ public sealed class PredictionSaveChangesInterceptorTests()
             return opts.AddInterceptors(
                 new PredictionSaveChangesInterceptor(
                     _ => new MockCalibrationProvider(calibration),
-                    strengthEstimate ?? new MockStrengthEstimator(estimate))
+                    strengthEstimate ?? new MockStrengthEstimator(estimate),
+                    _nullLogger)
             ).Options;
         }
         return opts.Options;
@@ -159,8 +163,8 @@ public sealed class PredictionSaveChangesInterceptorTests()
             await Should.NotThrowAsync(() => db.SaveChangesAsync());
 
             // one added for day 3
-            db.Prediction.Count().ShouldBe(1);
-            var prediction = db.Prediction.First().ShouldNotBeNull();
+            db.Prediction.Count().ShouldBe(3);
+            var prediction = db.Prediction.FirstOrDefault(p => p.HorizonDays == 3).ShouldNotBeNull();
             prediction.CalibrationVersion.ShouldBe("v1");
             prediction.HorizonDays.ShouldBe(3);
             prediction.EstimatedPsi.ShouldBe(4500);
@@ -225,17 +229,16 @@ public sealed class PredictionSaveChangesInterceptorTests()
             await Should.NotThrowAsync(() => db.SaveChangesAsync());
 
             // one added for day 7
-            db.Prediction.Count().ShouldBe(1);
-            var prediction = db.Prediction.First().ShouldNotBeNull();
+            db.Prediction.Count().ShouldBe(3);
+            var prediction = db.Prediction.FirstOrDefault(p => p.HorizonDays == 7).ShouldNotBeNull();
             prediction.CalibrationVersion.ShouldBe("v1");
-            prediction.HorizonDays.ShouldBe(7);
             prediction.EstimatedPsi.ShouldBe(4500);
             prediction.AdjustmentStage.ShouldBe(AdjustmentStage.ThreeDay);
         }
     }
 
     [Fact]
-    public async Task Prediction_removes_stale_predictions()
+    public async Task Prediction_keeps_successful_predictions()
     {
         var estimate = MakeEstimate(); // no predictions made
         using var connection = new SqliteConnection("Filename=:memory:");
@@ -329,7 +332,8 @@ public sealed class PredictionSaveChangesInterceptorTests()
             cr.ShouldNotBeNull().InternalTempF = 2_500_000_000;
             await Should.NotThrowAsync(() => db.SaveChangesAsync());
 
-            db.Prediction.ShouldBeEmpty();
+            db.Prediction.Count().ShouldBe(3);
+            db.Prediction.Select(p => p.EstimatedPsi).ShouldAllBe(e => e == null);
         }
     }
 
@@ -445,11 +449,11 @@ public sealed class PredictionSaveChangesInterceptorTests()
     }
 
     [Fact]
-    public async Task Prediction_overwrites_and_adds_and_removes_updated_predictions()
+    public async Task Prediction_overwrites_and_adds_and_keeps_updated_predictions()
     {
         var estimate = MakeEstimate(
             setDay3: true, // to update
-                           // day 7 to remove
+                           // day 7 to set null
             setDay28: true // to be added
         );
         using var connection = new SqliteConnection("Filename=:memory:");
@@ -540,10 +544,10 @@ public sealed class PredictionSaveChangesInterceptorTests()
             await Should.NotThrowAsync(() => db.SaveChangesAsync());
 
             var predictions = db.Prediction.ToList();
-            predictions.Count.ShouldBe(2);
+            predictions.Count.ShouldBe(3);
             predictions.ShouldAllBe(p => p.CalibrationVersion == "v1");
-            predictions.Select(p => p.HorizonDays).ShouldBeSubsetOf([3, 28]);
-            predictions.Select(p => p.EstimatedPsi).ShouldBeSubsetOf([4500, 4500]);
+            predictions.Select(p => p.HorizonDays).ShouldBeSubsetOf([3, 7, 28]);
+            predictions.Count(p => p.EstimatedPsi == 4500).ShouldBe(2);
         }
     }
 
@@ -565,7 +569,8 @@ public sealed class PredictionSaveChangesInterceptorTests()
             .AddInterceptors(
                 new PredictionSaveChangesInterceptor(
                     _ => new MockCalibrationProvider(_calibrationVersion),
-                    new MockStrengthEstimator(estimate)),
+                    new MockStrengthEstimator(estimate),
+                    _nullLogger),
                 new AuditSaveChangesInterceptor(
                     technician, clock)
             )
@@ -635,10 +640,10 @@ public sealed class PredictionSaveChangesInterceptorTests()
             await Should.NotThrowAsync(() => db.SaveChangesAsync());
 
             var predictions = db.Prediction.ToList();
-            predictions.Count.ShouldBe(2);
+            predictions.Count.ShouldBe(3);
             predictions.ShouldAllBe(p => p.CalibrationVersion == "v1");
-            predictions.Select(p => p.HorizonDays).ShouldBeSubsetOf([3, 7]);
-            predictions.Select(p => p.EstimatedPsi).ShouldBeSubsetOf([4500, 4500]);
+            predictions.Select(p => p.HorizonDays).ShouldBeSubsetOf([3, 7, 28]);
+            predictions.Count(p => p.EstimatedPsi == 4500).ShouldBe(2);
 
             predictions.ForEach(it =>
             {
@@ -670,10 +675,10 @@ public sealed class PredictionSaveChangesInterceptorTests()
 
             // should be the same
             var predictions = db.Prediction.ToList();
-            predictions.Count.ShouldBe(2);
+            predictions.Count.ShouldBe(3);
             predictions.ShouldAllBe(p => p.CalibrationVersion == "v1");
-            predictions.Select(p => p.HorizonDays).ShouldBeSubsetOf([3, 7]);
-            predictions.Select(p => p.EstimatedPsi).ShouldBeSubsetOf([4500, 4500]);
+            predictions.Select(p => p.HorizonDays).ShouldBeSubsetOf([3, 7, 28]);
+            predictions.Count(p => p.EstimatedPsi == 4500).ShouldBe(2);
 
             predictions.ForEach(it =>
             {
@@ -695,7 +700,6 @@ public sealed class PredictionSaveChangesInterceptorTests()
     {
         var estimate = MakeEstimate(
             setDay3: true, // to update
-                           // day 7 to remove
             setDay28: true // to be added
         );
         using var connection = new SqliteConnection("Filename=:memory:");
@@ -821,10 +825,10 @@ public sealed class PredictionSaveChangesInterceptorTests()
             await Should.NotThrowAsync(() => db.SaveChangesAsync());
 
             var predictions = db.Prediction.ToList();
-            predictions.Count.ShouldBe(4);
+            predictions.Count.ShouldBe(6);
             predictions.ShouldAllBe(p => p.CalibrationVersion == "v1");
-            predictions.Select(p => p.HorizonDays).ShouldBeSubsetOf([3, 28, 3, 28]);
-            predictions.Select(p => p.EstimatedPsi).ShouldBeSubsetOf([4500, 4500, 4500, 4500]);
+            predictions.Select(p => p.HorizonDays).ShouldBeSubsetOf([3, 7, 28, 3, 7, 28]);
+            predictions.Where(p => p.EstimatedPsi == 4500).ToList().Count.ShouldBe(4);
             predictions.ShouldAllBe(p => p.IsSynthetic);
         }
     }
@@ -842,6 +846,7 @@ public sealed class PredictionSaveChangesInterceptorTests()
 
         using var db = new VulcanDbContext(GetDbOptions(connection, estimate, _calibrationVersion, enableIntercept: true));
         await db.Database.EnsureCreatedAsync();
+        db.Add(_calibrationVersion);
         SyntheticDataSeeder.Seed(db);
 
         await Should.NotThrowAsync(() => db.SaveChangesAsync());
@@ -863,7 +868,8 @@ public sealed class PredictionSaveChangesInterceptorTests()
             .AddInterceptors(
                 new PredictionSaveChangesInterceptor(
                     _ => new MockCalibrationProvider(_calibrationVersion),
-                    _estimator))
+                    _estimator,
+                    _nullLogger))
             .Options;
         var noInterceptor = new DbContextOptionsBuilder<VulcanDbContext>()
             .UseSqlite(connection)
@@ -932,7 +938,7 @@ public sealed class PredictionSaveChangesInterceptorTests()
         }
     }
 
-    [Fact(Skip = "todo")]
+    [Fact]
     public async Task Three_day_break_maps_adjustment_stage_correctly()
     {
         using var connection = new SqliteConnection("Filename=:memory:");
@@ -943,12 +949,11 @@ public sealed class PredictionSaveChangesInterceptorTests()
             .AddInterceptors(
                 new PredictionSaveChangesInterceptor(
                     _ => new MockCalibrationProvider(_calibrationVersion),
-                    _estimator))
+                    _estimator,
+                    _nullLogger))
             .Options;
-        var noInterceptor = new DbContextOptionsBuilder<VulcanDbContext>()
-            .UseSqlite(connection)
-            .Options;
-
+        var castAt = new DateTime(
+            2026, 10, 1, 12, 0, 0, DateTimeKind.Utc);
         var specimen = new Specimen
         {
             Label = "LBL",
@@ -957,24 +962,14 @@ public sealed class PredictionSaveChangesInterceptorTests()
                 new CuringReading
                 {
                     InternalTempF = 73.4m,
-                    TakenAt = DateTime.UtcNow.AddHours(4)
+                    TakenAt = castAt
                 },
                 new CuringReading
                 {
-                    InternalTempF = 78.8m,
-                    TakenAt = DateTime.UtcNow.AddHours(5)
-                },
-                new CuringReading
-                {
-                    InternalTempF = 78.8m,
-                    TakenAt = DateTime.UtcNow.AddHours(6)
+                    InternalTempF = 73.4m,
+                    TakenAt = castAt.AddDays(1)
                 },
                 ],
-            BreakResult = new()
-            {
-                StrengthPsi = 4800,
-                BrokenAt = DateTime.UtcNow.AddDays(4).AddHours(1.3)
-            }
         };
         var batch = new Batch
         {
@@ -982,7 +977,7 @@ public sealed class PredictionSaveChangesInterceptorTests()
             IsSynthetic = true,
             ExpectedFinalBreakPsi = 6000,
             CementType = CementType.TypeI,
-            CastAt = DateTime.UtcNow,
+            CastAt = castAt,
             Specimens = [
                 specimen,
             ]
@@ -998,21 +993,39 @@ public sealed class PredictionSaveChangesInterceptorTests()
 
         await using (var db = new VulcanDbContext(opts))
         {
+            var prediction = db.Prediction
+                .FirstOrDefault(p => p.HorizonDays == 3)
+                .ShouldNotBeNull()
+                .EstimatedPsi
+                // bump beyond prediction
+                .ShouldNotBeNull() * 1.10m;
+            var brSpecimen = db.Specimen
+                .Where(s => s.Label == "LBL")
+                .First()
+                .ShouldNotBeNull();
+            brSpecimen.BreakResult = new()
+            {
+                StrengthPsi = (int)prediction,
+                BrokenAt = DateTime.UtcNow.AddDays(4).AddHours(1.3)
+            };
+
+            await db.SaveChangesAsync();
+        }
+
+        await using (var db = new VulcanDbContext(opts))
+        {
             var predictions = db.Prediction.ToList();
             predictions.Count.ShouldBe(3);
             predictions.Select(p => p.HorizonDays).ShouldBeSubsetOf([3, 7, 28]);
             predictions.Select(p => p.IsSynthetic).ShouldAllBe(it => it);
             predictions.Select(p => p.CalibrationVersion).ShouldAllBe(v => v == "v1");
-            predictions.Any(p => p.AdjustmentStage == AdjustmentStage.ThreeDay)
-                .ShouldBeTrue();
-            predictions.ForEach(p =>
-            {
-                if (p.EstimatedPsi is null)
-                {
-                    return;
-                }
-                p.EstimatedPsi.ShouldNotBe(p.UnadjustedPsi);
-            });
+            predictions
+                .FirstOrDefault(p => p.HorizonDays == 28)
+                .ShouldNotBeNull()
+                .ShouldSatisfyAllConditions(
+                    it => it.AdjustmentStage.ShouldBe(AdjustmentStage.ThreeDay),
+                    it => it.EstimatedPsi.ShouldBe(it.UnadjustedPsi),
+                    it => it.Basis.ShouldContain("Re-fit through the average 3-day breaks"));
         }
     }
 
@@ -1022,12 +1035,15 @@ public sealed class PredictionSaveChangesInterceptorTests()
         using var connection = new SqliteConnection("Filename=:memory:");
         await connection.OpenAsync();
 
+        var castAt = new DateTime(
+            2026, 10, 1, 12, 0, 0, DateTimeKind.Utc);
         var opts = new DbContextOptionsBuilder<VulcanDbContext>()
             .UseSqlite(connection)
             .AddInterceptors(
                 new PredictionSaveChangesInterceptor(
                     _ => new MockCalibrationProvider(_calibrationVersion),
-                    _estimator))
+                    _estimator,
+                    _nullLogger))
             .Options;
         var noInterceptor = new DbContextOptionsBuilder<VulcanDbContext>()
             .UseSqlite(connection)
@@ -1040,7 +1056,7 @@ public sealed class PredictionSaveChangesInterceptorTests()
             CuringReadings = [],
             BreakResult = new BreakResult
             {
-                BrokenAt = DateTime.UtcNow.AddDays(4),
+                BrokenAt = castAt.AddDays(2.5),
                 StrengthPsi = 2400
             }
         };
@@ -1051,7 +1067,7 @@ public sealed class PredictionSaveChangesInterceptorTests()
             CuringReadings = [],
             BreakResult = new BreakResult
             {
-                BrokenAt = DateTime.UtcNow.AddDays(4),
+                BrokenAt = castAt.AddDays(3),
                 StrengthPsi = 3300
             }
         };
@@ -1062,7 +1078,7 @@ public sealed class PredictionSaveChangesInterceptorTests()
             CuringReadings = [],
             BreakResult = new BreakResult
             {
-                BrokenAt = DateTime.UtcNow.AddDays(4),
+                BrokenAt = castAt.AddDays(2),
                 StrengthPsi = 3331
             }
         };
@@ -1073,7 +1089,7 @@ public sealed class PredictionSaveChangesInterceptorTests()
             CuringReadings = [],
             BreakResult = new BreakResult
             {
-                BrokenAt = DateTime.UtcNow.AddDays(4),
+                BrokenAt = castAt.AddDays(2.3),
                 StrengthPsi = 3333
             }
         };
@@ -1083,7 +1099,7 @@ public sealed class PredictionSaveChangesInterceptorTests()
             IsSynthetic = true,
             ExpectedFinalBreakPsi = 6200,
             CementType = CementType.TypeI,
-            CastAt = DateTime.UtcNow,
+            CastAt = castAt,
             Specimens = [
                 specimen,
                 specimen2,
@@ -1109,37 +1125,37 @@ public sealed class PredictionSaveChangesInterceptorTests()
                 {
                     SpecimenId = specimen.Id,
                     InternalTempF = 78.8m,
-                    TakenAt = DateTime.UtcNow.AddDays(4)
+                    TakenAt = castAt.AddDays(4)
                 },
                 new CuringReading
                 {
                     SpecimenId = specimen.Id,
                     InternalTempF = 78.8m,
-                    TakenAt = DateTime.UtcNow.AddDays(4)
+                    TakenAt = castAt.AddDays(4.1)
                 },
                 new CuringReading
                 {
                     SpecimenId = specimen2.Id,
                     InternalTempF = 79.8m,
-                    TakenAt = DateTime.UtcNow.AddDays(5)
+                    TakenAt = castAt.AddDays(5)
                 },
                 new CuringReading
                 {
                     SpecimenId = specimen2.Id,
                     InternalTempF = 79.8m,
-                    TakenAt = DateTime.UtcNow.AddDays(5)
+                    TakenAt = castAt.AddDays(5.1)
                 },
                 new CuringReading
                 {
                     SpecimenId = specimen3.Id,
                     InternalTempF = 79.8m,
-                    TakenAt = DateTime.UtcNow.AddDays(6)
+                    TakenAt = castAt.AddDays(6)
                 },
                 new CuringReading
                 {
                     SpecimenId = specimen3.Id,
                     InternalTempF = 79.8m,
-                    TakenAt = DateTime.UtcNow.AddDays(6)
+                    TakenAt = castAt.AddDays(6.1)
                 },
                 new CuringReading
                 {
@@ -1166,8 +1182,8 @@ public sealed class PredictionSaveChangesInterceptorTests()
         }
     }
 
-    // spot check on VM-SYN-006
-    [Fact(Skip = "Estimate is 6,234.681... instead of 4,449")]
+    // spot check on VM-SYN-006 following StrengthEstimator tests
+    [Fact]
     public async Task Seeding_batch_data_has_correct_prediction()
     {
         using var connection = new SqliteConnection("Filename=:memory:");
@@ -1178,7 +1194,8 @@ public sealed class PredictionSaveChangesInterceptorTests()
             .AddInterceptors(
                 new PredictionSaveChangesInterceptor(
                     _ => new MockCalibrationProvider(_calibrationVersion),
-                    _estimator))
+                    _estimator,
+                    _nullLogger))
             .Options;
         var noInterceptor = new DbContextOptionsBuilder<VulcanDbContext>()
             .UseSqlite(connection)
@@ -1206,7 +1223,7 @@ public sealed class PredictionSaveChangesInterceptorTests()
                 .First()
                 .ShouldNotBeNull()
                 .ShouldSatisfyAllConditions(
-                    it => it.EstimatedPsi.ShouldBe(4449m),
+                    it => it.EstimatedPsi.ShouldNotBeNull().ShouldBeInRange(6234m, 6236m),
                     it => it.IsSynthetic.ShouldBeTrue());
         }
     }

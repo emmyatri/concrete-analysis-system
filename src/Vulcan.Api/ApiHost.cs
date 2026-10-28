@@ -44,6 +44,7 @@ public static class ApiHost
 
 
         builder.Services
+            .AddLogging()
             .AddDatabase(builder.Configuration)
             .AddSingleton<TechnicianSettings>()
             .AddHttpContextAccessor()
@@ -122,13 +123,15 @@ public static class ApiHost
         var db = scope.ServiceProvider.GetRequiredService<VulcanDbContext>();
         var strengthEstimatorService = scope.ServiceProvider.GetRequiredService<IStrengthEstimateService>();
         var calibrationProvider = scope.ServiceProvider.GetRequiredService<ICalibrationProvider>();
+        var logger = scope.ServiceProvider.GetRequiredService<ILogger<PredictionSaveChangesInterceptor>>();
 
         var options = new DbContextOptionsBuilder<VulcanDbContext>()
                     .UseSqlite(db.Database.GetDbConnection())
                     .AddInterceptors(
                         new PredictionSaveChangesInterceptor(
-                            calibrationProvider,
-                            strengthEstimatorService),
+                            _ => calibrationProvider,
+                            strengthEstimatorService,
+                            logger),
                         // add audit changes last
                         new AuditSaveChangesInterceptor(
                             new SystemTechnician(),

@@ -5,7 +5,7 @@ using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-
+using Microsoft.Extensions.Logging;
 using Vulcan.Application.Interfaces;
 using Vulcan.Application.Services;
 using Vulcan.Domain.Entities;
@@ -83,7 +83,8 @@ public static class SetupUtils
                     .AddInterceptors(
                         new PredictionSaveChangesInterceptor(
                             (db) => new CalibrationProvider(db),
-                            new StrengthEstimateService()),
+                            new StrengthEstimateService(),
+                            provider.GetRequiredService<ILogger<PredictionSaveChangesInterceptor>>()),
                         // add audit changes last
                         provider.GetRequiredService<AuditSaveChangesInterceptor>()));
         }
@@ -94,7 +95,8 @@ public static class SetupUtils
                     .AddInterceptors(
                         new PredictionSaveChangesInterceptor(
                             (db) => new CalibrationProvider(db),
-                            new StrengthEstimateService()),
+                            new StrengthEstimateService(),
+                            provider.GetRequiredService<ILogger<PredictionSaveChangesInterceptor>>()),
                         // add audit changes last
                         provider.GetRequiredService<AuditSaveChangesInterceptor>()));
         }

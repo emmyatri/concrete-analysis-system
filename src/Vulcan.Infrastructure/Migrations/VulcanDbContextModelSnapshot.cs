@@ -583,7 +583,7 @@ namespace Vulcan.Infrastructure.Migrations
                         .WithMany()
                         .HasForeignKey("CalibrationVersion")
                         .HasPrincipalKey("Version")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.Navigation("Batch");

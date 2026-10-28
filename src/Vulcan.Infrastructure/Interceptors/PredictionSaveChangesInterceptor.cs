@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
 using Microsoft.EntityFrameworkCore.Diagnostics;
+using Microsoft.Extensions.Logging;
 using Vulcan.Application.Interfaces;
 using Vulcan.Domain.Entities;
 using Vulcan.Domain.Enums;
@@ -13,7 +14,8 @@ namespace Vulcan.Infrastructure.Interceptors;
 
 public sealed class PredictionSaveChangesInterceptor(
     Func<VulcanDbContext, ICalibrationProvider> calibrationProviderFactory,
-    IStrengthEstimateService strengthEstimateService
+    IStrengthEstimateService strengthEstimateService,
+    ILogger<PredictionSaveChangesInterceptor> logger
 ) : SaveChangesInterceptor
 {
     public override InterceptionResult<int> SavingChanges(
@@ -256,14 +258,23 @@ public sealed class PredictionSaveChangesInterceptor(
                     IsSynthetic: batch.IsSynthetic
                 ));
 
-        var estimate = strengthEstimateService.Estimate(
-            batch.CastAt,
-            batch.CementType,
-            batch.ExpectedFinalBreakPsi,
-            [.. strengthSpecimens],
-            StrengthSettings.FromCalibration(calibration, batch.CementType),
-            [.. strengthBreakMeasurements]
-        );
+        StrengthEstimateResult estimate = null!;
+        try
+        {
+            estimate = strengthEstimateService.Estimate(
+                batch.CastAt,
+                batch.CementType,
+                batch.ExpectedFinalBreakPsi,
+                [.. strengthSpecimens],
+                StrengthSettings.FromCalibration(calibration, batch.CementType),
+                [.. strengthBreakMeasurements]
+            );
+        }
+        catch (Exception ex)
+        {
+            logger.LogWarning($"Strength estimator failed to make calculate predictions on this save. Reason: {ex.Message}");
+            return;
+        }
 
         var predictions = new List<PredictionEntity>();
 

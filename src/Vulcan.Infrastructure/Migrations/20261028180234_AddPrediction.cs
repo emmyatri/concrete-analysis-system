@@ -50,7 +50,7 @@ public partial class AddPrediction : Migration
                     column: x => x.CalibrationVersion,
                     principalTable: "CalibrationVersion",
                     principalColumn: "Version",
-                    onDelete: ReferentialAction.Cascade);
+                    onDelete: ReferentialAction.Restrict);
             });
 
         migrationBuilder.CreateIndex(
