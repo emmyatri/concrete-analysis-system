@@ -109,7 +109,7 @@
 > |---|---|---|---|:---:|
 > | 3.1 | Click **Enter break**. | The list of cylinders for batch VM-2026-0142 is displayed. | FR-5 | ☐ |
 > | 3.2 | Click **Record break** for cylinder `A1`. Enter:<br>• Strength: `3,600`<br>• Break date: `10/2/2026 8:00`<br>Click **Save**. | The record-break modal closes, and a green confirmation banner appears: “Saved VM-2026-0142 · A1: 3,600 PSI.” | FR-5 | ☐ |
-> | 3.3 | Click **View batch**. | **Estimate cards** should include the following values (3-, 7-, and 28-day estimates):<br>• **Break estimate:** 3,600 PSI, 4,835 PSI, 5,998 PSI<br>• **Actual break:** 3,600 PSI; No actual break results for the 7- and 28-day estimates<br>• **Adjustment details:**<br>&nbsp;&nbsp;&nbsp;&nbsp;◦ “Adjusted using the 3-day breaks · was 3,573 before breaks · Calibration v1”<br>&nbsp;&nbsp;&nbsp;&nbsp;◦ “Adjusted using the 3-day breaks · was 4,814 before breaks · Calibration v1”<br>&nbsp;&nbsp;&nbsp;&nbsp;◦ “Adjusted using the 3-day breaks · was 5,990 before breaks · Calibration v1”<br>• **How this was calculated** control | FR-14, FR-15 | ☐ |
+> | 3.3 | Click **View batch**. | **Estimate cards** should include the following values (3-, 7-, and 28-day estimates):<br>• **Break estimate:** 3,600 PSI, 4,835 PSI, 5,998 PSI<br>• **Actual break:** 3,600 PSI · average of 1 cylinder, and “Estimate matched the actual break”; no actual break results for the 7- and 28-day estimates<br>• **Adjustment details:**<br>&nbsp;&nbsp;&nbsp;&nbsp;◦ “Adjusted using the 3-day breaks · was 3,573 before breaks · Calibration v1”<br>&nbsp;&nbsp;&nbsp;&nbsp;◦ “Adjusted using the 3-day breaks · was 4,814 before breaks · Calibration v1”<br>&nbsp;&nbsp;&nbsp;&nbsp;◦ “Adjusted using the 3-day breaks · was 5,990 before breaks · Calibration v1”<br>• **How this was calculated** control | FR-14, FR-15 | ☐ |
 
 ---
 
@@ -130,6 +130,8 @@
 > | 4.6 | Hover over one of the **VM-SYN-006 estimate markers** (hollow circles). | Tooltip appears displaying the estimated PSI *for a batch* at the indicated day on the x-axis. **Exact:** “Estimate: #,### PSI at day #” | FR-11, FR-14 | ☐ |
 > | 4.7 | Hover over one of the **VM-SYN-006 break markers** (filled circles). | Tooltip appears displaying the actual PSI *for a given cylinder* at the indicated day on the x-axis. **Exact:** “D#-#: #,### PSI at day #” | FR-10, FR-11, FR-12 | ☐ |
 > | 4.8 | Hover over any open space in the **VM-SYN-006 graph**. | Vertical line tracking along the x-axis appears in curing strip and in the strength chart with a tooltip displaying the predicted PSI *after breaks* at the indicated day on the x-axis. | FR-11, FR-12, FR-14 | ☐ |
+> | 4.9 | Click **Expand** in the strength chart's header. | A larger copy of the chart opens over the page, titled "VM-SYN-006 · Strength over time", with bigger text and the same lines, markers and end labels. Press **Escape** (or click outside it) to close. | FR-11, FR-14 | ☐ |
+> | 4.10 | In the curing strip, choose **Ambient temperature**, then click its **Expand**. | A larger curing chart opens on **Ambient temperature**, with day numbers on the x-axis, "Days since cast", and a y-axis title. Press **Escape** to close. | FR-12 | ☐ |
 
 ---
 
@@ -233,7 +235,7 @@
 
 | Metric | Value |
 |---|---|
-| **Total Test Steps**   | 36             |
+| **Total Test Steps**   | 38             |
 | **Steps Passed**       | _____     |
 | **Steps Failed**       | _____     |
 | **Total Elapsed Time** | _____ min |

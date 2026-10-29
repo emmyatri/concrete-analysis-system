@@ -72,6 +72,8 @@
 > | 1.6 | Hover over one of the **VM-SYN-006 estimate markers** (hollow circles). | Tooltip should appear displaying the estimated PSI *for a batch* at day on x-axis.<br>**Exact:** “Estimate: #,### PSI at day #” | FR-11, FR-14 | ☐ |
 > | 1.7 | Hover over one of the **VM-SYN-006 break markers** (filled circles). | Tooltip should appear displaying the actual PSI *for a given cylinder* at day on x-axis.<br>**Exact:** “D#-#: #,### PSI at day #” | FR-10, FR-11, FR-12 | ☐ |
 > | 1.8 | Hover over any open space in the **VM-SYN-006 graph**. | Vertical line tracking along the x-axis appears in curing strip and in the strength chart with a tooltip displaying the predicted PSI *after breaks* at day on x-axis. | FR-11, FR-12, FR-14 | ☐ |
+> | 1.9 | Click **Expand** in the strength chart's header. | A larger copy of the chart opens over the page, titled "VM-SYN-006 · Strength over time", with bigger text and the same lines, markers and end labels. Press **Escape** (or click outside it) to close. | FR-11, FR-14 | ☐ |
+> | 1.10 | In the curing strip, choose **Ambient temperature**, then click its **Expand**. | A larger curing chart opens on **Ambient temperature**, with day numbers on the x-axis, "Days since cast", and a y-axis title. Press **Escape** to close. | FR-12 | ☐ |
 
 ---
 
@@ -178,7 +180,7 @@
 
 | Metric | Value |
 |---|---|
-| **Total Test Steps** | 25 (24 application checks + 1 separate documentary verification) |
+| **Total Test Steps** | 27 (26 application checks + 1 separate documentary verification) |
 | **Steps Passed** | _____ |
 | **Steps Failed** | _____ |
 | **Total Elapsed Time** | _____ min |
