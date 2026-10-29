@@ -45,6 +45,8 @@ export function strengthChartConfig(
   minimumPsi: number | null,
   flaggedSpecimenIds: ReadonlySet<number>,
   colors: StrengthChartColors,
+  /** Axis, legend and tooltip text size. Larger in the expanded view. */
+  fontSize = 12,
 ): StrengthChartConfig {
   const batch = strength.batchNumber;
   const curve = (points: BatchStrength['curvePoints']): ChartPoint[] => [
@@ -177,7 +179,7 @@ export function strengthChartConfig(
 
   const highest = Math.max(...datasets.flatMap((d) => d.data.map((p) => p.y)));
   const step = highest > 5000 ? 2000 : 1000;
-  const font = { family: colors.font, size: 12 };
+  const font = { family: colors.font, size: fontSize };
 
   return {
     data: { datasets },
@@ -212,8 +214,9 @@ export function strengthChartConfig(
             callback: (value) => Number(value).toLocaleString('en-US'),
           },
           grid: { color: colors.grid },
+          // 70px lines the plot up with the curing strip below it; wider for larger text.
           afterFit: (scale) => {
-            scale.width = 70;
+            scale.width = 70 + (fontSize - 12) * 11;
           },
         },
       },
@@ -224,6 +227,7 @@ export function strengthChartConfig(
           labels: { usePointStyle: true, boxHeight: 6, color: colors.text, font },
         },
         tooltip: {
+          bodyFont: font,
           callbacks: {
             title: () => '',
             label: (item) => {
@@ -262,7 +266,11 @@ export const endLabelsPlugin: Plugin<'line'> = {
   id: 'vulcanEndLabels',
   afterDatasetsDraw(chart) {
     const { ctx, chartArea } = chart;
-    const lineHeight = 13;
+    // End labels scale with the chart's font (11px at the default 12px).
+    const labelSize = Math.round(
+      ((chart.options.font?.size as number | undefined) ?? 12) * (11 / 12),
+    );
+    const lineHeight = labelSize + 2;
     const labels = chart.data.datasets
       .map((dataset, index) => ({
         text: (dataset as StrengthDataset).endLabel,
@@ -276,7 +284,7 @@ export const endLabelsPlugin: Plugin<'line'> = {
       .sort((a, b) => a.y - b.y);
 
     ctx.save();
-    ctx.font = `600 11px ${chart.options.font?.family ?? 'sans-serif'}`;
+    ctx.font = `600 ${labelSize}px ${chart.options.font?.family ?? 'sans-serif'}`;
     ctx.textAlign = 'right';
     ctx.textBaseline = 'bottom';
     let previous = -Infinity;

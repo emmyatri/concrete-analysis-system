@@ -180,7 +180,44 @@
         <header class="card-header">
           <i class="pi pi-chart-line" aria-hidden="true"></i>
           <h2 id="chart-title">{{ batch.batchNumber }} · Strength over time</h2>
+          @if (strengthState().status === 'loaded') {
+            <p-button
+              class="expand-chart"
+              icon="pi pi-window-maximize"
+              label="Expand"
+              [text]="true"
+              size="small"
+              ariaLabel="Expand the strength chart"
+              data-testid="expand-chart"
+              (onClick)="chartExpanded.set(true)"
+            />
+          }
         </header>
+
+        <!-- A larger copy of the chart for reading the numbers on a shared screen. -->
+        <p-dialog
+          [header]="batch.batchNumber + ' · Strength over time'"
+          [visible]="chartExpanded()"
+          (visibleChange)="chartExpanded.set($event)"
+          [modal]="true"
+          [dismissableMask]="true"
+          [draggable]="false"
+          [resizable]="false"
+          [style]="{ width: '92vw', maxWidth: '1600px' }"
+          appendTo="body"
+        >
+          @if (chartExpanded()) {
+            <app-strength-chart
+              data-testid="expanded-chart"
+              [state]="strengthState()"
+              [castAt]="batch.castAt"
+              [minimumPsi]="minimumPsi()"
+              [flaggedSpecimenIds]="flaggedSpecimenIds()"
+              height="68vh"
+              [fontSize]="16"
+            />
+          }
+        </p-dialog>
 
         <app-strength-chart
           [state]="strengthState()"

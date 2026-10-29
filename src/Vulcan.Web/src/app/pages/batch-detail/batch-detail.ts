@@ -4,6 +4,7 @@ import { Component, computed, effect, inject, input, signal, untracked } from '@
 import { toObservable, toSignal } from '@angular/core/rxjs-interop';
 import { Router, RouterLink } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
+import { DialogModule } from 'primeng/dialog';
 import { TableModule } from 'primeng/table';
 import { TabsModule } from 'primeng/tabs';
 import { catchError, map, of, startWith, switchMap } from 'rxjs';
@@ -69,6 +70,7 @@ const FIELDS: Record<string, { label: string; short?: string; digits: string }> 
     DecimalPipe,
     RouterLink,
     ButtonModule,
+    DialogModule,
     TableModule,
     TabsModule,
     AddCylinderDialog,
@@ -215,6 +217,8 @@ export class BatchDetailPage {
 
   /** Days hovered over in either strength or curing charts are highlighted in both charts (M2-44). */
   protected readonly hoveredDay = signal<number | null>(null);
+  /** The strength chart's larger pop-out view. */
+  protected readonly chartExpanded = signal(false);
 
   // ---------- Saved warnings ----------
 
