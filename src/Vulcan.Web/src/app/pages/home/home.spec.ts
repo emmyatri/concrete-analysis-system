@@ -119,11 +119,12 @@ describe('HomePage', () => {
     const numbers = [...root.querySelectorAll('[data-testid="at-risk"] tbody .batch-number')].map(
       (el) => el.textContent?.trim(),
     );
-    expect(numbers).toEqual(['VM-SYN-006']);
+    // Largest shortfall first: moisture loss, high w/c, then cold-cured.
+    expect(numbers).toEqual(['VM-SYN-003', 'VM-SYN-006', 'VM-SYN-002']);
     const row = text('[data-testid="at-risk"] tbody tr');
-    expect(row).toContain('4,449 PSI');
-    expect(row).toContain('6,200 PSI');
-    expect(row).toContain('−1,751 (28%)');
+    expect(row).toContain('4,503 PSI');
+    expect(row).toContain('6,000 PSI');
+    expect(row).toContain('−1,497 (25%)');
     expect(text('[data-testid="at-risk"] tbody tr')).toContain('Projected 28-day strength');
   });
 
@@ -155,7 +156,7 @@ describe('HomePage', () => {
     root.querySelector<HTMLElement>('[data-testid="at-risk"] tbody tr.row-link')!.click();
     await harness.fixture.whenStable();
 
-    expect(TestBed.inject(Router).url).toBe('/batches/VM-SYN-006');
+    expect(TestBed.inject(Router).url).toBe('/batches/VM-SYN-003');
   });
 
   it('groups the batches under date headings, newest first', async () => {

@@ -300,7 +300,8 @@ const TEST_AGE_DAYS = { Day3: 3, Day7: 7, Day28: 28 } as const;
 /**
  * Records a break the way the server will: 404 for an unknown cylinder, 409 if it's already broken,
  * 400 for a strength outside 1–10,000 or not whole, or a date before the cast date or in the future.
- * Below 3,000 PSI saves with a warning (failing breaks are kept).
+ * A 28-day break below 3,000 PSI saves with a warning (failing breaks are kept). Earlier breaks are
+ * expected to be lower and aren't flagged (client-decisions §3).
  */
 function createBreak(request: HttpRequest<unknown>, path: string) {
   const specimenId = Number(path.split('/')[3]);
@@ -328,7 +329,8 @@ function createBreak(request: HttpRequest<unknown>, path: string) {
     if (!outside) continue;
     if (limit.severity === 'Reject')
       errors[limit.key] = [...(errors[limit.key] ?? []), limit.message];
-    else warnings.push({ key: limit.key, message: limit.message });
+    else if (specimen.testAgeDays === 'Day28')
+      warnings.push({ key: limit.key, message: limit.message });
   }
   const brokenAt = new Date(body.brokenAt);
   const day = (date: Date) =>

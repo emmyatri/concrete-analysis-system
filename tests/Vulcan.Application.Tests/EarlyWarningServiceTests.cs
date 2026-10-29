@@ -135,30 +135,50 @@ public class EarlyWarningServiceTests()
         await connection.OpenAsync();
         var db = GetDbContext(connection);
         await InitTestDb(db);
-        var batchService = SetupBatchService(db);
-        foreach (var batch in SyntheticDataLoader.Load())
-        {
-            await batchService.CreateAsync(batch);
-        }
+        // The same path the app uses to load the demo data, including its saved warnings.
+        SyntheticDataSeeder.Seed(db);
         var evaluator = SetupEarlyWarningService(db);
 
-        var syn006 = await evaluator.Evaluate(db.Batch.Single(b => b.BatchNumber == "VM-SYN-006"));
+        async Task<EarlyWarningEvaluation> Evaluate(string batchNumber) =>
+            await evaluator.Evaluate(db.Batch.Single(b => b.BatchNumber == batchNumber));
+
+        // High w/c: at risk, with the w/c input warning and the expected-vs-w/cm check.
+        var syn006 = await Evaluate("VM-SYN-006");
         syn006.AtRisk.ShouldBeTrue();
-        syn006.Projected28DayPsi.ShouldBe(4449d);
-        syn006.ShortfallPct.ShouldBe(28.24);
+        syn006.Projected28DayPsi.ShouldBe(4733d);
+        syn006.ShortfallPct.ShouldBe(23.66);
         syn006.EarlyWarnings[0].Warning.ShouldBe(
-            "Projected 28-day strength of 4,449 PSI is 28.24% below the expected 6,200 PSI");
+            "Projected 28-day strength of 4,733 PSI is 23.66% below the expected 6,200 PSI");
+        syn006.EarlyWarnings.ShouldContain(w => w.LimitKey == LimitKeys.WaterCementRatio);
         syn006.EarlyWarnings.ShouldContain(w => w.Warning ==
-                                                "Expected final of 6,200 PSI is 67.6% above the 3,700 PSI typical for a w/cm of 0.603");
-        syn006.EarlyWarnings.ShouldNotContain(w => w.LimitKey == "Break.StrengthPsi");
-        syn006.EarlyWarnings.ShouldNotContain(w => w.Warning.Contains("TODO"));
+            "Expected final of 6,200 PSI is 67.6% above the 3,700 PSI typical for a w/cm of 0.603");
+        syn006.EarlyWarnings.ShouldNotContain(w => w.LimitKey == LimitKeys.StrengthPsi);
 
-        var syn009 = await evaluator.Evaluate(db.Batch.Single(b => b.BatchNumber == "VM-SYN-009"));
+        // Cold-cured: at risk, with one ambient reason (not one per reading).
+        var syn002 = await Evaluate("VM-SYN-002");
+        syn002.AtRisk.ShouldBeTrue();
+        syn002.Projected28DayPsi.ShouldBe(5028d);
+        syn002.ShortfallPct.ShouldBe(10.21);
+        syn002.EarlyWarnings.Count(w => w.LimitKey == LimitKeys.AmbientTempF).ShouldBe(1);
+
+        // Moisture loss: at risk once the 3- and 7-day breaks come in low; no input warning.
+        var syn003 = await Evaluate("VM-SYN-003");
+        syn003.AtRisk.ShouldBeTrue();
+        syn003.Projected28DayPsi.ShouldBe(4503d);
+        syn003.EarlyWarnings.Single().LimitKey.ShouldBe(LimitKeys.PredictionShortfallPct);
+
+        // pH: flagged on entry but on track.
+        var syn009 = await Evaluate("VM-SYN-009");
         syn009.AtRisk.ShouldBeFalse();
-        syn009.EarlyWarnings.Single().LimitKey.ShouldBe("Batch.MixWaterPh");
+        syn009.EarlyWarnings.Single().LimitKey.ShouldBe(LimitKeys.MixWaterPh);
 
-        var syn001 = await evaluator.Evaluate(db.Batch.Single(b => b.BatchNumber == "VM-SYN-001"));
-        syn001.EarlyWarnings.ShouldBeEmpty();
+        foreach (var onTrack in new[] { "VM-SYN-001", "VM-SYN-004", "VM-SYN-005", "VM-SYN-007", "VM-SYN-008" })
+        {
+            (await Evaluate(onTrack)).EarlyWarnings.ShouldBeEmpty(onTrack);
+        }
+
+        // 150 cold ambient readings, the VM-SYN-006 w/c and the VM-SYN-009 pH. No early breaks.
+        db.RecordWarning.Count().ShouldBe(152);
     }
 
     [Fact]

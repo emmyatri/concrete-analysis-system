@@ -6,7 +6,7 @@
 
 #define AppName "Vulcan CBAS"
 #ifndef AppVersion
-  #define AppVersion "0.1.0-m1"
+#define AppVersion "0.1.0-m2"
 #endif
 #define AppExe "Vulcan.Desktop.exe"
 #define PublishDir "..\src\Vulcan.Desktop\bin\publish\win-x64"

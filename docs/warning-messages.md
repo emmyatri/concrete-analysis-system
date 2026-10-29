@@ -13,7 +13,7 @@ Every early warning returned by `GET /api/batches/{batchNumber}/strength` and `G
 | Limit key | Message | Example (VM-SYN-006) |
 |---|---|---|
 | `Prediction.MinimumPsi` | Projected 28-day strength of {projected} PSI is below the {minimum} PSI minimum | "Projected 28-day strength of 2,950 PSI is below the 3,000 PSI minimum" (illustrative; VM-SYN-006 doesn't trigger it) |
-| `Prediction.ShortfallPct` | Projected 28-day strength of {projected} PSI is {pct}% below the expected {expected} PSI | "Projected 28-day strength of 4,449 PSI is 28.24% below the expected 6,200 PSI" |
+| `Prediction.ShortfallPct` | Projected 28-day strength of {projected} PSI is {pct}% below the expected {expected} PSI | "Projected 28-day strength of 4,733 PSI is 23.66% below the expected 6,200 PSI" |
 | `Batch.ExpectedFinalVsWcmPct` | Expected final of {expected} PSI is {pct}% above the {aci} PSI typical for a w/cm of {ratio} | "Expected final of 6,200 PSI is 67.6% above the 3,700 PSI typical for a w/cm of 0.603" |
 
 ### Input warnings (configured messages from `validation-limits.json`)
@@ -32,7 +32,9 @@ These are the 10 measurements with a `Warn` range. The message is the configured
 | `Oxide.SulfurTrioxidePct` | The sulfur trioxide percent is outside the normal range [1.3-3.0] |
 | `Curing.AmbientTempF` | Ambient temperature is outside the normal range [60-80] |
 
-`Break.StrengthPsi` also has a warning range, but saved break warnings are not early warnings (client-decisions §13). They appear in the Warnings tab and on the strength chart, not in the early-warning list.
+`Break.StrengthPsi` also has a warning range (28-day breaks below 3,000 PSI, client-decisions §3), but saved break warnings are not early warnings (client-decisions §13). They appear in the Warnings tab and on the strength chart, not in the early-warning list.
+
+Each input factor is listed once per batch, even when many records carry the same warning. A cold-cured batch has a saved ambient-temperature warning on every reading, but the early-warning list shows one "Ambient temperature is outside the normal range [60-80]" line. The Warnings tab still lists every reading.
 
 Internal temperature, moisture, relative humidity, resistivity, CO₂, SCM percentage and aggregate percentages have no warning range in M2, so they never produce an early warning.
 

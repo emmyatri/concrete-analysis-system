@@ -39,7 +39,7 @@ describe('StrengthChart', () => {
     const root = render({ status: 'loaded', strength: strengthOf('VM-SYN-006') });
 
     expect(root.querySelector('canvas')?.getAttribute('aria-label')).toBe(
-      'VM-SYN-006 strength over time. Predicted 28-day strength 4,449 PSI. ' +
+      'VM-SYN-006 strength over time. Predicted 28-day strength 4,733 PSI. ' +
         'Expected final 6,200 PSI. 9 breaks recorded.',
     );
     expect(root.querySelector('[data-testid="not-enough-data"]')).toBeNull();

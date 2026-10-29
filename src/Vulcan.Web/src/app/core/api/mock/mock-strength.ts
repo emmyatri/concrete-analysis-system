@@ -317,11 +317,15 @@ export function mockEarlyWarnings(
 
 /**
  * Tier 1 (client-decisions section 13): the batch-entry and curing values already saved with a
- * Warn-limit warning. Break results aren't early warnings, so they're left out.
+ * Warn-limit warning. Break results aren't early warnings, so they're left out. Each factor is listed
+ * once: a cold batch has an ambient warning on every reading, but that's one reason.
  */
 function rangeWarnings(batch: BatchDetail): EarlyWarning[] {
   return batch.warnings
     .filter((saved) => saved.entityType !== 'BreakResult')
+    .filter(
+      (saved, index, all) => all.findIndex((other) => other.limitKey === saved.limitKey) === index,
+    )
     .map((saved) => {
       const limit = MOCK_VALIDATION_LIMITS.find(
         (row) => row.key === saved.limitKey && row.severity === 'Warn',

@@ -354,7 +354,8 @@ public class SpecimenServiceTests(DatabaseFixture dbFixture)
             Label = "C1",
             LengthIn = 12m,
             WidthIn = 6m,
-            TestAgeDays = TestAgeDays.Day3
+            // The 3,000 PSI warning applies to 28-day breaks only (client-decisions §3).
+            TestAgeDays = TestAgeDays.Day28
         };
 
         db.Specimen.Add(specimen);
@@ -393,6 +394,52 @@ public class SpecimenServiceTests(DatabaseFixture dbFixture)
                     warning.LimitKey == "Break.StrengthPsi"));
 
         Assert.Equal(2999m, warningRecord.Value);
+    }
+
+    // Early breaks below 3,000 PSI are expected and save without a warning (client-decisions §3).
+    [Fact]
+    public async Task RecordBreakAsync_LowThreeDayBreak_SavesWithoutWarning()
+    {
+        await using var db = _dbFixture.CreateDbContext();
+
+        var limitEvaluator = new LimitEvaluator(new LimitProvider(db));
+        var service = new SpecimenService(
+            new SpecimenRepository(db),
+            new SpecimenValidator(limitEvaluator),
+            new BreakResultValidator(limitEvaluator),
+            new TestClock(new DateTime(2026, 10, 5, 18, 0, 0, DateTimeKind.Utc)));
+
+        var batch = new Batch
+        {
+            BatchNumber = "VM-BREAK-EARLY-001",
+            CastAt = new DateTime(2026, 10, 1, 12, 0, 0, DateTimeKind.Utc)
+        };
+        db.Batch.Add(batch);
+        await db.SaveChangesAsync();
+
+        var specimen = new Specimen
+        {
+            BatchId = batch.Id,
+            Label = "C1",
+            LengthIn = 12m,
+            WidthIn = 6m,
+            TestAgeDays = TestAgeDays.Day3
+        };
+        db.Specimen.Add(specimen);
+        await db.SaveChangesAsync();
+
+        var breakResult = new BreakResult
+        {
+            BrokenAt = new DateTime(2026, 10, 4, 12, 0, 0, DateTimeKind.Utc),
+            StrengthPsi = 2500
+        };
+
+        var result = await service.RecordBreakAsync(specimen.Id, breakResult);
+
+        Assert.True(result.IsSuccess);
+        Assert.Empty(result.Warnings);
+        Assert.Empty(db.RecordWarning.Where(warning => warning.EntityId == breakResult.Id
+            && warning.EntityType == nameof(BreakResult)));
     }
 
     // Verifies that all applicable break validation errors are returned together

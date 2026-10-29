@@ -18,7 +18,7 @@ Vulcan Materials.
 | M3 — Calibration & Reporting            | Calibration against real breaks, printable/exportable reports                            | Fri, Nov 20, 2026    |
 | Final delivery                          | Signed installer, docs, training, source handoff                                         | Fri, Dec 4, 2026     |
 
-Current version: `0.1.0-m1` (pre-release)
+Current version: `0.1.0-m2` (pre-release)
 
 ---
 
@@ -287,7 +287,7 @@ For personal overrides, use `appsettings.Development.local.json`. It's git-ignor
 For Vulcan and anyone using the app. No .NET, Node or internet connection needed.
 
 1. **Download the installer:**
-   **[VulcanCBAS-Setup.exe](https://github.com/emmyatri/concrete-analysis-system/releases/download/v0.1.0-m1/VulcanCBAS-Setup.exe)**
+   **[VulcanCBAS-Setup.exe](https://github.com/emmyatri/concrete-analysis-system/releases/download/v0.1.0-m2/VulcanCBAS-Setup.exe)**
    (about 265 MB, always the latest release). Older versions are on the
    [Releases page](https://github.com/emmyatri/concrete-analysis-system/releases).
 2. **Double-click it.** Windows may say **"Windows protected your PC"** because the installer isn't signed yet. Click

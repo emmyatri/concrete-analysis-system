@@ -56,7 +56,7 @@ describe('CuringChart', () => {
 
   it('describes the line and band once there are three or more reading times', () => {
     expect(caption(allPoints)).toBe(
-      'Line = average of 9 cylinders · band = lowest to highest · readings so far: 0–72h',
+      'Line = average of 9 cylinders · band = lowest to highest · readings so far: 0–672h',
     );
   });
 

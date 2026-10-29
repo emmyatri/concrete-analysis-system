@@ -46,6 +46,7 @@
           inputId="break-strength"
           [control]="form.controls.strengthPsi"
           limitKey="Break.StrengthPsi"
+          [useWarnRange]="cylinder.testAgeDays === 'Day28'"
         >
           <input
             pInputText

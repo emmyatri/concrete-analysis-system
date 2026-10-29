@@ -22,9 +22,12 @@ public class EarlyWarningService(
         var predictions = await prediction.GetByBatchIdAsync(batch.Id);
         var batchRecordWarnings = await recordWarning.GetForBatchesAsync([batch]);
 
-        // Break results aren't early warnings (client-decisions §13).
+        // Break results aren't early warnings (client-decisions §13). One entry per factor: a cold
+        // batch has a saved ambient warning on every reading, but it is one reason, listed once.
         var savedWarnings = batchRecordWarnings
             .Where(rw => rw.EntityType != nameof(BreakResult))
+            .GroupBy(rw => rw.LimitKey)
+            .Select(group => group.OrderBy(rw => rw.Id).First())
             .Select(EarlyWarning.FromRecordWarning);
 
         var (shortfallPct, shortfallPsi, projected28DayPsi, warnings) = EvaluateBatch(batch, predictions);

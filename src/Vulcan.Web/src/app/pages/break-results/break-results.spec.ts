@@ -131,9 +131,10 @@ describe('BreakResultsPage', () => {
     expect(batch.specimens.find((s) => s.label === 'A1')?.breakResult?.strengthPsi).toBe(4500);
   });
 
-  it('shows the warning after saving a break below 3,000 PSI', async () => {
+  it('shows the warning after saving a 28-day break below 3,000 PSI', async () => {
     await open();
-    (rows()[0].querySelector('[data-testid="record-break"] button') as HTMLButtonElement).click();
+    // A5 is a 28-day cylinder; the 3,000 PSI warning doesn't apply to 3- and 7-day breaks.
+    (rows()[4].querySelector('[data-testid="record-break"] button') as HTMLButtonElement).click();
     await settle();
     await recordBreak('2999');
 

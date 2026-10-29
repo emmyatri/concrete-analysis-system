@@ -315,4 +315,20 @@ describe('AppField', () => {
     fixture.detectChanges();
     expect(component.computedHint()).toBe('10–15%');
   });
+  // A 3- or 7-day break ignores the 3,000 PSI warning but still checks the allowed range.
+  it('checks only the allowed range when useWarnRange is false', () => {
+    fixture.componentRef.setInput('limitKey', 'Break.StrengthPsi');
+    fixture.componentRef.setInput('useWarnRange', false);
+    control.setValue(2500);
+    control.markAsTouched();
+    fixture.detectChanges();
+
+    expect(component.state()).toBe('normal');
+    expect(component.message()).toBe('');
+    expect(component.computedHint()).toBe('1–10,000 PSI');
+
+    control.setValue(0);
+    fixture.detectChanges();
+    expect(component.state()).toBe('error');
+  });
 });

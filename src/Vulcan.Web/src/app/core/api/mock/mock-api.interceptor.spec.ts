@@ -160,11 +160,12 @@ describe('mockApiInterceptor', () => {
 
     expect(batch.batchNumber).toBe('VM-SYN-006');
     expect(batch.specimens).toHaveLength(9);
-    expect(batch.specimens.flatMap((s) => s.curingReadings)).toHaveLength(63);
+    // 7 readings per cylinder to 72 h, then daily until each 7- and 28-day cylinder is broken.
+    expect(batch.specimens.flatMap((s) => s.curingReadings)).toHaveLength(150);
     expect(batch.composition.waterCementRatio).toBe(0.603);
+    // No break warnings: the 3,000 PSI warning only applies to 28-day breaks.
     expect(batch.warnings.map((w) => [w.limitKey, w.value])).toEqual([
       ['Composition.WaterCementRatio', 0.603],
-      ['Break.StrengthPsi', 2950],
     ]);
   });
 
@@ -194,7 +195,7 @@ describe('mockApiInterceptor', () => {
 
     const strength = await firstValueFrom(api.getStrength('vm-syn-001'));
 
-    expect(strength).toMatchObject({ status: 'Estimated', atRisk: false, projected28DayPsi: 6408 });
+    expect(strength).toMatchObject({ status: 'Estimated', atRisk: false, projected28DayPsi: 6242 });
     expect(strength.curvePoints.map((p) => p.day)).toEqual(
       Array.from({ length: 28 }, (_, i) => i + 1),
     );
@@ -205,7 +206,7 @@ describe('mockApiInterceptor', () => {
       [28, 'ThreeAndSevenDay'],
     ]);
     expect(strength.measuredBreaks).toHaveLength(9);
-    expect(strength.curingPoints).toHaveLength(63);
+    expect(strength.curingPoints).toHaveLength(150);
     expect(strength.earlyWarnings).toEqual([]);
   });
 
@@ -215,12 +216,13 @@ describe('mockApiInterceptor', () => {
     const strength = await firstValueFrom(api.getStrength('VM-SYN-006'));
 
     // Same values as Vulcan.Prediction's tests at the 14 °F datum (SCRUM-194).
-    expect(strength.estimates.map((e) => e.unadjustedPsi)).toEqual([3848, 5094, 6235]);
+    expect(strength.estimates.map((e) => e.unadjustedPsi)).toEqual([3848, 5048, 6212]);
     expect(
-      strength.curingPoints.filter((p) => p.specimenLabel === 'D28-1').at(-1)?.maturityFHours,
+      // Maturity at 72 h, the same reading as Vulcan.Prediction's MaturityCalculatorTests.
+      strength.curingPoints.filter((p) => p.specimenLabel === 'D28-1').at(6)?.maturityFHours,
     ).toBe(4730.4);
-    // After the re-fit (ADR-005 section 4.4) it's 28% short of the expected 6,200.
-    expect(strength).toMatchObject({ atRisk: true, projected28DayPsi: 4449, shortfallPsi: 1751 });
+    // After the re-fit (ADR-005 section 4.4) it's 24% short of the expected 6,200.
+    expect(strength).toMatchObject({ atRisk: true, projected28DayPsi: 4733, shortfallPsi: 1467 });
     expect(strength.earlyWarnings.map((w) => w.limitKey)).toEqual([
       'Prediction.ShortfallPct',
       'Composition.WaterCementRatio',
@@ -282,9 +284,17 @@ describe('mockApiInterceptor', () => {
     const real = await firstValueFrom(api.getEarlyWarnings(false));
 
     expect(all.map((b) => [b.batchNumber, b.atRisk])).toEqual([
+      ['VM-SYN-003', true],
       ['VM-SYN-006', true],
+      ['VM-SYN-002', true],
       ['VM-SYN-009', false],
       ['VM-2026-0142', false],
+    ]);
+    // The cold batch has 150 low ambient readings but one reason.
+    const cold = all.find((b) => b.batchNumber === 'VM-SYN-002')!;
+    expect(cold.earlyWarnings.map((w) => w.limitKey)).toEqual([
+      'Prediction.ShortfallPct',
+      'Curing.AmbientTempF',
     ]);
     expect(real.map((b) => b.batchNumber)).toEqual(['VM-2026-0142']);
   });

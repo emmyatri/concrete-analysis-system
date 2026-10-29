@@ -127,7 +127,8 @@ public sealed class SpecimenService(
             breakResult,
             specimen.Batch.CastAt,
             false,
-            clock.UtcNow);
+            clock.UtcNow,
+            specimen.TestAgeDays);
 
         if (validation.Errors.Count > 0)
         {
