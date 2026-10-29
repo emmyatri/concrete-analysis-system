@@ -1225,7 +1225,7 @@ public sealed class PredictionSaveChangesInterceptorTests()
                 .First()
                 .ShouldNotBeNull()
                 .ShouldSatisfyAllConditions(
-                    it => it.EstimatedPsi.ShouldNotBeNull().ShouldBeInRange(4448m, 4450m),
+                    it => it.EstimatedPsi.ShouldNotBeNull().ShouldBeInRange(4869m, 4871m),
                     it => it.UnadjustedPsi.ShouldNotBeNull().ShouldBeInRange(6234m, 6236m),
                     it => it.AdjustmentStage.ShouldBe(AdjustmentStage.ThreeAndSevenDay),
                     it => it.IsSynthetic.ShouldBeTrue());

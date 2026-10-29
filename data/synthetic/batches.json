@@ -27,12 +27,12 @@
         {
           "Label": "D3-1",
           "LengthIn": 11.96,
-          "WidthIn": 6.0,
+          "WidthIn": 6,
           "TestAgeDays": "Day3",
           "IsSynthetic": true,
           "BreakResult": {
             "BrokenAt": "2026-06-04T12:05:00Z",
-            "StrengthPsi": 3350
+            "StrengthPsi": 3059
           },
           "CuringReadings": [
             {
@@ -74,7 +74,7 @@
             {
               "TakenAt": "2026-06-03T12:00:00Z",
               "InternalTempF": 79.8,
-              "AmbientTempF": 69.0,
+              "AmbientTempF": 69,
               "MoisturePct": 92.2,
               "RelativeHumidityPct": 93.7,
               "ResistivityOhmPerFt": 20.12,
@@ -108,7 +108,7 @@
           "IsSynthetic": true,
           "BreakResult": {
             "BrokenAt": "2026-06-04T12:10:00Z",
-            "StrengthPsi": 3359
+            "StrengthPsi": 3073
           },
           "CuringReadings": [
             {
@@ -127,7 +127,7 @@
               "MoisturePct": 93.6,
               "RelativeHumidityPct": 96.3,
               "ResistivityOhmPerFt": 17.34,
-              "Co2Ppm": 426.0
+              "Co2Ppm": 426
             },
             {
               "TakenAt": "2026-06-02T12:00:00Z",
@@ -149,8 +149,8 @@
             },
             {
               "TakenAt": "2026-06-03T12:00:00Z",
-              "InternalTempF": 78.0,
-              "AmbientTempF": 69.0,
+              "InternalTempF": 78,
+              "AmbientTempF": 69,
               "MoisturePct": 93.6,
               "RelativeHumidityPct": 93.6,
               "ResistivityOhmPerFt": 21.59,
@@ -163,7 +163,7 @@
               "MoisturePct": 91.2,
               "RelativeHumidityPct": 94.5,
               "ResistivityOhmPerFt": 21.41,
-              "Co2Ppm": 432.0
+              "Co2Ppm": 432
             },
             {
               "TakenAt": "2026-06-04T12:00:00Z",
@@ -184,7 +184,7 @@
           "IsSynthetic": true,
           "BreakResult": {
             "BrokenAt": "2026-06-04T12:15:00Z",
-            "StrengthPsi": 3371
+            "StrengthPsi": 2975
           },
           "CuringReadings": [
             {
@@ -226,7 +226,7 @@
             {
               "TakenAt": "2026-06-03T12:00:00Z",
               "InternalTempF": 80.4,
-              "AmbientTempF": 69.0,
+              "AmbientTempF": 69,
               "MoisturePct": 91.7,
               "RelativeHumidityPct": 94.4,
               "ResistivityOhmPerFt": 20.41,
@@ -255,12 +255,12 @@
         {
           "Label": "D7-1",
           "LengthIn": 11.99,
-          "WidthIn": 6.0,
+          "WidthIn": 6,
           "TestAgeDays": "Day7",
           "IsSynthetic": true,
           "BreakResult": {
             "BrokenAt": "2026-06-08T12:05:00Z",
-            "StrengthPsi": 4794
+            "StrengthPsi": 4368
           },
           "CuringReadings": [
             {
@@ -283,7 +283,7 @@
             },
             {
               "TakenAt": "2026-06-02T12:00:00Z",
-              "InternalTempF": 84.0,
+              "InternalTempF": 84,
               "AmbientTempF": 71.3,
               "MoisturePct": 90.8,
               "RelativeHumidityPct": 96.7,
@@ -302,7 +302,7 @@
             {
               "TakenAt": "2026-06-03T12:00:00Z",
               "InternalTempF": 79.4,
-              "AmbientTempF": 69.0,
+              "AmbientTempF": 69,
               "MoisturePct": 91.5,
               "RelativeHumidityPct": 96.9,
               "ResistivityOhmPerFt": 20.78,
@@ -324,7 +324,7 @@
               "MoisturePct": 90.9,
               "RelativeHumidityPct": 96.9,
               "ResistivityOhmPerFt": 24.22,
-              "Co2Ppm": 421.0
+              "Co2Ppm": 421
             }
           ]
         },
@@ -336,12 +336,12 @@
           "IsSynthetic": true,
           "BreakResult": {
             "BrokenAt": "2026-06-08T12:10:00Z",
-            "StrengthPsi": 4825
+            "StrengthPsi": 4698
           },
           "CuringReadings": [
             {
               "TakenAt": "2026-06-01T12:00:00Z",
-              "InternalTempF": 80.0,
+              "InternalTempF": 80,
               "AmbientTempF": 68.9,
               "MoisturePct": 91.8,
               "RelativeHumidityPct": 96.6,
@@ -359,7 +359,7 @@
             },
             {
               "TakenAt": "2026-06-02T12:00:00Z",
-              "InternalTempF": 82.0,
+              "InternalTempF": 82,
               "AmbientTempF": 71.3,
               "MoisturePct": 93.3,
               "RelativeHumidityPct": 93.9,
@@ -378,7 +378,7 @@
             {
               "TakenAt": "2026-06-03T12:00:00Z",
               "InternalTempF": 78.7,
-              "AmbientTempF": 69.0,
+              "AmbientTempF": 69,
               "MoisturePct": 93.4,
               "RelativeHumidityPct": 94.3,
               "ResistivityOhmPerFt": 19.83,
@@ -412,7 +412,7 @@
           "IsSynthetic": true,
           "BreakResult": {
             "BrokenAt": "2026-06-08T12:15:00Z",
-            "StrengthPsi": 4861
+            "StrengthPsi": 4411
           },
           "CuringReadings": [
             {
@@ -437,7 +437,7 @@
               "TakenAt": "2026-06-02T12:00:00Z",
               "InternalTempF": 81.9,
               "AmbientTempF": 71.3,
-              "MoisturePct": 91.0,
+              "MoisturePct": 91,
               "RelativeHumidityPct": 96.7,
               "ResistivityOhmPerFt": 17.24,
               "Co2Ppm": 427.8
@@ -454,11 +454,11 @@
             {
               "TakenAt": "2026-06-03T12:00:00Z",
               "InternalTempF": 79.4,
-              "AmbientTempF": 69.0,
+              "AmbientTempF": 69,
               "MoisturePct": 92.7,
               "RelativeHumidityPct": 95.2,
               "ResistivityOhmPerFt": 19.98,
-              "Co2Ppm": 411.0
+              "Co2Ppm": 411
             },
             {
               "TakenAt": "2026-06-04T00:00:00Z",
@@ -488,7 +488,7 @@
           "IsSynthetic": true,
           "BreakResult": {
             "BrokenAt": "2026-06-29T12:05:00Z",
-            "StrengthPsi": 6690
+            "StrengthPsi": 6551
           },
           "CuringReadings": [
             {
@@ -496,7 +496,7 @@
               "InternalTempF": 78.9,
               "AmbientTempF": 68.9,
               "MoisturePct": 91.1,
-              "RelativeHumidityPct": 96.0,
+              "RelativeHumidityPct": 96,
               "ResistivityOhmPerFt": 14.54,
               "Co2Ppm": 412.7
             },
@@ -529,8 +529,8 @@
             },
             {
               "TakenAt": "2026-06-03T12:00:00Z",
-              "InternalTempF": 79.0,
-              "AmbientTempF": 69.0,
+              "InternalTempF": 79,
+              "AmbientTempF": 69,
               "MoisturePct": 92.1,
               "RelativeHumidityPct": 93.4,
               "ResistivityOhmPerFt": 20.7,
@@ -564,7 +564,7 @@
           "IsSynthetic": true,
           "BreakResult": {
             "BrokenAt": "2026-06-29T12:10:00Z",
-            "StrengthPsi": 6614
+            "StrengthPsi": 6445
           },
           "CuringReadings": [
             {
@@ -606,7 +606,7 @@
             {
               "TakenAt": "2026-06-03T12:00:00Z",
               "InternalTempF": 79.6,
-              "AmbientTempF": 69.0,
+              "AmbientTempF": 69,
               "MoisturePct": 92.9,
               "RelativeHumidityPct": 94.9,
               "ResistivityOhmPerFt": 21.35,
@@ -640,7 +640,7 @@
           "IsSynthetic": true,
           "BreakResult": {
             "BrokenAt": "2026-06-29T12:15:00Z",
-            "StrengthPsi": 6740
+            "StrengthPsi": 6243
           },
           "CuringReadings": [
             {
@@ -682,8 +682,8 @@
             {
               "TakenAt": "2026-06-03T12:00:00Z",
               "InternalTempF": 78.7,
-              "AmbientTempF": 69.0,
-              "MoisturePct": 91.0,
+              "AmbientTempF": 69,
+              "MoisturePct": 91,
               "RelativeHumidityPct": 93.4,
               "ResistivityOhmPerFt": 21.18,
               "Co2Ppm": 419.1
@@ -737,18 +737,18 @@
         {
           "Label": "D3-1",
           "LengthIn": 11.99,
-          "WidthIn": 6.0,
+          "WidthIn": 6,
           "TestAgeDays": "Day3",
           "IsSynthetic": true,
           "BreakResult": {
             "BrokenAt": "2026-06-08T12:05:00Z",
-            "StrengthPsi": 3209
+            "StrengthPsi": 1860
           },
           "CuringReadings": [
             {
               "TakenAt": "2026-06-05T12:00:00Z",
-              "InternalTempF": 79.8,
-              "AmbientTempF": 70.0,
+              "InternalTempF": 49.8,
+              "AmbientTempF": 40,
               "MoisturePct": 90.3,
               "RelativeHumidityPct": 94.1,
               "ResistivityOhmPerFt": 15.3,
@@ -756,8 +756,8 @@
             },
             {
               "TakenAt": "2026-06-06T00:00:00Z",
-              "InternalTempF": 82.5,
-              "AmbientTempF": 71.4,
+              "InternalTempF": 52.5,
+              "AmbientTempF": 41.4,
               "MoisturePct": 92.2,
               "RelativeHumidityPct": 95.3,
               "ResistivityOhmPerFt": 15.9,
@@ -765,8 +765,8 @@
             },
             {
               "TakenAt": "2026-06-06T12:00:00Z",
-              "InternalTempF": 82.6,
-              "AmbientTempF": 71.1,
+              "InternalTempF": 52.6,
+              "AmbientTempF": 41.1,
               "MoisturePct": 92.7,
               "RelativeHumidityPct": 94.2,
               "ResistivityOhmPerFt": 18.65,
@@ -774,8 +774,8 @@
             },
             {
               "TakenAt": "2026-06-07T00:00:00Z",
-              "InternalTempF": 80.6,
-              "AmbientTempF": 69.0,
+              "InternalTempF": 50.6,
+              "AmbientTempF": 39,
               "MoisturePct": 90.8,
               "RelativeHumidityPct": 93.2,
               "ResistivityOhmPerFt": 18.38,
@@ -783,17 +783,17 @@
             },
             {
               "TakenAt": "2026-06-07T12:00:00Z",
-              "InternalTempF": 79.8,
-              "AmbientTempF": 68.1,
+              "InternalTempF": 49.8,
+              "AmbientTempF": 38.1,
               "MoisturePct": 93.9,
-              "RelativeHumidityPct": 94.0,
+              "RelativeHumidityPct": 94,
               "ResistivityOhmPerFt": 21.35,
               "Co2Ppm": 409.8
             },
             {
               "TakenAt": "2026-06-08T00:00:00Z",
-              "InternalTempF": 78.0,
-              "AmbientTempF": 67.4,
+              "InternalTempF": 48,
+              "AmbientTempF": 37.4,
               "MoisturePct": 92.2,
               "RelativeHumidityPct": 96.2,
               "ResistivityOhmPerFt": 22.62,
@@ -801,8 +801,8 @@
             },
             {
               "TakenAt": "2026-06-08T12:00:00Z",
-              "InternalTempF": 76.0,
-              "AmbientTempF": 67.7,
+              "InternalTempF": 46,
+              "AmbientTempF": 37.7,
               "MoisturePct": 93.8,
               "RelativeHumidityPct": 96.2,
               "ResistivityOhmPerFt": 23.11,
@@ -818,13 +818,13 @@
           "IsSynthetic": true,
           "BreakResult": {
             "BrokenAt": "2026-06-08T12:10:00Z",
-            "StrengthPsi": 3218
+            "StrengthPsi": 1866
           },
           "CuringReadings": [
             {
               "TakenAt": "2026-06-05T12:00:00Z",
-              "InternalTempF": 79.5,
-              "AmbientTempF": 70.0,
+              "InternalTempF": 49.5,
+              "AmbientTempF": 40,
               "MoisturePct": 91.9,
               "RelativeHumidityPct": 94.3,
               "ResistivityOhmPerFt": 14.09,
@@ -832,8 +832,8 @@
             },
             {
               "TakenAt": "2026-06-06T00:00:00Z",
-              "InternalTempF": 80.5,
-              "AmbientTempF": 71.4,
+              "InternalTempF": 50.5,
+              "AmbientTempF": 41.4,
               "MoisturePct": 90.6,
               "RelativeHumidityPct": 95.5,
               "ResistivityOhmPerFt": 17.39,
@@ -841,8 +841,8 @@
             },
             {
               "TakenAt": "2026-06-06T12:00:00Z",
-              "InternalTempF": 83.9,
-              "AmbientTempF": 71.1,
+              "InternalTempF": 53.9,
+              "AmbientTempF": 41.1,
               "MoisturePct": 90.8,
               "RelativeHumidityPct": 93.2,
               "ResistivityOhmPerFt": 17.48,
@@ -850,17 +850,17 @@
             },
             {
               "TakenAt": "2026-06-07T00:00:00Z",
-              "InternalTempF": 80.3,
-              "AmbientTempF": 69.0,
+              "InternalTempF": 50.3,
+              "AmbientTempF": 39,
               "MoisturePct": 90.4,
               "RelativeHumidityPct": 95.5,
               "ResistivityOhmPerFt": 19.73,
-              "Co2Ppm": 434.0
+              "Co2Ppm": 434
             },
             {
               "TakenAt": "2026-06-07T12:00:00Z",
-              "InternalTempF": 78.6,
-              "AmbientTempF": 68.1,
+              "InternalTempF": 48.6,
+              "AmbientTempF": 38.1,
               "MoisturePct": 93.1,
               "RelativeHumidityPct": 93.7,
               "ResistivityOhmPerFt": 20.65,
@@ -868,17 +868,17 @@
             },
             {
               "TakenAt": "2026-06-08T00:00:00Z",
-              "InternalTempF": 76.3,
-              "AmbientTempF": 67.4,
+              "InternalTempF": 46.3,
+              "AmbientTempF": 37.4,
               "MoisturePct": 90.6,
               "RelativeHumidityPct": 95.8,
               "ResistivityOhmPerFt": 22.63,
-              "Co2Ppm": 424.0
+              "Co2Ppm": 424
             },
             {
               "TakenAt": "2026-06-08T12:00:00Z",
-              "InternalTempF": 76.1,
-              "AmbientTempF": 67.7,
+              "InternalTempF": 46.1,
+              "AmbientTempF": 37.7,
               "MoisturePct": 92.8,
               "RelativeHumidityPct": 94.8,
               "ResistivityOhmPerFt": 22.71,
@@ -894,13 +894,13 @@
           "IsSynthetic": true,
           "BreakResult": {
             "BrokenAt": "2026-06-08T12:15:00Z",
-            "StrengthPsi": 3279
+            "StrengthPsi": 1798
           },
           "CuringReadings": [
             {
               "TakenAt": "2026-06-05T12:00:00Z",
-              "InternalTempF": 78.4,
-              "AmbientTempF": 70.0,
+              "InternalTempF": 48.4,
+              "AmbientTempF": 40,
               "MoisturePct": 91.5,
               "RelativeHumidityPct": 95.5,
               "ResistivityOhmPerFt": 15.28,
@@ -908,8 +908,8 @@
             },
             {
               "TakenAt": "2026-06-06T00:00:00Z",
-              "InternalTempF": 82.1,
-              "AmbientTempF": 71.4,
+              "InternalTempF": 52.1,
+              "AmbientTempF": 41.4,
               "MoisturePct": 90.4,
               "RelativeHumidityPct": 96.3,
               "ResistivityOhmPerFt": 16.22,
@@ -917,8 +917,8 @@
             },
             {
               "TakenAt": "2026-06-06T12:00:00Z",
-              "InternalTempF": 83.4,
-              "AmbientTempF": 71.1,
+              "InternalTempF": 53.4,
+              "AmbientTempF": 41.1,
               "MoisturePct": 93.5,
               "RelativeHumidityPct": 96.2,
               "ResistivityOhmPerFt": 17.02,
@@ -926,8 +926,8 @@
             },
             {
               "TakenAt": "2026-06-07T00:00:00Z",
-              "InternalTempF": 81.4,
-              "AmbientTempF": 69.0,
+              "InternalTempF": 51.4,
+              "AmbientTempF": 39,
               "MoisturePct": 93.6,
               "RelativeHumidityPct": 95.6,
               "ResistivityOhmPerFt": 18.38,
@@ -935,8 +935,8 @@
             },
             {
               "TakenAt": "2026-06-07T12:00:00Z",
-              "InternalTempF": 78.1,
-              "AmbientTempF": 68.1,
+              "InternalTempF": 48.1,
+              "AmbientTempF": 38.1,
               "MoisturePct": 92.7,
               "RelativeHumidityPct": 94.8,
               "ResistivityOhmPerFt": 20.87,
@@ -944,8 +944,8 @@
             },
             {
               "TakenAt": "2026-06-08T00:00:00Z",
-              "InternalTempF": 76.5,
-              "AmbientTempF": 67.4,
+              "InternalTempF": 46.5,
+              "AmbientTempF": 37.4,
               "MoisturePct": 92.4,
               "RelativeHumidityPct": 95.7,
               "ResistivityOhmPerFt": 21.39,
@@ -953,12 +953,12 @@
             },
             {
               "TakenAt": "2026-06-08T12:00:00Z",
-              "InternalTempF": 74.3,
-              "AmbientTempF": 67.7,
+              "InternalTempF": 44.3,
+              "AmbientTempF": 37.7,
               "MoisturePct": 92.2,
               "RelativeHumidityPct": 96.4,
               "ResistivityOhmPerFt": 23.22,
-              "Co2Ppm": 424.0
+              "Co2Ppm": 424
             }
           ]
         },
@@ -970,13 +970,13 @@
           "IsSynthetic": true,
           "BreakResult": {
             "BrokenAt": "2026-06-12T12:05:00Z",
-            "StrengthPsi": 4357
+            "StrengthPsi": 3173
           },
           "CuringReadings": [
             {
               "TakenAt": "2026-06-05T12:00:00Z",
-              "InternalTempF": 78.3,
-              "AmbientTempF": 70.0,
+              "InternalTempF": 48.3,
+              "AmbientTempF": 40,
               "MoisturePct": 91.4,
               "RelativeHumidityPct": 96.9,
               "ResistivityOhmPerFt": 15.83,
@@ -984,26 +984,26 @@
             },
             {
               "TakenAt": "2026-06-06T00:00:00Z",
-              "InternalTempF": 81.4,
-              "AmbientTempF": 71.4,
-              "MoisturePct": 92.0,
-              "RelativeHumidityPct": 96.0,
+              "InternalTempF": 51.4,
+              "AmbientTempF": 41.4,
+              "MoisturePct": 92,
+              "RelativeHumidityPct": 96,
               "ResistivityOhmPerFt": 15.62,
               "Co2Ppm": 421.5
             },
             {
               "TakenAt": "2026-06-06T12:00:00Z",
-              "InternalTempF": 81.8,
-              "AmbientTempF": 71.1,
-              "MoisturePct": 92.0,
+              "InternalTempF": 51.8,
+              "AmbientTempF": 41.1,
+              "MoisturePct": 92,
               "RelativeHumidityPct": 96.6,
               "ResistivityOhmPerFt": 17.24,
               "Co2Ppm": 417.4
             },
             {
               "TakenAt": "2026-06-07T00:00:00Z",
-              "InternalTempF": 81.8,
-              "AmbientTempF": 69.0,
+              "InternalTempF": 51.8,
+              "AmbientTempF": 39,
               "MoisturePct": 91.5,
               "RelativeHumidityPct": 93.1,
               "ResistivityOhmPerFt": 20.2,
@@ -1011,17 +1011,17 @@
             },
             {
               "TakenAt": "2026-06-07T12:00:00Z",
-              "InternalTempF": 79.8,
-              "AmbientTempF": 68.1,
+              "InternalTempF": 49.8,
+              "AmbientTempF": 38.1,
               "MoisturePct": 92.2,
               "RelativeHumidityPct": 94.5,
               "ResistivityOhmPerFt": 20.17,
-              "Co2Ppm": 432.0
+              "Co2Ppm": 432
             },
             {
               "TakenAt": "2026-06-08T00:00:00Z",
-              "InternalTempF": 78.3,
-              "AmbientTempF": 67.4,
+              "InternalTempF": 48.3,
+              "AmbientTempF": 37.4,
               "MoisturePct": 91.1,
               "RelativeHumidityPct": 95.9,
               "ResistivityOhmPerFt": 22.6,
@@ -1029,12 +1029,12 @@
             },
             {
               "TakenAt": "2026-06-08T12:00:00Z",
-              "InternalTempF": 74.7,
-              "AmbientTempF": 67.7,
+              "InternalTempF": 44.7,
+              "AmbientTempF": 37.7,
               "MoisturePct": 91.9,
               "RelativeHumidityPct": 94.5,
               "ResistivityOhmPerFt": 24.48,
-              "Co2Ppm": 427.0
+              "Co2Ppm": 427
             }
           ]
         },
@@ -1046,40 +1046,40 @@
           "IsSynthetic": true,
           "BreakResult": {
             "BrokenAt": "2026-06-12T12:10:00Z",
-            "StrengthPsi": 4424
+            "StrengthPsi": 3016
           },
           "CuringReadings": [
             {
               "TakenAt": "2026-06-05T12:00:00Z",
-              "InternalTempF": 79.6,
-              "AmbientTempF": 70.0,
-              "MoisturePct": 93.0,
+              "InternalTempF": 49.6,
+              "AmbientTempF": 40,
+              "MoisturePct": 93,
               "RelativeHumidityPct": 94.7,
               "ResistivityOhmPerFt": 14.57,
-              "Co2Ppm": 417.0
+              "Co2Ppm": 417
             },
             {
               "TakenAt": "2026-06-06T00:00:00Z",
-              "InternalTempF": 82.4,
-              "AmbientTempF": 71.4,
+              "InternalTempF": 52.4,
+              "AmbientTempF": 41.4,
               "MoisturePct": 90.2,
               "RelativeHumidityPct": 95.4,
               "ResistivityOhmPerFt": 16.81,
-              "Co2Ppm": 410.0
+              "Co2Ppm": 410
             },
             {
               "TakenAt": "2026-06-06T12:00:00Z",
-              "InternalTempF": 83.4,
-              "AmbientTempF": 71.1,
+              "InternalTempF": 53.4,
+              "AmbientTempF": 41.1,
               "MoisturePct": 93.1,
               "RelativeHumidityPct": 95.7,
               "ResistivityOhmPerFt": 17.08,
-              "Co2Ppm": 408.0
+              "Co2Ppm": 408
             },
             {
               "TakenAt": "2026-06-07T00:00:00Z",
-              "InternalTempF": 81.2,
-              "AmbientTempF": 69.0,
+              "InternalTempF": 51.2,
+              "AmbientTempF": 39,
               "MoisturePct": 92.7,
               "RelativeHumidityPct": 96.8,
               "ResistivityOhmPerFt": 19.69,
@@ -1087,8 +1087,8 @@
             },
             {
               "TakenAt": "2026-06-07T12:00:00Z",
-              "InternalTempF": 78.3,
-              "AmbientTempF": 68.1,
+              "InternalTempF": 48.3,
+              "AmbientTempF": 38.1,
               "MoisturePct": 90.2,
               "RelativeHumidityPct": 94.3,
               "ResistivityOhmPerFt": 21.68,
@@ -1096,8 +1096,8 @@
             },
             {
               "TakenAt": "2026-06-08T00:00:00Z",
-              "InternalTempF": 78.8,
-              "AmbientTempF": 67.4,
+              "InternalTempF": 48.8,
+              "AmbientTempF": 37.4,
               "MoisturePct": 90.8,
               "RelativeHumidityPct": 96.8,
               "ResistivityOhmPerFt": 22.81,
@@ -1105,9 +1105,9 @@
             },
             {
               "TakenAt": "2026-06-08T12:00:00Z",
-              "InternalTempF": 76.7,
-              "AmbientTempF": 67.7,
-              "MoisturePct": 90.0,
+              "InternalTempF": 46.7,
+              "AmbientTempF": 37.7,
+              "MoisturePct": 90,
               "RelativeHumidityPct": 96.9,
               "ResistivityOhmPerFt": 22.81,
               "Co2Ppm": 422.8
@@ -1122,13 +1122,13 @@
           "IsSynthetic": true,
           "BreakResult": {
             "BrokenAt": "2026-06-12T12:15:00Z",
-            "StrengthPsi": 4430
+            "StrengthPsi": 3185
           },
           "CuringReadings": [
             {
               "TakenAt": "2026-06-05T12:00:00Z",
-              "InternalTempF": 80.2,
-              "AmbientTempF": 70.0,
+              "InternalTempF": 50.2,
+              "AmbientTempF": 40,
               "MoisturePct": 92.2,
               "RelativeHumidityPct": 95.4,
               "ResistivityOhmPerFt": 15.32,
@@ -1136,26 +1136,26 @@
             },
             {
               "TakenAt": "2026-06-06T00:00:00Z",
-              "InternalTempF": 82.1,
-              "AmbientTempF": 71.4,
+              "InternalTempF": 52.1,
+              "AmbientTempF": 41.4,
               "MoisturePct": 93.3,
-              "RelativeHumidityPct": 93.0,
+              "RelativeHumidityPct": 93,
               "ResistivityOhmPerFt": 15.8,
               "Co2Ppm": 403.5
             },
             {
               "TakenAt": "2026-06-06T12:00:00Z",
-              "InternalTempF": 82.5,
-              "AmbientTempF": 71.1,
+              "InternalTempF": 52.5,
+              "AmbientTempF": 41.1,
               "MoisturePct": 91.6,
               "RelativeHumidityPct": 94.8,
               "ResistivityOhmPerFt": 18.8,
-              "Co2Ppm": 420.0
+              "Co2Ppm": 420
             },
             {
               "TakenAt": "2026-06-07T00:00:00Z",
-              "InternalTempF": 80.3,
-              "AmbientTempF": 69.0,
+              "InternalTempF": 50.3,
+              "AmbientTempF": 39,
               "MoisturePct": 90.2,
               "RelativeHumidityPct": 96.4,
               "ResistivityOhmPerFt": 19.14,
@@ -1163,8 +1163,8 @@
             },
             {
               "TakenAt": "2026-06-07T12:00:00Z",
-              "InternalTempF": 78.9,
-              "AmbientTempF": 68.1,
+              "InternalTempF": 48.9,
+              "AmbientTempF": 38.1,
               "MoisturePct": 93.1,
               "RelativeHumidityPct": 93.4,
               "ResistivityOhmPerFt": 20.52,
@@ -1172,8 +1172,8 @@
             },
             {
               "TakenAt": "2026-06-08T00:00:00Z",
-              "InternalTempF": 76.7,
-              "AmbientTempF": 67.4,
+              "InternalTempF": 46.7,
+              "AmbientTempF": 37.4,
               "MoisturePct": 93.4,
               "RelativeHumidityPct": 96.3,
               "ResistivityOhmPerFt": 21.35,
@@ -1181,8 +1181,8 @@
             },
             {
               "TakenAt": "2026-06-08T12:00:00Z",
-              "InternalTempF": 76.1,
-              "AmbientTempF": 67.7,
+              "InternalTempF": 46.1,
+              "AmbientTempF": 37.7,
               "MoisturePct": 91.2,
               "RelativeHumidityPct": 96.6,
               "ResistivityOhmPerFt": 22.8,
@@ -1198,13 +1198,13 @@
           "IsSynthetic": true,
           "BreakResult": {
             "BrokenAt": "2026-07-03T12:05:00Z",
-            "StrengthPsi": 5606
+            "StrengthPsi": 5327
           },
           "CuringReadings": [
             {
               "TakenAt": "2026-06-05T12:00:00Z",
-              "InternalTempF": 79.1,
-              "AmbientTempF": 70.0,
+              "InternalTempF": 49.1,
+              "AmbientTempF": 40,
               "MoisturePct": 92.1,
               "RelativeHumidityPct": 95.2,
               "ResistivityOhmPerFt": 15.38,
@@ -1212,17 +1212,17 @@
             },
             {
               "TakenAt": "2026-06-06T00:00:00Z",
-              "InternalTempF": 81.8,
-              "AmbientTempF": 71.4,
+              "InternalTempF": 51.8,
+              "AmbientTempF": 41.4,
               "MoisturePct": 90.1,
-              "RelativeHumidityPct": 95.0,
+              "RelativeHumidityPct": 95,
               "ResistivityOhmPerFt": 15.83,
               "Co2Ppm": 410.3
             },
             {
               "TakenAt": "2026-06-06T12:00:00Z",
-              "InternalTempF": 82.3,
-              "AmbientTempF": 71.1,
+              "InternalTempF": 52.3,
+              "AmbientTempF": 41.1,
               "MoisturePct": 93.2,
               "RelativeHumidityPct": 94.1,
               "ResistivityOhmPerFt": 18.7,
@@ -1230,8 +1230,8 @@
             },
             {
               "TakenAt": "2026-06-07T00:00:00Z",
-              "InternalTempF": 81.1,
-              "AmbientTempF": 69.0,
+              "InternalTempF": 51.1,
+              "AmbientTempF": 39,
               "MoisturePct": 92.4,
               "RelativeHumidityPct": 95.1,
               "ResistivityOhmPerFt": 20.32,
@@ -1239,8 +1239,8 @@
             },
             {
               "TakenAt": "2026-06-07T12:00:00Z",
-              "InternalTempF": 78.4,
-              "AmbientTempF": 68.1,
+              "InternalTempF": 48.4,
+              "AmbientTempF": 38.1,
               "MoisturePct": 93.4,
               "RelativeHumidityPct": 94.7,
               "ResistivityOhmPerFt": 21.1,
@@ -1248,17 +1248,17 @@
             },
             {
               "TakenAt": "2026-06-08T00:00:00Z",
-              "InternalTempF": 78.8,
-              "AmbientTempF": 67.4,
-              "MoisturePct": 90.0,
+              "InternalTempF": 48.8,
+              "AmbientTempF": 37.4,
+              "MoisturePct": 90,
               "RelativeHumidityPct": 93.1,
               "ResistivityOhmPerFt": 22.17,
-              "Co2Ppm": 427.0
+              "Co2Ppm": 427
             },
             {
               "TakenAt": "2026-06-08T12:00:00Z",
-              "InternalTempF": 75.6,
-              "AmbientTempF": 67.7,
+              "InternalTempF": 45.6,
+              "AmbientTempF": 37.7,
               "MoisturePct": 92.4,
               "RelativeHumidityPct": 96.2,
               "ResistivityOhmPerFt": 23.13,
@@ -1274,31 +1274,31 @@
           "IsSynthetic": true,
           "BreakResult": {
             "BrokenAt": "2026-07-03T12:10:00Z",
-            "StrengthPsi": 5610
+            "StrengthPsi": 4896
           },
           "CuringReadings": [
             {
               "TakenAt": "2026-06-05T12:00:00Z",
-              "InternalTempF": 80.3,
-              "AmbientTempF": 70.0,
+              "InternalTempF": 50.3,
+              "AmbientTempF": 40,
               "MoisturePct": 93.2,
-              "RelativeHumidityPct": 96.0,
+              "RelativeHumidityPct": 96,
               "ResistivityOhmPerFt": 15.1,
               "Co2Ppm": 420.5
             },
             {
               "TakenAt": "2026-06-06T00:00:00Z",
-              "InternalTempF": 81.5,
-              "AmbientTempF": 71.4,
+              "InternalTempF": 51.5,
+              "AmbientTempF": 41.4,
               "MoisturePct": 90.9,
-              "RelativeHumidityPct": 94.0,
+              "RelativeHumidityPct": 94,
               "ResistivityOhmPerFt": 17.24,
               "Co2Ppm": 435.8
             },
             {
               "TakenAt": "2026-06-06T12:00:00Z",
-              "InternalTempF": 82.0,
-              "AmbientTempF": 71.1,
+              "InternalTempF": 52,
+              "AmbientTempF": 41.1,
               "MoisturePct": 91.7,
               "RelativeHumidityPct": 96.1,
               "ResistivityOhmPerFt": 18.12,
@@ -1306,8 +1306,8 @@
             },
             {
               "TakenAt": "2026-06-07T00:00:00Z",
-              "InternalTempF": 82.5,
-              "AmbientTempF": 69.0,
+              "InternalTempF": 52.5,
+              "AmbientTempF": 39,
               "MoisturePct": 92.2,
               "RelativeHumidityPct": 93.1,
               "ResistivityOhmPerFt": 19.72,
@@ -1315,17 +1315,17 @@
             },
             {
               "TakenAt": "2026-06-07T12:00:00Z",
-              "InternalTempF": 79.4,
-              "AmbientTempF": 68.1,
+              "InternalTempF": 49.4,
+              "AmbientTempF": 38.1,
               "MoisturePct": 92.5,
               "RelativeHumidityPct": 93.4,
               "ResistivityOhmPerFt": 21.08,
-              "Co2Ppm": 414.0
+              "Co2Ppm": 414
             },
             {
               "TakenAt": "2026-06-08T00:00:00Z",
-              "InternalTempF": 77.7,
-              "AmbientTempF": 67.4,
+              "InternalTempF": 47.7,
+              "AmbientTempF": 37.4,
               "MoisturePct": 91.7,
               "RelativeHumidityPct": 93.3,
               "ResistivityOhmPerFt": 22.51,
@@ -1333,8 +1333,8 @@
             },
             {
               "TakenAt": "2026-06-08T12:00:00Z",
-              "InternalTempF": 75.1,
-              "AmbientTempF": 67.7,
+              "InternalTempF": 45.1,
+              "AmbientTempF": 37.7,
               "MoisturePct": 93.6,
               "RelativeHumidityPct": 95.9,
               "ResistivityOhmPerFt": 23.96,
@@ -1350,13 +1350,13 @@
           "IsSynthetic": true,
           "BreakResult": {
             "BrokenAt": "2026-07-03T12:15:00Z",
-            "StrengthPsi": 5671
+            "StrengthPsi": 5247
           },
           "CuringReadings": [
             {
               "TakenAt": "2026-06-05T12:00:00Z",
-              "InternalTempF": 80.2,
-              "AmbientTempF": 70.0,
+              "InternalTempF": 50.2,
+              "AmbientTempF": 40,
               "MoisturePct": 93.3,
               "RelativeHumidityPct": 94.1,
               "ResistivityOhmPerFt": 14.23,
@@ -1364,8 +1364,8 @@
             },
             {
               "TakenAt": "2026-06-06T00:00:00Z",
-              "InternalTempF": 81.8,
-              "AmbientTempF": 71.4,
+              "InternalTempF": 51.8,
+              "AmbientTempF": 41.4,
               "MoisturePct": 91.9,
               "RelativeHumidityPct": 93.7,
               "ResistivityOhmPerFt": 16.17,
@@ -1373,8 +1373,8 @@
             },
             {
               "TakenAt": "2026-06-06T12:00:00Z",
-              "InternalTempF": 83.0,
-              "AmbientTempF": 71.1,
+              "InternalTempF": 53,
+              "AmbientTempF": 41.1,
               "MoisturePct": 90.9,
               "RelativeHumidityPct": 96.1,
               "ResistivityOhmPerFt": 18.34,
@@ -1382,8 +1382,8 @@
             },
             {
               "TakenAt": "2026-06-07T00:00:00Z",
-              "InternalTempF": 80.4,
-              "AmbientTempF": 69.0,
+              "InternalTempF": 50.4,
+              "AmbientTempF": 39,
               "MoisturePct": 90.3,
               "RelativeHumidityPct": 95.2,
               "ResistivityOhmPerFt": 19.8,
@@ -1391,8 +1391,8 @@
             },
             {
               "TakenAt": "2026-06-07T12:00:00Z",
-              "InternalTempF": 79.4,
-              "AmbientTempF": 68.1,
+              "InternalTempF": 49.4,
+              "AmbientTempF": 38.1,
               "MoisturePct": 90.5,
               "RelativeHumidityPct": 96.7,
               "ResistivityOhmPerFt": 21.2,
@@ -1400,8 +1400,8 @@
             },
             {
               "TakenAt": "2026-06-08T00:00:00Z",
-              "InternalTempF": 78.7,
-              "AmbientTempF": 67.4,
+              "InternalTempF": 48.7,
+              "AmbientTempF": 37.4,
               "MoisturePct": 90.5,
               "RelativeHumidityPct": 94.1,
               "ResistivityOhmPerFt": 21.93,
@@ -1409,8 +1409,8 @@
             },
             {
               "TakenAt": "2026-06-08T12:00:00Z",
-              "InternalTempF": 74.7,
-              "AmbientTempF": 67.7,
+              "InternalTempF": 44.7,
+              "AmbientTempF": 37.7,
               "MoisturePct": 91.7,
               "RelativeHumidityPct": 94.8,
               "ResistivityOhmPerFt": 24.34,
@@ -1447,12 +1447,12 @@
         {
           "Label": "D3-1",
           "LengthIn": 11.92,
-          "WidthIn": 6.0,
+          "WidthIn": 6,
           "TestAgeDays": "Day3",
           "IsSynthetic": true,
           "BreakResult": {
             "BrokenAt": "2026-06-12T12:05:00Z",
-            "StrengthPsi": 4743
+            "StrengthPsi": 3028
           },
           "CuringReadings": [
             {
@@ -1467,7 +1467,7 @@
             {
               "TakenAt": "2026-06-10T00:00:00Z",
               "InternalTempF": 81.6,
-              "AmbientTempF": 71.0,
+              "AmbientTempF": 71,
               "MoisturePct": 93.3,
               "RelativeHumidityPct": 96.9,
               "ResistivityOhmPerFt": 15.46,
@@ -1480,14 +1480,14 @@
               "MoisturePct": 92.1,
               "RelativeHumidityPct": 94.4,
               "ResistivityOhmPerFt": 17.69,
-              "Co2Ppm": 415.0
+              "Co2Ppm": 415
             },
             {
               "TakenAt": "2026-06-11T00:00:00Z",
               "InternalTempF": 80.3,
               "AmbientTempF": 68.4,
-              "MoisturePct": 93.3,
-              "RelativeHumidityPct": 96.0,
+              "MoisturePct": 92.8,
+              "RelativeHumidityPct": 96,
               "ResistivityOhmPerFt": 19.15,
               "Co2Ppm": 428.5
             },
@@ -1495,7 +1495,7 @@
               "TakenAt": "2026-06-11T12:00:00Z",
               "InternalTempF": 78.6,
               "AmbientTempF": 67.2,
-              "MoisturePct": 93.0,
+              "MoisturePct": 92,
               "RelativeHumidityPct": 95.4,
               "ResistivityOhmPerFt": 20.29,
               "Co2Ppm": 423.4
@@ -1504,7 +1504,7 @@
               "TakenAt": "2026-06-12T00:00:00Z",
               "InternalTempF": 76.2,
               "AmbientTempF": 66.7,
-              "MoisturePct": 92.0,
+              "MoisturePct": 90.5,
               "RelativeHumidityPct": 96.8,
               "ResistivityOhmPerFt": 22.14,
               "Co2Ppm": 436.2
@@ -1513,7 +1513,7 @@
               "TakenAt": "2026-06-12T12:00:00Z",
               "InternalTempF": 74.6,
               "AmbientTempF": 68.7,
-              "MoisturePct": 91.8,
+              "MoisturePct": 89.8,
               "RelativeHumidityPct": 96.5,
               "ResistivityOhmPerFt": 23.54,
               "Co2Ppm": 420.2
@@ -1528,7 +1528,7 @@
           "IsSynthetic": true,
           "BreakResult": {
             "BrokenAt": "2026-06-12T12:10:00Z",
-            "StrengthPsi": 4678
+            "StrengthPsi": 2846
           },
           "CuringReadings": [
             {
@@ -1543,7 +1543,7 @@
             {
               "TakenAt": "2026-06-10T00:00:00Z",
               "InternalTempF": 81.7,
-              "AmbientTempF": 71.0,
+              "AmbientTempF": 71,
               "MoisturePct": 91.7,
               "RelativeHumidityPct": 94.7,
               "ResistivityOhmPerFt": 16.11,
@@ -1562,7 +1562,7 @@
               "TakenAt": "2026-06-11T00:00:00Z",
               "InternalTempF": 82.2,
               "AmbientTempF": 68.4,
-              "MoisturePct": 92.6,
+              "MoisturePct": 92.1,
               "RelativeHumidityPct": 94.1,
               "ResistivityOhmPerFt": 19.99,
               "Co2Ppm": 431.6
@@ -1571,7 +1571,7 @@
               "TakenAt": "2026-06-11T12:00:00Z",
               "InternalTempF": 78.4,
               "AmbientTempF": 67.2,
-              "MoisturePct": 92.6,
+              "MoisturePct": 91.6,
               "RelativeHumidityPct": 95.3,
               "ResistivityOhmPerFt": 21.44,
               "Co2Ppm": 428.2
@@ -1580,7 +1580,7 @@
               "TakenAt": "2026-06-12T00:00:00Z",
               "InternalTempF": 78.1,
               "AmbientTempF": 66.7,
-              "MoisturePct": 92.2,
+              "MoisturePct": 90.7,
               "RelativeHumidityPct": 94.6,
               "ResistivityOhmPerFt": 21.85,
               "Co2Ppm": 424.8
@@ -1589,7 +1589,7 @@
               "TakenAt": "2026-06-12T12:00:00Z",
               "InternalTempF": 75.1,
               "AmbientTempF": 68.7,
-              "MoisturePct": 91.2,
+              "MoisturePct": 89.2,
               "RelativeHumidityPct": 96.4,
               "ResistivityOhmPerFt": 23.76,
               "Co2Ppm": 413.4
@@ -1604,7 +1604,7 @@
           "IsSynthetic": true,
           "BreakResult": {
             "BrokenAt": "2026-06-12T12:15:00Z",
-            "StrengthPsi": 4677
+            "StrengthPsi": 2845
           },
           "CuringReadings": [
             {
@@ -1619,7 +1619,7 @@
             {
               "TakenAt": "2026-06-10T00:00:00Z",
               "InternalTempF": 82.2,
-              "AmbientTempF": 71.0,
+              "AmbientTempF": 71,
               "MoisturePct": 91.6,
               "RelativeHumidityPct": 94.6,
               "ResistivityOhmPerFt": 16.69,
@@ -1627,7 +1627,7 @@
             },
             {
               "TakenAt": "2026-06-10T12:00:00Z",
-              "InternalTempF": 83.0,
+              "InternalTempF": 83,
               "AmbientTempF": 70.6,
               "MoisturePct": 91.4,
               "RelativeHumidityPct": 95.9,
@@ -1638,7 +1638,7 @@
               "TakenAt": "2026-06-11T00:00:00Z",
               "InternalTempF": 81.7,
               "AmbientTempF": 68.4,
-              "MoisturePct": 93.2,
+              "MoisturePct": 92.7,
               "RelativeHumidityPct": 93.8,
               "ResistivityOhmPerFt": 19.2,
               "Co2Ppm": 409.1
@@ -1647,8 +1647,8 @@
               "TakenAt": "2026-06-11T12:00:00Z",
               "InternalTempF": 78.9,
               "AmbientTempF": 67.2,
-              "MoisturePct": 90.7,
-              "RelativeHumidityPct": 95.0,
+              "MoisturePct": 89.7,
+              "RelativeHumidityPct": 95,
               "ResistivityOhmPerFt": 20.37,
               "Co2Ppm": 416.6
             },
@@ -1656,7 +1656,7 @@
               "TakenAt": "2026-06-12T00:00:00Z",
               "InternalTempF": 78.7,
               "AmbientTempF": 66.7,
-              "MoisturePct": 91.6,
+              "MoisturePct": 90.1,
               "RelativeHumidityPct": 96.9,
               "ResistivityOhmPerFt": 22.49,
               "Co2Ppm": 404.1
@@ -1665,7 +1665,7 @@
               "TakenAt": "2026-06-12T12:00:00Z",
               "InternalTempF": 76.6,
               "AmbientTempF": 68.7,
-              "MoisturePct": 92.9,
+              "MoisturePct": 90.9,
               "RelativeHumidityPct": 96.9,
               "ResistivityOhmPerFt": 23.75,
               "Co2Ppm": 422.1
@@ -1680,7 +1680,7 @@
           "IsSynthetic": true,
           "BreakResult": {
             "BrokenAt": "2026-06-16T12:05:00Z",
-            "StrengthPsi": 5410
+            "StrengthPsi": 3799
           },
           "CuringReadings": [
             {
@@ -1690,12 +1690,12 @@
               "MoisturePct": 90.2,
               "RelativeHumidityPct": 93.1,
               "ResistivityOhmPerFt": 14.9,
-              "Co2Ppm": 427.0
+              "Co2Ppm": 427
             },
             {
               "TakenAt": "2026-06-10T00:00:00Z",
-              "InternalTempF": 82.0,
-              "AmbientTempF": 71.0,
+              "InternalTempF": 82,
+              "AmbientTempF": 71,
               "MoisturePct": 90.3,
               "RelativeHumidityPct": 93.2,
               "ResistivityOhmPerFt": 16.75,
@@ -1714,16 +1714,16 @@
               "TakenAt": "2026-06-11T00:00:00Z",
               "InternalTempF": 80.3,
               "AmbientTempF": 68.4,
-              "MoisturePct": 91.6,
+              "MoisturePct": 91.1,
               "RelativeHumidityPct": 94.1,
               "ResistivityOhmPerFt": 18.99,
-              "Co2Ppm": 423.0
+              "Co2Ppm": 423
             },
             {
               "TakenAt": "2026-06-11T12:00:00Z",
               "InternalTempF": 79.9,
               "AmbientTempF": 67.2,
-              "MoisturePct": 93.2,
+              "MoisturePct": 92.2,
               "RelativeHumidityPct": 95.4,
               "ResistivityOhmPerFt": 20.08,
               "Co2Ppm": 421.5
@@ -1732,7 +1732,7 @@
               "TakenAt": "2026-06-12T00:00:00Z",
               "InternalTempF": 76.1,
               "AmbientTempF": 66.7,
-              "MoisturePct": 92.7,
+              "MoisturePct": 91.2,
               "RelativeHumidityPct": 96.3,
               "ResistivityOhmPerFt": 21.69,
               "Co2Ppm": 422.7
@@ -1741,10 +1741,10 @@
               "TakenAt": "2026-06-12T12:00:00Z",
               "InternalTempF": 76.9,
               "AmbientTempF": 68.7,
-              "MoisturePct": 92.0,
+              "MoisturePct": 90,
               "RelativeHumidityPct": 93.8,
               "ResistivityOhmPerFt": 23.86,
-              "Co2Ppm": 430.0
+              "Co2Ppm": 430
             }
           ]
         },
@@ -1756,7 +1756,7 @@
           "IsSynthetic": true,
           "BreakResult": {
             "BrokenAt": "2026-06-16T12:10:00Z",
-            "StrengthPsi": 5538
+            "StrengthPsi": 3784
           },
           "CuringReadings": [
             {
@@ -1771,7 +1771,7 @@
             {
               "TakenAt": "2026-06-10T00:00:00Z",
               "InternalTempF": 79.9,
-              "AmbientTempF": 71.0,
+              "AmbientTempF": 71,
               "MoisturePct": 91.7,
               "RelativeHumidityPct": 95.5,
               "ResistivityOhmPerFt": 17.14,
@@ -1790,16 +1790,16 @@
               "TakenAt": "2026-06-11T00:00:00Z",
               "InternalTempF": 81.7,
               "AmbientTempF": 68.4,
-              "MoisturePct": 90.6,
+              "MoisturePct": 90.1,
               "RelativeHumidityPct": 93.1,
               "ResistivityOhmPerFt": 18.42,
-              "Co2Ppm": 417.0
+              "Co2Ppm": 417
             },
             {
               "TakenAt": "2026-06-11T12:00:00Z",
               "InternalTempF": 80.1,
               "AmbientTempF": 67.2,
-              "MoisturePct": 91.2,
+              "MoisturePct": 90.2,
               "RelativeHumidityPct": 93.5,
               "ResistivityOhmPerFt": 21.21,
               "Co2Ppm": 404.8
@@ -1808,7 +1808,7 @@
               "TakenAt": "2026-06-12T00:00:00Z",
               "InternalTempF": 76.3,
               "AmbientTempF": 66.7,
-              "MoisturePct": 90.7,
+              "MoisturePct": 89.2,
               "RelativeHumidityPct": 95.6,
               "ResistivityOhmPerFt": 22.18,
               "Co2Ppm": 425.4
@@ -1817,7 +1817,7 @@
               "TakenAt": "2026-06-12T12:00:00Z",
               "InternalTempF": 74.5,
               "AmbientTempF": 68.7,
-              "MoisturePct": 90.0,
+              "MoisturePct": 88,
               "RelativeHumidityPct": 94.2,
               "ResistivityOhmPerFt": 23.72,
               "Co2Ppm": 410.5
@@ -1832,7 +1832,7 @@
           "IsSynthetic": true,
           "BreakResult": {
             "BrokenAt": "2026-06-16T12:15:00Z",
-            "StrengthPsi": 5475
+            "StrengthPsi": 3770
           },
           "CuringReadings": [
             {
@@ -1847,7 +1847,7 @@
             {
               "TakenAt": "2026-06-10T00:00:00Z",
               "InternalTempF": 82.4,
-              "AmbientTempF": 71.0,
+              "AmbientTempF": 71,
               "MoisturePct": 91.1,
               "RelativeHumidityPct": 94.8,
               "ResistivityOhmPerFt": 17.19,
@@ -1866,8 +1866,8 @@
               "TakenAt": "2026-06-11T00:00:00Z",
               "InternalTempF": 80.9,
               "AmbientTempF": 68.4,
-              "MoisturePct": 91.6,
-              "RelativeHumidityPct": 93.0,
+              "MoisturePct": 91.1,
+              "RelativeHumidityPct": 93,
               "ResistivityOhmPerFt": 19.97,
               "Co2Ppm": 429.5
             },
@@ -1875,7 +1875,7 @@
               "TakenAt": "2026-06-11T12:00:00Z",
               "InternalTempF": 78.3,
               "AmbientTempF": 67.2,
-              "MoisturePct": 93.7,
+              "MoisturePct": 92.7,
               "RelativeHumidityPct": 94.8,
               "ResistivityOhmPerFt": 21.3,
               "Co2Ppm": 429.1
@@ -1884,8 +1884,8 @@
               "TakenAt": "2026-06-12T00:00:00Z",
               "InternalTempF": 78.6,
               "AmbientTempF": 66.7,
-              "MoisturePct": 91.5,
-              "RelativeHumidityPct": 96.0,
+              "MoisturePct": 90,
+              "RelativeHumidityPct": 96,
               "ResistivityOhmPerFt": 22.05,
               "Co2Ppm": 413.6
             },
@@ -1893,7 +1893,7 @@
               "TakenAt": "2026-06-12T12:00:00Z",
               "InternalTempF": 74.6,
               "AmbientTempF": 68.7,
-              "MoisturePct": 93.9,
+              "MoisturePct": 91.9,
               "RelativeHumidityPct": 94.2,
               "ResistivityOhmPerFt": 23.39,
               "Co2Ppm": 404.1
@@ -1908,14 +1908,14 @@
           "IsSynthetic": true,
           "BreakResult": {
             "BrokenAt": "2026-07-07T12:05:00Z",
-            "StrengthPsi": 6269
+            "StrengthPsi": 4874
           },
           "CuringReadings": [
             {
               "TakenAt": "2026-06-09T12:00:00Z",
               "InternalTempF": 79.8,
               "AmbientTempF": 71.4,
-              "MoisturePct": 91.0,
+              "MoisturePct": 91,
               "RelativeHumidityPct": 95.3,
               "ResistivityOhmPerFt": 14.73,
               "Co2Ppm": 414.4
@@ -1923,7 +1923,7 @@
             {
               "TakenAt": "2026-06-10T00:00:00Z",
               "InternalTempF": 81.2,
-              "AmbientTempF": 71.0,
+              "AmbientTempF": 71,
               "MoisturePct": 91.8,
               "RelativeHumidityPct": 96.3,
               "ResistivityOhmPerFt": 16.29,
@@ -1942,7 +1942,7 @@
               "TakenAt": "2026-06-11T00:00:00Z",
               "InternalTempF": 80.3,
               "AmbientTempF": 68.4,
-              "MoisturePct": 93.2,
+              "MoisturePct": 92.7,
               "RelativeHumidityPct": 94.9,
               "ResistivityOhmPerFt": 19.1,
               "Co2Ppm": 409.9
@@ -1951,7 +1951,7 @@
               "TakenAt": "2026-06-11T12:00:00Z",
               "InternalTempF": 79.8,
               "AmbientTempF": 67.2,
-              "MoisturePct": 91.9,
+              "MoisturePct": 90.9,
               "RelativeHumidityPct": 96.7,
               "ResistivityOhmPerFt": 19.99,
               "Co2Ppm": 429.9
@@ -1960,7 +1960,7 @@
               "TakenAt": "2026-06-12T00:00:00Z",
               "InternalTempF": 78.7,
               "AmbientTempF": 66.7,
-              "MoisturePct": 91.3,
+              "MoisturePct": 89.8,
               "RelativeHumidityPct": 94.4,
               "ResistivityOhmPerFt": 22.99,
               "Co2Ppm": 402.7
@@ -1969,7 +1969,7 @@
               "TakenAt": "2026-06-12T12:00:00Z",
               "InternalTempF": 76.6,
               "AmbientTempF": 68.7,
-              "MoisturePct": 93.3,
+              "MoisturePct": 91.3,
               "RelativeHumidityPct": 95.6,
               "ResistivityOhmPerFt": 23.08,
               "Co2Ppm": 410.7
@@ -1984,22 +1984,22 @@
           "IsSynthetic": true,
           "BreakResult": {
             "BrokenAt": "2026-07-07T12:10:00Z",
-            "StrengthPsi": 6230
+            "StrengthPsi": 4701
           },
           "CuringReadings": [
             {
               "TakenAt": "2026-06-09T12:00:00Z",
-              "InternalTempF": 80.0,
+              "InternalTempF": 80,
               "AmbientTempF": 71.4,
               "MoisturePct": 92.2,
-              "RelativeHumidityPct": 95.0,
+              "RelativeHumidityPct": 95,
               "ResistivityOhmPerFt": 14.29,
               "Co2Ppm": 429.5
             },
             {
               "TakenAt": "2026-06-10T00:00:00Z",
               "InternalTempF": 80.1,
-              "AmbientTempF": 71.0,
+              "AmbientTempF": 71,
               "MoisturePct": 93.2,
               "RelativeHumidityPct": 96.1,
               "ResistivityOhmPerFt": 16.37,
@@ -2018,7 +2018,7 @@
               "TakenAt": "2026-06-11T00:00:00Z",
               "InternalTempF": 82.2,
               "AmbientTempF": 68.4,
-              "MoisturePct": 91.3,
+              "MoisturePct": 90.8,
               "RelativeHumidityPct": 93.8,
               "ResistivityOhmPerFt": 19.21,
               "Co2Ppm": 406.7
@@ -2027,8 +2027,8 @@
               "TakenAt": "2026-06-11T12:00:00Z",
               "InternalTempF": 78.7,
               "AmbientTempF": 67.2,
-              "MoisturePct": 93.1,
-              "RelativeHumidityPct": 96.0,
+              "MoisturePct": 92.1,
+              "RelativeHumidityPct": 96,
               "ResistivityOhmPerFt": 21.61,
               "Co2Ppm": 409.7
             },
@@ -2036,7 +2036,7 @@
               "TakenAt": "2026-06-12T00:00:00Z",
               "InternalTempF": 76.6,
               "AmbientTempF": 66.7,
-              "MoisturePct": 90.4,
+              "MoisturePct": 88.9,
               "RelativeHumidityPct": 93.2,
               "ResistivityOhmPerFt": 22.09,
               "Co2Ppm": 403.8
@@ -2045,7 +2045,7 @@
               "TakenAt": "2026-06-12T12:00:00Z",
               "InternalTempF": 76.2,
               "AmbientTempF": 68.7,
-              "MoisturePct": 90.8,
+              "MoisturePct": 88.8,
               "RelativeHumidityPct": 93.5,
               "ResistivityOhmPerFt": 24.13,
               "Co2Ppm": 418.2
@@ -2060,12 +2060,12 @@
           "IsSynthetic": true,
           "BreakResult": {
             "BrokenAt": "2026-07-07T12:15:00Z",
-            "StrengthPsi": 6244
+            "StrengthPsi": 5023
           },
           "CuringReadings": [
             {
               "TakenAt": "2026-06-09T12:00:00Z",
-              "InternalTempF": 80.0,
+              "InternalTempF": 80,
               "AmbientTempF": 71.4,
               "MoisturePct": 91.9,
               "RelativeHumidityPct": 93.2,
@@ -2075,9 +2075,9 @@
             {
               "TakenAt": "2026-06-10T00:00:00Z",
               "InternalTempF": 80.2,
-              "AmbientTempF": 71.0,
-              "MoisturePct": 91.0,
-              "RelativeHumidityPct": 96.0,
+              "AmbientTempF": 71,
+              "MoisturePct": 91,
+              "RelativeHumidityPct": 96,
               "ResistivityOhmPerFt": 15.61,
               "Co2Ppm": 437.4
             },
@@ -2086,7 +2086,7 @@
               "InternalTempF": 81.8,
               "AmbientTempF": 70.6,
               "MoisturePct": 93.3,
-              "RelativeHumidityPct": 96.0,
+              "RelativeHumidityPct": 96,
               "ResistivityOhmPerFt": 17.85,
               "Co2Ppm": 437.5
             },
@@ -2094,7 +2094,7 @@
               "TakenAt": "2026-06-11T00:00:00Z",
               "InternalTempF": 82.1,
               "AmbientTempF": 68.4,
-              "MoisturePct": 92.1,
+              "MoisturePct": 91.6,
               "RelativeHumidityPct": 94.8,
               "ResistivityOhmPerFt": 18.62,
               "Co2Ppm": 424.7
@@ -2103,7 +2103,7 @@
               "TakenAt": "2026-06-11T12:00:00Z",
               "InternalTempF": 79.8,
               "AmbientTempF": 67.2,
-              "MoisturePct": 91.0,
+              "MoisturePct": 90,
               "RelativeHumidityPct": 96.4,
               "ResistivityOhmPerFt": 20.98,
               "Co2Ppm": 428.7
@@ -2112,7 +2112,7 @@
               "TakenAt": "2026-06-12T00:00:00Z",
               "InternalTempF": 76.4,
               "AmbientTempF": 66.7,
-              "MoisturePct": 90.9,
+              "MoisturePct": 89.4,
               "RelativeHumidityPct": 96.9,
               "ResistivityOhmPerFt": 21.71,
               "Co2Ppm": 434.1
@@ -2121,7 +2121,7 @@
               "TakenAt": "2026-06-12T12:00:00Z",
               "InternalTempF": 75.9,
               "AmbientTempF": 68.7,
-              "MoisturePct": 90.8,
+              "MoisturePct": 88.8,
               "RelativeHumidityPct": 95.4,
               "ResistivityOhmPerFt": 23.06,
               "Co2Ppm": 402.9
@@ -2149,9 +2149,9 @@
       },
       "CementOxideAnalysis": {
         "AluminaPct": 3.1,
-        "IronOxidePct": 3.0,
+        "IronOxidePct": 3,
         "MagnesiumOxidePct": 1.9,
-        "SulfurTrioxidePct": 2.0
+        "SulfurTrioxidePct": 2
       },
       "Specimens": [
         {
@@ -2162,17 +2162,17 @@
           "IsSynthetic": true,
           "BreakResult": {
             "BrokenAt": "2026-06-16T12:05:00Z",
-            "StrengthPsi": 3001
+            "StrengthPsi": 2739
           },
           "CuringReadings": [
             {
               "TakenAt": "2026-06-13T12:00:00Z",
               "InternalTempF": 80.5,
               "AmbientTempF": 71.2,
-              "MoisturePct": 93.0,
+              "MoisturePct": 93,
               "RelativeHumidityPct": 96.7,
               "ResistivityOhmPerFt": 14.57,
-              "Co2Ppm": 412.0
+              "Co2Ppm": 412
             },
             {
               "TakenAt": "2026-06-14T00:00:00Z",
@@ -2187,7 +2187,7 @@
               "TakenAt": "2026-06-14T12:00:00Z",
               "InternalTempF": 83.3,
               "AmbientTempF": 69.1,
-              "MoisturePct": 94.0,
+              "MoisturePct": 94,
               "RelativeHumidityPct": 93.1,
               "ResistivityOhmPerFt": 17.15,
               "Co2Ppm": 429.4
@@ -2203,25 +2203,25 @@
             },
             {
               "TakenAt": "2026-06-15T12:00:00Z",
-              "InternalTempF": 80.0,
+              "InternalTempF": 80,
               "AmbientTempF": 66.7,
               "MoisturePct": 93.2,
               "RelativeHumidityPct": 93.8,
               "ResistivityOhmPerFt": 20.54,
-              "Co2Ppm": 425.0
+              "Co2Ppm": 425
             },
             {
               "TakenAt": "2026-06-16T00:00:00Z",
               "InternalTempF": 78.1,
               "AmbientTempF": 68.3,
-              "MoisturePct": 91.0,
+              "MoisturePct": 91,
               "RelativeHumidityPct": 94.2,
               "ResistivityOhmPerFt": 21.43,
               "Co2Ppm": 417.1
             },
             {
               "TakenAt": "2026-06-16T12:00:00Z",
-              "InternalTempF": 75.0,
+              "InternalTempF": 75,
               "AmbientTempF": 69.8,
               "MoisturePct": 91.7,
               "RelativeHumidityPct": 94.1,
@@ -2238,7 +2238,7 @@
           "IsSynthetic": true,
           "BreakResult": {
             "BrokenAt": "2026-06-16T12:10:00Z",
-            "StrengthPsi": 3016
+            "StrengthPsi": 2979
           },
           "CuringReadings": [
             {
@@ -2261,7 +2261,7 @@
             },
             {
               "TakenAt": "2026-06-14T12:00:00Z",
-              "InternalTempF": 83.0,
+              "InternalTempF": 83,
               "AmbientTempF": 69.1,
               "MoisturePct": 93.3,
               "RelativeHumidityPct": 93.4,
@@ -2288,9 +2288,9 @@
             },
             {
               "TakenAt": "2026-06-16T00:00:00Z",
-              "InternalTempF": 78.0,
+              "InternalTempF": 78,
               "AmbientTempF": 68.3,
-              "MoisturePct": 92.0,
+              "MoisturePct": 92,
               "RelativeHumidityPct": 94.1,
               "ResistivityOhmPerFt": 22.96,
               "Co2Ppm": 410.5
@@ -2314,7 +2314,7 @@
           "IsSynthetic": true,
           "BreakResult": {
             "BrokenAt": "2026-06-16T12:15:00Z",
-            "StrengthPsi": 3064
+            "StrengthPsi": 2959
           },
           "CuringReadings": [
             {
@@ -2331,7 +2331,7 @@
               "InternalTempF": 82.1,
               "AmbientTempF": 70.4,
               "MoisturePct": 93.5,
-              "RelativeHumidityPct": 95.0,
+              "RelativeHumidityPct": 95,
               "ResistivityOhmPerFt": 17.03,
               "Co2Ppm": 430.2
             },
@@ -2355,9 +2355,9 @@
             },
             {
               "TakenAt": "2026-06-15T12:00:00Z",
-              "InternalTempF": 78.0,
+              "InternalTempF": 78,
               "AmbientTempF": 66.7,
-              "MoisturePct": 94.0,
+              "MoisturePct": 94,
               "RelativeHumidityPct": 94.3,
               "ResistivityOhmPerFt": 20.29,
               "Co2Ppm": 428.6
@@ -2390,7 +2390,7 @@
           "IsSynthetic": true,
           "BreakResult": {
             "BrokenAt": "2026-06-20T12:05:00Z",
-            "StrengthPsi": 4436
+            "StrengthPsi": 4387
           },
           "CuringReadings": [
             {
@@ -2425,7 +2425,7 @@
               "InternalTempF": 81.6,
               "AmbientTempF": 67.4,
               "MoisturePct": 91.9,
-              "RelativeHumidityPct": 95.0,
+              "RelativeHumidityPct": 95,
               "ResistivityOhmPerFt": 19.01,
               "Co2Ppm": 418.9
             },
@@ -2451,7 +2451,7 @@
               "TakenAt": "2026-06-16T12:00:00Z",
               "InternalTempF": 75.3,
               "AmbientTempF": 69.8,
-              "MoisturePct": 92.0,
+              "MoisturePct": 92,
               "RelativeHumidityPct": 94.4,
               "ResistivityOhmPerFt": 22.91,
               "Co2Ppm": 437.3
@@ -2466,7 +2466,7 @@
           "IsSynthetic": true,
           "BreakResult": {
             "BrokenAt": "2026-06-20T12:10:00Z",
-            "StrengthPsi": 4344
+            "StrengthPsi": 4419
           },
           "CuringReadings": [
             {
@@ -2500,7 +2500,7 @@
               "TakenAt": "2026-06-15T00:00:00Z",
               "InternalTempF": 80.6,
               "AmbientTempF": 67.4,
-              "MoisturePct": 91.0,
+              "MoisturePct": 91,
               "RelativeHumidityPct": 93.2,
               "ResistivityOhmPerFt": 20.31,
               "Co2Ppm": 432.8
@@ -2510,7 +2510,7 @@
               "InternalTempF": 78.9,
               "AmbientTempF": 66.7,
               "MoisturePct": 91.4,
-              "RelativeHumidityPct": 93.0,
+              "RelativeHumidityPct": 93,
               "ResistivityOhmPerFt": 21.44,
               "Co2Ppm": 428.7
             },
@@ -2529,20 +2529,20 @@
               "AmbientTempF": 69.8,
               "MoisturePct": 91.7,
               "RelativeHumidityPct": 93.5,
-              "ResistivityOhmPerFt": 23.0,
+              "ResistivityOhmPerFt": 23,
               "Co2Ppm": 427.4
             }
           ]
         },
         {
           "Label": "D7-3",
-          "LengthIn": 12.0,
+          "LengthIn": 12,
           "WidthIn": 5.91,
           "TestAgeDays": "Day7",
           "IsSynthetic": true,
           "BreakResult": {
             "BrokenAt": "2026-06-20T12:15:00Z",
-            "StrengthPsi": 4357
+            "StrengthPsi": 4226
           },
           "CuringReadings": [
             {
@@ -2559,7 +2559,7 @@
               "InternalTempF": 80.4,
               "AmbientTempF": 70.4,
               "MoisturePct": 92.9,
-              "RelativeHumidityPct": 97.0,
+              "RelativeHumidityPct": 97,
               "ResistivityOhmPerFt": 15.73,
               "Co2Ppm": 414.1
             },
@@ -2579,7 +2579,7 @@
               "MoisturePct": 92.1,
               "RelativeHumidityPct": 95.6,
               "ResistivityOhmPerFt": 18.77,
-              "Co2Ppm": 422.0
+              "Co2Ppm": 422
             },
             {
               "TakenAt": "2026-06-15T12:00:00Z",
@@ -2588,7 +2588,7 @@
               "MoisturePct": 92.8,
               "RelativeHumidityPct": 96.3,
               "ResistivityOhmPerFt": 19.77,
-              "Co2Ppm": 408.0
+              "Co2Ppm": 408
             },
             {
               "TakenAt": "2026-06-16T00:00:00Z",
@@ -2604,7 +2604,7 @@
               "InternalTempF": 75.9,
               "AmbientTempF": 69.8,
               "MoisturePct": 91.9,
-              "RelativeHumidityPct": 93.0,
+              "RelativeHumidityPct": 93,
               "ResistivityOhmPerFt": 23.04,
               "Co2Ppm": 430.9
             }
@@ -2618,12 +2618,12 @@
           "IsSynthetic": true,
           "BreakResult": {
             "BrokenAt": "2026-07-11T12:05:00Z",
-            "StrengthPsi": 6106
+            "StrengthPsi": 6198
           },
           "CuringReadings": [
             {
               "TakenAt": "2026-06-13T12:00:00Z",
-              "InternalTempF": 78.0,
+              "InternalTempF": 78,
               "AmbientTempF": 71.2,
               "MoisturePct": 90.4,
               "RelativeHumidityPct": 95.1,
@@ -2637,11 +2637,11 @@
               "MoisturePct": 90.1,
               "RelativeHumidityPct": 95.2,
               "ResistivityOhmPerFt": 16.67,
-              "Co2Ppm": 403.0
+              "Co2Ppm": 403
             },
             {
               "TakenAt": "2026-06-14T12:00:00Z",
-              "InternalTempF": 84.0,
+              "InternalTempF": 84,
               "AmbientTempF": 69.1,
               "MoisturePct": 92.3,
               "RelativeHumidityPct": 94.8,
@@ -2650,7 +2650,7 @@
             },
             {
               "TakenAt": "2026-06-15T00:00:00Z",
-              "InternalTempF": 80.0,
+              "InternalTempF": 80,
               "AmbientTempF": 67.4,
               "MoisturePct": 91.8,
               "RelativeHumidityPct": 95.9,
@@ -2671,7 +2671,7 @@
               "InternalTempF": 76.3,
               "AmbientTempF": 68.3,
               "MoisturePct": 93.9,
-              "RelativeHumidityPct": 95.0,
+              "RelativeHumidityPct": 95,
               "ResistivityOhmPerFt": 21.47,
               "Co2Ppm": 404.7
             },
@@ -2679,8 +2679,8 @@
               "TakenAt": "2026-06-16T12:00:00Z",
               "InternalTempF": 74.3,
               "AmbientTempF": 69.8,
-              "MoisturePct": 93.0,
-              "RelativeHumidityPct": 95.0,
+              "MoisturePct": 93,
+              "RelativeHumidityPct": 95,
               "ResistivityOhmPerFt": 23.77,
               "Co2Ppm": 421.2
             }
@@ -2694,7 +2694,7 @@
           "IsSynthetic": true,
           "BreakResult": {
             "BrokenAt": "2026-07-11T12:10:00Z",
-            "StrengthPsi": 5996
+            "StrengthPsi": 5937
           },
           "CuringReadings": [
             {
@@ -2729,7 +2729,7 @@
               "InternalTempF": 81.8,
               "AmbientTempF": 67.4,
               "MoisturePct": 92.6,
-              "RelativeHumidityPct": 93.0,
+              "RelativeHumidityPct": 93,
               "ResistivityOhmPerFt": 19.16,
               "Co2Ppm": 414.6
             },
@@ -2770,7 +2770,7 @@
           "IsSynthetic": true,
           "BreakResult": {
             "BrokenAt": "2026-07-11T12:15:00Z",
-            "StrengthPsi": 6127
+            "StrengthPsi": 5737
           },
           "CuringReadings": [
             {
@@ -2816,7 +2816,7 @@
               "MoisturePct": 90.8,
               "RelativeHumidityPct": 96.4,
               "ResistivityOhmPerFt": 21.49,
-              "Co2Ppm": 429.0
+              "Co2Ppm": 429
             },
             {
               "TakenAt": "2026-06-16T00:00:00Z",
@@ -2843,7 +2843,7 @@
     {
       "BatchNumber": "VM-SYN-005",
       "CastAt": "2026-06-17T12:00:00Z",
-      "FinalWeightLb": 29.0,
+      "FinalWeightLb": 29,
       "ExpectedFinalBreakPsi": 5700,
       "CementType": "TypeII",
       "MixWaterPh": 7.2,
@@ -2872,22 +2872,22 @@
           "IsSynthetic": true,
           "BreakResult": {
             "BrokenAt": "2026-06-20T12:05:00Z",
-            "StrengthPsi": 3316
+            "StrengthPsi": 2915
           },
           "CuringReadings": [
             {
               "TakenAt": "2026-06-17T12:00:00Z",
-              "InternalTempF": 79.0,
+              "InternalTempF": 79,
               "AmbientTempF": 70.7,
               "MoisturePct": 90.8,
-              "RelativeHumidityPct": 95.0,
+              "RelativeHumidityPct": 95,
               "ResistivityOhmPerFt": 15.26,
               "Co2Ppm": 413.6
             },
             {
               "TakenAt": "2026-06-18T00:00:00Z",
               "InternalTempF": 80.9,
-              "AmbientTempF": 69.0,
+              "AmbientTempF": 69,
               "MoisturePct": 90.6,
               "RelativeHumidityPct": 95.8,
               "ResistivityOhmPerFt": 16.11,
@@ -2918,7 +2918,7 @@
               "MoisturePct": 92.4,
               "RelativeHumidityPct": 96.6,
               "ResistivityOhmPerFt": 21.57,
-              "Co2Ppm": 422.0
+              "Co2Ppm": 422
             },
             {
               "TakenAt": "2026-06-20T00:00:00Z",
@@ -2927,14 +2927,14 @@
               "MoisturePct": 92.6,
               "RelativeHumidityPct": 96.3,
               "ResistivityOhmPerFt": 22.55,
-              "Co2Ppm": 419.0
+              "Co2Ppm": 419
             },
             {
               "TakenAt": "2026-06-20T12:00:00Z",
               "InternalTempF": 75.2,
               "AmbientTempF": 70.8,
               "MoisturePct": 93.7,
-              "RelativeHumidityPct": 95.0,
+              "RelativeHumidityPct": 95,
               "ResistivityOhmPerFt": 24.25,
               "Co2Ppm": 419.5
             }
@@ -2948,14 +2948,14 @@
           "IsSynthetic": true,
           "BreakResult": {
             "BrokenAt": "2026-06-20T12:10:00Z",
-            "StrengthPsi": 3401
+            "StrengthPsi": 2683
           },
           "CuringReadings": [
             {
               "TakenAt": "2026-06-17T12:00:00Z",
               "InternalTempF": 80.7,
               "AmbientTempF": 70.7,
-              "MoisturePct": 90.0,
+              "MoisturePct": 90,
               "RelativeHumidityPct": 93.7,
               "ResistivityOhmPerFt": 15.64,
               "Co2Ppm": 412.5
@@ -2963,7 +2963,7 @@
             {
               "TakenAt": "2026-06-18T00:00:00Z",
               "InternalTempF": 79.9,
-              "AmbientTempF": 69.0,
+              "AmbientTempF": 69,
               "MoisturePct": 90.4,
               "RelativeHumidityPct": 94.3,
               "ResistivityOhmPerFt": 15.81,
@@ -2982,7 +2982,7 @@
               "TakenAt": "2026-06-19T00:00:00Z",
               "InternalTempF": 80.4,
               "AmbientTempF": 66.9,
-              "MoisturePct": 94.0,
+              "MoisturePct": 94,
               "RelativeHumidityPct": 94.6,
               "ResistivityOhmPerFt": 19.46,
               "Co2Ppm": 433.7
@@ -2991,7 +2991,7 @@
               "TakenAt": "2026-06-19T12:00:00Z",
               "InternalTempF": 79.4,
               "AmbientTempF": 67.5,
-              "MoisturePct": 90.0,
+              "MoisturePct": 90,
               "RelativeHumidityPct": 96.2,
               "ResistivityOhmPerFt": 20.42,
               "Co2Ppm": 422.1
@@ -3024,7 +3024,7 @@
           "IsSynthetic": true,
           "BreakResult": {
             "BrokenAt": "2026-06-20T12:15:00Z",
-            "StrengthPsi": 3371
+            "StrengthPsi": 2917
           },
           "CuringReadings": [
             {
@@ -3039,7 +3039,7 @@
             {
               "TakenAt": "2026-06-18T00:00:00Z",
               "InternalTempF": 82.1,
-              "AmbientTempF": 69.0,
+              "AmbientTempF": 69,
               "MoisturePct": 91.9,
               "RelativeHumidityPct": 96.3,
               "ResistivityOhmPerFt": 17.05,
@@ -3067,7 +3067,7 @@
               "TakenAt": "2026-06-19T12:00:00Z",
               "InternalTempF": 80.4,
               "AmbientTempF": 67.5,
-              "MoisturePct": 93.0,
+              "MoisturePct": 93,
               "RelativeHumidityPct": 94.9,
               "ResistivityOhmPerFt": 20.76,
               "Co2Ppm": 418.2
@@ -3076,7 +3076,7 @@
               "TakenAt": "2026-06-20T00:00:00Z",
               "InternalTempF": 76.2,
               "AmbientTempF": 68.6,
-              "MoisturePct": 91.0,
+              "MoisturePct": 91,
               "RelativeHumidityPct": 95.4,
               "ResistivityOhmPerFt": 22.42,
               "Co2Ppm": 408.6
@@ -3085,7 +3085,7 @@
               "TakenAt": "2026-06-20T12:00:00Z",
               "InternalTempF": 75.6,
               "AmbientTempF": 70.8,
-              "MoisturePct": 90.0,
+              "MoisturePct": 90,
               "RelativeHumidityPct": 95.8,
               "ResistivityOhmPerFt": 23.86,
               "Co2Ppm": 417.8
@@ -3100,7 +3100,7 @@
           "IsSynthetic": true,
           "BreakResult": {
             "BrokenAt": "2026-06-24T12:05:00Z",
-            "StrengthPsi": 4510
+            "StrengthPsi": 4174
           },
           "CuringReadings": [
             {
@@ -3115,7 +3115,7 @@
             {
               "TakenAt": "2026-06-18T00:00:00Z",
               "InternalTempF": 81.4,
-              "AmbientTempF": 69.0,
+              "AmbientTempF": 69,
               "MoisturePct": 93.9,
               "RelativeHumidityPct": 94.1,
               "ResistivityOhmPerFt": 15.66,
@@ -3161,8 +3161,8 @@
               "TakenAt": "2026-06-20T12:00:00Z",
               "InternalTempF": 75.5,
               "AmbientTempF": 70.8,
-              "MoisturePct": 93.0,
-              "RelativeHumidityPct": 96.0,
+              "MoisturePct": 93,
+              "RelativeHumidityPct": 96,
               "ResistivityOhmPerFt": 23.74,
               "Co2Ppm": 430.3
             }
@@ -3171,12 +3171,12 @@
         {
           "Label": "D7-2",
           "LengthIn": 11.97,
-          "WidthIn": 6.0,
+          "WidthIn": 6,
           "TestAgeDays": "Day7",
           "IsSynthetic": true,
           "BreakResult": {
             "BrokenAt": "2026-06-24T12:10:00Z",
-            "StrengthPsi": 4487
+            "StrengthPsi": 4215
           },
           "CuringReadings": [
             {
@@ -3191,7 +3191,7 @@
             {
               "TakenAt": "2026-06-18T00:00:00Z",
               "InternalTempF": 81.7,
-              "AmbientTempF": 69.0,
+              "AmbientTempF": 69,
               "MoisturePct": 90.1,
               "RelativeHumidityPct": 93.8,
               "ResistivityOhmPerFt": 17.19,
@@ -3204,14 +3204,14 @@
               "MoisturePct": 90.5,
               "RelativeHumidityPct": 93.7,
               "ResistivityOhmPerFt": 18.11,
-              "Co2Ppm": 410.0
+              "Co2Ppm": 410
             },
             {
               "TakenAt": "2026-06-19T00:00:00Z",
               "InternalTempF": 81.9,
               "AmbientTempF": 66.9,
               "MoisturePct": 91.5,
-              "RelativeHumidityPct": 94.0,
+              "RelativeHumidityPct": 94,
               "ResistivityOhmPerFt": 19.55,
               "Co2Ppm": 427.8
             },
@@ -3219,7 +3219,7 @@
               "TakenAt": "2026-06-19T12:00:00Z",
               "InternalTempF": 80.5,
               "AmbientTempF": 67.5,
-              "MoisturePct": 90.0,
+              "MoisturePct": 90,
               "RelativeHumidityPct": 93.8,
               "ResistivityOhmPerFt": 20.49,
               "Co2Ppm": 408.8
@@ -3252,7 +3252,7 @@
           "IsSynthetic": true,
           "BreakResult": {
             "BrokenAt": "2026-06-24T12:15:00Z",
-            "StrengthPsi": 4565
+            "StrengthPsi": 4049
           },
           "CuringReadings": [
             {
@@ -3267,7 +3267,7 @@
             {
               "TakenAt": "2026-06-18T00:00:00Z",
               "InternalTempF": 82.1,
-              "AmbientTempF": 69.0,
+              "AmbientTempF": 69,
               "MoisturePct": 90.3,
               "RelativeHumidityPct": 95.6,
               "ResistivityOhmPerFt": 15.89,
@@ -3328,7 +3328,7 @@
           "IsSynthetic": true,
           "BreakResult": {
             "BrokenAt": "2026-07-15T12:05:00Z",
-            "StrengthPsi": 5940
+            "StrengthPsi": 5945
           },
           "CuringReadings": [
             {
@@ -3342,8 +3342,8 @@
             },
             {
               "TakenAt": "2026-06-18T00:00:00Z",
-              "InternalTempF": 81.0,
-              "AmbientTempF": 69.0,
+              "InternalTempF": 81,
+              "AmbientTempF": 69,
               "MoisturePct": 91.4,
               "RelativeHumidityPct": 96.7,
               "ResistivityOhmPerFt": 15.9,
@@ -3390,9 +3390,9 @@
               "InternalTempF": 75.4,
               "AmbientTempF": 70.8,
               "MoisturePct": 90.3,
-              "RelativeHumidityPct": 94.0,
+              "RelativeHumidityPct": 94,
               "ResistivityOhmPerFt": 23.21,
-              "Co2Ppm": 408.0
+              "Co2Ppm": 408
             }
           ]
         },
@@ -3404,7 +3404,7 @@
           "IsSynthetic": true,
           "BreakResult": {
             "BrokenAt": "2026-07-15T12:10:00Z",
-            "StrengthPsi": 5928
+            "StrengthPsi": 5944
           },
           "CuringReadings": [
             {
@@ -3419,9 +3419,9 @@
             {
               "TakenAt": "2026-06-18T00:00:00Z",
               "InternalTempF": 80.3,
-              "AmbientTempF": 69.0,
-              "MoisturePct": 93.0,
-              "RelativeHumidityPct": 94.0,
+              "AmbientTempF": 69,
+              "MoisturePct": 93,
+              "RelativeHumidityPct": 94,
               "ResistivityOhmPerFt": 16.25,
               "Co2Ppm": 411.7
             },
@@ -3430,7 +3430,7 @@
               "InternalTempF": 82.3,
               "AmbientTempF": 67.8,
               "MoisturePct": 91.5,
-              "RelativeHumidityPct": 94.0,
+              "RelativeHumidityPct": 94,
               "ResistivityOhmPerFt": 17.18,
               "Co2Ppm": 416.9
             },
@@ -3475,12 +3475,12 @@
         {
           "Label": "D28-3",
           "LengthIn": 11.91,
-          "WidthIn": 6.0,
+          "WidthIn": 6,
           "TestAgeDays": "Day28",
           "IsSynthetic": true,
           "BreakResult": {
             "BrokenAt": "2026-07-15T12:15:00Z",
-            "StrengthPsi": 5869
+            "StrengthPsi": 5606
           },
           "CuringReadings": [
             {
@@ -3495,7 +3495,7 @@
             {
               "TakenAt": "2026-06-18T00:00:00Z",
               "InternalTempF": 79.8,
-              "AmbientTempF": 69.0,
+              "AmbientTempF": 69,
               "MoisturePct": 91.3,
               "RelativeHumidityPct": 94.4,
               "ResistivityOhmPerFt": 16.82,
@@ -3541,9 +3541,9 @@
               "TakenAt": "2026-06-20T12:00:00Z",
               "InternalTempF": 74.4,
               "AmbientTempF": 70.8,
-              "MoisturePct": 92.0,
+              "MoisturePct": 92,
               "RelativeHumidityPct": 93.9,
-              "ResistivityOhmPerFt": 24.0,
+              "ResistivityOhmPerFt": 24,
               "Co2Ppm": 405.7
             }
           ]
@@ -3560,7 +3560,7 @@
       "CementSurfacePh": 7.2,
       "IsSynthetic": true,
       "Composition": {
-        "CementPct": 10.0,
+        "CementPct": 10,
         "ScmPct": 0,
         "ScmType": "None",
         "CoarseAggregatePct": 40,
@@ -3652,18 +3652,18 @@
         },
         {
           "Label": "D3-2",
-          "LengthIn": 12.0,
+          "LengthIn": 12,
           "WidthIn": 5.9,
           "TestAgeDays": "Day3",
           "IsSynthetic": true,
           "BreakResult": {
             "BrokenAt": "2026-06-24T12:10:00Z",
-            "StrengthPsi": 3315
+            "StrengthPsi": 3118
           },
           "CuringReadings": [
             {
               "TakenAt": "2026-06-21T12:00:00Z",
-              "InternalTempF": 78.0,
+              "InternalTempF": 78,
               "AmbientTempF": 69.5,
               "MoisturePct": 92.8,
               "RelativeHumidityPct": 95.9,
@@ -3676,7 +3676,7 @@
               "AmbientTempF": 68.7,
               "MoisturePct": 90.8,
               "RelativeHumidityPct": 93.7,
-              "ResistivityOhmPerFt": 17.0,
+              "ResistivityOhmPerFt": 17,
               "Co2Ppm": 420.1
             },
             {
@@ -3693,7 +3693,7 @@
               "InternalTempF": 80.2,
               "AmbientTempF": 67.5,
               "MoisturePct": 92.7,
-              "RelativeHumidityPct": 95.0,
+              "RelativeHumidityPct": 95,
               "ResistivityOhmPerFt": 19.43,
               "Co2Ppm": 430.3
             },
@@ -3729,17 +3729,17 @@
         {
           "Label": "D3-3",
           "LengthIn": 11.9,
-          "WidthIn": 6.0,
+          "WidthIn": 6,
           "TestAgeDays": "Day3",
           "IsSynthetic": true,
           "BreakResult": {
             "BrokenAt": "2026-06-24T12:15:00Z",
-            "StrengthPsi": 3358
+            "StrengthPsi": 2933
           },
           "CuringReadings": [
             {
               "TakenAt": "2026-06-21T12:00:00Z",
-              "InternalTempF": 80.0,
+              "InternalTempF": 80,
               "AmbientTempF": 69.5,
               "MoisturePct": 90.3,
               "RelativeHumidityPct": 94.7,
@@ -3760,13 +3760,13 @@
               "InternalTempF": 83.8,
               "AmbientTempF": 67.4,
               "MoisturePct": 93.1,
-              "RelativeHumidityPct": 97.0,
+              "RelativeHumidityPct": 97,
               "ResistivityOhmPerFt": 17.86,
               "Co2Ppm": 417.2
             },
             {
               "TakenAt": "2026-06-23T00:00:00Z",
-              "InternalTempF": 82.0,
+              "InternalTempF": 82,
               "AmbientTempF": 67.5,
               "MoisturePct": 93.4,
               "RelativeHumidityPct": 95.6,
@@ -3784,7 +3784,7 @@
             },
             {
               "TakenAt": "2026-06-24T00:00:00Z",
-              "InternalTempF": 78.0,
+              "InternalTempF": 78,
               "AmbientTempF": 70.6,
               "MoisturePct": 90.1,
               "RelativeHumidityPct": 95.9,
@@ -3810,7 +3810,7 @@
           "IsSynthetic": true,
           "BreakResult": {
             "BrokenAt": "2026-06-28T12:05:00Z",
-            "StrengthPsi": 3886
+            "StrengthPsi": 3863
           },
           "CuringReadings": [
             {
@@ -3818,7 +3818,7 @@
               "InternalTempF": 79.9,
               "AmbientTempF": 69.5,
               "MoisturePct": 91.8,
-              "RelativeHumidityPct": 97.0,
+              "RelativeHumidityPct": 97,
               "ResistivityOhmPerFt": 14.71,
               "Co2Ppm": 432.8
             },
@@ -3828,14 +3828,14 @@
               "AmbientTempF": 68.7,
               "MoisturePct": 90.7,
               "RelativeHumidityPct": 96.6,
-              "ResistivityOhmPerFt": 17.0,
+              "ResistivityOhmPerFt": 17,
               "Co2Ppm": 433.3
             },
             {
               "TakenAt": "2026-06-22T12:00:00Z",
               "InternalTempF": 82.6,
               "AmbientTempF": 67.4,
-              "MoisturePct": 93.0,
+              "MoisturePct": 93,
               "RelativeHumidityPct": 94.6,
               "ResistivityOhmPerFt": 17.55,
               "Co2Ppm": 432.5
@@ -3862,7 +3862,7 @@
               "TakenAt": "2026-06-24T00:00:00Z",
               "InternalTempF": 78.6,
               "AmbientTempF": 70.6,
-              "MoisturePct": 91.0,
+              "MoisturePct": 91,
               "RelativeHumidityPct": 94.5,
               "ResistivityOhmPerFt": 22.14,
               "Co2Ppm": 414.7
@@ -3886,7 +3886,7 @@
           "IsSynthetic": true,
           "BreakResult": {
             "BrokenAt": "2026-06-28T12:10:00Z",
-            "StrengthPsi": 3872
+            "StrengthPsi": 4066
           },
           "CuringReadings": [
             {
@@ -3950,7 +3950,7 @@
               "MoisturePct": 90.2,
               "RelativeHumidityPct": 95.2,
               "ResistivityOhmPerFt": 23.16,
-              "Co2Ppm": 406.0
+              "Co2Ppm": 406
             }
           ]
         },
@@ -3962,7 +3962,7 @@
           "IsSynthetic": true,
           "BreakResult": {
             "BrokenAt": "2026-06-28T12:15:00Z",
-            "StrengthPsi": 3952
+            "StrengthPsi": 3997
           },
           "CuringReadings": [
             {
@@ -3981,13 +3981,13 @@
               "MoisturePct": 92.9,
               "RelativeHumidityPct": 94.8,
               "ResistivityOhmPerFt": 17.07,
-              "Co2Ppm": 425.0
+              "Co2Ppm": 425
             },
             {
               "TakenAt": "2026-06-22T12:00:00Z",
               "InternalTempF": 83.8,
               "AmbientTempF": 67.4,
-              "MoisturePct": 91.0,
+              "MoisturePct": 91,
               "RelativeHumidityPct": 94.5,
               "ResistivityOhmPerFt": 18.86,
               "Co2Ppm": 428.9
@@ -4038,7 +4038,7 @@
           "IsSynthetic": true,
           "BreakResult": {
             "BrokenAt": "2026-07-19T12:05:00Z",
-            "StrengthPsi": 4487
+            "StrengthPsi": 5183
           },
           "CuringReadings": [
             {
@@ -4075,7 +4075,7 @@
               "MoisturePct": 92.4,
               "RelativeHumidityPct": 94.5,
               "ResistivityOhmPerFt": 19.39,
-              "Co2Ppm": 420.0
+              "Co2Ppm": 420
             },
             {
               "TakenAt": "2026-06-23T12:00:00Z",
@@ -4084,7 +4084,7 @@
               "MoisturePct": 93.2,
               "RelativeHumidityPct": 95.8,
               "ResistivityOhmPerFt": 20.65,
-              "Co2Ppm": 436.0
+              "Co2Ppm": 436
             },
             {
               "TakenAt": "2026-06-24T00:00:00Z",
@@ -4099,7 +4099,7 @@
               "TakenAt": "2026-06-24T12:00:00Z",
               "InternalTempF": 76.1,
               "AmbientTempF": 71.6,
-              "MoisturePct": 90.0,
+              "MoisturePct": 90,
               "RelativeHumidityPct": 95.6,
               "ResistivityOhmPerFt": 23.85,
               "Co2Ppm": 429.6
@@ -4114,17 +4114,17 @@
           "IsSynthetic": true,
           "BreakResult": {
             "BrokenAt": "2026-07-19T12:10:00Z",
-            "StrengthPsi": 4431
+            "StrengthPsi": 5080
           },
           "CuringReadings": [
             {
               "TakenAt": "2026-06-21T12:00:00Z",
               "InternalTempF": 78.7,
               "AmbientTempF": 69.5,
-              "MoisturePct": 90.0,
+              "MoisturePct": 90,
               "RelativeHumidityPct": 96.2,
               "ResistivityOhmPerFt": 14.05,
-              "Co2Ppm": 431.0
+              "Co2Ppm": 431
             },
             {
               "TakenAt": "2026-06-22T00:00:00Z",
@@ -4167,7 +4167,7 @@
               "InternalTempF": 77.7,
               "AmbientTempF": 70.6,
               "MoisturePct": 91.9,
-              "RelativeHumidityPct": 95.0,
+              "RelativeHumidityPct": 95,
               "ResistivityOhmPerFt": 22.42,
               "Co2Ppm": 412.2
             },
@@ -4190,7 +4190,7 @@
           "IsSynthetic": true,
           "BreakResult": {
             "BrokenAt": "2026-07-19T12:15:00Z",
-            "StrengthPsi": 4466
+            "StrengthPsi": 5183
           },
           "CuringReadings": [
             {
@@ -4209,16 +4209,16 @@
               "MoisturePct": 90.2,
               "RelativeHumidityPct": 94.8,
               "ResistivityOhmPerFt": 16.65,
-              "Co2Ppm": 432.0
+              "Co2Ppm": 432
             },
             {
               "TakenAt": "2026-06-22T12:00:00Z",
               "InternalTempF": 81.9,
               "AmbientTempF": 67.4,
-              "MoisturePct": 93.0,
+              "MoisturePct": 93,
               "RelativeHumidityPct": 95.5,
               "ResistivityOhmPerFt": 18.87,
-              "Co2Ppm": 427.0
+              "Co2Ppm": 427
             },
             {
               "TakenAt": "2026-06-23T00:00:00Z",
@@ -4231,19 +4231,19 @@
             },
             {
               "TakenAt": "2026-06-23T12:00:00Z",
-              "InternalTempF": 78.0,
+              "InternalTempF": 78,
               "AmbientTempF": 67.8,
               "MoisturePct": 93.5,
               "RelativeHumidityPct": 94.5,
               "ResistivityOhmPerFt": 20.25,
-              "Co2Ppm": 406.0
+              "Co2Ppm": 406
             },
             {
               "TakenAt": "2026-06-24T00:00:00Z",
               "InternalTempF": 77.2,
               "AmbientTempF": 70.6,
               "MoisturePct": 91.6,
-              "RelativeHumidityPct": 95.0,
+              "RelativeHumidityPct": 95,
               "ResistivityOhmPerFt": 21.51,
               "Co2Ppm": 419.5
             },
@@ -4279,7 +4279,7 @@
       },
       "CementOxideAnalysis": {
         "AluminaPct": 4.6,
-        "IronOxidePct": 4.0,
+        "IronOxidePct": 4,
         "MagnesiumOxidePct": 1.7,
         "SulfurTrioxidePct": 2.3
       },
@@ -4292,7 +4292,7 @@
           "IsSynthetic": true,
           "BreakResult": {
             "BrokenAt": "2026-06-28T12:05:00Z",
-            "StrengthPsi": 3209
+            "StrengthPsi": 2827
           },
           "CuringReadings": [
             {
@@ -4320,7 +4320,7 @@
               "MoisturePct": 93.9,
               "RelativeHumidityPct": 93.7,
               "ResistivityOhmPerFt": 16.92,
-              "Co2Ppm": 424.0
+              "Co2Ppm": 424
             },
             {
               "TakenAt": "2026-06-27T00:00:00Z",
@@ -4356,7 +4356,7 @@
               "MoisturePct": 91.8,
               "RelativeHumidityPct": 96.9,
               "ResistivityOhmPerFt": 23.57,
-              "Co2Ppm": 422.0
+              "Co2Ppm": 422
             }
           ]
         },
@@ -4368,14 +4368,14 @@
           "IsSynthetic": true,
           "BreakResult": {
             "BrokenAt": "2026-06-28T12:10:00Z",
-            "StrengthPsi": 3222
+            "StrengthPsi": 2847
           },
           "CuringReadings": [
             {
               "TakenAt": "2026-06-25T12:00:00Z",
               "InternalTempF": 79.4,
               "AmbientTempF": 68.3,
-              "MoisturePct": 92.0,
+              "MoisturePct": 92,
               "RelativeHumidityPct": 96.9,
               "ResistivityOhmPerFt": 14.23,
               "Co2Ppm": 402.2
@@ -4402,17 +4402,17 @@
               "TakenAt": "2026-06-27T00:00:00Z",
               "InternalTempF": 80.5,
               "AmbientTempF": 67.3,
-              "MoisturePct": 93.0,
+              "MoisturePct": 93,
               "RelativeHumidityPct": 94.5,
               "ResistivityOhmPerFt": 19.11,
-              "Co2Ppm": 438.0
+              "Co2Ppm": 438
             },
             {
               "TakenAt": "2026-06-27T12:00:00Z",
               "InternalTempF": 78.7,
               "AmbientTempF": 69.1,
               "MoisturePct": 92.5,
-              "RelativeHumidityPct": 96.0,
+              "RelativeHumidityPct": 96,
               "ResistivityOhmPerFt": 19.93,
               "Co2Ppm": 420.6
             },
@@ -4444,7 +4444,7 @@
           "IsSynthetic": true,
           "BreakResult": {
             "BrokenAt": "2026-06-28T12:15:00Z",
-            "StrengthPsi": 3150
+            "StrengthPsi": 2890
           },
           "CuringReadings": [
             {
@@ -4460,8 +4460,8 @@
               "TakenAt": "2026-06-26T00:00:00Z",
               "InternalTempF": 81.1,
               "AmbientTempF": 67.3,
-              "MoisturePct": 90.0,
-              "RelativeHumidityPct": 93.0,
+              "MoisturePct": 90,
+              "RelativeHumidityPct": 93,
               "ResistivityOhmPerFt": 16.57,
               "Co2Ppm": 411.9
             },
@@ -4514,13 +4514,13 @@
         },
         {
           "Label": "D7-1",
-          "LengthIn": 12.0,
+          "LengthIn": 12,
           "WidthIn": 5.91,
           "TestAgeDays": "Day7",
           "IsSynthetic": true,
           "BreakResult": {
             "BrokenAt": "2026-07-02T12:05:00Z",
-            "StrengthPsi": 4703
+            "StrengthPsi": 4259
           },
           "CuringReadings": [
             {
@@ -4534,7 +4534,7 @@
             },
             {
               "TakenAt": "2026-06-26T00:00:00Z",
-              "InternalTempF": 81.0,
+              "InternalTempF": 81,
               "AmbientTempF": 67.3,
               "MoisturePct": 91.3,
               "RelativeHumidityPct": 94.9,
@@ -4584,7 +4584,7 @@
               "MoisturePct": 91.3,
               "RelativeHumidityPct": 93.7,
               "ResistivityOhmPerFt": 23.55,
-              "Co2Ppm": 431.0
+              "Co2Ppm": 431
             }
           ]
         },
@@ -4596,7 +4596,7 @@
           "IsSynthetic": true,
           "BreakResult": {
             "BrokenAt": "2026-07-02T12:10:00Z",
-            "StrengthPsi": 4703
+            "StrengthPsi": 4175
           },
           "CuringReadings": [
             {
@@ -4622,9 +4622,9 @@
               "InternalTempF": 82.1,
               "AmbientTempF": 66.5,
               "MoisturePct": 91.9,
-              "RelativeHumidityPct": 94.0,
+              "RelativeHumidityPct": 94,
               "ResistivityOhmPerFt": 18.19,
-              "Co2Ppm": 419.0
+              "Co2Ppm": 419
             },
             {
               "TakenAt": "2026-06-27T00:00:00Z",
@@ -4639,7 +4639,7 @@
               "TakenAt": "2026-06-27T12:00:00Z",
               "InternalTempF": 80.1,
               "AmbientTempF": 69.1,
-              "MoisturePct": 93.0,
+              "MoisturePct": 93,
               "RelativeHumidityPct": 93.4,
               "ResistivityOhmPerFt": 20.37,
               "Co2Ppm": 437.8
@@ -4672,7 +4672,7 @@
           "IsSynthetic": true,
           "BreakResult": {
             "BrokenAt": "2026-07-02T12:15:00Z",
-            "StrengthPsi": 4725
+            "StrengthPsi": 4577
           },
           "CuringReadings": [
             {
@@ -4707,13 +4707,13 @@
               "InternalTempF": 82.3,
               "AmbientTempF": 67.3,
               "MoisturePct": 93.7,
-              "RelativeHumidityPct": 93.0,
+              "RelativeHumidityPct": 93,
               "ResistivityOhmPerFt": 20.24,
               "Co2Ppm": 413.2
             },
             {
               "TakenAt": "2026-06-27T12:00:00Z",
-              "InternalTempF": 80.0,
+              "InternalTempF": 80,
               "AmbientTempF": 69.1,
               "MoisturePct": 90.4,
               "RelativeHumidityPct": 93.1,
@@ -4725,7 +4725,7 @@
               "InternalTempF": 76.2,
               "AmbientTempF": 70.8,
               "MoisturePct": 90.1,
-              "RelativeHumidityPct": 96.0,
+              "RelativeHumidityPct": 96,
               "ResistivityOhmPerFt": 22.28,
               "Co2Ppm": 410.8
             },
@@ -4748,14 +4748,14 @@
           "IsSynthetic": true,
           "BreakResult": {
             "BrokenAt": "2026-07-23T12:05:00Z",
-            "StrengthPsi": 6436
+            "StrengthPsi": 6127
           },
           "CuringReadings": [
             {
               "TakenAt": "2026-06-25T12:00:00Z",
               "InternalTempF": 80.3,
               "AmbientTempF": 68.3,
-              "MoisturePct": 92.0,
+              "MoisturePct": 92,
               "RelativeHumidityPct": 95.1,
               "ResistivityOhmPerFt": 15.84,
               "Co2Ppm": 418.3
@@ -4764,10 +4764,10 @@
               "TakenAt": "2026-06-26T00:00:00Z",
               "InternalTempF": 80.6,
               "AmbientTempF": 67.3,
-              "MoisturePct": 92.0,
-              "RelativeHumidityPct": 93.0,
+              "MoisturePct": 92,
+              "RelativeHumidityPct": 93,
               "ResistivityOhmPerFt": 16.38,
-              "Co2Ppm": 414.0
+              "Co2Ppm": 414
             },
             {
               "TakenAt": "2026-06-26T12:00:00Z",
@@ -4798,7 +4798,7 @@
             },
             {
               "TakenAt": "2026-06-28T00:00:00Z",
-              "InternalTempF": 78.0,
+              "InternalTempF": 78,
               "AmbientTempF": 70.8,
               "MoisturePct": 91.7,
               "RelativeHumidityPct": 93.6,
@@ -4818,13 +4818,13 @@
         },
         {
           "Label": "D28-2",
-          "LengthIn": 12.0,
+          "LengthIn": 12,
           "WidthIn": 5.94,
           "TestAgeDays": "Day28",
           "IsSynthetic": true,
           "BreakResult": {
             "BrokenAt": "2026-07-23T12:10:00Z",
-            "StrengthPsi": 6375
+            "StrengthPsi": 6120
           },
           "CuringReadings": [
             {
@@ -4865,7 +4865,7 @@
             },
             {
               "TakenAt": "2026-06-27T12:00:00Z",
-              "InternalTempF": 79.0,
+              "InternalTempF": 79,
               "AmbientTempF": 69.1,
               "MoisturePct": 92.4,
               "RelativeHumidityPct": 95.4,
@@ -4888,7 +4888,7 @@
               "MoisturePct": 90.1,
               "RelativeHumidityPct": 93.4,
               "ResistivityOhmPerFt": 22.77,
-              "Co2Ppm": 409.0
+              "Co2Ppm": 409
             }
           ]
         },
@@ -4900,7 +4900,7 @@
           "IsSynthetic": true,
           "BreakResult": {
             "BrokenAt": "2026-07-23T12:15:00Z",
-            "StrengthPsi": 6339
+            "StrengthPsi": 6145
           },
           "CuringReadings": [
             {
@@ -4917,7 +4917,7 @@
               "InternalTempF": 80.8,
               "AmbientTempF": 67.3,
               "MoisturePct": 91.2,
-              "RelativeHumidityPct": 94.0,
+              "RelativeHumidityPct": 94,
               "ResistivityOhmPerFt": 15.97,
               "Co2Ppm": 419.7
             },
@@ -4937,11 +4937,11 @@
               "MoisturePct": 91.8,
               "RelativeHumidityPct": 94.4,
               "ResistivityOhmPerFt": 18.96,
-              "Co2Ppm": 415.0
+              "Co2Ppm": 415
             },
             {
               "TakenAt": "2026-06-27T12:00:00Z",
-              "InternalTempF": 79.0,
+              "InternalTempF": 79,
               "AmbientTempF": 69.1,
               "MoisturePct": 93.4,
               "RelativeHumidityPct": 95.6,
@@ -4961,7 +4961,7 @@
               "TakenAt": "2026-06-28T12:00:00Z",
               "InternalTempF": 76.7,
               "AmbientTempF": 71.3,
-              "MoisturePct": 94.0,
+              "MoisturePct": 94,
               "RelativeHumidityPct": 94.8,
               "ResistivityOhmPerFt": 24.35,
               "Co2Ppm": 434.9
@@ -4977,7 +4977,7 @@
       "ExpectedFinalBreakPsi": 5700,
       "CementType": "TypeII",
       "MixWaterPh": 7.2,
-      "CementSurfacePh": 8.0,
+      "CementSurfacePh": 8,
       "IsSynthetic": true,
       "Composition": {
         "CementPct": 10.5,
@@ -4988,9 +4988,9 @@
         "WaterPct": 15.5
       },
       "CementOxideAnalysis": {
-        "AluminaPct": 5.0,
+        "AluminaPct": 5,
         "IronOxidePct": 2.7,
-        "MagnesiumOxidePct": 2.0,
+        "MagnesiumOxidePct": 2,
         "SulfurTrioxidePct": 2.5
       },
       "Specimens": [
@@ -5002,7 +5002,7 @@
           "IsSynthetic": true,
           "BreakResult": {
             "BrokenAt": "2026-07-02T12:05:00Z",
-            "StrengthPsi": 3336
+            "StrengthPsi": 2738
           },
           "CuringReadings": [
             {
@@ -5021,16 +5021,16 @@
               "MoisturePct": 90.3,
               "RelativeHumidityPct": 94.8,
               "ResistivityOhmPerFt": 16.61,
-              "Co2Ppm": 429.0
+              "Co2Ppm": 429
             },
             {
               "TakenAt": "2026-06-30T12:00:00Z",
-              "InternalTempF": 83.0,
+              "InternalTempF": 83,
               "AmbientTempF": 66.9,
               "MoisturePct": 93.3,
               "RelativeHumidityPct": 94.2,
               "ResistivityOhmPerFt": 17.5,
-              "Co2Ppm": 402.0
+              "Co2Ppm": 402
             },
             {
               "TakenAt": "2026-07-01T00:00:00Z",
@@ -5048,7 +5048,7 @@
               "MoisturePct": 92.2,
               "RelativeHumidityPct": 95.4,
               "ResistivityOhmPerFt": 21.63,
-              "Co2Ppm": 403.0
+              "Co2Ppm": 403
             },
             {
               "TakenAt": "2026-07-02T00:00:00Z",
@@ -5062,7 +5062,7 @@
             {
               "TakenAt": "2026-07-02T12:00:00Z",
               "InternalTempF": 74.4,
-              "AmbientTempF": 70.0,
+              "AmbientTempF": 70,
               "MoisturePct": 90.1,
               "RelativeHumidityPct": 94.6,
               "ResistivityOhmPerFt": 23.79,
@@ -5078,12 +5078,12 @@
           "IsSynthetic": true,
           "BreakResult": {
             "BrokenAt": "2026-07-02T12:10:00Z",
-            "StrengthPsi": 3343
+            "StrengthPsi": 2867
           },
           "CuringReadings": [
             {
               "TakenAt": "2026-06-29T12:00:00Z",
-              "InternalTempF": 78.0,
+              "InternalTempF": 78,
               "AmbientTempF": 67.4,
               "MoisturePct": 92.6,
               "RelativeHumidityPct": 93.8,
@@ -5121,24 +5121,24 @@
               "TakenAt": "2026-07-01T12:00:00Z",
               "InternalTempF": 79.4,
               "AmbientTempF": 70.3,
-              "MoisturePct": 92.0,
+              "MoisturePct": 92,
               "RelativeHumidityPct": 96.7,
               "ResistivityOhmPerFt": 20.28,
               "Co2Ppm": 426.8
             },
             {
               "TakenAt": "2026-07-02T00:00:00Z",
-              "InternalTempF": 78.0,
+              "InternalTempF": 78,
               "AmbientTempF": 70.6,
               "MoisturePct": 93.2,
               "RelativeHumidityPct": 96.7,
               "ResistivityOhmPerFt": 23.02,
-              "Co2Ppm": 433.0
+              "Co2Ppm": 433
             },
             {
               "TakenAt": "2026-07-02T12:00:00Z",
               "InternalTempF": 74.7,
-              "AmbientTempF": 70.0,
+              "AmbientTempF": 70,
               "MoisturePct": 93.5,
               "RelativeHumidityPct": 94.7,
               "ResistivityOhmPerFt": 24.13,
@@ -5154,7 +5154,7 @@
           "IsSynthetic": true,
           "BreakResult": {
             "BrokenAt": "2026-07-02T12:15:00Z",
-            "StrengthPsi": 3359
+            "StrengthPsi": 2807
           },
           "CuringReadings": [
             {
@@ -5197,7 +5197,7 @@
               "TakenAt": "2026-07-01T12:00:00Z",
               "InternalTempF": 78.9,
               "AmbientTempF": 70.3,
-              "MoisturePct": 91.0,
+              "MoisturePct": 91,
               "RelativeHumidityPct": 94.9,
               "ResistivityOhmPerFt": 21.66,
               "Co2Ppm": 435.5
@@ -5207,14 +5207,14 @@
               "InternalTempF": 76.8,
               "AmbientTempF": 70.6,
               "MoisturePct": 92.6,
-              "RelativeHumidityPct": 94.0,
+              "RelativeHumidityPct": 94,
               "ResistivityOhmPerFt": 22.6,
               "Co2Ppm": 410.4
             },
             {
               "TakenAt": "2026-07-02T12:00:00Z",
-              "InternalTempF": 75.0,
-              "AmbientTempF": 70.0,
+              "InternalTempF": 75,
+              "AmbientTempF": 70,
               "MoisturePct": 91.5,
               "RelativeHumidityPct": 95.9,
               "ResistivityOhmPerFt": 23.41,
@@ -5230,7 +5230,7 @@
           "IsSynthetic": true,
           "BreakResult": {
             "BrokenAt": "2026-07-06T12:05:00Z",
-            "StrengthPsi": 4492
+            "StrengthPsi": 4202
           },
           "CuringReadings": [
             {
@@ -5253,7 +5253,7 @@
             },
             {
               "TakenAt": "2026-06-30T12:00:00Z",
-              "InternalTempF": 84.0,
+              "InternalTempF": 84,
               "AmbientTempF": 66.9,
               "MoisturePct": 90.3,
               "RelativeHumidityPct": 95.6,
@@ -5265,7 +5265,7 @@
               "InternalTempF": 81.8,
               "AmbientTempF": 68.8,
               "MoisturePct": 93.9,
-              "RelativeHumidityPct": 93.0,
+              "RelativeHumidityPct": 93,
               "ResistivityOhmPerFt": 19.25,
               "Co2Ppm": 431.2
             },
@@ -5290,7 +5290,7 @@
             {
               "TakenAt": "2026-07-02T12:00:00Z",
               "InternalTempF": 74.5,
-              "AmbientTempF": 70.0,
+              "AmbientTempF": 70,
               "MoisturePct": 90.9,
               "RelativeHumidityPct": 95.6,
               "ResistivityOhmPerFt": 22.84,
@@ -5306,7 +5306,7 @@
           "IsSynthetic": true,
           "BreakResult": {
             "BrokenAt": "2026-07-06T12:10:00Z",
-            "StrengthPsi": 4547
+            "StrengthPsi": 4131
           },
           "CuringReadings": [
             {
@@ -5331,7 +5331,7 @@
               "TakenAt": "2026-06-30T12:00:00Z",
               "InternalTempF": 82.1,
               "AmbientTempF": 66.9,
-              "MoisturePct": 90.0,
+              "MoisturePct": 90,
               "RelativeHumidityPct": 94.7,
               "ResistivityOhmPerFt": 18.33,
               "Co2Ppm": 423.1
@@ -5340,10 +5340,10 @@
               "TakenAt": "2026-07-01T00:00:00Z",
               "InternalTempF": 80.2,
               "AmbientTempF": 68.8,
-              "MoisturePct": 90.0,
+              "MoisturePct": 90,
               "RelativeHumidityPct": 94.1,
               "ResistivityOhmPerFt": 19.79,
-              "Co2Ppm": 436.0
+              "Co2Ppm": 436
             },
             {
               "TakenAt": "2026-07-01T12:00:00Z",
@@ -5366,7 +5366,7 @@
             {
               "TakenAt": "2026-07-02T12:00:00Z",
               "InternalTempF": 74.9,
-              "AmbientTempF": 70.0,
+              "AmbientTempF": 70,
               "MoisturePct": 93.8,
               "RelativeHumidityPct": 93.4,
               "ResistivityOhmPerFt": 23.53,
@@ -5382,7 +5382,7 @@
           "IsSynthetic": true,
           "BreakResult": {
             "BrokenAt": "2026-07-06T12:15:00Z",
-            "StrengthPsi": 4444
+            "StrengthPsi": 4253
           },
           "CuringReadings": [
             {
@@ -5392,7 +5392,7 @@
               "MoisturePct": 90.6,
               "RelativeHumidityPct": 94.7,
               "ResistivityOhmPerFt": 14.18,
-              "Co2Ppm": 412.0
+              "Co2Ppm": 412
             },
             {
               "TakenAt": "2026-06-30T00:00:00Z",
@@ -5407,7 +5407,7 @@
               "TakenAt": "2026-06-30T12:00:00Z",
               "InternalTempF": 81.9,
               "AmbientTempF": 66.9,
-              "MoisturePct": 92.0,
+              "MoisturePct": 92,
               "RelativeHumidityPct": 96.7,
               "ResistivityOhmPerFt": 17.69,
               "Co2Ppm": 414.6
@@ -5428,7 +5428,7 @@
               "MoisturePct": 93.4,
               "RelativeHumidityPct": 95.2,
               "ResistivityOhmPerFt": 21.53,
-              "Co2Ppm": 409.0
+              "Co2Ppm": 409
             },
             {
               "TakenAt": "2026-07-02T00:00:00Z",
@@ -5442,7 +5442,7 @@
             {
               "TakenAt": "2026-07-02T12:00:00Z",
               "InternalTempF": 75.9,
-              "AmbientTempF": 70.0,
+              "AmbientTempF": 70,
               "MoisturePct": 93.1,
               "RelativeHumidityPct": 94.3,
               "ResistivityOhmPerFt": 24.49,
@@ -5458,7 +5458,7 @@
           "IsSynthetic": true,
           "BreakResult": {
             "BrokenAt": "2026-07-27T12:05:00Z",
-            "StrengthPsi": 5895
+            "StrengthPsi": 6079
           },
           "CuringReadings": [
             {
@@ -5493,9 +5493,9 @@
               "InternalTempF": 82.2,
               "AmbientTempF": 68.8,
               "MoisturePct": 90.9,
-              "RelativeHumidityPct": 95.0,
+              "RelativeHumidityPct": 95,
               "ResistivityOhmPerFt": 19.52,
-              "Co2Ppm": 414.0
+              "Co2Ppm": 414
             },
             {
               "TakenAt": "2026-07-01T12:00:00Z",
@@ -5511,14 +5511,14 @@
               "InternalTempF": 77.8,
               "AmbientTempF": 70.6,
               "MoisturePct": 93.8,
-              "RelativeHumidityPct": 94.0,
+              "RelativeHumidityPct": 94,
               "ResistivityOhmPerFt": 22.46,
-              "Co2Ppm": 411.0
+              "Co2Ppm": 411
             },
             {
               "TakenAt": "2026-07-02T12:00:00Z",
               "InternalTempF": 75.8,
-              "AmbientTempF": 70.0,
+              "AmbientTempF": 70,
               "MoisturePct": 92.8,
               "RelativeHumidityPct": 94.8,
               "ResistivityOhmPerFt": 23.98,
@@ -5534,7 +5534,7 @@
           "IsSynthetic": true,
           "BreakResult": {
             "BrokenAt": "2026-07-27T12:10:00Z",
-            "StrengthPsi": 5805
+            "StrengthPsi": 6077
           },
           "CuringReadings": [
             {
@@ -5557,10 +5557,10 @@
             },
             {
               "TakenAt": "2026-06-30T12:00:00Z",
-              "InternalTempF": 83.0,
+              "InternalTempF": 83,
               "AmbientTempF": 66.9,
               "MoisturePct": 93.3,
-              "RelativeHumidityPct": 94.0,
+              "RelativeHumidityPct": 94,
               "ResistivityOhmPerFt": 17.79,
               "Co2Ppm": 421.9
             },
@@ -5575,7 +5575,7 @@
             },
             {
               "TakenAt": "2026-07-01T12:00:00Z",
-              "InternalTempF": 80.0,
+              "InternalTempF": 80,
               "AmbientTempF": 70.3,
               "MoisturePct": 92.1,
               "RelativeHumidityPct": 94.9,
@@ -5594,7 +5594,7 @@
             {
               "TakenAt": "2026-07-02T12:00:00Z",
               "InternalTempF": 75.1,
-              "AmbientTempF": 70.0,
+              "AmbientTempF": 70,
               "MoisturePct": 91.4,
               "RelativeHumidityPct": 94.4,
               "ResistivityOhmPerFt": 23.27,
@@ -5610,7 +5610,7 @@
           "IsSynthetic": true,
           "BreakResult": {
             "BrokenAt": "2026-07-27T12:15:00Z",
-            "StrengthPsi": 5763
+            "StrengthPsi": 5798
           },
           "CuringReadings": [
             {
@@ -5633,9 +5633,9 @@
             },
             {
               "TakenAt": "2026-06-30T12:00:00Z",
-              "InternalTempF": 83.0,
+              "InternalTempF": 83,
               "AmbientTempF": 66.9,
-              "MoisturePct": 90.0,
+              "MoisturePct": 90,
               "RelativeHumidityPct": 95.8,
               "ResistivityOhmPerFt": 17.08,
               "Co2Ppm": 417.9
@@ -5670,7 +5670,7 @@
             {
               "TakenAt": "2026-07-02T12:00:00Z",
               "InternalTempF": 74.7,
-              "AmbientTempF": 70.0,
+              "AmbientTempF": 70,
               "MoisturePct": 93.2,
               "RelativeHumidityPct": 96.4,
               "ResistivityOhmPerFt": 23.25,
@@ -5712,7 +5712,7 @@
           "IsSynthetic": true,
           "BreakResult": {
             "BrokenAt": "2026-07-06T12:05:00Z",
-            "StrengthPsi": 4284
+            "StrengthPsi": 3466
           },
           "CuringReadings": [
             {
@@ -5729,7 +5729,7 @@
               "InternalTempF": 82.4,
               "AmbientTempF": 66.6,
               "MoisturePct": 90.6,
-              "RelativeHumidityPct": 96.0,
+              "RelativeHumidityPct": 96,
               "ResistivityOhmPerFt": 16.63,
               "Co2Ppm": 403.2
             },
@@ -5749,12 +5749,12 @@
               "MoisturePct": 91.2,
               "RelativeHumidityPct": 94.2,
               "ResistivityOhmPerFt": 20.16,
-              "Co2Ppm": 431.0
+              "Co2Ppm": 431
             },
             {
               "TakenAt": "2026-07-05T12:00:00Z",
               "InternalTempF": 78.8,
-              "AmbientTempF": 71.0,
+              "AmbientTempF": 71,
               "MoisturePct": 90.5,
               "RelativeHumidityPct": 96.8,
               "ResistivityOhmPerFt": 20.8,
@@ -5771,10 +5771,10 @@
             },
             {
               "TakenAt": "2026-07-06T12:00:00Z",
-              "InternalTempF": 75.0,
+              "InternalTempF": 75,
               "AmbientTempF": 69.7,
               "MoisturePct": 90.1,
-              "RelativeHumidityPct": 94.0,
+              "RelativeHumidityPct": 94,
               "ResistivityOhmPerFt": 24.41,
               "Co2Ppm": 420.8
             }
@@ -5788,7 +5788,7 @@
           "IsSynthetic": true,
           "BreakResult": {
             "BrokenAt": "2026-07-06T12:10:00Z",
-            "StrengthPsi": 4247
+            "StrengthPsi": 3361
           },
           "CuringReadings": [
             {
@@ -5807,14 +5807,14 @@
               "MoisturePct": 91.8,
               "RelativeHumidityPct": 94.8,
               "ResistivityOhmPerFt": 16.32,
-              "Co2Ppm": 412.0
+              "Co2Ppm": 412
             },
             {
               "TakenAt": "2026-07-04T12:00:00Z",
               "InternalTempF": 84.2,
               "AmbientTempF": 68.1,
               "MoisturePct": 93.8,
-              "RelativeHumidityPct": 94.0,
+              "RelativeHumidityPct": 94,
               "ResistivityOhmPerFt": 18.64,
               "Co2Ppm": 432.9
             },
@@ -5830,9 +5830,9 @@
             {
               "TakenAt": "2026-07-05T12:00:00Z",
               "InternalTempF": 79.1,
-              "AmbientTempF": 71.0,
+              "AmbientTempF": 71,
               "MoisturePct": 93.6,
-              "RelativeHumidityPct": 97.0,
+              "RelativeHumidityPct": 97,
               "ResistivityOhmPerFt": 19.82,
               "Co2Ppm": 417.4
             },
@@ -5864,14 +5864,14 @@
           "IsSynthetic": true,
           "BreakResult": {
             "BrokenAt": "2026-07-06T12:15:00Z",
-            "StrengthPsi": 4299
+            "StrengthPsi": 3357
           },
           "CuringReadings": [
             {
               "TakenAt": "2026-07-03T12:00:00Z",
               "InternalTempF": 79.1,
               "AmbientTempF": 66.7,
-              "MoisturePct": 91.0,
+              "MoisturePct": 91,
               "RelativeHumidityPct": 95.2,
               "ResistivityOhmPerFt": 15.3,
               "Co2Ppm": 426.7
@@ -5881,9 +5881,9 @@
               "InternalTempF": 82.6,
               "AmbientTempF": 66.6,
               "MoisturePct": 92.1,
-              "RelativeHumidityPct": 95.0,
+              "RelativeHumidityPct": 95,
               "ResistivityOhmPerFt": 16.37,
-              "Co2Ppm": 423.0
+              "Co2Ppm": 423
             },
             {
               "TakenAt": "2026-07-04T12:00:00Z",
@@ -5906,7 +5906,7 @@
             {
               "TakenAt": "2026-07-05T12:00:00Z",
               "InternalTempF": 80.3,
-              "AmbientTempF": 71.0,
+              "AmbientTempF": 71,
               "MoisturePct": 93.1,
               "RelativeHumidityPct": 93.7,
               "ResistivityOhmPerFt": 21.54,
@@ -5928,7 +5928,7 @@
               "MoisturePct": 90.5,
               "RelativeHumidityPct": 93.4,
               "ResistivityOhmPerFt": 23.1,
-              "Co2Ppm": 403.0
+              "Co2Ppm": 403
             }
           ]
         },
@@ -5940,7 +5940,7 @@
           "IsSynthetic": true,
           "BreakResult": {
             "BrokenAt": "2026-07-10T12:05:00Z",
-            "StrengthPsi": 4980
+            "StrengthPsi": 4657
           },
           "CuringReadings": [
             {
@@ -5959,7 +5959,7 @@
               "MoisturePct": 92.5,
               "RelativeHumidityPct": 95.9,
               "ResistivityOhmPerFt": 16.65,
-              "Co2Ppm": 433.0
+              "Co2Ppm": 433
             },
             {
               "TakenAt": "2026-07-04T12:00:00Z",
@@ -5981,8 +5981,8 @@
             },
             {
               "TakenAt": "2026-07-05T12:00:00Z",
-              "InternalTempF": 80.0,
-              "AmbientTempF": 71.0,
+              "InternalTempF": 80,
+              "AmbientTempF": 71,
               "MoisturePct": 91.5,
               "RelativeHumidityPct": 93.9,
               "ResistivityOhmPerFt": 21.64,
@@ -6016,7 +6016,7 @@
           "IsSynthetic": true,
           "BreakResult": {
             "BrokenAt": "2026-07-10T12:10:00Z",
-            "StrengthPsi": 5023
+            "StrengthPsi": 4497
           },
           "CuringReadings": [
             {
@@ -6051,14 +6051,14 @@
               "InternalTempF": 79.8,
               "AmbientTempF": 69.7,
               "MoisturePct": 93.3,
-              "RelativeHumidityPct": 94.0,
+              "RelativeHumidityPct": 94,
               "ResistivityOhmPerFt": 19.11,
               "Co2Ppm": 429.8
             },
             {
               "TakenAt": "2026-07-05T12:00:00Z",
               "InternalTempF": 79.5,
-              "AmbientTempF": 71.0,
+              "AmbientTempF": 71,
               "MoisturePct": 93.9,
               "RelativeHumidityPct": 93.8,
               "ResistivityOhmPerFt": 21.49,
@@ -6075,10 +6075,10 @@
             },
             {
               "TakenAt": "2026-07-06T12:00:00Z",
-              "InternalTempF": 77.0,
+              "InternalTempF": 77,
               "AmbientTempF": 69.7,
               "MoisturePct": 92.5,
-              "RelativeHumidityPct": 93.0,
+              "RelativeHumidityPct": 93,
               "ResistivityOhmPerFt": 24.42,
               "Co2Ppm": 420.9
             }
@@ -6092,7 +6092,7 @@
           "IsSynthetic": true,
           "BreakResult": {
             "BrokenAt": "2026-07-10T12:15:00Z",
-            "StrengthPsi": 4970
+            "StrengthPsi": 4543
           },
           "CuringReadings": [
             {
@@ -6126,15 +6126,15 @@
               "TakenAt": "2026-07-05T00:00:00Z",
               "InternalTempF": 80.9,
               "AmbientTempF": 69.7,
-              "MoisturePct": 94.0,
-              "RelativeHumidityPct": 94.0,
+              "MoisturePct": 94,
+              "RelativeHumidityPct": 94,
               "ResistivityOhmPerFt": 18.99,
               "Co2Ppm": 404.2
             },
             {
               "TakenAt": "2026-07-05T12:00:00Z",
               "InternalTempF": 78.9,
-              "AmbientTempF": 71.0,
+              "AmbientTempF": 71,
               "MoisturePct": 90.7,
               "RelativeHumidityPct": 93.4,
               "ResistivityOhmPerFt": 20.52,
@@ -6168,7 +6168,7 @@
           "IsSynthetic": true,
           "BreakResult": {
             "BrokenAt": "2026-07-31T12:05:00Z",
-            "StrengthPsi": 5705
+            "StrengthPsi": 5482
           },
           "CuringReadings": [
             {
@@ -6176,18 +6176,18 @@
               "InternalTempF": 80.6,
               "AmbientTempF": 66.7,
               "MoisturePct": 91.7,
-              "RelativeHumidityPct": 97.0,
+              "RelativeHumidityPct": 97,
               "ResistivityOhmPerFt": 14.12,
               "Co2Ppm": 432.5
             },
             {
               "TakenAt": "2026-07-04T00:00:00Z",
-              "InternalTempF": 81.0,
+              "InternalTempF": 81,
               "AmbientTempF": 66.6,
-              "MoisturePct": 93.0,
+              "MoisturePct": 93,
               "RelativeHumidityPct": 96.7,
               "ResistivityOhmPerFt": 17.39,
-              "Co2Ppm": 437.0
+              "Co2Ppm": 437
             },
             {
               "TakenAt": "2026-07-04T12:00:00Z",
@@ -6209,8 +6209,8 @@
             },
             {
               "TakenAt": "2026-07-05T12:00:00Z",
-              "InternalTempF": 79.0,
-              "AmbientTempF": 71.0,
+              "InternalTempF": 79,
+              "AmbientTempF": 71,
               "MoisturePct": 92.5,
               "RelativeHumidityPct": 94.2,
               "ResistivityOhmPerFt": 20.24,
@@ -6244,7 +6244,7 @@
           "IsSynthetic": true,
           "BreakResult": {
             "BrokenAt": "2026-07-31T12:10:00Z",
-            "StrengthPsi": 5649
+            "StrengthPsi": 5712
           },
           "CuringReadings": [
             {
@@ -6254,7 +6254,7 @@
               "MoisturePct": 90.1,
               "RelativeHumidityPct": 95.4,
               "ResistivityOhmPerFt": 15.89,
-              "Co2Ppm": 436.0
+              "Co2Ppm": 436
             },
             {
               "TakenAt": "2026-07-04T00:00:00Z",
@@ -6278,7 +6278,7 @@
               "TakenAt": "2026-07-05T00:00:00Z",
               "InternalTempF": 81.8,
               "AmbientTempF": 69.7,
-              "MoisturePct": 93.0,
+              "MoisturePct": 93,
               "RelativeHumidityPct": 93.3,
               "ResistivityOhmPerFt": 18.79,
               "Co2Ppm": 416.8
@@ -6286,11 +6286,11 @@
             {
               "TakenAt": "2026-07-05T12:00:00Z",
               "InternalTempF": 80.5,
-              "AmbientTempF": 71.0,
+              "AmbientTempF": 71,
               "MoisturePct": 91.6,
               "RelativeHumidityPct": 94.3,
               "ResistivityOhmPerFt": 19.94,
-              "Co2Ppm": 420.0
+              "Co2Ppm": 420
             },
             {
               "TakenAt": "2026-07-06T00:00:00Z",
@@ -6303,7 +6303,7 @@
             },
             {
               "TakenAt": "2026-07-06T12:00:00Z",
-              "InternalTempF": 75.0,
+              "InternalTempF": 75,
               "AmbientTempF": 69.7,
               "MoisturePct": 91.6,
               "RelativeHumidityPct": 93.5,
@@ -6320,7 +6320,7 @@
           "IsSynthetic": true,
           "BreakResult": {
             "BrokenAt": "2026-07-31T12:15:00Z",
-            "StrengthPsi": 5564
+            "StrengthPsi": 5707
           },
           "CuringReadings": [
             {
@@ -6334,7 +6334,7 @@
             },
             {
               "TakenAt": "2026-07-04T00:00:00Z",
-              "InternalTempF": 82.0,
+              "InternalTempF": 82,
               "AmbientTempF": 66.6,
               "MoisturePct": 91.6,
               "RelativeHumidityPct": 94.3,
@@ -6345,7 +6345,7 @@
               "TakenAt": "2026-07-04T12:00:00Z",
               "InternalTempF": 82.6,
               "AmbientTempF": 68.1,
-              "MoisturePct": 92.0,
+              "MoisturePct": 92,
               "RelativeHumidityPct": 96.7,
               "ResistivityOhmPerFt": 17.36,
               "Co2Ppm": 434.1
@@ -6362,7 +6362,7 @@
             {
               "TakenAt": "2026-07-05T12:00:00Z",
               "InternalTempF": 79.4,
-              "AmbientTempF": 71.0,
+              "AmbientTempF": 71,
               "MoisturePct": 92.9,
               "RelativeHumidityPct": 93.2,
               "ResistivityOhmPerFt": 19.94,
@@ -6381,7 +6381,7 @@
               "TakenAt": "2026-07-06T12:00:00Z",
               "InternalTempF": 75.3,
               "AmbientTempF": 69.7,
-              "MoisturePct": 92.0,
+              "MoisturePct": 92,
               "RelativeHumidityPct": 95.2,
               "ResistivityOhmPerFt": 24.33,
               "Co2Ppm": 414.6

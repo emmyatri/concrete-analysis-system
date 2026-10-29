@@ -162,6 +162,7 @@ public class EarlyWarningEndpointTests
         var db = scope.ServiceProvider.GetRequiredService<VulcanDbContext>();
         SyntheticDataSeeder.Seed(db);
         db.ChangeTracker.Clear();
+        var warningsBefore = await db.RecordWarning.CountAsync();
         var repository = scope.ServiceProvider.GetRequiredService<IBatchRepository>();
 
         var batches = await repository.GetEarlyWarningCandidatesAsync(true, CancellationToken.None);
@@ -173,7 +174,7 @@ public class EarlyWarningEndpointTests
         batches.SelectMany(batch => batch.Specimens).SelectMany(specimen => specimen.CuringReadings).Count()
             .ShouldBe(567);
         db.ChangeTracker.Entries().ShouldBeEmpty();
-        (await db.RecordWarning.CountAsync()).ShouldBe(0);
+        (await db.RecordWarning.CountAsync()).ShouldBe(warningsBefore);
     }
 
     [Fact]

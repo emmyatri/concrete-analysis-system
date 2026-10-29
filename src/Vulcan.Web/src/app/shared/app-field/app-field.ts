@@ -53,6 +53,9 @@ export class AppField {
   readonly control = input.required<AbstractControl>();
   readonly limitKey = input<string>('');
   readonly hint = input<string>('');
+  // False ignores the Warn (normal) range and checks only the Reject (allowed) range, e.g. a 3- or
+  // 7-day break, where the 3,000 PSI warning doesn't apply (client-decisions §3).
+  readonly useWarnRange = input(true);
 
   // Snapshot of the control's current state and field value.
   private readonly controlSnapshot = signal({
@@ -99,7 +102,11 @@ export class AppField {
     if (!limitKey || value === null) {
       return { severity: null, message: null };
     }
-    return this.validationService.evaluate(limitKey, value, limits);
+    const result = this.validationService.evaluate(limitKey, value, limits);
+    if (result.severity === 'Warn' && !this.useWarnRange()) {
+      return { severity: null, message: null };
+    }
+    return result;
   });
 
   // Computed message based on errors or the current validation result.
@@ -135,8 +142,10 @@ export class AppField {
     // Find the first validation limit with severity 'Reject'.
     const rejectLimit = matchLimits.find((limit) => limit.severity === 'Reject');
 
-    // Find the first validation limit with severity 'Warn'.
-    const warnLimit = matchLimits.find((limit) => limit.severity === 'Warn');
+    // Find the first validation limit with severity 'Warn', unless this field ignores it.
+    const warnLimit = this.useWarnRange()
+      ? matchLimits.find((limit) => limit.severity === 'Warn')
+      : undefined;
 
     // Show the Reject range when the value is an error. Otherwise, prefer the normal Warn range.
     const result = this.validationResult();

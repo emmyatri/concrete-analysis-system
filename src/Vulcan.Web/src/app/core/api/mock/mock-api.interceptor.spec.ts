@@ -162,9 +162,9 @@ describe('mockApiInterceptor', () => {
     expect(batch.specimens).toHaveLength(9);
     expect(batch.specimens.flatMap((s) => s.curingReadings)).toHaveLength(63);
     expect(batch.composition.waterCementRatio).toBe(0.603);
+    // D3-1 breaks at 2,950 PSI, but the 3,000 PSI warning only applies to 28-day breaks.
     expect(batch.warnings.map((w) => [w.limitKey, w.value])).toEqual([
       ['Composition.WaterCementRatio', 0.603],
-      ['Break.StrengthPsi', 2950],
     ]);
   });
 
@@ -194,7 +194,7 @@ describe('mockApiInterceptor', () => {
 
     const strength = await firstValueFrom(api.getStrength('vm-syn-001'));
 
-    expect(strength).toMatchObject({ status: 'Estimated', atRisk: false, projected28DayPsi: 6408 });
+    expect(strength).toMatchObject({ status: 'Estimated', atRisk: false, projected28DayPsi: 6164 });
     expect(strength.curvePoints.map((p) => p.day)).toEqual(
       Array.from({ length: 28 }, (_, i) => i + 1),
     );
@@ -219,8 +219,8 @@ describe('mockApiInterceptor', () => {
     expect(
       strength.curingPoints.filter((p) => p.specimenLabel === 'D28-1').at(-1)?.maturityFHours,
     ).toBe(4730.4);
-    // After the re-fit (ADR-005 section 4.4) it's 28% short of the expected 6,200.
-    expect(strength).toMatchObject({ atRisk: true, projected28DayPsi: 4449, shortfallPsi: 1751 });
+    // After the re-fit (ADR-005 section 4.4) it's 21% short of the expected 6,200.
+    expect(strength).toMatchObject({ atRisk: true, projected28DayPsi: 4870, shortfallPsi: 1330 });
     expect(strength.earlyWarnings.map((w) => w.limitKey)).toEqual([
       'Prediction.ShortfallPct',
       'Composition.WaterCementRatio',
@@ -282,9 +282,17 @@ describe('mockApiInterceptor', () => {
     const real = await firstValueFrom(api.getEarlyWarnings(false));
 
     expect(all.map((b) => [b.batchNumber, b.atRisk])).toEqual([
+      ['VM-SYN-003', true],
       ['VM-SYN-006', true],
+      ['VM-SYN-002', true],
       ['VM-SYN-009', false],
       ['VM-2026-0142', false],
+    ]);
+    // The cold batch has 63 low ambient readings but one reason.
+    const cold = all.find((b) => b.batchNumber === 'VM-SYN-002')!;
+    expect(cold.earlyWarnings.map((w) => w.limitKey)).toEqual([
+      'Prediction.ShortfallPct',
+      'Curing.AmbientTempF',
     ]);
     expect(real.map((b) => b.batchNumber)).toEqual(['VM-2026-0142']);
   });

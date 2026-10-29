@@ -32,7 +32,9 @@ These are the 10 measurements with a `Warn` range. The message is the configured
 | `Oxide.SulfurTrioxidePct` | The sulfur trioxide percent is outside the normal range [1.3-3.0] |
 | `Curing.AmbientTempF` | Ambient temperature is outside the normal range [60-80] |
 
-`Break.StrengthPsi` also has a warning range, but saved break warnings are not early warnings (client-decisions §13). They appear in the Warnings tab and on the strength chart, not in the early-warning list.
+`Break.StrengthPsi` also has a warning range (28-day breaks below 3,000 PSI, client-decisions §3), but saved break warnings are not early warnings (client-decisions §13). They appear in the Warnings tab and on the strength chart, not in the early-warning list.
+
+Each input factor is listed once per batch, even when many records carry the same warning. A cold-cured batch has a saved ambient-temperature warning on every reading, but the early-warning list shows one "Ambient temperature is outside the normal range [60-80]" line. The Warnings tab still lists every reading.
 
 Internal temperature, moisture, relative humidity, resistivity, CO₂, SCM percentage and aggregate percentages have no warning range in M2, so they never produce an early warning.
 

@@ -1,5 +1,6 @@
 using Vulcan.Domain.Constants;
 using Vulcan.Domain.Entities;
+using Vulcan.Domain.Enums;
 using Vulcan.Domain.Validation;
 
 namespace Vulcan.Domain.Services;
@@ -13,7 +14,8 @@ public class BreakResultValidator(LimitEvaluator limitEvaluator)
         BreakResult breakResult,
         DateTime castAt,
         bool specimenAlreadyHasResult,
-        DateTime now)
+        DateTime now,
+        TestAgeDays testAgeDays = TestAgeDays.Day28)
     {
         var errors = new List<ValidationError>();
         var warnings = new List<ValidationError>();
@@ -30,7 +32,9 @@ public class BreakResultValidator(LimitEvaluator limitEvaluator)
                     reject.Message));
                 break;
 
-            case LimitResult.Warn warn:
+            // The 3,000 PSI warning applies to 28-day breaks only. Earlier breaks are expected to be
+            // lower (client-decisions §3, team proposal pending client confirmation).
+            case LimitResult.Warn warn when testAgeDays == TestAgeDays.Day28:
                 warnings.Add(new ValidationError(
                     LimitKeys.StrengthPsi,
                     warn.Message));

@@ -226,4 +226,38 @@ public class BreakResultValidatorTests
             };
         }
     }
+
+    [Theory]
+    [InlineData(TestAgeDays.Day3)]
+    [InlineData(TestAgeDays.Day7)]
+    public void Validate_LowEarlyBreak_IsNotFlagged(TestAgeDays testAgeDays)
+    {
+        // The 3,000 PSI warning applies to 28-day breaks only (client-decisions §3).
+        var result = _validator.Validate(
+            CreateBreakResult(2500),
+            _castAt,
+            false,
+            _now,
+            testAgeDays);
+
+        Assert.Empty(result.Errors);
+        Assert.DoesNotContain(
+            result.Warnings,
+            warning => warning.Key == LimitKeys.StrengthPsi);
+    }
+
+    [Fact]
+    public void Validate_EarlyBreakOutsideRejectRange_StillReturnsError()
+    {
+        var result = _validator.Validate(
+            CreateBreakResult(0),
+            _castAt,
+            false,
+            _now,
+            TestAgeDays.Day3);
+
+        Assert.Contains(
+            result.Errors,
+            error => error.Key == LimitKeys.StrengthPsi);
+    }
 }

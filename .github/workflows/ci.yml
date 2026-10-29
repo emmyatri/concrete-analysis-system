@@ -54,6 +54,11 @@ jobs:
         working-directory: src/Vulcan.Web
         run: npm test -- --watch=false
 
+      # The synthetic dataset must match its generator, stay inside the rejection limits and flag
+      # only the demo cases (SCRUM-166).
+      - name: Test (synthetic data generator)
+        run: node --test data/synthetic/generate.test.mjs
+
       # Writes the production build to src/Vulcan.Api/wwwroot.
       # Must run before the .NET build so the UI gets copied into the app.
       - name: Build (Angular)

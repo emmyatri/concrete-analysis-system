@@ -116,6 +116,19 @@ normal: a 3-day break is often well under the 28-day strength.
 accomplish"
 *Affects:* `BreakResult.StrengthPsi`, `Batch.ExpectedFinalBreakPsi`
 
+**M2 change — team proposal, pending client confirmation (2026-10-29).** The 3,000 PSI warning now applies to
+**28-day breaks only**. The strength model (ADR-005) expects Type I and II concrete to reach about 45–50% of its
+28-day strength at 3 days, so a healthy 6,000 PSI mix breaks around 2,500–3,000 PSI at day 3. Flagging every such
+break would bury the real problems. The 1–10,000 PSI rejection limits still apply at every age, and low early breaks
+still drive the early warning through the projected 28-day strength (§13).
+
+This differs from Rev 1, which lists the 3,000–10,000 range for each age. We are asking the client at the M2 review
+(2026-11-02) whether the warning should apply to 28-day breaks only, or at every age. If the answer is every age,
+revert `BreakResultValidator` to warn regardless of `TestAgeDays` and re-run `data/synthetic/generate.mjs`.
+
+*Affects (M2 change):* `BreakResultValidator`, `SpecimenService`, `SyntheticDataSeeder`, the break dialog, and
+`data/synthetic/generate.mjs`
+
 ## 4. pH is the mix water's pH
 
 Rev 1 says "PH reading 1 to 9 (7.0 to 7.5 is normal)." That range can't describe the concrete itself, which runs around

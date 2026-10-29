@@ -95,9 +95,9 @@ describe('BatchSearchPage', () => {
       'Type III',
       '6,200',
       '0.603 ⚠',
-      '4,461 ⚠',
+      '5,149 ⚠',
       '9 / 9',
-      '2 warnings',
+      '1 warning',
     ]);
   });
 
