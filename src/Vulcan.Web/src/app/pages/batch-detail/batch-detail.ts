@@ -19,6 +19,7 @@ import { CuringSummary } from '../curing-summary/curing-summary';
 import { EstimateCards } from '../estimate-cards/estimate-cards';
 import { StrengthChart, StrengthLoad } from '../strength-chart/strength-chart';
 import { CuringChart } from '../curing-chart/curing-chart';
+import type { CuringMeasurement } from '../curing-chart/curing-chart-config';
 
 type LoadState =
   | { status: 'loading' }
@@ -219,6 +220,8 @@ export class BatchDetailPage {
   protected readonly hoveredDay = signal<number | null>(null);
   /** The strength chart's larger pop-out view. */
   protected readonly chartExpanded = signal(false);
+  /** The curing strip's larger pop-out view, on this measurement; null when closed. */
+  protected readonly curingExpanded = signal<CuringMeasurement | null>(null);
 
   // ---------- Saved warnings ----------
 

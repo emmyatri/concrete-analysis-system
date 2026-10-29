@@ -123,4 +123,27 @@ describe('curingChartConfig', () => {
       expect(tickLabel).toContain(expectedUnit);
     },
   );
+
+  it('shows axis titles and larger text in the expanded view', () => {
+    const { options } = curingChartConfig(
+      points,
+      castAt,
+      colors,
+      'ambientTempF',
+      flaggedReadings,
+      16,
+    );
+    expect(options.scales?.['x']?.title?.display).toBe(true);
+    expect(options.scales?.['y']?.title).toMatchObject({
+      display: true,
+      text: 'Ambient temperature (°F)',
+    });
+    expect(options.font).toMatchObject({ size: 16 });
+  });
+
+  it('keeps the compact strip on the page', () => {
+    const { options } = curingChartConfig(points, castAt, colors, 'internalTempF', flaggedReadings);
+    expect(options.scales?.['x']?.title?.display).toBe(false);
+    expect(options.font).toMatchObject({ size: 12 });
+  });
 });

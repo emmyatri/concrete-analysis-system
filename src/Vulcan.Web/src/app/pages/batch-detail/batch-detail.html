@@ -237,8 +237,36 @@
             [castAt]="batch.castAt"
             [hoveredDay]="hoveredDay()"
             (hoveredDayChange)="hoveredDay.set($event)"
+            (expand)="curingExpanded.set($event)"
           />
         }
+
+        <!-- A larger copy of the curing strip, opened on the measurement shown on the page. -->
+        <p-dialog
+          [header]="batch.batchNumber + ' · Curing readings'"
+          [visible]="curingExpanded() !== null"
+          (visibleChange)="!$event && curingExpanded.set(null)"
+          [modal]="true"
+          [dismissableMask]="true"
+          [draggable]="false"
+          [resizable]="false"
+          [style]="{ width: '92vw', maxWidth: '1600px' }"
+          appendTo="body"
+        >
+          @if (curingExpanded(); as measurement) {
+            <app-curing-chart
+              data-testid="expanded-curing"
+              [curingPoints]="curingPoints()"
+              [readings]="readings()"
+              [warnings]="batch.warnings"
+              [castAt]="batch.castAt"
+              [initialMeasurement]="measurement"
+              [expandable]="false"
+              height="55vh"
+              [fontSize]="16"
+            />
+          }
+        </p-dialog>
       </section>
 
       <div class="side">

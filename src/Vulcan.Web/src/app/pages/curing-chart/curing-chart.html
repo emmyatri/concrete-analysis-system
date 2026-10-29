@@ -12,6 +12,17 @@
       (ngModelChange)="selectedMeasurement.set($event)"
       scrollHeight="120px"
     />
+    @if (expandable()) {
+      <p-button
+        icon="pi pi-window-maximize"
+        label="Expand"
+        [text]="true"
+        size="small"
+        ariaLabel="Expand the curing readings chart"
+        data-testid="expand-curing"
+        (onClick)="expand.emit(selectedMeasurement())"
+      />
+    }
   </div>
 </div>
 
@@ -21,6 +32,6 @@
   [data]="chart().data"
   [options]="chart().options"
   [plugins]="guidePlugins"
-  height="120px"
+  [height]="height()"
 />
 <small class="curing-caption">{{ readingCaption() }}</small>

@@ -54,7 +54,10 @@ export function curingChartConfig(
   colors: CuringChartColors,
   selectedMeasurement: CuringMeasurement,
   flaggedReadings: ReadonlyMap<string, string>,
+  /** Axis and tooltip text size. Larger in the expanded view, which also shows the axis titles. */
+  fontSize = 12,
 ): CuringChartConfig {
+  const expanded = fontSize > 12;
   const measurementLabel = measurementLabels[selectedMeasurement];
   const measurementUnits: Record<CuringMeasurement, string> = {
     internalTempF: ' °F',
@@ -65,7 +68,7 @@ export function curingChartConfig(
     co2Ppm: ' ppm',
   };
 
-  const font = { family: colors.font, size: 12 };
+  const font = { family: colors.font, size: fontSize };
 
   /** Group curing points by timestamp.*/
   const readingsByTime = new Map<number, CuringPoint[]>();
@@ -171,8 +174,8 @@ export function curingChartConfig(
           type: 'linear',
           min: 0,
           max: 28,
-          title: { display: false, text: 'Days since cast', color: colors.text, font },
-          ticks: { display: false, color: colors.text, font },
+          title: { display: expanded, text: 'Days since cast', color: colors.text, font },
+          ticks: { display: expanded, color: colors.text, font },
           afterBuildTicks: (axis) => {
             axis.ticks = DAY_TICKS.map((value) => ({ value }));
           },
@@ -184,17 +187,18 @@ export function curingChartConfig(
           },
         },
         y: {
-          title: { display: false, text: measurementLabel, color: colors.text, font },
+          title: { display: expanded, text: measurementLabel, color: colors.text, font },
           ticks: {
-            maxTicksLimit: 3,
+            maxTicksLimit: expanded ? 6 : 3,
             color: colors.text,
             font,
             callback: (value) =>
               `${Number(value).toLocaleString('en-US')}${measurementUnits[selectedMeasurement]}`,
           },
           grid: { color: colors.grid },
+          // 70px lines the strip up with the strength chart above it; wider for larger text.
           afterFit: (scale) => {
-            scale.width = 70;
+            scale.width = 70 + (fontSize - 12) * 11;
           },
         },
       },
@@ -203,6 +207,7 @@ export function curingChartConfig(
           display: false,
         },
         tooltip: {
+          bodyFont: font,
           filter: (item) => item.datasetIndex === 0,
           callbacks: {
             title: () => '',
