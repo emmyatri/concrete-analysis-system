@@ -48,6 +48,10 @@
 > **Section 7 (Accuracy Benchmark):** Verify the documented client agreement on the benchmark and measurement method; this is not a software-screen test.
 >
 > **Dependencies:** Sections 3–6 depend on the ambient-temperature reading saved in Section 2. When using the in-memory mock, start from seeded data and avoid refreshing between dependent steps.
+>
+> **Before you start (step 0, not counted):** Close the app, delete `%LOCALAPPDATA%\VulcanCBAS\vulcan.db`, then relaunch. The synthetic batches reload with their stored predictions. A database from before #83 shows "Not enough curing data yet" on every batch.
+>
+> **Real-app dependency:** Step 1.1 and the banner in 6.1 come from the early-warning service (SCRUM-181/182). If that isn't merged, Home shows "Early warnings aren't available yet" with mock mode off. Record those steps as **Blocked**, not **Fail**.
 
 ---
 
@@ -80,8 +84,8 @@
 >
 > | Step | Action / What to Type | Expected Result | Req ID | Pass / Fail |
 > |---|---|---|---|:---:|
-> | 2.1 | Click **Curing readings** in the upper right corner of the Batch Detail screen for batch: `VM-SYN-006`. | On opening:<br>• Batch and cylinder selection dropdowns are visible.<br>• **Batch:** VM-SYN-006 is selected.<br>• **Cylinder:** defaults to D3-1.<br>• **Cast line:** “Cast 06/21/26 08:00 · View batch”<br>• **Grid:** **D3-1 · readings**, with an empty new row.<br>• **Time taken:** defaults to the current time. | FR-6 | ☐ |
-> | 2.2 | Enter in Row 8:<br>• Time taken: `06/21/2026 14:00 (2:00 PM)`<br>• Internal (°F): `79.5`<br>• Ambient (°F): `85`<br>• Moisture (%): `91.7`<br>• RH (%): `95.2`<br>• Resistivity (Ω/ft): `16.25`<br>• CO₂ (ppm): `417.7`<br>Click the row's **Save** (or press **Enter**). | • **Ambient** cell turns amber (orange border and background). No message shows yet; the grid only lists a warning once a flagged row is saved.<br>• Row 8 locks and reads 79.5 °F, 85.0 °F, 91.7%, 95.2%, 16.25 Ω/ft, 417.7 ppm with status **Saved**. A new empty Row 9 appears below. | FR-6; FR-16 (warning aspect) | ☐ |
+> | 2.1 | Click **Curing readings** in the upper right corner of the Batch Detail screen for batch: `VM-SYN-006`. | On opening:<br>• Batch and cylinder selection dropdowns are visible.<br>• **Batch:** VM-SYN-006 is selected.<br>• **Cylinder:** defaults to D3-1.<br>• **Cast line:** “Cast 06/21/26 08:00 · View batch”<br>• **Grid:** **D3-1 · readings**, with 7 saved readings and an empty new row (Row 8).<br>• **Time taken:** defaults to the current time. | FR-6 | ☐ |
+> | 2.2 | Enter in Row 8:<br>• Time taken: `06/21/2026 14:00 (2:00 PM)`, 6 hours after the cast time shown (on an Eastern-time computer)<br>• Internal (°F): `79.5`<br>• Ambient (°F): `85`<br>• Moisture (%): `91.7`<br>• RH (%): `95.2`<br>• Resistivity (Ω/ft): `16.25`<br>• CO₂ (ppm): `417.7`<br>Click the row's **Save** (or press **Enter**). | • **Ambient** cell turns amber (orange border and background). No message shows yet; the grid only lists a warning once a flagged row is saved.<br>• Row 8 locks and reads 79.5 °F, 85.0 °F, 91.7%, 95.2%, 16.25 Ω/ft, 417.7 ppm with status **Saved**. A new empty Row 9 appears below. | FR-6; FR-16 (warning aspect) | ☐ |
 
 ---
 
