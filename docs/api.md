@@ -12,7 +12,7 @@ A `400` status code represents a malformed request or one or more fields that fa
     "type": "object",
     "properties": {
         "title": {
-            "type": "string"
+            "type": "string",
         },
         "status": {
             "type": "number"
@@ -84,7 +84,7 @@ Use to create a batch.
                     "default": false
                 },
                 "expectedFinalBreakPsi": {
-                    "type": "integer"
+                    "type": "integer",
                 }
             },
             "required": [
@@ -2439,7 +2439,7 @@ Use to get the batches that are predicted to be at-risk.
                             "description": "The value that triggered the warning"
                         },
                         "limitKey": {
-                            "type": "string"
+                            "type": "string",
                         },
                         "limit": {
                             "type": "number"
