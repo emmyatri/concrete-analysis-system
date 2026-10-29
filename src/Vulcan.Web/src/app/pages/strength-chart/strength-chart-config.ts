@@ -39,7 +39,7 @@ const DAY_TICKS = [0, 3, 7, 14, 21, 28];
 /**
  * Everything p-chart needs to draw one batch (SCRUM-174, mockup M2-01): the predicted curve, the
  * curve before breaks, the 3/7/28-day estimates as hollow markers, breaks as dots (flagged ones in
- * orange) with a dash at their mean at each age, and the Expected final and minimum as reference
+ * orange) with a line through their mean at each age, and the Expected final and minimum as reference
  * lines. The card title names the batch, so the legend doesn't repeat it.
  */
 export function strengthChartConfig(
@@ -135,8 +135,7 @@ export function strengthChartConfig(
     );
   }
   if (breaks.length > 0) {
-    // A dash at the average break for each age. Not joined into a line: between test ages it
-    // would only be a straight line between averages, which reads like a third prediction.
+    // The average break at each age, joined into a line.
     const means = meanByAge(breaks);
     const last = means.at(-1);
     datasets.push({
@@ -144,10 +143,8 @@ export function strengthChartConfig(
       data: means,
       borderColor: colors.breaks,
       backgroundColor: colors.breaks,
-      borderWidth: 3,
-      showLine: false,
-      pointRadius: 9,
-      pointHoverRadius: 11,
+      borderWidth: 2,
+      pointRadius: 0,
       pointStyle: 'line',
       endLabel: last && Math.round(last.x) === 28 ? `28-day actual ${psi(last.y)}` : undefined,
     });

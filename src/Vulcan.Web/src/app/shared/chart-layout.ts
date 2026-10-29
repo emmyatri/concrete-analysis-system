@@ -3,5 +3,5 @@
  * The curing strip uses the same padding so the two x-axes stay lined up for the shared hover line.
  */
 export function rightGutter(fontSize = 12): number {
-  return Math.round((150 * fontSize) / 12);
+  return Math.round((180 * fontSize) / 12);
 }

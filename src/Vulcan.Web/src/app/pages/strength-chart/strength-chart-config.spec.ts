@@ -59,12 +59,12 @@ describe('strengthChartConfig', () => {
     expect(predicted.at(-1)).toEqual({ x: 28, y: 4733 });
   });
 
-  it('marks the mean break at each age with a dash, not a line', () => {
+  it('draws the mean break at each age as a line', () => {
     const { data } = strengthChartConfig(strengthOf('VM-SYN-006'), 3000, new Set(), COLORS);
 
     const mean = data.datasets.find((d) => d.label === 'Mean by age')!;
     expect(mean.data.map((p) => p.y)).toEqual([3129, 3969, 4994]);
-    expect([mean.showLine, mean.pointStyle]).toEqual([false, 'line']);
+    expect(mean.showLine).not.toBe(false);
   });
 
   it('labels the 28-day estimate with its gap to target, and the 28-day actual', () => {
@@ -91,8 +91,8 @@ describe('strengthChartConfig', () => {
     const small = strengthChartConfig(strengthOf('VM-SYN-006'), 3000, new Set(), COLORS);
     const large = strengthChartConfig(strengthOf('VM-SYN-006'), 3000, new Set(), COLORS, 16);
 
-    expect(small.options.layout?.padding).toMatchObject({ right: 150 });
-    expect(large.options.layout?.padding).toMatchObject({ right: 200 });
+    expect(small.options.layout?.padding).toMatchObject({ right: 180 });
+    expect(large.options.layout?.padding).toMatchObject({ right: 240 });
   });
 
   it('fits the y-axis to the highest of the curves, breaks and Expected final', () => {
