@@ -38,10 +38,13 @@ describe('EstimateCards', () => {
     const root = render(batchOf('VM-SYN-006'));
 
     expect(text(root, '[data-testid="estimate-28"] [data-testid="actual"]')).toBe(
-      'Actual break: 4,994 PSI (average of 3) · estimate −5.2% vs actual',
+      'Actual break: 4,994 PSI · average of 3 cylinders',
     );
-    expect(text(root, '[data-testid="estimate-3"] [data-testid="actual"]')).toBe(
-      'Actual break: 3,129 PSI (average of 3) · estimate 0.0% vs actual',
+    expect(text(root, '[data-testid="estimate-28"] [data-testid="difference"]')).toBe(
+      'Estimate was 261 PSI (5.2%) below the actual break',
+    );
+    expect(text(root, '[data-testid="estimate-3"] [data-testid="difference"]')).toBe(
+      'Estimate matched the actual break',
     );
   });
 
