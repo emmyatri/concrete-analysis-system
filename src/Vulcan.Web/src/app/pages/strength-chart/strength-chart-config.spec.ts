@@ -19,19 +19,19 @@ const strengthOf = (batchNumber: string) =>
   mockStrength(MOCK_BATCH_DETAILS.find((b) => b.batchNumber === batchNumber)!);
 
 describe('strengthChartConfig', () => {
-  it('labels every batch line by batch number, flagged breaks in their own set', () => {
+  it('labels every line without repeating the batch number, flagged breaks in their own set', () => {
     const strength = strengthOf('VM-SYN-006');
     const d31 = strength.measuredBreaks.find((b) => b.specimenLabel === 'D3-1')!;
 
     const { data } = strengthChartConfig(strength, 3000, new Set([d31.specimenId]), COLORS);
 
     expect(data.datasets.map((d) => d.label)).toEqual([
-      'VM-SYN-006 predicted',
-      'VM-SYN-006 before breaks',
-      'VM-SYN-006 estimate',
-      'VM-SYN-006 breaks',
-      'VM-SYN-006 flagged breaks',
-      'VM-SYN-006 mean by age',
+      'Predicted',
+      'Before breaks',
+      'Estimate',
+      'Breaks',
+      'Flagged breaks',
+      'Mean by age',
       'Expected final',
       'Minimum',
     ]);
@@ -42,7 +42,7 @@ describe('strengthChartConfig', () => {
   it('marks the 3-, 7- and 28-day estimates with hollow markers', () => {
     const { data } = strengthChartConfig(strengthOf('VM-SYN-006'), 3000, new Set(), COLORS);
 
-    const estimate = data.datasets.find((d) => d.label === 'VM-SYN-006 estimate')!;
+    const estimate = data.datasets.find((d) => d.label === 'Estimate')!;
     expect(estimate.data).toEqual([
       { x: 3, y: 3129 },
       { x: 7, y: 3969 },
@@ -59,11 +59,40 @@ describe('strengthChartConfig', () => {
     expect(predicted.at(-1)).toEqual({ x: 28, y: 4733 });
   });
 
-  it('draws the mean break at each age', () => {
+  it('marks the mean break at each age with a dash, not a line', () => {
     const { data } = strengthChartConfig(strengthOf('VM-SYN-006'), 3000, new Set(), COLORS);
 
-    const mean = data.datasets.find((d) => d.label === 'VM-SYN-006 mean by age')!;
+    const mean = data.datasets.find((d) => d.label === 'Mean by age')!;
     expect(mean.data.map((p) => p.y)).toEqual([3129, 3969, 4994]);
+    expect([mean.showLine, mean.pointStyle]).toEqual([false, 'line']);
+  });
+
+  it('labels the 28-day estimate with its gap to target, and the 28-day actual', () => {
+    const { data } = strengthChartConfig(strengthOf('VM-SYN-006'), 3000, new Set(), COLORS);
+    const endLabels = data.datasets
+      .map((d) => (d as { endLabel?: string }).endLabel)
+      .filter(Boolean);
+
+    expect(endLabels).toEqual([
+      '28-day est. 4,733 (−24%)',
+      '28-day actual 4,994',
+      'Expected final 6,200',
+      '3,000 min',
+    ]);
+  });
+
+  it('shows a projection above target as a plus', () => {
+    const { data } = strengthChartConfig(strengthOf('VM-SYN-005'), 3000, new Set(), COLORS);
+
+    expect((data.datasets[0] as { endLabel?: string }).endLabel).toBe('28-day est. 6,106 (+7%)');
+  });
+
+  it('puts the end labels in a right-hand gutter that grows with the text', () => {
+    const small = strengthChartConfig(strengthOf('VM-SYN-006'), 3000, new Set(), COLORS);
+    const large = strengthChartConfig(strengthOf('VM-SYN-006'), 3000, new Set(), COLORS, 16);
+
+    expect(small.options.layout?.padding).toMatchObject({ right: 150 });
+    expect(large.options.layout?.padding).toMatchObject({ right: 200 });
   });
 
   it('fits the y-axis to the highest of the curves, breaks and Expected final', () => {

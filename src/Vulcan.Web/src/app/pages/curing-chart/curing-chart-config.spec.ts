@@ -173,6 +173,34 @@ describe('curingChartConfig', () => {
     },
   );
 
+  it('always keeps every reading inside the range', () => {
+    // VM-SYN-003's internal temperature runs from about 69.5 to 84 °F; the old range cut off the low end.
+    expect(yAxisRange('internalTempF', 69.5, 84)).toEqual({ min: 60, max: 90 });
+    for (const batch of MOCK_BATCH_DETAILS.filter((b) => b.isSynthetic)) {
+      for (const measurement of [
+        'internalTempF',
+        'ambientTempF',
+        'moisturePct',
+        'relativeHumidityPct',
+        'resistivityOhmPerFt',
+        'co2Ppm',
+      ] as const) {
+        const { options } = curingChartConfig(
+          mockStrength(batch).curingPoints,
+          batch.castAt,
+          colors,
+          measurement,
+          flaggedReadings,
+        );
+        const y = options.scales?.['y'] as { min?: number; max?: number };
+        if (y.min === undefined) continue;
+        const values = mockStrength(batch).curingPoints.map((p) => p[measurement]);
+        expect(Math.min(...values)).toBeGreaterThanOrEqual(y.min);
+        expect(Math.max(...values)).toBeLessThanOrEqual(y.max!);
+      }
+    }
+  });
+
   it('leaves the range to Chart.js when readings already spread wider', () => {
     expect(yAxisRange('internalTempF', 50, 85)).toBeUndefined();
   });

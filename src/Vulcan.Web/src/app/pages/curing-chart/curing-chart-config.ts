@@ -1,4 +1,5 @@
 import type { ChartData, ChartDataset, ChartOptions, ScriptableContext } from 'chart.js';
+import { rightGutter } from '../../shared/chart-layout';
 import { CuringPoint } from '../../core/api/models';
 
 /** Theme values used by the curing chart. */
@@ -75,13 +76,27 @@ export function yAxisRange(
 ): { min: number; max: number } | undefined {
   const span = MIN_Y_SPAN[measurement];
   if (!Number.isFinite(low) || !Number.isFinite(high) || high - low >= span) return undefined;
-  // Snap to half-span steps so the gridlines land on round numbers (85–95%, 400–440 ppm).
+  // Snap outward to half-span steps so the gridlines land on round numbers (85–95%, 400–440 ppm),
+  // then widen on the side with less room until the range is at least `span`. Every reading
+  // always stays inside the range.
   const step = span / 2;
-  let min = Math.floor(((low + high) / 2 - span / 2) / step) * step;
-  if (high > min + span) min += step;
-  if (PERCENT_MEASUREMENTS.has(measurement)) min = Math.min(min, 100 - span);
-  min = Math.max(0, min);
-  return { min, max: min + span };
+  let min = Math.floor(low / step) * step;
+  let max = Math.ceil(high / step) * step;
+  if (max === min) max += step;
+  while (max - min < span) {
+    if (low - min <= max - high) min -= step;
+    else max += step;
+  }
+  const ceiling = PERCENT_MEASUREMENTS.has(measurement) ? 100 : Infinity;
+  if (max > ceiling) {
+    min -= max - ceiling;
+    max = ceiling;
+  }
+  if (min < 0) {
+    max -= min;
+    min = 0;
+  }
+  return { min, max };
 }
 
 export function curingChartConfig(
@@ -204,7 +219,9 @@ export function curingChartConfig(
       animation: false,
       font,
       interaction: { mode: 'index', intersect: false },
-      layout: { padding: { top: 4, right: 8 } },
+      // On the page: the same right padding as the strength chart above, so the days line up.
+      // The expanded view stands alone, so it uses the full width.
+      layout: { padding: { top: 4, right: expanded ? 8 : rightGutter(fontSize) } },
       scales: {
         x: {
           type: 'linear',

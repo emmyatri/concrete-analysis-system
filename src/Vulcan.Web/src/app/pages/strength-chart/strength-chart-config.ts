@@ -1,6 +1,7 @@
 import type { ChartData, ChartDataset, ChartOptions, Plugin } from 'chart.js';
 
 import { BatchStrength } from '../../core/api/models';
+import { rightGutter } from '../../shared/chart-layout';
 
 /** Colors for the chart, read from the theme's PrimeNG tokens (StrengthChart.colors). */
 export interface StrengthChartColors {
@@ -37,8 +38,9 @@ const DAY_TICKS = [0, 3, 7, 14, 21, 28];
 
 /**
  * Everything p-chart needs to draw one batch (SCRUM-174, mockup M2-01): the predicted curve, the
- * curve before breaks, the 3/7/28-day estimates as hollow markers, breaks as dots (flagged ones in orange) with a line through their mean at each
- * age, and the Expected final and minimum as reference lines. Datasets are labeled by batch number.
+ * curve before breaks, the 3/7/28-day estimates as hollow markers, breaks as dots (flagged ones in
+ * orange) with a dash at their mean at each age, and the Expected final and minimum as reference
+ * lines. The card title names the batch, so the legend doesn't repeat it.
  */
 export function strengthChartConfig(
   strength: BatchStrength,
@@ -48,7 +50,6 @@ export function strengthChartConfig(
   /** Axis, legend and tooltip text size. Larger in the expanded view. */
   fontSize = 12,
 ): StrengthChartConfig {
-  const batch = strength.batchNumber;
   const curve = (points: BatchStrength['curvePoints']): ChartPoint[] => [
     { x: 0, y: 0 },
     ...points.map((p) => ({ x: p.day, y: p.psi })),
@@ -57,7 +58,7 @@ export function strengthChartConfig(
 
   if (strength.curvePoints.length > 0) {
     datasets.push({
-      label: `${batch} predicted`,
+      label: 'Predicted',
       data: curve(strength.curvePoints),
       borderColor: colors.predicted,
       backgroundColor: colors.predicted,
@@ -67,12 +68,12 @@ export function strengthChartConfig(
       endLabel:
         strength.projected28DayPsi === null
           ? undefined
-          : `28-day est. ${psi(strength.projected28DayPsi)}`,
+          : `28-day est. ${psi(strength.projected28DayPsi)}${versusTarget(strength)}`,
     });
   }
   if (strength.unadjustedCurvePoints.length > 0) {
     datasets.push({
-      label: `${batch} before breaks`,
+      label: 'Before breaks',
       data: curve(strength.unadjustedCurvePoints),
       borderColor: colors.initialEstimate,
       backgroundColor: colors.initialEstimate,
@@ -87,7 +88,7 @@ export function strengthChartConfig(
   const estimates = strength.estimates.filter((e) => e.estimatedPsi !== null);
   if (estimates.length > 0) {
     datasets.push({
-      label: `${batch} estimate`,
+      label: 'Estimate',
       data: estimates.map((e) => ({ x: e.horizonDays, y: e.estimatedPsi! })),
       borderColor: colors.predicted,
       backgroundColor: colors.surface,
@@ -118,7 +119,7 @@ export function strengthChartConfig(
   if (breaks.some((b) => !b.flagged)) {
     datasets.push(
       dots(
-        `${batch} breaks`,
+        'Breaks',
         colors.breaks,
         breaks.filter((b) => !b.flagged),
       ),
@@ -127,21 +128,28 @@ export function strengthChartConfig(
   if (breaks.some((b) => b.flagged)) {
     datasets.push(
       dots(
-        `${batch} flagged breaks`,
+        'Flagged breaks',
         colors.flagged,
         breaks.filter((b) => b.flagged),
       ),
     );
   }
   if (breaks.length > 0) {
+    // A dash at the average break for each age. Not joined into a line: between test ages it
+    // would only be a straight line between averages, which reads like a third prediction.
+    const means = meanByAge(breaks);
+    const last = means.at(-1);
     datasets.push({
-      label: `${batch} mean by age`,
-      data: meanByAge(breaks),
+      label: 'Mean by age',
+      data: means,
       borderColor: colors.breaks,
       backgroundColor: colors.breaks,
-      borderWidth: 2,
-      pointRadius: 0,
+      borderWidth: 3,
+      showLine: false,
+      pointRadius: 9,
+      pointHoverRadius: 11,
       pointStyle: 'line',
+      endLabel: last && Math.round(last.x) === 28 ? `28-day actual ${psi(last.y)}` : undefined,
     });
   }
 
@@ -188,7 +196,8 @@ export function strengthChartConfig(
       animation: false,
       font,
       interaction: { mode: 'nearest', intersect: false },
-      layout: { padding: { top: 4, right: 8 } },
+      // The end labels sit in this right-hand gutter, clear of the lines and markers at day 28.
+      layout: { padding: { top: 4, right: rightGutter(fontSize) } },
       clip: 8,
       scales: {
         x: {
@@ -244,7 +253,15 @@ export function strengthChartConfig(
   };
 }
 
-/** The average break at each test age, joined into a line. */
+/** "(−10%)" below the Expected final, "(+3%)" above it; nothing without a projection. */
+function versusTarget(strength: BatchStrength): string {
+  if (strength.shortfallPct === null || strength.projected28DayPsi === null) return '';
+  const pct = Math.round(Math.abs(strength.shortfallPct));
+  if (pct === 0) return ' (on target)';
+  return strength.shortfallPct > 0 ? ` (−${pct}%)` : ` (+${pct}%)`;
+}
+
+/** The average break at each test age, one point per age. */
 function meanByAge(breaks: { x: number; y: number }[]): ChartPoint[] {
   const byAge = new Map<number, { x: number[]; y: number[] }>();
   for (const b of breaks) {
@@ -259,8 +276,8 @@ function meanByAge(breaks: { x: number; y: number }[]): ChartPoint[] {
 }
 
 /**
- * Draws each dataset's endLabel at the right end of its line, above it. When two lines end close
- * together (a batch right on its Expected final), the lower label moves below its line instead.
+ * Draws each dataset's endLabel in the gutter to the right of the plot, level with the end of its
+ * line or its last marker. Labels that would overlap are pushed apart, top to bottom.
  */
 export const endLabelsPlugin: Plugin<'line'> = {
   id: 'vulcanEndLabels',
@@ -285,16 +302,14 @@ export const endLabelsPlugin: Plugin<'line'> = {
 
     ctx.save();
     ctx.font = `600 ${labelSize}px ${chart.options.font?.family ?? 'sans-serif'}`;
-    ctx.textAlign = 'right';
-    ctx.textBaseline = 'bottom';
+    ctx.textAlign = 'left';
+    ctx.textBaseline = 'middle';
     let previous = -Infinity;
     for (const label of labels) {
-      let bottom = label.y - 5;
-      if (bottom - lineHeight < previous)
-        bottom = Math.max(label.y + 5 + lineHeight, previous + lineHeight);
+      const y = Math.min(Math.max(label.y, previous + lineHeight), chartArea.bottom);
       ctx.fillStyle = label.color;
-      ctx.fillText(label.text, chartArea.right - 4, bottom);
-      previous = bottom;
+      ctx.fillText(label.text, chartArea.right + 10, y);
+      previous = y;
     }
     ctx.restore();
   },
