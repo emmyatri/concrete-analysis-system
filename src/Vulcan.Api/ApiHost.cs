@@ -7,6 +7,7 @@ using Microsoft.OpenApi;
 using Vulcan.Api.Controllers;
 using Vulcan.Api.Technicians;
 using Vulcan.Application.Interfaces;
+using Vulcan.Application.Services;
 using Vulcan.Domain.Interfaces;
 using Vulcan.Infrastructure;
 using Vulcan.Infrastructure.Interceptors;
@@ -66,6 +67,13 @@ public static class ApiHost
         // use overrides if provided
         configureServices?.Invoke(builder.Services);
 
+        var earlyWarningsEnabled = builder.Services.Any(service =>
+            service.ServiceType == typeof(IEarlyWarningEvaluator));
+        if (earlyWarningsEnabled)
+        {
+            builder.Services.AddScoped<EarlyWarningQuery>();
+        }
+
         var app = builder.Build();
         app.EnsureMigrated();
         app.SeedData();
@@ -96,6 +104,10 @@ public static class ApiHost
         api.MapGet("/health", () => Results.Ok(new { status = "ok" }));
 
         api.MapTechnicianEndpoints();
+        if (earlyWarningsEnabled)
+        {
+            api.MapEarlyWarningEndpoints();
+        }
         app.MapControllers();
 
         // Unknown /api routes return a JSON 404, never the Angular page.
@@ -120,10 +132,18 @@ public static class ApiHost
     {
         using var scope = app.Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<VulcanDbContext>();
+        var strengthEstimatorService = scope.ServiceProvider.GetRequiredService<IStrengthEstimateService>();
+        var calibrationProvider = scope.ServiceProvider.GetRequiredService<ICalibrationProvider>();
+        var logger = scope.ServiceProvider.GetRequiredService<ILogger<PredictionSaveChangesInterceptor>>();
 
         var options = new DbContextOptionsBuilder<VulcanDbContext>()
                     .UseSqlite(db.Database.GetDbConnection())
                     .AddInterceptors(
+                        new PredictionSaveChangesInterceptor(
+                            _ => calibrationProvider,
+                            strengthEstimatorService,
+                            logger),
+                        // add audit changes last
                         new AuditSaveChangesInterceptor(
                             new SystemTechnician(),
                             scope.ServiceProvider.GetRequiredService<IClock>()))
@@ -139,6 +159,5 @@ public static class ApiHost
         {
             SyntheticDataSeeder.Seed(seedDb);
         }
-
     }
 }
