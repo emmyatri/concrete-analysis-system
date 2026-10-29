@@ -87,8 +87,10 @@ public class EarlyWarningService(
         }
 
         // Expected final vs. w/cm. Below 0.33 the check is skipped (ADR-005, section 4.5).
+        // Round to 3 places like the displayed w/c, so the table lookup and the message match the screen.
         if (batch.Composition is { } composition
-            && wcrCalculator.Calculate(composition) is { } wcm
+            && wcrCalculator.Calculate(composition) is { } rawWcm
+            && Math.Round(rawWcm, 3, MidpointRounding.AwayFromZero) is var wcm
             && wcm >= 0.33m)
         {
             var aciTablePsi = CalculateAciTablePsi((double)wcm);

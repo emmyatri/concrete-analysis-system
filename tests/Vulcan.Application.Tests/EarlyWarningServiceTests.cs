@@ -111,8 +111,7 @@ public class EarlyWarningServiceTests()
         var evaluator = SetupEarlyWarningService(db);
 
         var result = await evaluator.Evaluate(syn);
-        // Without breaks the projection is 6,235 PSI (above target), so it's flagged but not at risk.
-        result.AtRisk.ShouldBeFalse();
+        result.AtRisk.ShouldBeTrue();
         // VM-SYN-006 should be flagged for WCM percent
         result.EarlyWarnings
             .Any(ew => ew.LimitKey == LimitKeys.ExpectedFinalVsWcmPct)
@@ -191,7 +190,8 @@ public class EarlyWarningServiceTests()
         var evaluator = SetupEarlyWarningService(db);
 
         var result = await evaluator.Evaluate(syn);
-        result.AtRisk.ShouldBeTrue();
+        // Without breaks the projection is 6,235 PSI (above target), so it's flagged but not at risk.
+        result.AtRisk.ShouldBeFalse();
         // VM-SYN-006 should be flagged for WCM percent
         result.EarlyWarnings
             .Any(ew => ew.LimitKey == LimitKeys.ExpectedFinalVsWcmPct)
