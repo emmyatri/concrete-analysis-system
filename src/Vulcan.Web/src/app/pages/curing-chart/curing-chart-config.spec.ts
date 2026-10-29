@@ -1,4 +1,4 @@
-import { type CuringChartColors, curingChartConfig } from './curing-chart-config';
+import { type CuringChartColors, curingChartConfig, yAxisRange } from './curing-chart-config';
 import { MOCK_BATCH_DETAILS } from '../../core/api/mock/mock-batch-details';
 import { mockStrength } from '../../core/api/mock/mock-strength';
 import type { Scale, ScriptableContext } from 'chart.js';
@@ -145,5 +145,35 @@ describe('curingChartConfig', () => {
     const { options } = curingChartConfig(points, castAt, colors, 'internalTempF', flaggedReadings);
     expect(options.scales?.['x']?.title?.display).toBe(false);
     expect(options.font).toMatchObject({ size: 12 });
+  });
+
+  it('gives small spreads a minimum y range, so sensor noise looks flat', () => {
+    const moisture = MOCK_BATCH_DETAILS.find((b) => b.batchNumber === 'VM-SYN-009')!;
+    const { options } = curingChartConfig(
+      mockStrength(moisture).curingPoints,
+      moisture.castAt,
+      colors,
+      'moisturePct',
+      flaggedReadings,
+    );
+    const y = options.scales?.['y'] as { min?: number; max?: number };
+    expect(y.max! - y.min!).toBe(10);
+    expect(y.max).toBeLessThanOrEqual(100);
+  });
+
+  it.each([
+    ['moisturePct', 91, 93, { min: 85, max: 95 }],
+    ['relativeHumidityPct', 95, 99, { min: 90, max: 100 }],
+    ['co2Ppm', 410, 430, { min: 400, max: 440 }],
+    ['ambientTempF', 2, 4, { min: 0, max: 20 }],
+  ] as const)(
+    'centres %s readings from %d to %d in a minimum range',
+    (measurement, low, high, expected) => {
+      expect(yAxisRange(measurement, low, high)).toEqual(expected);
+    },
+  );
+
+  it('leaves the range to Chart.js when readings already spread wider', () => {
+    expect(yAxisRange('internalTempF', 50, 85)).toBeUndefined();
   });
 });

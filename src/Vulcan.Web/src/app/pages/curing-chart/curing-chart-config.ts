@@ -48,6 +48,42 @@ export const measurementLabels: Record<CuringMeasurement, string> = {
 };
 
 /** The configuration instructions for the curing chart.*/
+/**
+ * The smallest y-axis range for each measurement, so normal sensor noise reads as flat instead of
+ * filling the strip (e.g. moisture moving between 91% and 93% on a 90–94% axis).
+ */
+export const MIN_Y_SPAN: Record<CuringMeasurement, number> = {
+  internalTempF: 20,
+  ambientTempF: 20,
+  moisturePct: 10,
+  relativeHumidityPct: 10,
+  resistivityOhmPerFt: 10,
+  co2Ppm: 40,
+};
+
+/** Percent measurements can't go above 100. */
+const PERCENT_MEASUREMENTS = new Set<CuringMeasurement>(['moisturePct', 'relativeHumidityPct']);
+
+/**
+ * A y-axis range at least MIN_Y_SPAN wide, centred on the readings. Undefined when the readings
+ * already spread wider, so Chart.js picks the range as before.
+ */
+export function yAxisRange(
+  measurement: CuringMeasurement,
+  low: number,
+  high: number,
+): { min: number; max: number } | undefined {
+  const span = MIN_Y_SPAN[measurement];
+  if (!Number.isFinite(low) || !Number.isFinite(high) || high - low >= span) return undefined;
+  // Snap to half-span steps so the gridlines land on round numbers (85–95%, 400–440 ppm).
+  const step = span / 2;
+  let min = Math.floor(((low + high) / 2 - span / 2) / step) * step;
+  if (high > min + span) min += step;
+  if (PERCENT_MEASUREMENTS.has(measurement)) min = Math.min(min, 100 - span);
+  min = Math.max(0, min);
+  return { min, max: min + span };
+}
+
 export function curingChartConfig(
   curingPoints: CuringPoint[],
   castAt: string,
@@ -187,6 +223,11 @@ export function curingChartConfig(
           },
         },
         y: {
+          ...yAxisRange(
+            selectedMeasurement,
+            Math.min(...minPoints.map((point) => point.y)),
+            Math.max(...maxPoints.map((point) => point.y)),
+          ),
           title: { display: expanded, text: measurementLabel, color: colors.text, font },
           ticks: {
             maxTicksLimit: expanded ? 6 : 3,
