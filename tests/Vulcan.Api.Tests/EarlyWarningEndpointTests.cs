@@ -143,15 +143,15 @@ public class EarlyWarningEndpointTests
     }
 
     [Fact]
-    public async Task Without_an_evaluator_the_draft_route_keeps_the_existing_api_not_found_response()
+    public async Task The_real_evaluator_is_registered_and_the_route_is_mapped()
     {
         await using var app = await StartAsync(null);
         using var client = ClientFor(app);
 
-        var response = await client.GetAsync("/api/warnings/early");
+        var results = await client.GetFromJsonAsync<EarlyWarningBatchDTO[]>("/api/warnings/early");
 
-        response.StatusCode.ShouldBe(HttpStatusCode.NotFound);
-        (await response.Content.ReadAsStringAsync()).ShouldContain("API route not found");
+        results.ShouldNotBeNull();
+        results.ShouldBeEmpty();
     }
 
     [Fact]

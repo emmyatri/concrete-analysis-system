@@ -8,6 +8,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Vulcan.Application.Interfaces;
 using Vulcan.Application.Services;
+using Vulcan.Application.Services.EarlyWarning;
 using Vulcan.Domain.Entities;
 using Vulcan.Domain.Interfaces;
 using Vulcan.Domain.Services;
@@ -56,6 +57,7 @@ public static class SetupUtils
         services.AddScoped<ISpecificGravityRepository, SpecificGravityRepository>();
         services.AddScoped<IValidationLimitRepository, ValidationLimitRepository>();
 
+
         services.AddScoped<BatchValidator>();
         services.AddScoped<CompositionValidator>();
         services.AddScoped<CementOxideValidator>();
@@ -69,6 +71,8 @@ public static class SetupUtils
         services.AddScoped<SpecificGravityService>();
         services.AddScoped<ValidationLimitService>();
         services.AddScoped<IStrengthEstimateService, StrengthEstimateService>();
+        services.AddScoped<EarlyWarningService>();
+        services.AddScoped<IEarlyWarningEvaluator>(sp => sp.GetRequiredService<EarlyWarningService>());
         services.AddScoped<StrengthService>();
 
         if (cs.Contains(":memory:", StringComparison.OrdinalIgnoreCase))
