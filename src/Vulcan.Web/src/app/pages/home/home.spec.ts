@@ -122,9 +122,9 @@ describe('HomePage', () => {
     // Largest shortfall first: moisture loss, high w/c, then cold-cured.
     expect(numbers).toEqual(['VM-SYN-003', 'VM-SYN-006', 'VM-SYN-002']);
     const row = text('[data-testid="at-risk"] tbody tr');
-    expect(row).toContain('4,563 PSI');
+    expect(row).toContain('4,503 PSI');
     expect(row).toContain('6,000 PSI');
-    expect(row).toContain('−1,437 (24%)');
+    expect(row).toContain('−1,497 (25%)');
     expect(text('[data-testid="at-risk"] tbody tr')).toContain('Projected 28-day strength');
   });
 

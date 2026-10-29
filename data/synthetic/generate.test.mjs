@@ -69,6 +69,17 @@ test('SCM delays early strength and leaves day 28 unchanged', () => {
   assert.ok(Math.abs(day28(withScm) - day28(without)) <= 1);
 });
 
+test('each cylinder has readings every 12 h to 72 h, then daily until it is broken', () => {
+  for (const b of dataset.Batches) {
+    for (const s of b.Specimens) {
+      const expected = { Day3: 7, Day7: 11, Day28: 32 }[s.TestAgeDays];
+      assert.equal(s.CuringReadings.length, expected, `${b.BatchNumber} ${s.Label}`);
+      const last = Math.max(...s.CuringReadings.map(r => Date.parse(r.TakenAt)));
+      assert.ok(last < Date.parse(s.BreakResult.BrokenAt), `${b.BatchNumber} ${s.Label} reading after break`);
+    }
+  }
+});
+
 test('scatter is deterministic and within ±5%', () => {
   const values = dataset.Batches.flatMap(b => b.Specimens.map(s => scatter(b.BatchNumber, s.Label)));
   assert.ok(values.every(value => value >= 0.95 && value <= 1.05));

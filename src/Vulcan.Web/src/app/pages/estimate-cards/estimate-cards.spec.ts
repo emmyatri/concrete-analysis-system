@@ -27,9 +27,9 @@ describe('EstimateCards', () => {
   it('shows each estimate with the adjustment used and its calibration version', () => {
     const root = render(batchOf('VM-SYN-006'));
 
-    expect(text(root, '[data-testid="estimate-7"] [data-testid="estimate-psi"]')).toBe('3,975 PSI');
+    expect(text(root, '[data-testid="estimate-7"] [data-testid="estimate-psi"]')).toBe('3,969 PSI');
     expect(text(root, '[data-testid="estimate-7"] [data-testid="basis"]')).toBe(
-      'Adjusted using the 3- and 7-day breaks · was 5,094 before breaks · Calibration v1',
+      'Adjusted using the 3- and 7-day breaks · was 5,048 before breaks · Calibration v1',
     );
     expect(text(root, '[data-testid="estimate-7"] details p')).toContain('ACI 209R-92 (TypeIII)');
   });
@@ -38,10 +38,10 @@ describe('EstimateCards', () => {
     const root = render(batchOf('VM-SYN-006'));
 
     expect(text(root, '[data-testid="estimate-28"] [data-testid="actual"]')).toBe(
-      'Actual break: 5,149 PSI (average of 3) · estimate −5.4% vs actual',
+      'Actual break: 4,994 PSI (average of 3) · estimate −5.2% vs actual',
     );
     expect(text(root, '[data-testid="estimate-3"] [data-testid="actual"]')).toBe(
-      'Actual break: 3,000 PSI (average of 3) · estimate 0.0% vs actual',
+      'Actual break: 3,129 PSI (average of 3) · estimate 0.0% vs actual',
     );
   });
 
@@ -49,7 +49,7 @@ describe('EstimateCards', () => {
     const root = render(batchOf('VM-SYN-006'));
 
     expect(root.querySelector('[data-testid="estimate-28"]')?.classList).toContain('at-risk');
-    expect(text(root, '[data-testid="risk-badge"]')).toBe('⚠ 21% below target');
+    expect(text(root, '[data-testid="risk-badge"]')).toBe('⚠ 24% below target');
     expect(root.querySelectorAll('.at-risk')).toHaveLength(1);
   });
 

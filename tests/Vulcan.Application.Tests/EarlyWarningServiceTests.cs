@@ -145,26 +145,26 @@ public class EarlyWarningServiceTests()
         // High w/c: at risk, with the w/c input warning and the expected-vs-w/cm check.
         var syn006 = await Evaluate("VM-SYN-006");
         syn006.AtRisk.ShouldBeTrue();
-        syn006.Projected28DayPsi.ShouldBe(4870d);
-        syn006.ShortfallPct.ShouldBe(21.45);
+        syn006.Projected28DayPsi.ShouldBe(4733d);
+        syn006.ShortfallPct.ShouldBe(23.66);
         syn006.EarlyWarnings[0].Warning.ShouldBe(
-            "Projected 28-day strength of 4,870 PSI is 21.45% below the expected 6,200 PSI");
+            "Projected 28-day strength of 4,733 PSI is 23.66% below the expected 6,200 PSI");
         syn006.EarlyWarnings.ShouldContain(w => w.LimitKey == LimitKeys.WaterCementRatio);
         syn006.EarlyWarnings.ShouldContain(w => w.Warning ==
             "Expected final of 6,200 PSI is 67.6% above the 3,700 PSI typical for a w/cm of 0.603");
         syn006.EarlyWarnings.ShouldNotContain(w => w.LimitKey == LimitKeys.StrengthPsi);
 
-        // Cold-cured: at risk from curing temperature, with one ambient reason (not one per reading).
+        // Cold-cured: at risk, with one ambient reason (not one per reading).
         var syn002 = await Evaluate("VM-SYN-002");
         syn002.AtRisk.ShouldBeTrue();
-        syn002.Projected28DayPsi.ShouldBe(5169d);
-        syn002.ShortfallPct.ShouldBe(7.7);
+        syn002.Projected28DayPsi.ShouldBe(5028d);
+        syn002.ShortfallPct.ShouldBe(10.21);
         syn002.EarlyWarnings.Count(w => w.LimitKey == LimitKeys.AmbientTempF).ShouldBe(1);
 
         // Moisture loss: at risk once the 3- and 7-day breaks come in low; no input warning.
         var syn003 = await Evaluate("VM-SYN-003");
         syn003.AtRisk.ShouldBeTrue();
-        syn003.Projected28DayPsi.ShouldBe(4563d);
+        syn003.Projected28DayPsi.ShouldBe(4503d);
         syn003.EarlyWarnings.Single().LimitKey.ShouldBe(LimitKeys.PredictionShortfallPct);
 
         // pH: flagged on entry but on track.
@@ -177,8 +177,8 @@ public class EarlyWarningServiceTests()
             (await Evaluate(onTrack)).EarlyWarnings.ShouldBeEmpty(onTrack);
         }
 
-        // 63 cold ambient readings, the VM-SYN-006 w/c and the VM-SYN-009 pH. No early breaks.
-        db.RecordWarning.Count().ShouldBe(65);
+        // 150 cold ambient readings, the VM-SYN-006 w/c and the VM-SYN-009 pH. No early breaks.
+        db.RecordWarning.Count().ShouldBe(152);
     }
 
     [Fact]

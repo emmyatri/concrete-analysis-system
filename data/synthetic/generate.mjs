@@ -3,10 +3,11 @@
 // Every strength effect here is MADE UP FOR TESTING (SLA 1.3). None of it is real Vulcan data or
 // a validated engineering relationship. See docs/synthetic-data.md for the effects and sizes.
 //
-// The curing readings from the M1 dataset are kept as they are, except for two demo cases:
+// The first 72 h of curing readings come from the M1 dataset, except for two demo cases:
 //   VM-SYN-002 cold-cured: internal and ambient temperatures shifted down by COLD_SHIFT_F.
 //   VM-SYN-003 moisture loss: moisture falls MOISTURE_DROP points between 24 h and 72 h.
-// Both changes are applied only once, so running the generator again leaves the data unchanged.
+// After 72 h, each 7- and 28-day cylinder gets one reading a day until it is broken.
+// These changes are applied only once, so running the generator again leaves the data unchanged.
 // Break strengths are then recalculated for every specimen from its own curing readings.
 //
 //   node data/synthetic/generate.mjs           rewrite batches.json
@@ -17,13 +18,13 @@ import { isDeepStrictEqual } from 'node:util';
 import { pathToFileURL } from 'node:url';
 
 // Chosen so that only the named demo cases are flagged with ±5% scatter (checked by flags()).
-export const SEED = 168;
+export const SEED = 176;
 export const WATER_REFERENCE = 0.5; // w/cm above this lowers strength
 export const WATER_SLOPE = 2.0; // 2% per 0.01 of w/cm above the reference
 export const MOISTURE_SLOPE = 0.08; // 8% per point of batch-average moisture lost, day 1 to day 3
 export const MOISTURE_NOISE = 1.5; // average losses below this many points are normal variation
 export const SCM_DELAY = 0.1; // day-3 reduction = 10% of the SCM share of cementitious mass
-export const COLD_SHIFT_F = 30; // cold-cured case: °F below the M1 temperatures
+export const COLD_SHIFT_F = 25; // cold-cured case: °F below the M1 temperatures
 export const MOISTURE_DROP = 2; // moisture-loss case: points lost between 24 h and 72 h
 export const COLD_CASE = 'VM-SYN-002';
 export const MOISTURE_CASE = 'VM-SYN-003';
@@ -35,6 +36,48 @@ const HOUR_MS = 3_600_000;
 const hoursAfterCast = (batch, reading) =>
   (Date.parse(reading.TakenAt) - Date.parse(batch.CastAt)) / HOUR_MS;
 const round1 = value => Math.round(value * 10) / 10;
+
+const pad = n => String(n).padStart(2, '0');
+const isoAt = (castAt, hours) => {
+  const d = new Date(Date.parse(castAt) + hours * HOUR_MS);
+  return `${d.getUTCFullYear()}-${pad(d.getUTCMonth() + 1)}-${pad(d.getUTCDate())}T${pad(d.getUTCHours())}:${pad(d.getUTCMinutes())}:${pad(d.getUTCSeconds())}Z`;
+};
+const round2 = value => Math.round(value * 100) / 100;
+/** Deterministic noise in [-1, 1) for a key. */
+function noise(...parts) {
+  const hash = createHash('sha256').update(`${SEED}:${parts.join(':')}`).digest();
+  return (hash.readUInt32BE(0) / 2 ** 32) * 2 - 1;
+}
+export const DAILY_FROM_HOURS = 96;
+/**
+ * After the first 72 h, adds one reading a day until each cylinder's break (none for 3-day cylinders).
+ * Internal temperature cools toward ambient as hydration slows; resistivity keeps rising.
+ */
+export function extendReadings(batch) {
+  const at = hours => batch.Specimens.flatMap(s => s.CuringReadings).filter(r => Math.abs(hoursAfterCast(batch, r) - hours) < 0.01);
+  const ambientBase = [48, 60, 72].flatMap(h => at(h).map(r => r.AmbientTempF)).reduce((a, b, _, all) => a + b / all.length, 0);
+  for (const specimen of batch.Specimens) {
+    const day = Number(specimen.TestAgeDays.slice(3));
+    const readings = specimen.CuringReadings;
+    if (day <= 3 || readings.some(r => hoursAfterCast(batch, r) > 72.01)) continue;
+    const last = readings.find(r => Math.abs(hoursAfterCast(batch, r) - 72) < 0.01);
+    const mean = field => readings.reduce((a, r) => a + r[field], 0) / readings.length;
+    for (let hours = DAILY_FROM_HOURS; hours <= day * 24; hours += 24) {
+      const ambient = round1(ambientBase + 0.8 * noise(batch.BatchNumber, 'ambient', hours));
+      const settled = ambientBase + 2;
+      const internal = settled + (last.InternalTempF - settled) * Math.exp(-(hours - 72) / 36);
+      readings.push({
+        TakenAt: isoAt(batch.CastAt, hours),
+        InternalTempF: round1(internal + 0.3 * noise(batch.BatchNumber, specimen.Label, 'internal', hours)),
+        AmbientTempF: ambient,
+        MoisturePct: round1(last.MoisturePct - (0.03 * (hours - 72)) / 24 + 0.2 * noise(batch.BatchNumber, specimen.Label, 'moisture', hours)),
+        RelativeHumidityPct: round1(Math.min(100, mean('RelativeHumidityPct') + 0.4 * noise(batch.BatchNumber, specimen.Label, 'rh', hours))),
+        ResistivityOhmPerFt: round2(last.ResistivityOhmPerFt * (1 + 0.5 * Math.log(hours / 72)) + 0.2 * noise(batch.BatchNumber, specimen.Label, 'res', hours)),
+        Co2Ppm: round1(mean('Co2Ppm') + 4 * noise(batch.BatchNumber, specimen.Label, 'co2', hours)),
+      });
+    }
+  }
+}
 
 /** Deterministic per-specimen multiplier between 0.95 and 1.05. */
 export function scatter(batchNumber, label) {
@@ -144,6 +187,8 @@ export function generate(source, calibration) {
       }
     }
 
+    extendReadings(batch);
+
     for (const specimen of batch.Specimens) {
       specimen.BreakResult.StrengthPsi = calculateBreak(batch, specimen, calibration);
     }
@@ -184,7 +229,7 @@ export function flags(dataset, limits) {
 /** The demo cases: one on-track batch, three at-risk batches for different reasons, and the pH case. */
 export const INTENDED_FLAGS = {
   'VM-SYN-001': {},
-  'VM-SYN-002': { 'Curing.AmbientTempF': 63 },
+  'VM-SYN-002': { 'Curing.AmbientTempF': 150 },
   'VM-SYN-003': {},
   'VM-SYN-004': {},
   'VM-SYN-005': {},

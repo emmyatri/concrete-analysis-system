@@ -13,7 +13,7 @@ Every early warning returned by `GET /api/batches/{batchNumber}/strength` and `G
 | Limit key | Message | Example (VM-SYN-006) |
 |---|---|---|
 | `Prediction.MinimumPsi` | Projected 28-day strength of {projected} PSI is below the {minimum} PSI minimum | "Projected 28-day strength of 2,950 PSI is below the 3,000 PSI minimum" (illustrative; VM-SYN-006 doesn't trigger it) |
-| `Prediction.ShortfallPct` | Projected 28-day strength of {projected} PSI is {pct}% below the expected {expected} PSI | "Projected 28-day strength of 4,449 PSI is 28.24% below the expected 6,200 PSI" |
+| `Prediction.ShortfallPct` | Projected 28-day strength of {projected} PSI is {pct}% below the expected {expected} PSI | "Projected 28-day strength of 4,733 PSI is 23.66% below the expected 6,200 PSI" |
 | `Batch.ExpectedFinalVsWcmPct` | Expected final of {expected} PSI is {pct}% above the {aci} PSI typical for a w/cm of {ratio} | "Expected final of 6,200 PSI is 67.6% above the 3,700 PSI typical for a w/cm of 0.603" |
 
 ### Input warnings (configured messages from `validation-limits.json`)

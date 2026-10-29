@@ -7,7 +7,7 @@
 
 ## Purpose and structure
 
-Nine **fabricated** batches support demonstrations and tests; they are not actual Vulcan production data or engineering predictions. Each batch has one `Composition`, one `CementOxideAnalysis`, and nine `Specimens` (three each at `Day3`, `Day7`, and `Day28`). Every specimen has one `BreakResult` and seven `CuringReadings`, taken at 0, 12, 24, 36, 48, 60, and 72 hours after casting. This produces 81 specimens, 81 break results, and 567 curing readings.
+Nine **fabricated** batches support demonstrations and tests; they are not actual Vulcan production data or engineering predictions. Each batch has one `Composition`, one `CementOxideAnalysis`, and nine `Specimens` (three each at `Day3`, `Day7`, and `Day28`). Every specimen has one `BreakResult` and seven `CuringReadings`, taken every 12 hours through 72 hours after casting, then once a day until the cylinder is broken (7 readings for 3-day cylinders, 11 for 7-day, 32 for 28-day). This produces 81 specimens, 81 break results, and 1,350 curing readings.
 
 The nested JSON uses the exact approved schema field names for data fields, with entity names used as grouping keys. Generated database IDs, foreign keys, and audit fields are intentionally omitted because the importer and EF Core persistence layer will assign them.
 
@@ -103,14 +103,14 @@ These measurements and strength effects are **made up for testing** (SLA 1.3). T
 
 ### How the breaks are generated
 
-Each specimen's break starts from the ADR-005 estimate: the Nurse-Saul equivalent age from that specimen's own internal temperatures (14 °F datum, 73.4 °F reference), put through the ACI 209R-92 curve for the batch's cement type and expected final strength. Four made-up effects are then applied:
+Each specimen's break starts from the ADR-005 estimate: the Nurse-Saul equivalent age from that specimen's own internal temperatures (14 °F datum, 73.4 °F reference), put through the ACI 209R-92 curve for the batch's cement type and expected final strength. Four made-up effects are then applied (seed 176 for the scatter):
 
 | Effect | Size | Applies to |
 |---|---|---|
 | Water-to-cementitious ratio | −2% per 0.01 above 0.50 (minimum multiplier 0.50) | Every age |
 | Moisture loss, day 1 to day 3 | −8% per point of batch-average moisture lost; losses under 1.5 points are normal variation and ignored | Every age |
 | SCM content | Day 3 reduced by 10% of the SCM share of cementitious mass, shrinking linearly to nothing at day 28 | 3- and 7-day breaks |
-| Scatter | Deterministic ±5% per specimen (seed 168), then rounded to whole PSI | Every break |
+| Scatter | Deterministic ±5% per specimen (seed 176), then rounded to whole PSI | Every break |
 
 The seed was chosen so that, with ±5% scatter, only the named demo cases below are flagged. That choice is part of the made-up data.
 
@@ -118,11 +118,11 @@ The seed was chosen so that, with ±5% scatter, only the named demo cases below 
 
 | Batch | Case | What changed from M1 | What the app shows |
 |---|---|---|---|
-| VM-SYN-001 | On track | Breaks recalculated only | No warnings. Projected 6,164 PSI against 6,200 |
-| VM-SYN-002 | Cold-cured | Internal and ambient temperatures 30 °F lower (ambient 37–41 °F) | Ambient warning on every reading; at risk before any break (projected 5,169 PSI, 7.7% short) |
-| VM-SYN-003 | Moisture loss | Moisture falls 2 points between 24 h and 72 h | No input warning; at risk once the 3- and 7-day breaks come in low (projected 4,563 PSI, 24% short) |
-| VM-SYN-006 | High w/c | Breaks recalculated only (w/cm 0.603 unchanged) | w/cm warning, expected-final-vs-w/cm warning, at risk (projected 4,870 PSI, 21.45% short) |
-| VM-SYN-009 | pH | Breaks recalculated only (mix-water pH 7.6 unchanged) | pH warning; on track |
+| VM-SYN-001 | On track | Daily readings added; breaks recalculated | No warnings. Projected 6,242 PSI against 6,200 |
+| VM-SYN-002 | Cold-cured | Internal and ambient temperatures 25 °F lower (ambient 42–46 °F); daily readings added | Ambient warning on every reading (150); at risk before any break and after (projected 5,028 PSI, 10.21% short) |
+| VM-SYN-003 | Moisture loss | Moisture falls 2 points between 24 h and 72 h; daily readings added | No input warning; at risk once the 3- and 7-day breaks come in low (projected 4,503 PSI, 24.95% short) |
+| VM-SYN-006 | High w/c | Daily readings added; breaks recalculated (w/cm 0.603 unchanged) | w/cm warning, expected-final-vs-w/cm warning, at risk (projected 4,733 PSI, 23.66% short) |
+| VM-SYN-009 | pH | Daily readings added; breaks recalculated (mix-water pH 7.6 unchanged) | pH warning; on track |
 
 All other batches are on track with no warnings. Moisture has no warning range and trends don't trigger warnings in M2 (client-decisions §13), so the moisture-loss batch is flagged by its projected shortfall, not by a moisture warning.
 
@@ -134,7 +134,7 @@ From the repository root:
 - `node data/synthetic/generate.mjs --check` fails if `batches.json` differs from the generator, breaks a rejection limit, or raises any warning other than the demo cases.
 - `node --test data/synthetic/generate.test.mjs` runs the generator tests (also run in CI).
 
-The cold and moisture changes are applied only once, so running the generator again leaves the data unchanged.
+The cold, moisture and daily-reading changes are applied only once, so running the generator again leaves the data unchanged.
 
 ## Curing environment convention
 
@@ -142,7 +142,7 @@ Ambient temperature represents the shared curing/control-room environment rather
 
 `InternalTempF` remains specimen-specific and may vary between cylinders at the same timestamp. This allows individual specimen behavior to differ while maintaining a consistent shared ambient environment.
 
-The synthetic dataset contains seven curing readings per specimen at 12-hour intervals through the first 72 hours. VM-SYN-002's shared ambient readings are 37–41 °F (the cold-cured case); every other batch stays within 60–80 °F.
+Each specimen has readings every 12 hours through the first 72 hours (from the M1 dataset), then one a day until it is broken, so 3-day cylinders stop at 72 h, 7-day at 168 h, and 28-day at 672 h. After 72 h, internal temperature cools toward the batch's ambient as hydration slows, resistivity keeps rising, and moisture, humidity and CO₂ hold near their earlier values. VM-SYN-002's shared ambient readings are 42–46 °F (the cold-cured case); every other batch stays within 60–80 °F.
 
 ## Timestamp and pH conventions
 
@@ -152,7 +152,7 @@ All timestamps use UTC ISO 8601 with a `Z` suffix. Synthetic casts occur in June
 
 Most synthetic batches use mix-water pH values within the normal 7.0–7.5 range. VM-SYN-009 intentionally uses a `MixWaterPh` of **7.6**, which remains within the accepted 1–9 range but is slightly outside the normal range. This provides a demonstration case for the application's pH warning behavior.
 
-Intentional warnings in this dataset, all by design: VM-SYN-002 ambient temperature (all 63 readings), VM-SYN-006 w/cm (0.603), and VM-SYN-009 mix-water pH (7.6). VM-SYN-006's D3-1 break is still 2,950 PSI, but the 3,000 PSI warning applies to 28-day breaks only (client-decisions §3). Any other warning raised on import indicates a validation or data error; `generate.mjs --check` enforces this.
+Intentional warnings in this dataset, all by design: VM-SYN-002 ambient temperature (all 150 readings), VM-SYN-006 w/cm (0.603), and VM-SYN-009 mix-water pH (7.6). Several 3-day breaks are below 3,000 PSI, but the 3,000 PSI warning applies to 28-day breaks only (client-decisions §3). Any other warning raised on import indicates a validation or data error; `generate.mjs --check` enforces this.
 
 If the Project Lead requires pH at every curing interval, a schema change to M1-02 must be approved first; per-reading pH fields should not be silently added to the dataset.
 

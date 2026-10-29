@@ -35,7 +35,7 @@ describe('strengthChartConfig', () => {
       'Expected final',
       'Minimum',
     ]);
-    expect(data.datasets[4].data).toEqual([{ x: 3, y: 2950, specimen: 'D3-1' }]);
+    expect(data.datasets[4].data).toEqual([{ x: 3, y: 3148, specimen: 'D3-1' }]);
     expect(data.datasets[4].borderColor).toBe('orange');
   });
 
@@ -44,9 +44,9 @@ describe('strengthChartConfig', () => {
 
     const estimate = data.datasets.find((d) => d.label === 'VM-SYN-006 estimate')!;
     expect(estimate.data).toEqual([
-      { x: 3, y: 3000 },
-      { x: 7, y: 3975 },
-      { x: 28, y: 4870 },
+      { x: 3, y: 3129 },
+      { x: 7, y: 3969 },
+      { x: 28, y: 4733 },
     ]);
     expect([estimate.borderColor, estimate.backgroundColor]).toEqual(['blue', 'white']);
   });
@@ -56,18 +56,18 @@ describe('strengthChartConfig', () => {
 
     const predicted = data.datasets[0].data;
     expect(predicted[0]).toEqual({ x: 0, y: 0 });
-    expect(predicted.at(-1)).toEqual({ x: 28, y: 4870 });
+    expect(predicted.at(-1)).toEqual({ x: 28, y: 4733 });
   });
 
   it('draws the mean break at each age', () => {
     const { data } = strengthChartConfig(strengthOf('VM-SYN-006'), 3000, new Set(), COLORS);
 
     const mean = data.datasets.find((d) => d.label === 'VM-SYN-006 mean by age')!;
-    expect(mean.data.map((p) => p.y)).toEqual([3000, 3975, 5149]);
+    expect(mean.data.map((p) => p.y)).toEqual([3129, 3969, 4994]);
   });
 
   it('fits the y-axis to the highest of the curves, breaks and Expected final', () => {
-    // VM-SYN-001's highest value is a 28-day break of 6,551, above its 6,200 Expected final.
+    // VM-SYN-001's highest value is a 28-day break of 6,445, above its 6,200 Expected final.
     const { options } = strengthChartConfig(strengthOf('VM-SYN-001'), 3000, new Set(), COLORS);
 
     expect(options.scales?.['y']?.max).toBe(8000);

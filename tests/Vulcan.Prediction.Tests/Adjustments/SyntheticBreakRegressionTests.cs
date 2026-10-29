@@ -48,8 +48,9 @@ public class SyntheticBreakRegressionTests
                             .GetProperty("StrengthPsi")
                             .GetDouble() > 0);
 
+                    // 7 readings to 72 h, then daily until the break (SCRUM-166).
                     Assert.Equal(
-                        7,
+                        age switch { "Day3" => 7, "Day7" => 11, _ => 32 },
                         specimen.GetProperty("CuringReadings")
                             .GetArrayLength());
                 });
@@ -173,15 +174,15 @@ public class SyntheticBreakRegressionTests
         // These verify regression consistency, not real-world prediction accuracy.
         var expected7DayPsi = new Dictionary<string, double>
         {
-            ["VM-SYN-001"] = 4550,
-            ["VM-SYN-002"] = 3121,
-            ["VM-SYN-003"] = 4250,
-            ["VM-SYN-004"] = 4333,
-            ["VM-SYN-005"] = 4229,
-            ["VM-SYN-006"] = 4388,
-            ["VM-SYN-007"] = 4348,
-            ["VM-SYN-008"] = 4195,
-            ["VM-SYN-009"] = 4504
+            ["VM-SYN-001"] = 4443,
+            ["VM-SYN-002"] = 3119,
+            ["VM-SYN-003"] = 4268,
+            ["VM-SYN-004"] = 4192,
+            ["VM-SYN-005"] = 4123,
+            ["VM-SYN-006"] = 4450,
+            ["VM-SYN-007"] = 4241,
+            ["VM-SYN-008"] = 3980,
+            ["VM-SYN-009"] = 4453
         };
 
         foreach (var batch in batches)
@@ -258,15 +259,15 @@ public class SyntheticBreakRegressionTests
         // These verify calculation consistency, not real-world prediction accuracy.
         var expected28DayPsi = new Dictionary<string, double>
         {
-            ["VM-SYN-001"] = 6164,
-            ["VM-SYN-002"] = 5169,
-            ["VM-SYN-003"] = 4563,
-            ["VM-SYN-004"] = 6064,
-            ["VM-SYN-005"] = 5605,
-            ["VM-SYN-006"] = 4870,
-            ["VM-SYN-007"] = 6136,
-            ["VM-SYN-008"] = 5832,
-            ["VM-SYN-009"] = 5671
+            ["VM-SYN-001"] = 6242,
+            ["VM-SYN-002"] = 5028,
+            ["VM-SYN-003"] = 4503,
+            ["VM-SYN-004"] = 5848,
+            ["VM-SYN-005"] = 6106,
+            ["VM-SYN-006"] = 4733,
+            ["VM-SYN-007"] = 5987,
+            ["VM-SYN-008"] = 6153,
+            ["VM-SYN-009"] = 5369
         };
 
         foreach (var batch in batches)

@@ -81,20 +81,19 @@ describe('BatchDetailPage', () => {
     expect(text('[data-testid="synthetic-tag"]')).toBe('Synthetic');
     expect(text('[data-testid="warning-count"]')).toBe('1 warning');
 
-    // Cylinders & breaks: all 9. The low Day-3 break isn't flagged: the 3,000 PSI warning is for
-    // 28-day breaks (client-decisions §3).
+    // Cylinders & breaks: all 9, none flagged (the 3,000 PSI warning is for 28-day breaks).
     const cylinders = rows('cylinders');
     expect(cylinders).toHaveLength(9);
     expect(cells(cylinders[0])).toEqual(
-      expect.arrayContaining(['D3-1', 'Day 3', '11.93 in', '5.99 in', '2,950 PSI', '7', 'View']),
+      expect.arrayContaining(['D3-1', 'Day 3', '11.93 in', '5.99 in', '3,148 PSI', '7', 'View']),
     );
     // Broken at reads "06/24 @ 12:05".
     expect(cells(cylinders[0])[4]).toMatch(/^\d\d\/\d\d @ \d\d:\d\d$/);
 
-    // Curing readings: 63, grouped under 9 cylinders.
+    // Curing readings: 150 (7 per cylinder to 72 h, then daily to each break), grouped under 9 cylinders.
     const readings = rows('readings');
     expect(readings.filter((r) => r.classList.contains('group-row'))).toHaveLength(9);
-    expect(readings.filter((r) => !r.classList.contains('group-row'))).toHaveLength(63);
+    expect(readings.filter((r) => !r.classList.contains('group-row'))).toHaveLength(150);
     expect(text('[data-testid="readings"] .group-row')).toBe('Cylinder D3-1 · 7 readings');
     // Each value shows its unit.
     expect(cells(readings[1]).slice(1)).toEqual([
@@ -352,7 +351,7 @@ describe('BatchDetailPage', () => {
     await open('VM-SYN-006');
 
     expect(root.querySelector('app-strength-chart canvas')?.getAttribute('aria-label')).toContain(
-      'VM-SYN-006 strength over time. Predicted 28-day strength 4,870 PSI.',
+      'VM-SYN-006 strength over time. Predicted 28-day strength 4,733 PSI.',
     );
   });
 
@@ -366,7 +365,7 @@ describe('BatchDetailPage', () => {
       'Batch.ExpectedFinalVsWcmPct',
     ]);
     expect(reasons[0].textContent).toContain('Projected 28-day strength');
-    expect(reasons[0].textContent).toContain('4,870 PSI');
+    expect(reasons[0].textContent).toContain('4,733 PSI');
     expect(text('[data-testid="early-warning-title"]')).toBe(
       'VM-SYN-006 is at risk of missing its target',
     );
@@ -389,7 +388,7 @@ describe('BatchDetailPage', () => {
 
     expect(
       [...root.querySelectorAll('[data-testid="estimate-psi"]')].map((e) => e.textContent?.trim()),
-    ).toEqual(['3,000 PSI', '3,975 PSI', '4,870 PSI']);
+    ).toEqual(['3,129 PSI', '3,969 PSI', '4,733 PSI']);
     expect(root.querySelector('[data-testid="curing-summary"]')).not.toBeNull();
   });
 

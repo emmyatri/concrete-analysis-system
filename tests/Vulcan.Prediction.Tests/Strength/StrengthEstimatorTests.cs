@@ -390,8 +390,9 @@ public sealed class StrengthEstimatorTests
         Assert.Equal(6200, fixture.ExpectedFinalPsi);
         Assert.Equal(9, fixture.Specimens.Length);
 
+        // 7 readings to 72 h, then daily until each cylinder is broken (SCRUM-166).
         Assert.All(fixture.Specimens, specimen =>
-            Assert.Equal(7, specimen.Readings.Count));
+            Assert.True(specimen.Readings.Count is 7 or 11 or 32));
 
         // Approved initial Type III coefficients from ADR-005.
         // M2-20 will provide calibration settings in production.
@@ -419,8 +420,8 @@ public sealed class StrengthEstimatorTests
         // M2-15: Updated regression expectations using the 14°F
         // Nurse–Saul datum using the VM-SYN-006 fixture.
         Assert.InRange(result.Day3!.EstimatedPsi, 3847, 3849);
-        Assert.InRange(result.Day7!.EstimatedPsi, 5093, 5095);
-        Assert.InRange(result.Day28!.EstimatedPsi, 6234, 6236);
+        Assert.InRange(result.Day7!.EstimatedPsi, 5047, 5049);
+        Assert.InRange(result.Day28!.EstimatedPsi, 6211, 6213);
 
         Assert.True(result.Day3.EstimatedPsi > 0);
         Assert.True(result.Day7.EstimatedPsi > result.Day3.EstimatedPsi);

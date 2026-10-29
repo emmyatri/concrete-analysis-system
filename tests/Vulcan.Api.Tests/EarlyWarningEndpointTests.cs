@@ -172,7 +172,7 @@ public class EarlyWarningEndpointTests
         batches.SelectMany(batch => batch.Specimens).Count().ShouldBe(81);
         batches.SelectMany(batch => batch.Specimens).Count(specimen => specimen.BreakResult != null).ShouldBe(81);
         batches.SelectMany(batch => batch.Specimens).SelectMany(specimen => specimen.CuringReadings).Count()
-            .ShouldBe(567);
+            .ShouldBe(1350);
         db.ChangeTracker.Entries().ShouldBeEmpty();
         (await db.RecordWarning.CountAsync()).ShouldBe(warningsBefore);
     }

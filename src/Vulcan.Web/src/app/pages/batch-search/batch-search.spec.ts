@@ -95,7 +95,7 @@ describe('BatchSearchPage', () => {
       'Type III',
       '6,200',
       '0.603 ⚠',
-      '5,149 ⚠',
+      '4,994 ⚠',
       '9 / 9',
       '1 warning',
     ]);
