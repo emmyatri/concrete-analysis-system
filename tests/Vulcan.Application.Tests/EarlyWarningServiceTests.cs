@@ -111,7 +111,8 @@ public class EarlyWarningServiceTests()
         var evaluator = SetupEarlyWarningService(db);
 
         var result = await evaluator.Evaluate(syn);
-        result.AtRisk.ShouldBeTrue();
+        // Without breaks the projection is 6,235 PSI (above target), so it's flagged but not at risk.
+        result.AtRisk.ShouldBeFalse();
         // VM-SYN-006 should be flagged for WCM percent
         result.EarlyWarnings
             .Any(ew => ew.LimitKey == LimitKeys.ExpectedFinalVsWcmPct)
@@ -125,6 +126,39 @@ public class EarlyWarningServiceTests()
                 .Where(ew => ew.LimitKey == LimitKeys.ExpectedFinalVsWcmPct)
                 .ShouldBeEmpty();
         }
+    }
+
+    [Fact]
+    public async Task Synthetic_batches_match_the_m2_demo()
+    {
+        using var connection = new SqliteConnection("Filename=:memory:");
+        await connection.OpenAsync();
+        var db = GetDbContext(connection);
+        await InitTestDb(db);
+        var batchService = SetupBatchService(db);
+        foreach (var batch in SyntheticDataLoader.Load())
+        {
+            await batchService.CreateAsync(batch);
+        }
+        var evaluator = SetupEarlyWarningService(db);
+
+        var syn006 = await evaluator.Evaluate(db.Batch.Single(b => b.BatchNumber == "VM-SYN-006"));
+        syn006.AtRisk.ShouldBeTrue();
+        syn006.Projected28DayPsi.ShouldBe(4449d);
+        syn006.ShortfallPct.ShouldBe(28.24);
+        syn006.EarlyWarnings[0].Warning.ShouldBe(
+            "Projected 28-day strength of 4,449 PSI is 28.24% below the expected 6,200 PSI");
+        syn006.EarlyWarnings.ShouldContain(w => w.Warning ==
+                                                "Expected final of 6,200 PSI is 67.6% above the 3,700 PSI typical for a w/cm of 0.603");
+        syn006.EarlyWarnings.ShouldNotContain(w => w.LimitKey == "Break.StrengthPsi");
+        syn006.EarlyWarnings.ShouldNotContain(w => w.Warning.Contains("TODO"));
+
+        var syn009 = await evaluator.Evaluate(db.Batch.Single(b => b.BatchNumber == "VM-SYN-009"));
+        syn009.AtRisk.ShouldBeFalse();
+        syn009.EarlyWarnings.Single().LimitKey.ShouldBe("Batch.MixWaterPh");
+
+        var syn001 = await evaluator.Evaluate(db.Batch.Single(b => b.BatchNumber == "VM-SYN-001"));
+        syn001.EarlyWarnings.ShouldBeEmpty();
     }
 
     [Fact]

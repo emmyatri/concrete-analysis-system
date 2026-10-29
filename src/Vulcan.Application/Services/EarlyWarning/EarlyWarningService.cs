@@ -1,3 +1,4 @@
+using System.Globalization;
 using Vulcan.Application.Contracts;
 using Vulcan.Application.Interfaces;
 using Vulcan.Domain.Constants;
@@ -11,46 +12,40 @@ public class EarlyWarningService(
     IPredictionRepository prediction,
     IRecordWarningRepository recordWarning,
     ILimitProvider limitProvider,
-    WaterCementRatioCalculator wcrCalculator)
+    WaterCementRatioCalculator wcrCalculator) : IEarlyWarningEvaluator
 {
+    public Task<EarlyWarningEvaluation> EvaluateAsync(Batch batch, CancellationToken cancellationToken)
+        => Evaluate(batch);
+
     public async Task<EarlyWarningEvaluation> Evaluate(Batch batch)
     {
         var predictions = await prediction.GetByBatchIdAsync(batch.Id);
-        var batchRecordWarnings = await recordWarning
-            .GetForBatchesAsync([batch]);
-        var existingBatchWarnings = batchRecordWarnings
+        var batchRecordWarnings = await recordWarning.GetForBatchesAsync([batch]);
+
+        // Break results aren't early warnings (client-decisions §13).
+        var savedWarnings = batchRecordWarnings
+            .Where(rw => rw.EntityType != nameof(BreakResult))
             .Select(EarlyWarning.FromRecordWarning);
 
-        // var warnings = new List<EarlyWarning>();
+        var (shortfallPct, shortfallPsi, projected28DayPsi, warnings) = EvaluateBatch(batch, predictions);
 
-        // foreach (var p in predictions)
-        // {
-        //     warnings.AddRange(EvaluatePrediction(p));
-        // }
+        var predictionWarnings = warnings
+            .Where(w => w.LimitKey.StartsWith("Prediction.", StringComparison.Ordinal))
+            .ToList();
+        var batchWarnings = warnings.Except(predictionWarnings);
 
-        var (
-            shortfallPct,
-            shortfallPsi,
-            projected28DayPsi,
-            warnings
-        ) = EvaluateBatch(batch, predictions);
-
-        return new EarlyWarningEvaluation
-        (
-            AtRisk: warnings.Count > 0,
+        return new EarlyWarningEvaluation(
+            AtRisk: predictionWarnings.Count > 0,
+            Projected28DayPsi: projected28DayPsi,
             ShortfallPsi: shortfallPsi,
             ShortfallPct: shortfallPct,
-            Projected28DayPsi: projected28DayPsi,
-            EarlyWarnings: [.. warnings.Concat(existingBatchWarnings).Select(w => w.ToDTO())]
-        );
+            EarlyWarnings: [.. predictionWarnings.Concat(savedWarnings).Concat(batchWarnings).Select(w => w.ToDTO())]);
     }
 
     /// <summary>
-    /// Returns (shortfall percent?, shortfall PSI?, projected 28 day psi, list of early warnings)
+    /// Returns (shortfall percent?, shortfall PSI?, projected 28-day PSI?, early warnings).
+    /// Message wording matches mock-strength.ts, which the M2 acceptance script is verified against.
     /// </summary>
-    /// <param name="batch"></param>
-    /// <param name="predictions"></param>
-    /// <returns></returns>
     private (double?, int?, double?, List<EarlyWarning>) EvaluateBatch(
         Batch batch,
         IEnumerable<PredictionEntity> predictions)
@@ -64,80 +59,55 @@ public class EarlyWarningService(
         {
             if (p.HorizonDays == 28 && p.EstimatedPsi is { } current28DayEstimate)
             {
-                // check shortfall percent
-                var batchShortfallPct = CalculateShortfallPct(
-                    batch.ExpectedFinalBreakPsi,
-                    current28DayEstimate);
+                // Whole PSI, rounded the same way as the strength endpoint (SCRUM-169).
+                var projected = Math.Round(current28DayEstimate, 0, MidpointRounding.AwayFromZero);
+                var batchShortfallPct = Math.Round(
+                    CalculateShortfallPct(batch.ExpectedFinalBreakPsi, projected), 2, MidpointRounding.AwayFromZero);
 
-                var shortfallWarning = Check(
-                    LimitKeys.PredictionShortfallPct,
-                    batchShortfallPct,
-                    nameof(current28DayEstimate));
+                var minimumPsiWarning = Check(LimitKeys.PredictionMinimumPsi, (double)projected, "projected28DayPsi");
+                if (minimumPsiWarning is not null)
+                {
+                    minimumPsiWarning.Warning =
+                        $"Projected 28-day strength of {Psi((double)projected)} is below the {Psi(minimumPsiWarning.Limit)} minimum";
+                    warnings.Add(minimumPsiWarning);
+                }
 
+                var shortfallWarning = Check(LimitKeys.PredictionShortfallPct, batchShortfallPct, "shortfallPct");
                 if (shortfallWarning is not null)
                 {
+                    shortfallWarning.Warning =
+                        $"Projected 28-day strength of {Psi((double)projected)} is {batchShortfallPct.ToString("0.##", CultureInfo.InvariantCulture)}% below the expected {Psi(batch.ExpectedFinalBreakPsi)}";
                     warnings.Add(shortfallWarning);
                 }
 
-                // set return results
                 shortfallPct = batchShortfallPct;
-                shortfallPsi = (int)(batch.ExpectedFinalBreakPsi - current28DayEstimate);
-                projected28DayPsi = (double?)p.EstimatedPsi;
-
-                // check minimum psi
-                var minimumPsiWarning = Check(
-                    LimitKeys.PredictionMinimumPsi,
-                    (double)current28DayEstimate,
-                    nameof(current28DayEstimate));
-
-                if (minimumPsiWarning is not null)
-                {
-                    warnings.Add(minimumPsiWarning);
-                }
+                shortfallPsi = batch.ExpectedFinalBreakPsi - (int)projected;
+                projected28DayPsi = (double)projected;
             }
-
-            // rest of prediction checks
         }
 
-        // check water-cement ratio
-        if (batch.Composition is { } composition)
+        // Expected final vs. w/cm. Below 0.33 the check is skipped (ADR-005, section 4.5).
+        if (batch.Composition is { } composition
+            && wcrCalculator.Calculate(composition) is { } wcm
+            && wcm >= 0.33m)
         {
-            var waterCementRatio = wcrCalculator.Calculate(composition);
-            // don't check wcm below 0.33; ADR-005, section 4.5
-            if (waterCementRatio is { } wcm && wcm >= 0.33m)
-            {
-                var aciTablePsi = CalculateAciTablePsi((double)wcm);
-                if (aciTablePsi == 0)
-                {
-                    return (shortfallPct, shortfallPsi, projected28DayPsi, warnings);
-                }
-                var expectedFinalVsWcmWarning = Check(
-                    LimitKeys.ExpectedFinalVsWcmPct,
-                    CalculateExpectedFinalVsWcmPct(
-                        batch.ExpectedFinalBreakPsi,
-                        aciTablePsi),
-                    nameof(Batch.ExpectedFinalBreakPsi));
+            var aciTablePsi = CalculateAciTablePsi((double)wcm);
+            var vsWcmPct = Math.Round(
+                CalculateExpectedFinalVsWcmPct(batch.ExpectedFinalBreakPsi, aciTablePsi), 1, MidpointRounding.AwayFromZero);
 
-                if (expectedFinalVsWcmWarning is not null)
-                {
-                    warnings.Add(expectedFinalVsWcmWarning);
-                }
+            var expectedFinalVsWcmWarning = Check(LimitKeys.ExpectedFinalVsWcmPct, vsWcmPct, "expectedFinalVsWcmPct");
+            if (expectedFinalVsWcmWarning is not null)
+            {
+                expectedFinalVsWcmWarning.Warning =
+                    $"Expected final of {Psi(batch.ExpectedFinalBreakPsi)} is {vsWcmPct.ToString("0.#", CultureInfo.InvariantCulture)}% above the {Psi(Math.Round(aciTablePsi))} typical for a w/cm of {wcm.ToString("0.###", CultureInfo.InvariantCulture)}";
+                warnings.Add(expectedFinalVsWcmWarning);
             }
         }
 
         return (shortfallPct, shortfallPsi, projected28DayPsi, warnings);
     }
 
-    // private List<EarlyWarning> EvaluatePrediction(PredictionEntity prediction)
-    // {
-    //     // usings lists to accommodate (likely?) future warnings
-    //     var warnings = new List<EarlyWarning>();
-
-    //     return warnings;
-    // }
-
-    // not using LimitEvalutor because an EarlyWarning must include what end of the range was
-    // violated
+    // Not using LimitEvaluator because an EarlyWarning must include which end of the range was violated.
     private EarlyWarning? Check(string key, double value, string field)
     {
         var limits = limitProvider.Get(key);
@@ -156,22 +126,15 @@ public class EarlyWarningService(
             return null;
         }
 
-        // additional null check to fall-through
-        if (limits.Reject is { } reject && CheckRange(reject) is { } notNull)
+        if (limits.Reject is { } reject && CheckRange(reject) is { } rejected)
         {
-            return notNull;
+            return rejected;
         }
 
-        if (limits.Warn is { } warn)
-        {
-            return CheckRange(warn);
-        }
-
-        return null;
+        return limits.Warn is { } warn ? CheckRange(warn) : null;
     }
 
-    // interpolate the water-cement ratio within the ACI table. Values beyond 0.82 are clamped to
-    // 2000 according to ADR-005, section 4.5.
+    // Linear interpolation in ACI 211.1-97, Table 6.3.4(a). Beyond 0.82 the 2,000 PSI value is used (ADR-005, section 4.5).
     private static double CalculateAciTablePsi(double wcm)
     {
         (double Wcm, double Psi)[] table =
@@ -209,17 +172,11 @@ public class EarlyWarningService(
         throw new InvalidOperationException("Unable to interpolate ACI table PSI.");
     }
 
-    // based on ACI 211.1-97, Table 6.3.4(a)
-    private static double CalculateShortfallPct(
-        int expectedFinalBreakPsi,
-        decimal current28DayEstimatePsi)
-        => (double)((expectedFinalBreakPsi - current28DayEstimatePsi)
-                / expectedFinalBreakPsi * 100);
+    private static double CalculateShortfallPct(int expectedFinalBreakPsi, decimal projected28DayPsi)
+        => (double)((expectedFinalBreakPsi - projected28DayPsi) / expectedFinalBreakPsi * 100);
 
-    // based on ACI 211.1-97, Table 6.3.4(a)
-    private static double CalculateExpectedFinalVsWcmPct(
-        int expectedFinalBreakPsi,
-        double aciTablePsi)
-        => (expectedFinalBreakPsi - aciTablePsi)
-            / aciTablePsi * 100;
+    private static double CalculateExpectedFinalVsWcmPct(int expectedFinalBreakPsi, double aciTablePsi)
+        => (expectedFinalBreakPsi - aciTablePsi) / aciTablePsi * 100;
+
+    private static string Psi(double value) => $"{value.ToString("N0", CultureInfo.InvariantCulture)} PSI";
 }

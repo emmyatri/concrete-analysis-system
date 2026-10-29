@@ -56,7 +56,7 @@ public static class SetupUtils
         services.AddScoped<IRecordWarningRepository, RecordWarningRepository>();
         services.AddScoped<ISpecificGravityRepository, SpecificGravityRepository>();
         services.AddScoped<IValidationLimitRepository, ValidationLimitRepository>();
-        services.AddScoped<IPredictionRepository, PredictionRepository>();
+
 
         services.AddScoped<BatchValidator>();
         services.AddScoped<CompositionValidator>();
@@ -72,6 +72,7 @@ public static class SetupUtils
         services.AddScoped<ValidationLimitService>();
         services.AddScoped<IStrengthEstimateService, StrengthEstimateService>();
         services.AddScoped<EarlyWarningService>();
+        services.AddScoped<IEarlyWarningEvaluator>(sp => sp.GetRequiredService<EarlyWarningService>());
         services.AddScoped<StrengthService>();
 
         if (cs.Contains(":memory:", StringComparison.OrdinalIgnoreCase))
