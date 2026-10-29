@@ -33,6 +33,11 @@ export class StrengthChart {
   /** Cylinders whose break was saved with a warning, drawn in orange. */
   readonly flaggedSpecimenIds = input<ReadonlySet<number>>(new Set());
 
+  /** Chart height; the expanded view on Batch Detail makes it taller. */
+  readonly height = input('320px');
+  /** Text size for axes, legend and labels; the expanded view makes it larger. */
+  readonly fontSize = input(12);
+
   /** Day hovered over by either strength or curing charts. (M2-44) */
   readonly hoveredDay = input<number | null>(null);
   readonly hoveredDayChange = output<number | null>();
@@ -65,7 +70,13 @@ export class StrengthChart {
   protected readonly config = computed(() => {
     const strength = this.strength();
     return strength
-      ? strengthChartConfig(strength, this.minimumPsi(), this.flaggedSpecimenIds(), this.colors())
+      ? strengthChartConfig(
+          strength,
+          this.minimumPsi(),
+          this.flaggedSpecimenIds(),
+          this.colors(),
+          this.fontSize(),
+        )
       : null;
   });
 

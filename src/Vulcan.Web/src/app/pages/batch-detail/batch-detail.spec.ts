@@ -355,6 +355,40 @@ describe('BatchDetailPage', () => {
     );
   });
 
+  it('pops the strength chart out larger', async () => {
+    await open('VM-SYN-006');
+
+    expect(document.body.querySelector('[data-testid="expanded-chart"]')).toBeNull();
+    root.querySelector<HTMLButtonElement>('[data-testid="expand-chart"] button')!.click();
+    harness.detectChanges();
+    await harness.fixture.whenStable();
+    harness.detectChanges();
+
+    const expanded = document.body.querySelector('[data-testid="expanded-chart"] canvas');
+    expect(expanded?.getAttribute('aria-label')).toContain('VM-SYN-006 strength over time.');
+    expect(document.body.querySelector('.p-dialog-title')?.textContent).toContain(
+      'VM-SYN-006 · Strength over time',
+    );
+  });
+
+  it('pops the curing readings out larger', async () => {
+    await open('VM-SYN-006');
+
+    expect(document.body.querySelector('[data-testid="expanded-curing"]')).toBeNull();
+    root.querySelector<HTMLButtonElement>('[data-testid="expand-curing"] button')!.click();
+    harness.detectChanges();
+    await harness.fixture.whenStable();
+    harness.detectChanges();
+
+    const expanded = document.body.querySelector('[data-testid="expanded-curing"]');
+    expect(expanded).not.toBeNull();
+    // The copy has no Expand button of its own.
+    expect(expanded?.querySelector('[data-testid="expand-curing"]')).toBeNull();
+    expect(document.body.querySelector('.p-dialog-title')?.textContent).toContain(
+      'VM-SYN-006 · Curing readings',
+    );
+  });
+
   it('lists early-warning reasons on an at-risk batch, shortfall first', async () => {
     await open('VM-SYN-006');
 

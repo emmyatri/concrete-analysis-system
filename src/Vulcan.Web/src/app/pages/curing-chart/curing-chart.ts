@@ -8,8 +8,8 @@ import {
   effect,
   inject,
   input,
+  linkedSignal,
   output,
-  signal,
   viewChild,
 } from '@angular/core';
 import { DOCUMENT } from '@angular/common';
@@ -62,6 +62,17 @@ export class CuringChart {
   /** The batch's cast time (ISO, UTC), for "Latest reading: 18 h". */
   readonly castAt = input.required<string>();
 
+  /** Chart height; the expanded view on Batch Detail makes it taller. */
+  readonly height = input('120px');
+  /** Text size for axes and tooltip; the expanded view makes it larger and shows axis titles. */
+  readonly fontSize = input(12);
+  /** Shows the Expand button. Off for the expanded copy itself. */
+  readonly expandable = input(true);
+  /** The measurement to show first; the expanded view opens on the one shown on the page. */
+  readonly initialMeasurement = input<CuringMeasurement>('internalTempF');
+  /** Asks Batch Detail to open the larger view, on the measurement shown now. */
+  readonly expand = output<CuringMeasurement>();
+
   /** Day hovered over by either strength or curing charts. (M2-44) */
   readonly hoveredDay = input<number | null>(null);
   readonly hoveredDayChange = output<number | null>();
@@ -70,7 +81,7 @@ export class CuringChart {
   /** The user's selected measurement for filtering the view of curing readings;
    * default = internal temp (M2-44).
    * */
-  readonly selectedMeasurement = signal<CuringMeasurement>('internalTempF');
+  readonly selectedMeasurement = linkedSignal<CuringMeasurement>(() => this.initialMeasurement());
   readonly measurementOptions = Object.entries(measurementLabels).map(([value, label]) => ({
     value,
     label,
@@ -137,6 +148,7 @@ export class CuringChart {
       this.colors(),
       this.selectedMeasurement(),
       this.flaggedReadings(),
+      this.fontSize(),
     ),
   );
 
@@ -168,12 +180,12 @@ export class CuringChart {
         ctx.save();
         const style = this.document.defaultView?.getComputedStyle(this.document.documentElement);
         ctx.fillStyle = style?.getPropertyValue('--p-surface-950').trim() || '#171717';
-        ctx.font = `11px ${this.colors().font}`;
+        ctx.font = `${Math.round((this.fontSize() * 11) / 12)}px ${this.colors().font}`;
         ctx.textAlign = 'left';
 
         for (const day of [1, 3]) {
           const x = xAxis.getPixelForValue(day);
-          ctx.fillText(`Day ${day}`, x + 8, chartArea.top + 12);
+          ctx.fillText(`Day ${day}`, x + 8, chartArea.top + this.fontSize());
         }
 
         ctx.restore();

@@ -1,4 +1,4 @@
-import { type CuringChartColors, curingChartConfig } from './curing-chart-config';
+import { type CuringChartColors, curingChartConfig, yAxisRange } from './curing-chart-config';
 import { MOCK_BATCH_DETAILS } from '../../core/api/mock/mock-batch-details';
 import { mockStrength } from '../../core/api/mock/mock-strength';
 import type { Scale, ScriptableContext } from 'chart.js';
@@ -123,4 +123,85 @@ describe('curingChartConfig', () => {
       expect(tickLabel).toContain(expectedUnit);
     },
   );
+
+  it('shows axis titles and larger text in the expanded view', () => {
+    const { options } = curingChartConfig(
+      points,
+      castAt,
+      colors,
+      'ambientTempF',
+      flaggedReadings,
+      16,
+    );
+    expect(options.scales?.['x']?.title?.display).toBe(true);
+    expect(options.scales?.['y']?.title).toMatchObject({
+      display: true,
+      text: 'Ambient temperature (°F)',
+    });
+    expect(options.font).toMatchObject({ size: 16 });
+  });
+
+  it('keeps the compact strip on the page', () => {
+    const { options } = curingChartConfig(points, castAt, colors, 'internalTempF', flaggedReadings);
+    expect(options.scales?.['x']?.title?.display).toBe(false);
+    expect(options.font).toMatchObject({ size: 12 });
+  });
+
+  it('gives small spreads a minimum y range, so sensor noise looks flat', () => {
+    const moisture = MOCK_BATCH_DETAILS.find((b) => b.batchNumber === 'VM-SYN-009')!;
+    const { options } = curingChartConfig(
+      mockStrength(moisture).curingPoints,
+      moisture.castAt,
+      colors,
+      'moisturePct',
+      flaggedReadings,
+    );
+    const y = options.scales?.['y'] as { min?: number; max?: number };
+    expect(y.max! - y.min!).toBe(10);
+    expect(y.max).toBeLessThanOrEqual(100);
+  });
+
+  it.each([
+    ['moisturePct', 91, 93, { min: 85, max: 95 }],
+    ['relativeHumidityPct', 95, 99, { min: 90, max: 100 }],
+    ['co2Ppm', 410, 430, { min: 400, max: 440 }],
+    ['ambientTempF', 2, 4, { min: 0, max: 20 }],
+  ] as const)(
+    'centres %s readings from %d to %d in a minimum range',
+    (measurement, low, high, expected) => {
+      expect(yAxisRange(measurement, low, high)).toEqual(expected);
+    },
+  );
+
+  it('always keeps every reading inside the range', () => {
+    // VM-SYN-003's internal temperature runs from about 69.5 to 84 °F; the old range cut off the low end.
+    expect(yAxisRange('internalTempF', 69.5, 84)).toEqual({ min: 60, max: 90 });
+    for (const batch of MOCK_BATCH_DETAILS.filter((b) => b.isSynthetic)) {
+      for (const measurement of [
+        'internalTempF',
+        'ambientTempF',
+        'moisturePct',
+        'relativeHumidityPct',
+        'resistivityOhmPerFt',
+        'co2Ppm',
+      ] as const) {
+        const { options } = curingChartConfig(
+          mockStrength(batch).curingPoints,
+          batch.castAt,
+          colors,
+          measurement,
+          flaggedReadings,
+        );
+        const y = options.scales?.['y'] as { min?: number; max?: number };
+        if (y.min === undefined) continue;
+        const values = mockStrength(batch).curingPoints.map((p) => p[measurement]);
+        expect(Math.min(...values)).toBeGreaterThanOrEqual(y.min);
+        expect(Math.max(...values)).toBeLessThanOrEqual(y.max!);
+      }
+    }
+  });
+
+  it('leaves the range to Chart.js when readings already spread wider', () => {
+    expect(yAxisRange('internalTempF', 50, 85)).toBeUndefined();
+  });
 });

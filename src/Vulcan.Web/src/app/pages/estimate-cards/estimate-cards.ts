@@ -77,9 +77,14 @@ export class EstimateCards {
   });
 }
 
-/** ADR-005 Equation 7, signed: "+1.2%" when the estimate is above the actual break, "−0.3%" below. */
+/**
+ * ADR-005 Equation 7 in words: "Estimate was 91 PSI (1.9%) above the actual break", "… below …",
+ * or "Estimate matched the actual break" when they agree to within 0.05%.
+ */
 function difference(estimatedPsi: number, actualPsi: number): string {
   const pct = Math.round(((estimatedPsi - actualPsi) / actualPsi) * 1000) / 10;
-  if (pct === 0) return '0.0%';
-  return `${pct < 0 ? '−' : '+'}${formatNumber(Math.abs(pct), 'en-US', '1.1-1')}%`;
+  if (pct === 0) return 'Estimate matched the actual break';
+  const psi = formatNumber(Math.abs(Math.round(estimatedPsi - actualPsi)), 'en-US', '1.0-0');
+  const percent = formatNumber(Math.abs(pct), 'en-US', '1.1-1');
+  return `Estimate was ${psi} PSI (${percent}%) ${pct > 0 ? 'above' : 'below'} the actual break`;
 }

@@ -21,18 +21,19 @@
       }
       @default {
         @if (card.estimate; as estimate) {
+          <p class="value-label">Estimated</p>
           <p class="estimate-value" data-testid="estimate-psi">
             {{ card.estimatedPsi | number: '1.0-0' }} PSI
           </p>
 
           @if (card.actual !== null) {
             <p class="estimate-line" data-testid="actual">
-              Actual break: {{ card.actual | number: '1.0-0' }} PSI (average of
-              {{ card.breakCount }})
-              @if (card.difference) {
-                · estimate {{ card.difference }} vs actual
-              }
+              Actual break: <strong>{{ card.actual | number: '1.0-0' }} PSI</strong> · average of
+              {{ card.breakCount }} {{ card.breakCount === 1 ? 'cylinder' : 'cylinders' }}
             </p>
+            @if (card.difference) {
+              <p class="estimate-line" data-testid="difference">{{ card.difference }}</p>
+            }
           } @else {
             <p class="estimate-line" data-testid="due">
               Breaks due {{ card.dueAt | date: 'MM/dd/yy' }}
