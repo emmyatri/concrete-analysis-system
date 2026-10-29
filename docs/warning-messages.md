@@ -1,79 +1,73 @@
 # Plain-language early-warning messages
 
-SCRUM-182 · Requirement: FR-16
+SCRUM-182 · Requirement: FR-16 · Implemented in `EarlyWarningService` (SCRUM-181)
 
 ## Purpose
 
-Explain each triggered early-warning factor using the batch’s actual measurements. SCRUM-181 decides which factors trigger; this formatter supplies their wording.
+Every early warning returned by `GET /api/batches/{batchNumber}/strength` and `GET /api/warnings/early` carries a sentence an operator can read without knowing internal codes. Messages never show a limit key and never invent a value, threshold or cause.
 
-Messages must not display internal factor codes or invent missing measurements, thresholds, or causes.
+## Messages shipped in M2
 
-## Message templates
+### Prediction and target warnings (built with the batch's numbers)
 
-Placeholders in braces are replaced with actual values.
+| Limit key | Message | Example (VM-SYN-006) |
+|---|---|---|
+| `Prediction.MinimumPsi` | Projected 28-day strength of {projected} PSI is below the {minimum} PSI minimum | "Projected 28-day strength of 2,950 PSI is below the 3,000 PSI minimum" (illustrative; VM-SYN-006 doesn't trigger it) |
+| `Prediction.ShortfallPct` | Projected 28-day strength of {projected} PSI is {pct}% below the expected {expected} PSI | "Projected 28-day strength of 4,449 PSI is 28.24% below the expected 6,200 PSI" |
+| `Batch.ExpectedFinalVsWcmPct` | Expected final of {expected} PSI is {pct}% above the {aci} PSI typical for a w/cm of {ratio} | "Expected final of 6,200 PSI is 67.6% above the 3,700 PSI typical for a w/cm of 0.603" |
 
-| Factor | Proposed message |
-| --- | --- |
-| Projected shortfall | The projected 28-day strength is {projectedPsi} PSI, which is {shortfallPsi} PSI below the expected {expectedPsi} PSI—a shortfall of {shortfallPct}%. |
-| Below minimum strength | The projected 28-day strength is {projectedPsi} PSI, below the configured minimum of {minimumPsi} PSI. |
-| Expected strength versus water–cementitious ratio | The expected final strength of {expectedPsi} PSI is {excessPct}% above the approximate {typicalPsi} PSI from the ACI reference for a water–cementitious ratio of {ratio}. The target may be too high for this much water relative to cementitious material. |
-| Water–cement ratio | The water–cement ratio is {ratio}, {direction} the configured warning {boundLabel} of {limit}. |
-| SCM percentage | Supplementary cementitious material makes up {value}% of the mix, {direction} the configured warning {boundLabel} of {limit}%. |
-| Coarse aggregate | Coarse aggregate makes up {value}% of the mix, {direction} the configured warning {boundLabel} of {limit}%. |
-| Fine aggregate | Fine aggregate makes up {value}% of the mix, {direction} the configured warning {boundLabel} of {limit}%. |
-| Alumina | The cement’s alumina content is {value}%, {direction} the configured warning {boundLabel} of {limit}%. |
-| Iron oxide | The cement’s iron oxide content is {value}%, {direction} the configured warning {boundLabel} of {limit}%. |
-| Magnesium oxide | The cement’s magnesium oxide content is {value}%, {direction} the configured warning {boundLabel} of {limit}%. |
-| Sulfur trioxide | The cement’s sulfur trioxide content is {value}%, {direction} the configured warning {boundLabel} of {limit}%. |
-| Mix water pH | The mix water pH is {value}, {direction} the configured warning {boundLabel} of {limit}. |
-| Cement surface pH | The cement surface pH is {value}, {direction} the configured warning {boundLabel} of {limit}. |
-| Internal temperature | The internal temperature reading is {value} °F, {direction} the configured warning {boundLabel} of {limit} °F. |
-| Ambient temperature | The ambient temperature reading is {value} °F, {direction} the configured warning {boundLabel} of {limit} °F. |
-| Moisture | The moisture reading is {value}%, {direction} the configured warning {boundLabel} of {limit}%. |
-| Relative humidity | The relative humidity reading is {value}%, {direction} the configured warning {boundLabel} of {limit}%. |
-| Resistivity | The resistivity reading is {value} ohms/ft, {direction} the configured warning {boundLabel} of {limit} ohms/ft. |
-| Carbon dioxide | The carbon dioxide reading is {value} {unit}, {direction} the configured warning {boundLabel} of {limit} {unit}. |
+### Input warnings (configured messages from `validation-limits.json`)
 
-For range messages, `{direction}` is “below” or “above”; `{boundLabel}` is “minimum” or “maximum”. Both come from the triggered factor’s comparison with its configured limit.
+These are the 10 measurements with a `Warn` range. The message is the configured text; the screen shows the measured value next to it.
 
-Water–cement ratio and water–cementitious ratio are distinct measurements. Their labels and values must match the factor being explained.
+| Limit key | Message |
+|---|---|
+| `Batch.CementSurfacePh` | Cement surface pH is outside the normal range [7.1-8.0] |
+| `Batch.FinalWeightLb` | Sample weight is outside the normal range [20-30] for a 12x6 cylinder |
+| `Batch.MixWaterPh` | pH is outside the normal range [7.0-7.5] |
+| `Composition.WaterCementRatio` | The water to cement ratio is outside the normal range [0.4-0.6] |
+| `Oxide.AluminaPct` | The aluminum oxide percent is outside the normal range [3.0-7.5] |
+| `Oxide.IronOxidePct` | The iron oxide percent is outside the normal range [0.5-6.0] |
+| `Oxide.MagnesiumOxidePct` | The magnesium oxide percent is outside the normal range [0.1-4.0] |
+| `Oxide.SulfurTrioxidePct` | The sulfur trioxide percent is outside the normal range [1.3-3.0] |
+| `Curing.AmbientTempF` | Ambient temperature is outside the normal range [60-80] |
+
+`Break.StrengthPsi` also has a warning range, but saved break warnings are not early warnings (client-decisions §13). They appear in the Warnings tab and on the strength chart, not in the early-warning list.
+
+Internal temperature, moisture, relative humidity, resistivity, CO₂, SCM percentage and aggregate percentages have no warning range in M2, so they never produce an early warning.
 
 ## Formatting
 
-- Match the application’s established number formatting.
-- Show PSI with thousands separators.
-- Retain enough precision to explain why a value crossed a limit.
-- Show percentages with `%`, temperatures with `°F`, and resistivity with `ohms/ft`.
-- pH and ratios have no physical unit; identify them explicitly in the sentence.
-- Confirm the carbon dioxide unit against the implemented contract before coding. Do not relabel ppm as percent without conversion.
-- Where available, identify the specimen and reading time so operators can locate the measurement.
+- PSI uses thousands separators and is rounded to whole PSI, matching the strength endpoint (SCRUM-169).
+- Shortfall percentage is rounded to 2 decimal places; expected-vs-w/cm percentage to 1.
+- The w/cm ratio is rounded to 3 decimal places before the ACI table lookup, so the message matches the w/c shown on screen.
+- Formatting uses the invariant culture so output does not change with the computer's regional settings.
+- Wording matches `mock-strength.ts`, which the M2 acceptance script (`docs/m2-acceptance.md`) is verified against. Change both together.
 
 ## Ordering
 
-1. Projected strength shortfall.
-2. Projected strength below the configured minimum.
-3. Other factors in an agreed, deterministic order.
+1. Prediction warnings: minimum PSI, then projected shortfall
+2. Saved input warnings, in the order they were recorded
+3. Expected final vs. w/cm
 
-The remaining explanatory ranking must be agreed with SCRUM-181’s developer. Do not invent numerical importance scores.
+## Missing data
 
-## Test plan
+- Not enough curing data for a 28-day estimate: no prediction warnings. Input warnings and the w/cm check still apply.
+- w/cm below 0.33: the w/cm check is skipped (ADR-005 §4.5). Above 0.82, the 2,000 PSI table value is used.
 
-- Every supported factor produces a sentence containing its actual value and applicable unit or measurement label.
-- Messages include the correct limit and comparison direction.
-- Different input values produce corresponding changes in the message.
-- Projected shortfall messages include projected strength, expected strength, shortfall in PSI, and shortfall percentage.
-- Expected-strength-versus-ratio messages include the actual ratio, expected strength, reference strength, and percentage difference.
-- Output contains no internal factor codes or unresolved placeholders.
-- Formatting does not conceal a threshold crossing.
-- Ordering puts projected shortfall first and is deterministic.
-- Missing supporting data is handled explicitly without fabricated numbers; agree on that behavior before implementation.
-- Once connected to the warning service, every returned warning has at least one nonempty explanation.
+## Decisions (previously open questions)
 
-## Questions I need to figure out though
+| Question | Decision |
+|---|---|
+| Factor codes and shared types | `ValidationLimit` keys plus the three keys above; returned as `EarlyWarningDTO` (SCRUM-170) |
+| Supporting values | `EarlyWarningDTO.Value` and `Limit`; prediction values from `EarlyWarningEvaluation` |
+| Which measurements have warning ranges | The `Warn` rows in `validation-limits.json` |
+| Ordering | As above |
+| Missing data | As above; no invented numbers |
+| CO₂ units | ppm; no warning range in M2 |
 
-- Factor codes and shared input/output types.
-- Which supporting values SCRUM-181 supplies.
-- Ordering among mix and curing factors.
-- Missing-data and unsupported-factor behavior.
-- Carbon dioxide units and reading identification.
-- Which measurements currently have approved warning ranges.
+## M3 follow-ups
+
+- Include the measured value in input-warning messages (for example "Mix water pH is 7.6, above the normal maximum of 7.5"). Update the acceptance script at the same time.
+- Return the crossed bound in `Limit` for saved input warnings (currently 0).
+- Move message building out of `EarlyWarningService` into a dedicated formatter if more warning types are added.

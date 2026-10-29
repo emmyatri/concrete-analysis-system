@@ -1,6 +1,7 @@
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging.Abstractions;
+using Vulcan.Application.Contracts;
 using Vulcan.Application.Services;
 using Vulcan.Application.Services.EarlyWarning;
 using Vulcan.Domain.Constants;
@@ -307,5 +308,36 @@ public class EarlyWarningServiceTests()
                 SulfurTrioxidePct = 2m
             }
         };
+    }
+
+    [Fact]
+    public async Task Every_early_warning_reads_as_plain_language()
+    {
+        using var connection = new SqliteConnection("Filename=:memory:");
+        await connection.OpenAsync();
+        var db = GetDbContext(connection);
+        await InitTestDb(db);
+        var batchService = SetupBatchService(db);
+        foreach (var batch in SyntheticDataLoader.Load())
+        {
+            await batchService.CreateAsync(batch);
+        }
+        var evaluator = SetupEarlyWarningService(db);
+
+        var warnings = new List<EarlyWarningDTO>();
+        foreach (var batch in db.Batch.ToList())
+        {
+            warnings.AddRange((await evaluator.Evaluate(batch)).EarlyWarnings);
+        }
+
+        warnings.ShouldNotBeEmpty();
+        warnings.ShouldAllBe(w => !string.IsNullOrWhiteSpace(w.Warning));
+        warnings.ShouldAllBe(w => !w.Warning.Contains(w.LimitKey));
+        warnings.ShouldAllBe(w => !w.Warning.Contains("TODO"));
+
+        // Prediction and target warnings carry the batch's real numbers.
+        warnings
+            .Where(w => w.LimitKey.StartsWith("Prediction.") || w.LimitKey == LimitKeys.ExpectedFinalVsWcmPct)
+            .ShouldAllBe(w => w.Warning.Contains(" PSI") && w.Warning.Any(char.IsDigit));
     }
 }
