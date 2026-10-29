@@ -223,7 +223,7 @@ export function curingChartConfig(
               if (warningLines.length > 0) {
                 return warningLines;
               }
-              return `${item.dataset.label}: ${point.y.toLocaleString('en-US')}${measurementUnits[selectedMeasurement]} at day ${day}`;
+              return `${item.dataset.label}: ${point.y.toLocaleString('en-US', { maximumFractionDigits: 1 })}${measurementUnits[selectedMeasurement]} at day ${day}`;
             },
           },
         },
