@@ -164,7 +164,7 @@ export function curingChartConfig(
       maintainAspectRatio: false,
       animation: false,
       font,
-      interaction: { mode: 'nearest', intersect: false },
+      interaction: { mode: 'index', intersect: false },
       layout: { padding: { top: 4, right: 8 } },
       scales: {
         x: {
