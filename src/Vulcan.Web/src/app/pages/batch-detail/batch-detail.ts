@@ -4,15 +4,22 @@ import { Component, computed, effect, inject, input, signal, untracked } from '@
 import { toObservable, toSignal } from '@angular/core/rxjs-interop';
 import { Router, RouterLink } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
+import { DialogModule } from 'primeng/dialog';
 import { TableModule } from 'primeng/table';
 import { TabsModule } from 'primeng/tabs';
 import { catchError, map, of, startWith, switchMap } from 'rxjs';
 
 import { describeApiError } from '../../core/api/api-errors';
-import { BatchDetail, SavedWarning, Specimen } from '../../core/api/models';
+import { earlyWarningsShortfallFirst } from '../../core/api/early-warnings';
+import { BatchDetail, EarlyWarning, SavedWarning, Specimen } from '../../core/api/models';
 import { ReferenceDataService } from '../../core/api/reference-data.service';
 import { VulcanApiService } from '../../core/api/vulcan-api.service';
 import { AddCylinderDialog } from '../add-cylinder-dialog/add-cylinder-dialog';
+import { CuringSummary } from '../curing-summary/curing-summary';
+import { EstimateCards } from '../estimate-cards/estimate-cards';
+import { StrengthChart, StrengthLoad } from '../strength-chart/strength-chart';
+import { CuringChart } from '../curing-chart/curing-chart';
+import type { CuringMeasurement } from '../curing-chart/curing-chart-config';
 
 type LoadState =
   | { status: 'loading' }
@@ -64,9 +71,14 @@ const FIELDS: Record<string, { label: string; short?: string; digits: string }> 
     DecimalPipe,
     RouterLink,
     ButtonModule,
+    DialogModule,
     TableModule,
     TabsModule,
     AddCylinderDialog,
+    StrengthChart,
+    CuringChart,
+    EstimateCards,
+    CuringSummary,
   ],
   templateUrl: './batch-detail.html',
   styleUrl: './batch-detail.scss',
@@ -126,6 +138,90 @@ export class BatchDetailPage {
   });
 
   protected readonly cementLabels = CEMENT_LABELS;
+
+  // ---------- Strength chart ----------
+
+  /** Which batch the chart last loaded, so a reload after adding cylinders doesn't blank the chart. */
+  private strengthBatchNumber: string | null = null;
+
+  /** Loaded next to the batch. If it fails, the rest of the page still shows. */
+  protected readonly strengthState = toSignal(
+    toObservable(
+      computed(() => ({ batchNumber: this.batchNumber(), attempt: this.attempt() })),
+    ).pipe(
+      switchMap(({ batchNumber }) => {
+        const sameBatch = this.strengthBatchNumber === batchNumber;
+        this.strengthBatchNumber = batchNumber;
+        const load = this.api.getStrength(batchNumber).pipe(
+          map((strength): StrengthLoad => ({ status: 'loaded', strength })),
+          catchError((error: unknown) =>
+            of<StrengthLoad>({ status: 'failed', message: describeApiError(error).message }),
+          ),
+        );
+        return sameBatch ? load : load.pipe(startWith<StrengthLoad>({ status: 'loading' }));
+      }),
+    ),
+    { initialValue: { status: 'loading' } as StrengthLoad },
+  );
+
+  /** Plain-language reasons from GET strength, shortfall first. Empty when the batch is on track. */
+  protected readonly earlyWarningReasons = computed((): EarlyWarning[] => {
+    const state = this.strengthState();
+    if (state.status !== 'loaded') return [];
+    return earlyWarningsShortfallFirst(state.strength.earlyWarnings);
+  });
+
+  /** "VM-SYN-006 is at risk of missing its target" when the prediction says so (mockup M2-01). */
+  protected readonly earlyWarningTitle = computed(() => {
+    const state = this.strengthState();
+    return state.status === 'loaded' && state.strength.atRisk
+      ? `${state.strength.batchNumber} is at risk of missing its target`
+      : 'Early warning';
+  });
+
+  /**
+   * The chart's minimum line: Prediction.MinimumPsi once SCRUM-181 adds it, until then the break
+   * strength Warn limit (both 3,000 PSI, the client's minimum).
+   */
+  protected readonly minimumPsi = computed(
+    () =>
+      this.referenceData.limitFor('Prediction.MinimumPsi')?.warn?.min ??
+      this.referenceData.limitFor('Break.StrengthPsi')?.warn?.min ??
+      null,
+  );
+
+  /** Cylinders whose break saved with a warning, drawn in orange on the chart. */
+  protected readonly flaggedSpecimenIds = computed(
+    () =>
+      new Set(
+        (this.batch()?.specimens ?? [])
+          .filter(
+            (s) =>
+              s.breakResult &&
+              this.warningFor('BreakResult', s.breakResult.id, 'Break.StrengthPsi'),
+          )
+          .map((s) => s.id),
+      ),
+  );
+
+  // ---------- Curing chart ----------
+
+  protected readonly curingPoints = computed(() => {
+    const state = this.strengthState();
+    if (state.status === 'loaded') {
+      return state.strength.curingPoints;
+    }
+    return [];
+  });
+
+  // ---------- Shared chart interaction ----------
+
+  /** Days hovered over in either strength or curing charts are highlighted in both charts (M2-44). */
+  protected readonly hoveredDay = signal<number | null>(null);
+  /** The strength chart's larger pop-out view. */
+  protected readonly chartExpanded = signal(false);
+  /** The curing strip's larger pop-out view, on this measurement; null when closed. */
+  protected readonly curingExpanded = signal<CuringMeasurement | null>(null);
 
   // ---------- Saved warnings ----------
 

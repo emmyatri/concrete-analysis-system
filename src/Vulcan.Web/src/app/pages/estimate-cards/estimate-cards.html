@@ -1,0 +1,64 @@
+@for (card of cards(); track card.horizon) {
+  <article
+    class="card estimate-card"
+    [class.at-risk]="card.atRisk"
+    [attr.data-testid]="'estimate-' + card.horizon"
+  >
+    <header class="estimate-header">
+      <h3>{{ card.horizon }}-day estimate</h3>
+      @if (card.atRisk && riskLabel()) {
+        <span class="risk-badge" data-testid="risk-badge">⚠ {{ riskLabel() }}</span>
+      }
+    </header>
+
+    @switch (state().status) {
+      @case ('loading') {
+        <p class="estimate-value muted">…</p>
+      }
+      @case ('failed') {
+        <p class="estimate-value muted">—</p>
+        <p class="estimate-line">Couldn't load the estimate</p>
+      }
+      @default {
+        @if (card.estimate; as estimate) {
+          <p class="value-label">Estimated</p>
+          <p class="estimate-value" data-testid="estimate-psi">
+            {{ card.estimatedPsi | number: '1.0-0' }} PSI
+          </p>
+
+          @if (card.actual !== null) {
+            <p class="estimate-line" data-testid="actual">
+              Actual break: <strong>{{ card.actual | number: '1.0-0' }} PSI</strong> · average of
+              {{ card.breakCount }} {{ card.breakCount === 1 ? 'cylinder' : 'cylinders' }}
+            </p>
+            @if (card.difference) {
+              <p class="estimate-line" data-testid="difference">{{ card.difference }}</p>
+            }
+          } @else {
+            <p class="estimate-line" data-testid="due">
+              Breaks due {{ card.dueAt | date: 'MM/dd/yy' }}
+              @if (card.horizon === 28) {
+                · target {{ batch().expectedFinalBreakPsi | number }} PSI
+              }
+            </p>
+          }
+
+          <p class="estimate-basis" data-testid="basis">
+            {{ card.adjustment }}
+            @if (card.adjusted) {
+              · was {{ estimate.unadjustedPsi | number }} before breaks
+            }
+            · Calibration {{ estimate.calibratedVersion }}
+          </p>
+          <details class="estimate-details">
+            <summary>How this was calculated</summary>
+            <p>{{ estimate.basis }}</p>
+          </details>
+        } @else {
+          <p class="estimate-value muted">—</p>
+          <p class="estimate-line" data-testid="no-estimate">Not enough curing data yet</p>
+        }
+      }
+    }
+  </article>
+}

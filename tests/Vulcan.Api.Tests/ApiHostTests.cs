@@ -88,8 +88,24 @@ public class ApiHostTests
         }
     }
 
-    // DEMO HOTFIX: the demo set loads next to real batches and leaves them unchanged.
-    // Revert to the M1-24 "empty database only" test after the demo.
+
+    // SCRUM-155: the desktop app passes its command-line args through, so
+    // "Vulcan.Desktop.exe --SeedSyntheticData=true" loads the demo set.
+    [Fact]
+    public async Task Synthetic_seed_data_loads_when_command_line_arg_is_set()
+    {
+        await using var app = ApiHost.Create(["--environment=Testing", "--SeedSyntheticData=true"]);
+
+        using var scope = app.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<VulcanDbContext>();
+
+        var batches = await db.Batch.ToListAsync();
+
+        batches.Count.ShouldBe(9);
+        batches.ShouldAllBe(batch => batch.IsSynthetic);
+    }
+
+    // The demo set loads next to real batches and leaves them unchanged (kept after the M1 demo).
     [Fact]
     public async Task Synthetic_seed_data_loads_alongside_existing_batches()
     {

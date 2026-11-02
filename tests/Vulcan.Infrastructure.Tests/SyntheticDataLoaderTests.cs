@@ -47,10 +47,12 @@ public class SyntheticDataLoaderTests(DatabaseFixture dbFixture)
         // not just the nine parent batch records.
         Assert.Equal(81, await db.Specimen.CountAsync());
         Assert.Equal(81, await db.BreakResult.CountAsync());
-        Assert.Equal(567, await db.CuringReading.CountAsync());
+        Assert.Equal(1350, await db.CuringReading.CountAsync());
 
         var expectedSurfacePh = SyntheticDataLoader.Load()
             .ToDictionary(batch => batch.BatchNumber, batch => batch.CementSurfacePh);
+        var expectedBatches = SyntheticDataLoader.Load()
+            .ToDictionary(batch => batch.BatchNumber);
         db.ChangeTracker.Clear();
 
         var batches = await db.Batch
@@ -78,6 +80,18 @@ public class SyntheticDataLoaderTests(DatabaseFixture dbFixture)
 
             Assert.All(batch.Specimens, specimen =>
             {
+                var expectedSpecimen = expectedBatches[batch.BatchNumber].Specimens
+                    .Single(expected => expected.Label == specimen.Label);
+                Assert.Equal(expectedSpecimen.BreakResult!.StrengthPsi, specimen.BreakResult!.StrengthPsi);
+                Assert.Equal(expectedSpecimen.CuringReadings.Count, specimen.CuringReadings.Count);
+                foreach (var reading in specimen.CuringReadings)
+                {
+                    var expectedReading = expectedSpecimen.CuringReadings
+                        .Single(expected => expected.TakenAt == reading.TakenAt);
+                    Assert.Equal(expectedReading.InternalTempF, reading.InternalTempF);
+                    Assert.Equal(expectedReading.AmbientTempF, reading.AmbientTempF);
+                    Assert.Equal(expectedReading.MoisturePct, reading.MoisturePct);
+                }
                 Assert.True(specimen.IsSynthetic);
                 Assert.Equal("Synthetic data", specimen.CreatedBy);
                 Assert.Equal(batch.CastAt, specimen.CreatedAtUtc);

@@ -123,6 +123,7 @@ These are the ones reviewers will send PRs back for.
 - **No real Vulcan data in the repo, ever.** Only synthetic data, in `data/synthetic/`. This is in our contract.
 - **Ask a lead before adding a NuGet package.**
 - **Don't commit `bin/`, `obj/`, `.db` files, or anything in `.gitignore`.** If `git status` shows them, stop and ask.
+- **Line endings are LF.** `.gitattributes` and `.editorconfig` handle it, so don't change them. If `git status` shows files you didn't touch, check with `git diff --ignore-cr-at-eol`. If that's empty, it's line-ending noise: `git restore <file>` clears it.
 
 ---
 

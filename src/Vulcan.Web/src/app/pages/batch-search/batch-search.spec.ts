@@ -95,9 +95,9 @@ describe('BatchSearchPage', () => {
       'Type III',
       '6,200',
       '0.603 ⚠',
-      '4,461 ⚠',
+      '4,994 ⚠',
       '9 / 9',
-      '2 warnings',
+      '1 warning',
     ]);
   });
 
@@ -114,7 +114,6 @@ describe('BatchSearchPage', () => {
 
     expect(batchNumbers()).toEqual(['VM-2026-0142', 'VM-2026-0141', 'VM-2026-0139']);
   });
-
 
   it('says synthetic data is hidden when that is why nothing matches', async () => {
     TestBed.inject(SyntheticDataSetting).show.set(false);

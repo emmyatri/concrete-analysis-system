@@ -63,7 +63,10 @@ export class ReferenceDataService {
 
   private fetch(): void {
     this._status.set('loading');
-    forkJoin({ limits: this.api.getValidationLimits(), gravities: this.api.getSpecificGravities() }).subscribe({
+    forkJoin({
+      limits: this.api.getValidationLimits(),
+      gravities: this.api.getSpecificGravities(),
+    }).subscribe({
       next: ({ limits, gravities }) => {
         this._limits.set(limits);
         this._gravities.set(gravities);

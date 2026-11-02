@@ -10,7 +10,9 @@ describe('ReferenceDataService', () => {
   let http: HttpTestingController;
 
   beforeEach(() => {
-    TestBed.configureTestingModule({ providers: [provideHttpClient(), provideHttpClientTesting()] });
+    TestBed.configureTestingModule({
+      providers: [provideHttpClient(), provideHttpClientTesting()],
+    });
     service = TestBed.inject(ReferenceDataService);
     http = TestBed.inject(HttpTestingController);
   });
@@ -50,7 +52,9 @@ describe('ReferenceDataService', () => {
 
   it('reports a failure, and can load again', () => {
     service.load();
-    http.expectOne('/api/validation-limits').flush(null, { status: 0, statusText: 'Unknown Error' });
+    http
+      .expectOne('/api/validation-limits')
+      .flush(null, { status: 0, statusText: 'Unknown Error' });
     http.match('/api/specific-gravities');
     expect(service.status()).toBe('failed');
 

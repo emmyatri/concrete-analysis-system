@@ -5,6 +5,7 @@ import { CreateBatchRequest, CreateBatchResponse } from './batches';
 import {
   BatchDetail,
   BatchQuery,
+  BatchStrength,
   BatchSummary,
   CreateBreakResultRequest,
   CreateBreakResultResponse,
@@ -12,6 +13,7 @@ import {
   CreateCuringReadingResponse,
   CreateSpecimenRequest,
   CreateSpecimenResponse,
+  EarlyWarningBatch,
   PendingBreak,
   SpecificGravity,
   ValidationLimit,
@@ -52,7 +54,6 @@ export class VulcanApiService {
     return this.http.post<CreateBatchResponse>('/api/batches', request);
   }
 
-
   /** Cylinders not broken yet, soonest due first. Follows the Synthetic data switch like Search. */
   getPendingBreaks(includeSynthetic: boolean) {
     const params = new HttpParams().set('includeSynthetic', String(includeSynthetic));
@@ -67,7 +68,6 @@ export class VulcanApiService {
     return this.http.post<CreateBreakResultResponse>(`/api/specimens/${specimenId}/break`, request);
   }
 
-
   /**
    * Adds one curing reading to a cylinder. A 400 lists bad values by key ("Curing.AmbientTempF",
    * "Curing.TakenAt", …); a 404 means there's no such cylinder.
@@ -79,7 +79,6 @@ export class VulcanApiService {
     );
   }
 
-
   /**
    * Adds a cylinder to a batch. A 400 lists bad values by ValidationLimit key ("Specimen.Label" for a label
    * already used on this batch); a 404 means there's no batch with that number.
@@ -89,5 +88,19 @@ export class VulcanApiService {
       `/api/batches/${encodeURIComponent(batchNumber)}/specimens`,
       request,
     );
+  }
+
+  /**
+   * The strength chart, 3/7/28-day estimates and early warnings for one batch (M2-30). Status
+   * InsufficientCuringData means no estimate yet; a 404 means there's no batch with that number.
+   */
+  getStrength(batchNumber: string) {
+    return this.http.get<BatchStrength>(`/api/batches/${encodeURIComponent(batchNumber)}/strength`);
+  }
+
+  /** Batches with at least one early warning, at-risk batches first. Follows the Synthetic data switch. */
+  getEarlyWarnings(includeSynthetic: boolean) {
+    const params = new HttpParams().set('includeSynthetic', String(includeSynthetic));
+    return this.http.get<EarlyWarningBatch[]>('/api/warnings/early', { params });
   }
 }

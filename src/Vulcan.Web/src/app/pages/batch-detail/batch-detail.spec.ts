@@ -1,4 +1,5 @@
 ﻿import { provideHttpClient, withInterceptors } from '@angular/common/http';
+import { Component, input } from '@angular/core';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
 import { provideRouter, withComponentInputBinding } from '@angular/router';
@@ -15,7 +16,20 @@ import { BatchDetail } from '../../core/api/models';
 import { ReferenceDataService } from '../../core/api/reference-data.service';
 import { USE_MOCKS } from '../../core/api/use-mocks';
 import { VulcanPreset } from '../../theme/vulcan-preset';
+import { StrengthChart } from '../strength-chart/strength-chart';
 import { BatchDetailPage } from './batch-detail';
+
+/** Stands in for p-chart, since jsdom can't draw on a canvas. */
+// eslint-disable-next-line @angular-eslint/component-selector -- must match PrimeNG's selector
+@Component({ selector: 'p-chart', template: '<canvas [attr.aria-label]="ariaLabel()"></canvas>' })
+class FakeChart {
+  readonly type = input<string>();
+  readonly data = input<unknown>();
+  readonly options = input<unknown>();
+  readonly plugins = input<unknown>();
+  readonly height = input<string>();
+  readonly ariaLabel = input<string>();
+}
 
 // jsdom has no ResizeObserver, and PrimeNG's tab list uses one to size its scroll buttons.
 globalThis.ResizeObserver ??= class {
@@ -43,6 +57,7 @@ describe('BatchDetailPage', () => {
         { provide: USE_MOCKS, useValue: useMocks },
       ],
     });
+    TestBed.overrideComponent(StrengthChart, { set: { imports: [FakeChart] } });
     if (useMocks) TestBed.inject(ReferenceDataService).load();
     harness = await RouterTestingHarness.create(`/batches/${batchNumber}`);
     root = harness.routeNativeElement as HTMLElement;
@@ -64,21 +79,21 @@ describe('BatchDetailPage', () => {
 
     expect(text('h1')).toBe('VM-SYN-006');
     expect(text('[data-testid="synthetic-tag"]')).toBe('Synthetic');
-    expect(text('[data-testid="warning-count"]')).toBe('2 warnings');
+    expect(text('[data-testid="warning-count"]')).toBe('1 warning');
 
-    // Cylinders & breaks: all 9, and the failing Day-3 break is flagged.
+    // Cylinders & breaks: all 9, none flagged (the 3,000 PSI warning is for 28-day breaks).
     const cylinders = rows('cylinders');
     expect(cylinders).toHaveLength(9);
     expect(cells(cylinders[0])).toEqual(
-      expect.arrayContaining(['D3-1', 'Day 3', '11.93 in', '5.99 in', '2,950 PSI ⚠', '7', 'View']),
+      expect.arrayContaining(['D3-1', 'Day 3', '11.93 in', '5.99 in', '3,148 PSI', '7', 'View']),
     );
     // Broken at reads "06/24 @ 12:05".
     expect(cells(cylinders[0])[4]).toMatch(/^\d\d\/\d\d @ \d\d:\d\d$/);
 
-    // Curing readings: 63, grouped under 9 cylinders.
+    // Curing readings: 150 (7 per cylinder to 72 h, then daily to each break), grouped under 9 cylinders.
     const readings = rows('readings');
     expect(readings.filter((r) => r.classList.contains('group-row'))).toHaveLength(9);
-    expect(readings.filter((r) => !r.classList.contains('group-row'))).toHaveLength(63);
+    expect(readings.filter((r) => !r.classList.contains('group-row'))).toHaveLength(150);
     expect(text('[data-testid="readings"] .group-row')).toBe('Cylinder D3-1 · 7 readings');
     // Each value shows its unit.
     expect(cells(readings[1]).slice(1)).toEqual([
@@ -90,10 +105,9 @@ describe('BatchDetailPage', () => {
       '416.8 ppm',
     ]);
 
-    // Warnings: both saved warnings, each saying which record it's on.
+    // Warnings: the saved warning, saying which record it's on.
     expect(rows('warnings').map((r) => cells(r).slice(0, 3))).toEqual([
       ['Recipe', 'Water / cementitious', '0.603 ⚠'],
-      ['Cylinder D3-1 · break', 'Break strength (PSI)', '2,950 ⚠'],
     ]);
   });
 
@@ -331,6 +345,100 @@ describe('BatchDetailPage', () => {
 
     expect(text('[data-testid="not-found"] h1')).toBe('No batch VM-NOPE-999');
     expect(root.querySelector('[data-testid="summary"]')).toBeNull();
+  });
+
+  it('shows the strength chart for the batch', async () => {
+    await open('VM-SYN-006');
+
+    expect(root.querySelector('app-strength-chart canvas')?.getAttribute('aria-label')).toContain(
+      'VM-SYN-006 strength over time. Predicted 28-day strength 4,733 PSI.',
+    );
+  });
+
+  it('pops the strength chart out larger', async () => {
+    await open('VM-SYN-006');
+
+    expect(document.body.querySelector('[data-testid="expanded-chart"]')).toBeNull();
+    root.querySelector<HTMLButtonElement>('[data-testid="expand-chart"] button')!.click();
+    harness.detectChanges();
+    await harness.fixture.whenStable();
+    harness.detectChanges();
+
+    const expanded = document.body.querySelector('[data-testid="expanded-chart"] canvas');
+    expect(expanded?.getAttribute('aria-label')).toContain('VM-SYN-006 strength over time.');
+    expect(document.body.querySelector('.p-dialog-title')?.textContent).toContain(
+      'VM-SYN-006 · Strength over time',
+    );
+  });
+
+  it('pops the curing readings out larger', async () => {
+    await open('VM-SYN-006');
+
+    expect(document.body.querySelector('[data-testid="expanded-curing"]')).toBeNull();
+    root.querySelector<HTMLButtonElement>('[data-testid="expand-curing"] button')!.click();
+    harness.detectChanges();
+    await harness.fixture.whenStable();
+    harness.detectChanges();
+
+    const expanded = document.body.querySelector('[data-testid="expanded-curing"]');
+    expect(expanded).not.toBeNull();
+    // The copy has no Expand button of its own.
+    expect(expanded?.querySelector('[data-testid="expand-curing"]')).toBeNull();
+    expect(document.body.querySelector('.p-dialog-title')?.textContent).toContain(
+      'VM-SYN-006 · Curing readings',
+    );
+  });
+
+  it('lists early-warning reasons on an at-risk batch, shortfall first', async () => {
+    await open('VM-SYN-006');
+
+    const reasons = [...root.querySelectorAll('[data-testid="early-warnings"] li')];
+    expect(reasons.map((el) => el.getAttribute('data-limit-key'))).toEqual([
+      'Prediction.ShortfallPct',
+      'Composition.WaterCementRatio',
+      'Batch.ExpectedFinalVsWcmPct',
+    ]);
+    expect(reasons[0].textContent).toContain('Projected 28-day strength');
+    expect(reasons[0].textContent).toContain('4,733 PSI');
+    expect(text('[data-testid="early-warning-title"]')).toBe(
+      'VM-SYN-006 is at risk of missing its target',
+    );
+  });
+
+  it('titles the banner "Early warning" when the batch has warnings but is on track', async () => {
+    await open('VM-SYN-009');
+
+    expect(text('[data-testid="early-warning-title"]')).toBe('Early warning');
+  });
+
+  it('hides the early-warning banner when the batch is on track', async () => {
+    await open('VM-SYN-001');
+
+    expect(root.querySelector('[data-testid="early-warnings"]')).toBeNull();
+  });
+
+  it('shows the 3, 7 and 28-day estimates and the Day 1 / Day 3 summary', async () => {
+    await open('VM-SYN-006');
+
+    expect(
+      [...root.querySelectorAll('[data-testid="estimate-psi"]')].map((e) => e.textContent?.trim()),
+    ).toEqual(['3,129 PSI', '3,969 PSI', '4,733 PSI']);
+    expect(root.querySelector('[data-testid="curing-summary"]')).not.toBeNull();
+  });
+
+  it('still shows the batch when the strength estimate fails', async () => {
+    await open('VM-SYN-006', false);
+    const http = TestBed.inject(HttpTestingController);
+    http
+      .expectOne('/api/batches/VM-SYN-006')
+      .flush(MOCK_BATCH_DETAILS.find((b) => b.batchNumber === 'VM-SYN-006')!);
+    http
+      .expectOne('/api/batches/VM-SYN-006/strength')
+      .flush(null, { status: 500, statusText: 'Server Error' });
+    harness.detectChanges();
+
+    expect(text('h1')).toBe('VM-SYN-006');
+    expect(text('[data-testid="chart-failed"]')).toContain("Couldn't load the strength estimate.");
   });
 
   it('offers Try again when the local service fails', async () => {

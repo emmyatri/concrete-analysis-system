@@ -11,7 +11,10 @@ describe('technicianInterceptor', () => {
 
   beforeEach(() => {
     TestBed.configureTestingModule({
-      providers: [provideHttpClient(withInterceptors([technicianInterceptor])), provideHttpClientTesting()],
+      providers: [
+        provideHttpClient(withInterceptors([technicianInterceptor])),
+        provideHttpClientTesting(),
+      ],
     });
     http = TestBed.inject(HttpTestingController);
     client = TestBed.inject(HttpClient);
@@ -33,7 +36,9 @@ describe('technicianInterceptor', () => {
 
     client.post('/api/batches', {}).subscribe();
 
-    expect(http.expectOne('/api/batches').request.headers.get(TECHNICIAN_HEADER)).toBe('Jos%C3%A9%20Rivera');
+    expect(http.expectOne('/api/batches').request.headers.get(TECHNICIAN_HEADER)).toBe(
+      'Jos%C3%A9%20Rivera',
+    );
   });
 
   it('switching technician changes the name on the next call', () => {
@@ -42,6 +47,8 @@ describe('technicianInterceptor', () => {
 
     client.post('/api/batches', {}).subscribe();
 
-    expect(decodeURIComponent(http.expectOne('/api/batches').request.headers.get(TECHNICIAN_HEADER)!)).toBe('M. Chen');
+    expect(
+      decodeURIComponent(http.expectOne('/api/batches').request.headers.get(TECHNICIAN_HEADER)!),
+    ).toBe('M. Chen');
   });
 });

@@ -19,13 +19,18 @@ describe('describeApiError', () => {
 
     expect(problem.kind).toBe('validation');
     expect(problem.fieldErrors).toEqual([
-      { key: 'Composition.CementPct', message: 'Cement composition must be within the range [10-15]' },
+      {
+        key: 'Composition.CementPct',
+        message: 'Cement composition must be within the range [10-15]',
+      },
       { key: 'Batch.BatchNumber', message: 'Batch number VM-2026-0142 already exists' },
     ]);
   });
 
   it('shows the "can\'t reach the server" message when there is no answer', () => {
-    expect(describeApiError(new HttpErrorResponse({ status: 0 })).message).toBe(UNREACHABLE_MESSAGE);
+    expect(describeApiError(new HttpErrorResponse({ status: 0 })).message).toBe(
+      UNREACHABLE_MESSAGE,
+    );
     // The dev proxy answers 504 when the local API isn't running.
     expect(describeApiError(new HttpErrorResponse({ status: 504 })).kind).toBe('unreachable');
   });

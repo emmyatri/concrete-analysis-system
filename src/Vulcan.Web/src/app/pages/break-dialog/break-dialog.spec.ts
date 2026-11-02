@@ -36,6 +36,9 @@ describe('BreakDialog', () => {
     isSynthetic: false,
   };
 
+  /** VM-2026-0142's fifth cylinder, A5, broken at 28 days. */
+  const A5: PendingBreak = { ...A1, specimenId: 14205, label: 'A5', testAgeDays: 'Day28' };
+
   const open = async (cylinder = A1) => {
     clearSavedMockBatches();
     TestBed.configureTestingModule({
@@ -138,8 +141,8 @@ describe('BreakDialog', () => {
     expect((await breakOf('VM-2026-0142', 'A1'))?.strengthPsi).toBe(expected);
   });
 
-  it('saves 2,999 PSI in amber, with a warning', async () => {
-    await open();
+  it('saves a 28-day break of 2,999 PSI in amber, with a warning', async () => {
+    await open(A5);
     await enter('2999');
 
     expect(document.body.querySelector('app-field.app-field--warn')).not.toBeNull();
@@ -152,6 +155,19 @@ describe('BreakDialog', () => {
     expect(batch.warnings.some((w) => w.entityType === 'BreakResult' && w.value === 2999)).toBe(
       true,
     );
+  });
+
+  it('saves a 3-day break of 2,999 PSI without a warning (the 3,000 PSI warning is for 28-day breaks)', async () => {
+    await open();
+    await enter('2999');
+
+    expect(document.body.querySelector('app-field.app-field--warn')).toBeNull();
+
+    await save();
+
+    expect(saved[0].warnings).toEqual([]);
+    const batch = await firstValueFrom(TestBed.inject(VulcanApiService).getBatch('VM-2026-0142'));
+    expect(batch.warnings.some((w) => w.entityType === 'BreakResult')).toBe(false);
   });
 
   it('rejects a break date before the cast date', async () => {

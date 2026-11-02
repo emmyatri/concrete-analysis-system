@@ -46,9 +46,18 @@ jobs:
         working-directory: src/Vulcan.Web
         run: npm run lint
 
+      - name: Format check (Angular)
+        working-directory: src/Vulcan.Web
+        run: npm run format:check
+
       - name: Test (Angular)
         working-directory: src/Vulcan.Web
         run: npm test -- --watch=false
+
+      # The synthetic dataset must match its generator, stay inside the rejection limits and flag
+      # only the demo cases (SCRUM-166).
+      - name: Test (synthetic data generator)
+        run: node --test data/synthetic/generate.test.mjs
 
       # Writes the production build to src/Vulcan.Api/wwwroot.
       # Must run before the .NET build so the UI gets copied into the app.
@@ -108,6 +117,7 @@ jobs:
       # Pushes to dev/main only, kept 3 days: artifacts count against the repo's 500 MB storage limit.
       - name: Upload the self-contained build
         if: github.event_name != 'pull_request'
+        continue-on-error: true
         uses: actions/upload-artifact@v4
         with:
           name: vulcan-cbas-win-x64
@@ -144,6 +154,7 @@ jobs:
       # Kept 7 days. Permanent downloads live on the GitHub Release page, which doesn't count against storage.
       - name: Upload the installer
         if: github.event_name != 'pull_request'
+        continue-on-error: true
         uses: actions/upload-artifact@v4
         with:
           name: vulcan-cbas-installer

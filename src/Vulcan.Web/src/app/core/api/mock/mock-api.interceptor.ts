@@ -1,4 +1,9 @@
-﻿import { HttpErrorResponse, HttpInterceptorFn, HttpRequest, HttpResponse } from '@angular/common/http';
+﻿import {
+  HttpErrorResponse,
+  HttpInterceptorFn,
+  HttpRequest,
+  HttpResponse,
+} from '@angular/common/http';
 import { inject } from '@angular/core';
 import { Observable, of, throwError } from 'rxjs';
 
@@ -16,7 +21,7 @@ import { TECHNICIAN_HEADER } from '../../session/technician.interceptor';
 import { USE_MOCKS } from '../use-mocks';
 import { MOCK_BATCH_DETAILS, mockBatchDetailFromRequest } from './mock-batch-details';
 import { MOCK_BATCHES, MOCK_SPECIFIC_GRAVITIES, MOCK_VALIDATION_LIMITS } from './mock-data';
-
+import { mockEarlyWarnings, mockStrength } from './mock-strength';
 
 /** Batches saved while the app is open, so a new batch shows up in the list until you reload. */
 const savedBatches: BatchSummary[] = [];
@@ -47,15 +52,30 @@ export const mockApiInterceptor: HttpInterceptorFn = (request, next) => {
   if (!inject(USE_MOCKS)) return next(request);
 
   const path = request.url.split('?')[0];
-  if (request.method === 'GET' && path === '/api/validation-limits') return ok(MOCK_VALIDATION_LIMITS);
-  if (request.method === 'GET' && path === '/api/specific-gravities') return ok(MOCK_SPECIFIC_GRAVITIES);
+  if (request.method === 'GET' && path === '/api/health') return ok({ status: 'ok' });
+  if (request.method === 'GET' && path === '/api/validation-limits')
+    return ok(MOCK_VALIDATION_LIMITS);
+  if (request.method === 'GET' && path === '/api/specific-gravities')
+    return ok(MOCK_SPECIFIC_GRAVITIES);
   if (request.method === 'GET' && path === '/api/batches') return ok(findBatches(request));
   if (request.method === 'POST' && path === '/api/batches') return createBatch(request);
-  if (request.method === 'POST' && /^\/api\/batches\/[^/]+\/specimens$/.test(path)) return createSpecimen(request, path);
+  if (request.method === 'POST' && /^\/api\/batches\/[^/]+\/specimens$/.test(path))
+    return createSpecimen(request, path);
+  if (request.method === 'GET' && /^\/api\/batches\/[^/]+\/strength$/.test(path))
+    return getStrength(request, path);
   if (request.method === 'GET' && path.startsWith('/api/batches/')) return getBatch(request, path);
   if (request.method === 'GET' && path === '/api/breaks/pending') return ok(pendingBreaks(request));
-  if (request.method === 'POST' && /^\/api\/specimens\/\d+\/break$/.test(path)) return createBreak(request, path);
-  if (request.method === 'POST' && /^\/api\/specimens\/\d+\/readings$/.test(path)) return createReading(request, path);
+  if (request.method === 'POST' && /^\/api\/specimens\/\d+\/break$/.test(path))
+    return createBreak(request, path);
+  if (request.method === 'POST' && /^\/api\/specimens\/\d+\/readings$/.test(path))
+    return createReading(request, path);
+  if (request.method === 'GET' && path === '/api/warnings/early')
+    return ok(
+      mockEarlyWarnings(
+        [...savedDetails, ...MOCK_BATCH_DETAILS],
+        request.params.get('includeSynthetic') !== 'false',
+      ),
+    );
 
   return next(request);
 };
@@ -102,6 +122,19 @@ function getBatch(request: HttpRequest<unknown>, path: string) {
 }
 
 /**
+ * A batch's strength prediction, worked out from its current readings and breaks (mock-strength.ts),
+ * or a 404 like the server's.
+ */
+function getStrength(request: HttpRequest<unknown>, path: string) {
+  const batchNumber = decodeURIComponent(path.split('/')[3]);
+  const batch = [...savedDetails, ...MOCK_BATCH_DETAILS].find(
+    (row) => row.batchNumber.toLowerCase() === batchNumber.toLowerCase(),
+  );
+  if (batch) return ok(mockStrength(batch));
+  return problem(request, 404, 'Not Found', { detail: `Batch ${batchNumber} was not found.` });
+}
+
+/**
  * Checks a new batch the way the server will: duplicate numbers and Reject limits fail with a 400,
  * Warn limits save and come back as warnings.
  */
@@ -117,13 +150,18 @@ function createBatch(request: HttpRequest<unknown>) {
   if (exists) errors['Batch.BatchNumber'] = [`Batch number ${batchNumber} already exists`];
 
   // { batch: { mixWaterPh } } → "Batch.MixWaterPh", { oxides: { aluminaPct } } → "Oxide.AluminaPct"
-  const groups: Record<string, string> = { batch: 'Batch', composition: 'Composition', oxides: 'Oxide' };
+  const groups: Record<string, string> = {
+    batch: 'Batch',
+    composition: 'Composition',
+    oxides: 'Oxide',
+  };
   for (const [group, prefix] of Object.entries(groups)) {
     for (const [field, value] of Object.entries(body[group] ?? {})) {
       if (typeof value !== 'number') continue;
       const key = `${prefix}.${field[0].toUpperCase()}${field.slice(1)}`;
       for (const limit of MOCK_VALIDATION_LIMITS.filter((row) => row.key === key)) {
-        const outside = (limit.min !== null && value < limit.min) || (limit.max !== null && value > limit.max);
+        const outside =
+          (limit.min !== null && value < limit.min) || (limit.max !== null && value > limit.max);
         if (!outside) continue;
         if (limit.severity === 'Reject') errors[key] = [...(errors[key] ?? []), limit.message];
         else warnings.push({ key, message: limit.message });
@@ -198,7 +236,9 @@ function createSpecimen(request: HttpRequest<unknown>, path: string) {
     ['Specimen.LengthIn', body.lengthIn],
     ['Specimen.WidthIn', body.widthIn],
   ] as const) {
-    for (const limit of MOCK_VALIDATION_LIMITS.filter((row) => row.key === key && row.severity === 'Reject')) {
+    for (const limit of MOCK_VALIDATION_LIMITS.filter(
+      (row) => row.key === key && row.severity === 'Reject',
+    )) {
       if ((limit.min !== null && value < limit.min) || (limit.max !== null && value > limit.max)) {
         errors[key] = [...(errors[key] ?? []), limit.message];
       }
@@ -235,7 +275,8 @@ function createSpecimen(request: HttpRequest<unknown>, path: string) {
 /** Every cylinder without a break, soonest due first (cast date + test age). */
 function pendingBreaks(request: HttpRequest<unknown>): PendingBreak[] {
   const includeSynthetic = request.params.get('includeSynthetic') !== 'false';
-  const due = (row: PendingBreak) => Date.parse(row.castAt) + TEST_AGE_DAYS[row.testAgeDays] * DAY_MS;
+  const due = (row: PendingBreak) =>
+    Date.parse(row.castAt) + TEST_AGE_DAYS[row.testAgeDays] * DAY_MS;
   return [...savedDetails, ...MOCK_BATCH_DETAILS]
     .filter((batch) => includeSynthetic || !batch.isSynthetic)
     .flatMap((batch) =>
@@ -259,7 +300,8 @@ const TEST_AGE_DAYS = { Day3: 3, Day7: 7, Day28: 28 } as const;
 /**
  * Records a break the way the server will: 404 for an unknown cylinder, 409 if it's already broken,
  * 400 for a strength outside 1–10,000 or not whole, or a date before the cast date or in the future.
- * Below 3,000 PSI saves with a warning (failing breaks are kept).
+ * A 28-day break below 3,000 PSI saves with a warning (failing breaks are kept). Earlier breaks are
+ * expected to be lower and aren't flagged (client-decisions §3).
  */
 function createBreak(request: HttpRequest<unknown>, path: string) {
   const specimenId = Number(path.split('/')[3]);
@@ -271,7 +313,9 @@ function createBreak(request: HttpRequest<unknown>, path: string) {
     return problem(request, 404, 'Not Found', { detail: `Cylinder ${specimenId} was not found.` });
   }
   if (specimen.breakResult) {
-    return problem(request, 409, 'Conflict', { detail: `Cylinder ${specimen.label} already has a break result.` });
+    return problem(request, 409, 'Conflict', {
+      detail: `Cylinder ${specimen.label} already has a break result.`,
+    });
   }
 
   const body = request.body as CreateBreakResultRequest;
@@ -280,19 +324,28 @@ function createBreak(request: HttpRequest<unknown>, path: string) {
   const strength = body.strengthPsi;
   if (!Number.isInteger(strength)) errors['Break.StrengthPsi'] = ['PSI must be a whole number'];
   for (const limit of MOCK_VALIDATION_LIMITS.filter((row) => row.key === 'Break.StrengthPsi')) {
-    const outside = (limit.min !== null && strength < limit.min) || (limit.max !== null && strength > limit.max);
+    const outside =
+      (limit.min !== null && strength < limit.min) || (limit.max !== null && strength > limit.max);
     if (!outside) continue;
-    if (limit.severity === 'Reject') errors[limit.key] = [...(errors[limit.key] ?? []), limit.message];
-    else warnings.push({ key: limit.key, message: limit.message });
+    if (limit.severity === 'Reject')
+      errors[limit.key] = [...(errors[limit.key] ?? []), limit.message];
+    else if (specimen.testAgeDays === 'Day28')
+      warnings.push({ key: limit.key, message: limit.message });
   }
   const brokenAt = new Date(body.brokenAt);
-  const day = (date: Date) => new Date(date.getFullYear(), date.getMonth(), date.getDate()).getTime();
+  const day = (date: Date) =>
+    new Date(date.getFullYear(), date.getMonth(), date.getDate()).getTime();
   if (Number.isNaN(brokenAt.getTime())) errors['Break.BrokenAt'] = ['Break date is required'];
-  else if (day(brokenAt) < day(new Date(batch.castAt))) errors['Break.BrokenAt'] = ["Break date can't be before the cast date"];
-  else if (day(brokenAt) > day(new Date())) errors['Break.BrokenAt'] = ["Break date can't be in the future"];
+  else if (day(brokenAt) < day(new Date(batch.castAt)))
+    errors['Break.BrokenAt'] = ["Break date can't be before the cast date"];
+  else if (day(brokenAt) > day(new Date()))
+    errors['Break.BrokenAt'] = ["Break date can't be in the future"];
 
   if (Object.keys(errors).length > 0) {
-    return problem(request, 400, 'Bad Request', { title: 'One or more validation errors occurred.', errors });
+    return problem(request, 400, 'Bad Request', {
+      title: 'One or more validation errors occurred.',
+      errors,
+    });
   }
 
   const id = nextId++;
@@ -323,7 +376,12 @@ function createBreak(request: HttpRequest<unknown>, path: string) {
 }
 
 /** An error response shaped like ASP.NET's ProblemDetails. */
-function problem(request: HttpRequest<unknown>, status: number, statusText: string, body: Record<string, unknown>) {
+function problem(
+  request: HttpRequest<unknown>,
+  status: number,
+  statusText: string,
+  body: Record<string, unknown>,
+) {
   return throwError(
     () =>
       new HttpErrorResponse({
@@ -334,7 +392,6 @@ function problem(request: HttpRequest<unknown>, status: number, statusText: stri
       }),
   );
 }
-
 
 /** Each reading field and the ValidationLimit key that checks it. */
 const READING_FIELDS = [
@@ -371,19 +428,25 @@ function createReading(request: HttpRequest<unknown>, path: string) {
       continue;
     }
     for (const limit of MOCK_VALIDATION_LIMITS.filter((row) => row.key === key)) {
-      const outside = (limit.min !== null && value < limit.min) || (limit.max !== null && value > limit.max);
+      const outside =
+        (limit.min !== null && value < limit.min) || (limit.max !== null && value > limit.max);
       if (!outside) continue;
       if (limit.severity === 'Reject') errors[key] = [...(errors[key] ?? []), limit.message];
       else warnings.push({ key, message: limit.message });
     }
   }
   const takenAt = new Date(body.takenAt);
-  if (Number.isNaN(takenAt.getTime())) errors['Curing.TakenAt'] = ['Enter when the reading was taken'];
-  else if (takenAt < new Date(batch.castAt)) errors['Curing.TakenAt'] = ["Reading time can't be before the batch was cast"];
+  if (Number.isNaN(takenAt.getTime()))
+    errors['Curing.TakenAt'] = ['Enter when the reading was taken'];
+  else if (takenAt < new Date(batch.castAt))
+    errors['Curing.TakenAt'] = ["Reading time can't be before the batch was cast"];
   else if (takenAt > new Date()) errors['Curing.TakenAt'] = ["Reading time can't be in the future"];
 
   if (Object.keys(errors).length > 0) {
-    return problem(request, 400, 'Bad Request', { title: 'One or more validation errors occurred.', errors });
+    return problem(request, 400, 'Bad Request', {
+      title: 'One or more validation errors occurred.',
+      errors,
+    });
   }
 
   const id = nextId++;

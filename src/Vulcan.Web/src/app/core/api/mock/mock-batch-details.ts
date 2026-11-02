@@ -85,7 +85,8 @@ function warningsFor(batch: Omit<BatchDetail, 'warnings'>): SavedWarning[] {
     );
   }
   for (const specimen of batch.specimens) {
-    if (specimen.breakResult) {
+    // The 3,000 PSI break warning applies to 28-day breaks only (client-decisions §3).
+    if (specimen.breakResult && specimen.testAgeDays === 'Day28') {
       check(
         'BreakResult',
         specimen.breakResult.id,

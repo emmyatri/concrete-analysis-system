@@ -27,14 +27,23 @@ export function calculateComposition(
 ): CompositionTotals {
   const n = (value: number | null) => value ?? 0;
   const totalPct =
-    n(input.cementPct) + n(input.waterPct) + n(input.coarseAggregatePct) + n(input.fineAggregatePct) + n(input.scmPct);
+    n(input.cementPct) +
+    n(input.waterPct) +
+    n(input.coarseAggregatePct) +
+    n(input.fineAggregatePct) +
+    n(input.scmPct);
 
   const sgWater = gravities.get('Water');
   const sgCement = gravities.get('Cement');
   const sgScm = input.scmType === 'None' ? 0 : gravities.get(input.scmType);
 
   let waterCementRatio: number | null = null;
-  if (sgWater !== undefined && sgCement !== undefined && sgScm !== undefined && input.waterPct !== null) {
+  if (
+    sgWater !== undefined &&
+    sgCement !== undefined &&
+    sgScm !== undefined &&
+    input.waterPct !== null
+  ) {
     const cementitious = n(input.cementPct) * sgCement + n(input.scmPct) * sgScm;
     waterCementRatio = cementitious > 0 ? (input.waterPct * sgWater) / cementitious : null;
   }

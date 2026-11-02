@@ -79,9 +79,9 @@ describe('CuringReadingsPage', () => {
     await settle();
   };
   const readings = async () =>
-    (
-      await firstValueFrom(TestBed.inject(VulcanApiService).getBatch('VM-SYN-006'))
-    ).specimens.find((s) => s.label === 'D3-1')!.curingReadings;
+    (await firstValueFrom(TestBed.inject(VulcanApiService).getBatch('VM-SYN-006'))).specimens.find(
+      (s) => s.label === 'D3-1',
+    )!.curingReadings;
 
   afterEach(() => harness?.fixture.destroy());
 
@@ -106,7 +106,7 @@ describe('CuringReadingsPage', () => {
 
     expect(text('[data-testid="ranges"]')).toBe(
       'Internal 0–200 °F · Ambient 0–150 °F (normal 60–80) · Moisture 0–100% · RH 0–100% · ' +
-      'Resistivity ≥ 0.01 ohms/ft · CO₂ ≥ 0 ppm',
+        'Resistivity ≥ 0.01 ohms/ft · CO₂ ≥ 0 ppm',
     );
   });
 
@@ -243,19 +243,21 @@ describe('CuringReadingsPage', () => {
   it("shows the server's message on the cell when it refuses a value", async () => {
     await open('/curing?batch=VM-SYN-006&cylinder=D3-1', false);
     const http = TestBed.inject(HttpTestingController);
-    http.match(() => true).forEach((request) => {
-      if (request.request.url === '/api/batches/VM-SYN-006') {
-        request.flush({
-          id: 6,
-          batchNumber: 'VM-SYN-006',
-          castAt: '2026-06-21T12:00:00Z',
-          specimens: [{ id: 601, label: 'D3-1', curingReadings: [] }],
-          warnings: [],
-        });
-      } else if (request.request.url === '/api/batches') {
-        request.flush([]);
-      }
-    });
+    http
+      .match(() => true)
+      .forEach((request) => {
+        if (request.request.url === '/api/batches/VM-SYN-006') {
+          request.flush({
+            id: 6,
+            batchNumber: 'VM-SYN-006',
+            castAt: '2026-06-21T12:00:00Z',
+            specimens: [{ id: 601, label: 'D3-1', curingReadings: [] }],
+            warnings: [],
+          });
+        } else if (request.request.url === '/api/batches') {
+          request.flush([]);
+        }
+      });
     await settle();
     await fill(newRows()[0], GOOD);
     await pressEnter(newRows()[0]);

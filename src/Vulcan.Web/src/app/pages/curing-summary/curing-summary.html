@@ -1,0 +1,31 @@
+@if (hasReadings()) {
+  <table class="curing-summary" data-testid="curing-summary">
+    <thead>
+      <tr>
+        <th scope="col"><span class="visually-hidden">Reading</span></th>
+        @for (day of days; track day) {
+          <th scope="col">Day {{ day }}</th>
+        }
+      </tr>
+    </thead>
+    <tbody>
+      @for (row of rows(); track row.label) {
+        <tr>
+          <th scope="row">{{ row.label }}</th>
+          @for (cell of row.cells; track $index) {
+            <td>
+              @if (cell.warning; as message) {
+                <span class="flagged" [title]="message">{{ cell.text }} ⚠</span>
+              } @else {
+                {{ cell.text }}
+              }
+            </td>
+          }
+        </tr>
+      }
+    </tbody>
+  </table>
+  <p class="curing-summary-caption">Based on all readings within each 24-hour window.</p>
+} @else {
+  <p class="empty" data-testid="curing-summary-empty">No curing readings yet.</p>
+}

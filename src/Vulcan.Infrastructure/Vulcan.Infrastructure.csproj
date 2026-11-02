@@ -1,6 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <ItemGroup>
     <ProjectReference Include="..\Vulcan.Application\Vulcan.Application.csproj" />
+    <ProjectReference Include="..\Vulcan.Prediction\Vulcan.Prediction.csproj" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" />

@@ -5,9 +5,10 @@ using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-
+using Microsoft.Extensions.Logging;
 using Vulcan.Application.Interfaces;
 using Vulcan.Application.Services;
+using Vulcan.Application.Services.EarlyWarning;
 using Vulcan.Domain.Entities;
 using Vulcan.Domain.Interfaces;
 using Vulcan.Domain.Services;
@@ -40,31 +41,9 @@ public static class SetupUtils
             cs = $"Data Source={Path.Combine(dir, "vulcan.db")}";
         }
 
-
-        if (cs.Contains(":memory:", StringComparison.OrdinalIgnoreCase))
-        {
-            // An in-memory database only lives while a connection is open, so keep one open for the app's lifetime (tests).
-            services.AddSingleton(_ =>
-            {
-                var connection = new SqliteConnection(cs);
-                connection.Open();
-                return connection;
-            });
-            services.AddDbContext<VulcanDbContext>((provider, options) =>
-                options.UseSqlite(provider.GetRequiredService<SqliteConnection>())
-                    .AddInterceptors(
-                        provider.GetRequiredService<AuditSaveChangesInterceptor>()));
-        }
-        else
-        {
-            services.AddDbContext<VulcanDbContext>((provider, options) =>
-                options.UseSqlite(cs)
-                    .AddInterceptors(
-                        provider.GetRequiredService<AuditSaveChangesInterceptor>()));
-        }
-
         services.AddScoped<ILimitProvider, LimitProvider>();
         services.AddScoped<ISpecificGravityProvider, SpecificGravityProvider>();
+        services.AddScoped<ICalibrationProvider, CalibrationProvider>();
         services.AddScoped<LimitEvaluator>();
         services.AddScoped<WaterCementRatioCalculator>();
 
@@ -73,9 +52,11 @@ public static class SetupUtils
         services.AddScoped<IBatchRepository, BatchRepository>();
         services.AddScoped<ISpecimenRepository, SpecimenRepository>();
         services.AddScoped<ICuringRepository, CuringRepository>();
+        services.AddScoped<IPredictionRepository, PredictionRepository>();
         services.AddScoped<IRecordWarningRepository, RecordWarningRepository>();
         services.AddScoped<ISpecificGravityRepository, SpecificGravityRepository>();
         services.AddScoped<IValidationLimitRepository, ValidationLimitRepository>();
+
 
         services.AddScoped<BatchValidator>();
         services.AddScoped<CompositionValidator>();
@@ -89,6 +70,42 @@ public static class SetupUtils
         services.AddScoped<CuringService>();
         services.AddScoped<SpecificGravityService>();
         services.AddScoped<ValidationLimitService>();
+        services.AddScoped<IStrengthEstimateService, StrengthEstimateService>();
+        services.AddScoped<EarlyWarningService>();
+        services.AddScoped<IEarlyWarningEvaluator>(sp => sp.GetRequiredService<EarlyWarningService>());
+        services.AddScoped<StrengthService>();
+
+        if (cs.Contains(":memory:", StringComparison.OrdinalIgnoreCase))
+        {
+            // An in-memory database only lives while a connection is open, so keep one open for the app's lifetime (tests).
+            services.AddSingleton(_ =>
+            {
+                var connection = new SqliteConnection(cs);
+                connection.Open();
+                return connection;
+            });
+            services.AddDbContext<VulcanDbContext>((provider, options) =>
+                options.UseSqlite(provider.GetRequiredService<SqliteConnection>())
+                    .AddInterceptors(
+                        new PredictionSaveChangesInterceptor(
+                            (db) => new CalibrationProvider(db),
+                            provider.GetRequiredService<IStrengthEstimateService>(),
+                            provider.GetRequiredService<ILogger<PredictionSaveChangesInterceptor>>()),
+                        // add audit changes last
+                        provider.GetRequiredService<AuditSaveChangesInterceptor>()));
+        }
+        else
+        {
+            services.AddDbContext<VulcanDbContext>((provider, options) =>
+                options.UseSqlite(cs)
+                    .AddInterceptors(
+                        new PredictionSaveChangesInterceptor(
+                            (db) => new CalibrationProvider(db),
+                            provider.GetRequiredService<IStrengthEstimateService>(),
+                            provider.GetRequiredService<ILogger<PredictionSaveChangesInterceptor>>()),
+                        // add audit changes last
+                        provider.GetRequiredService<AuditSaveChangesInterceptor>()));
+        }
 
         return services;
     }
@@ -152,6 +169,33 @@ public static class SetupUtils
         var missing = gravities.Where(seed =>
             !existing.Contains(seed.Material));
         db.SpecificGravity.AddRange(missing);
+        db.SaveChanges();
+    }
+
+    public static CalibrationVersion LoadCalibrationVersionV1()
+    {
+        var json = (
+            typeof(SetupUtils).Assembly.GetManifestResourceStream("Vulcan.Infrastructure.Seed.calibration-v1.json")
+        ) ?? throw new InvalidOperationException(
+            "Could not find the calibration v1 file. Please ensure it is in Vulcan.Infrastructure/Seed/calibration-v1.json");
+        var calibration = JsonSerializer.Deserialize<CalibrationVersion>(json, _jsonOptions)
+                                ?? throw new JsonException("Calibration v1 seed data is malformed");
+        return calibration;
+    }
+
+    public static void SeedCalibrationVersionV1(this VulcanDbContext db)
+    {
+        var calibration = LoadCalibrationVersionV1();
+
+        var exists = db.CalibrationVersion
+            .Any(x => x.Version.ToLower() == calibration.Version.ToLower());
+
+        if (exists)
+        {
+            return;
+        }
+
+        db.Add(calibration);
         db.SaveChanges();
     }
 }

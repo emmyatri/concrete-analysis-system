@@ -15,7 +15,8 @@ export interface ApiProblem {
   fieldErrors: FieldError[];
 }
 
-export const UNREACHABLE_MESSAGE = "Can't reach the local service. Check that the app is open and try again.";
+export const UNREACHABLE_MESSAGE =
+  "Can't reach the local service. Check that the app is open and try again.";
 export const SERVER_ERROR_MESSAGE =
   'Something went wrong on the local service. Try again, and tell a lead if it keeps happening.';
 
@@ -37,7 +38,10 @@ export function describeApiError(error: unknown): ApiProblem {
   }
 
   if (error instanceof HttpErrorResponse && error.status === 400) {
-    const body = error.error as { title?: string; errors?: Record<string, string[] | string> } | null;
+    const body = error.error as {
+      title?: string;
+      errors?: Record<string, string[] | string>;
+    } | null;
     const fieldErrors = Object.entries(body?.errors ?? {}).flatMap(([key, messages]) =>
       (Array.isArray(messages) ? messages : [messages]).map((message) => ({ key, message })),
     );
