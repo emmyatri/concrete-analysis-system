@@ -389,6 +389,223 @@ All three thresholds are proposed and may be adjusted following client feedback.
 
 ---
 
+## 14. Client answers, Nov 2, 2026
+
+At the Milestone 2 review, Don Murphy provided clarification on early
+break warnings, prediction accuracy, moisture measurements, and the
+recommended actions for batches showing insufficient strength.
+
+These answers establish the client-directed behavior for Milestone 3
+and supersede conflicting earlier assumptions in sections 3 and 13.
+
+### 14.1 Early break warning thresholds
+
+**Question:**
+
+> Break warning: right now, the 3,000 PSI warning applies only to
+> 28-day breaks, since 3- and 7-day breaks are normally lower.
+> Should it apply at every age instead?
+
+**Client's answer:**
+
+> 3 day break should be 30 to 40% of 3000 PSI  Early warning
+>
+> 7 day break should be 60 to 70% of 3000 PSI   Warning the batch
+> will probably fail.
+
+**Decision:**
+
+Early break warnings will use age-specific strength thresholds
+rather than applying the full 3,000 PSI minimum at every test age.
+
+| Test age | Client threshold | Equivalent PSI | Expected behavior |
+|----------|------------------|----------------|-------------------|
+| 3 days | 30–40% of 3,000 PSI | 900–1,200 PSI | Early warning; monitor at day 7 |
+| 7 days | 60–70% of 3,000 PSI | 1,800–2,100 PSI | Warn that the batch will probably fail |
+| 28 days | 100% of 3,000 PSI | 3,000 PSI | Retain the existing minimum-strength warning |
+
+Actual break results below the warning thresholds must remain
+recordable rather than being rejected solely because they are
+below 3,000 PSI.
+
+The percentage ranges reflect the client's specified warning
+criteria. Exact warning boundaries will be established during
+implementation using these confirmed ranges.
+
+*Affects:* FR-5, FR-16; sections 3 and 13.
+
+### 14.2 Prediction accuracy benchmark
+
+**Question:**
+
+> Accuracy benchmark: what accuracy should we hold the 28-day
+> estimate to (for example, within 5% of the actual break), and
+> should we measure that per batch or as an average across batches?
+
+**Client's answer:**
+
+> 28 day estimate. I think 5% of the actual break will work.
+> After enough data is gathered, it could be adjusted to reflect
+> actual data.
+
+**Decision:**
+
+The prediction engine will use an initial accuracy target of
+**within 5% of the actual 28-day compressive strength**.
+
+The benchmark compares the predicted 28-day strength against
+the measured 28-day break result.
+
+This target may be adjusted after sufficient real testing data
+has been collected and evaluated.
+
+This accuracy benchmark is separate from the proposed 5%
+projected-strength shortfall warning in section 13.
+
+Prediction accuracy measures the difference between estimated
+and actual strength. Projected shortfall measures the difference
+between estimated strength and the batch's expected final strength.
+
+**Current implementation note (November 9, 2026):**
+
+The existing prediction engine has been evaluated against the
+synthetic dataset. One synthetic batch currently produces a 28-day
+strength estimate with an accuracy slightly outside the newly
+established 5% target.
+
+This deviation is documented as a known limitation of the current
+implementation and does not indicate that the prediction engine
+requires immediate modification.
+
+The 5% benchmark will serve as the accuracy target for future
+validation and refinement. Performance should be reassessed as
+additional testing data becomes available, particularly real-world
+batch and break results.
+
+*Affects:* SC-4, SC-5; prediction accuracy evaluation.
+
+### 14.3 Moisture measurement and alarm range
+
+**Question:**
+
+> Moisture sensors: when your sensors report moisture as a
+> percentage, what is it a percentage of? For example, would a
+> reading of 92% mean the concrete is 92% saturated (relative),
+> or that 92% of its weight is water? We want to make sure our
+> normal ranges match what your sensors actually send.
+
+**Client's answer:**
+
+> Moisture content should be 2 to 4% of the total weight of the
+> batch sample or an alarm is set.
+
+**Decision:**
+
+Moisture content is measured as a **percentage of the total weight
+of the batch sample**, not as relative moisture content or saturation.
+
+The confirmed normal range is **2–4% by sample weight**.
+
+| Moisture reading | Expected behavior |
+|------------------|-------------------|
+| Below 2% | Generate a moisture alarm |
+| 2–4%, inclusive | Within the normal range |
+| Above 4% | Generate a moisture alarm |
+
+Moisture readings outside the normal range will generate warnings
+rather than being rejected solely for exceeding the normal range.
+
+Existing data-entry rejection limits remain separate.
+
+This decision supersedes the earlier 3.5–5% moisture range recorded
+in section 13 and clarifies the measurement basis described in FR-6.
+
+*Affects:* FR-6, FR-16; section 13, moisture validation and
+warning configuration.
+
+### 14.4 Recommended action after consecutive short breaks
+
+**Question:**
+
+> Next steps: when a batch is projected to come in short at day 3,
+> what does your team actually do? This tells us what the warnings
+> should recommend in Milestone 3.
+
+**Client's answer:**
+
+> If a break comes in short on day 3, it should be a warning and
+> flagged to watch on day 7. If day 7 is still short, it is a bad
+> batch and should be abandoned and a new batch started.
+
+**Decision:**
+
+The early warning system will provide recommendations based on
+consecutive insufficient break results.
+
+| Condition | System recommendation |
+|-----------|-----------------------|
+| Day-3 break is below its applicable threshold | Issue an early warning and flag the batch for review at day 7 |
+| Day-7 break is also below its applicable threshold | Warn that the batch is likely to fail and recommend abandoning it and starting a new batch |
+
+These recommendations are informational.
+
+The system will not automatically abandon a batch, delete its
+records, or create a replacement batch.
+
+The abandonment recommendation applies when both day-3 and day-7
+break results are short.
+
+A short day-7 result without a preceding short day-3 result still
+receives its applicable strength warning, but does not automatically
+satisfy the consecutive-short-break condition.
+
+*Affects:* FR-16; early warning recommendations.
+
+### 14.5 SLA requirements affected
+
+The November 2 client clarifications affect the following
+requirements:
+
+| Requirement | Effect of client clarification |
+|-------------|--------------------------------|
+| FR-5 | Establishes age-specific early break warning thresholds instead of applying 3,000 PSI at every test age |
+| FR-6 | Clarifies moisture as a percentage of sample weight, with an alarm outside 2–4%, rather than relative moisture content |
+| FR-16 | Establishes early warning behavior and recommended actions for short day-3 and day-7 breaks |
+| SC-4 | Establishes an initial 5% accuracy target for the 28-day strength estimate |
+| SC-5 | Aligns prediction accuracy evaluation with the confirmed benchmark |
+
+These client clarifications refine existing application behavior
+and acceptance criteria without changing milestone content,
+milestone dates, or the final deliverable.
+
+Under SLA section 6.3, changes that can be accommodated without
+affecting milestone content or dates may be recorded in writing
+and implemented without re-execution of the agreement.
+
+The agreement also requires:
+
+- Written submission of the requested change, copying the
+  Faculty Supervisor.
+- A written feasibility assessment from the development team
+  within two business days, addressing scope, milestone content,
+  milestone dates, and the final deliverable.
+- Written confirmation of any verbal agreement before it is
+  acted upon.
+
+This section records the client's answers and their anticipated
+effect on the requirements. It does not independently establish
+that all SLA 6.3 communication requirements have been completed.
+
+*Source:* Don Murphy, client responses, November 2, 2026.
+
+*Contract reference:* SLA section 6.3, Amendment of this Agreement.
+
+*Status:* Client answers received and documented for Milestone 3.
+Implementation will follow the confirmed client requirements and
+the written amendment process established in SLA section 6.3.
+
+---
+
 ## Our own defaults (not client rules)
 
 These fill gaps Rev 1 doesn't cover. They're our calls, and we'll change them if real data proves them wrong. The
