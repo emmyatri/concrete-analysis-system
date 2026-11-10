@@ -94,7 +94,7 @@ describe('CuringReadingsPage', () => {
     // Each saved value shows its unit, formatted like Batch Detail.
     expect(
       [...existingRows()[0].querySelectorAll('td')].slice(2, 8).map((td) => td.textContent?.trim()),
-    ).toEqual(['78.4 °F', '69.5 °F', '91.6%', '96.1%', '15.98 Ω/ft', '416.8 ppm']);
+    ).toEqual(['78.4 °F', '69.5 °F', '3.0%', '96.1%', '15.98 Ω/ft', '416.8 ppm']);
     expect(newRows().length).toBe(1);
     expect(newRows()[0].querySelector('td')?.textContent?.trim()).toBe('8');
     // Time taken starts at now.

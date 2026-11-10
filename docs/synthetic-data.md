@@ -1,4 +1,5 @@
-﻿# Synthetic concrete batch dataset
+﻿
+# Synthetic concrete batch dataset
 
 **Status:** M1 dataset approved — Amelia Black, 2026-09-2. M2 revision (SCRUM-166) — Amelia Black, 2026-10-29
 **Requirements:** FR-20, A-2
@@ -7,7 +8,7 @@
 
 ## Purpose and structure
 
-Nine **fabricated** batches support demonstrations and tests; they are not actual Vulcan production data or engineering predictions. Each batch has one `Composition`, one `CementOxideAnalysis`, and nine `Specimens` (three each at `Day3`, `Day7`, and `Day28`). Every specimen has one `BreakResult` and seven `CuringReadings`, taken every 12 hours through 72 hours after casting, then once a day until the cylinder is broken (7 readings for 3-day cylinders, 11 for 7-day, 32 for 28-day). This produces 81 specimens, 81 break results, and 1,350 curing readings.
+Nine **fabricated** batches support demonstrations and tests; they are not actual Vulcan production data or engineering predictions. Each batch has one `Composition`, one `CementOxideAnalysis`, and nine `Specimens` (three each at `Day3`, `Day7`, and `Day28`). Every specimen has one `BreakResult` and curing readings taken every 12 hours through 72 hours after casting, then once a day until the cylinder is broken (7 readings for 3-day cylinders, 11 for 7-day, 32 for 28-day). This produces 81 specimens, 81 break results, and 1,350 curing readings.
 
 The nested JSON uses the exact approved schema field names for data fields, with entity names used as grouping keys. Generated database IDs, foreign keys, and audit fields are intentionally omitted because the importer and EF Core persistence layer will assign them.
 
@@ -15,7 +16,7 @@ The nested JSON uses the exact approved schema field names for data fields, with
 
 ## Approved limits and their provenance
 
-The following ranges are transcribed from the approved M1-02 `docs/schema.md`, section 4 (`ValidationLimit`). Its `Source` column identifies the client's documents, functional requirements, cited standards, or team-defined plausibility limits. These are **project validation settings**, not a claim that all are universal DOT limits.
+The following ranges originate from the approved M1-02 `docs/schema.md`, section 4 (`ValidationLimit`), with the moisture convention updated under SCRUM-201. The `Source` column identifies the client's documents, functional requirements, cited standards, or team-defined plausibility limits. These are **project validation settings**, not a claim that all are universal DOT limits.
 
 | Field or derived value | Approved range or rule | Source in approved schema |
 |---|---|---|
@@ -35,7 +36,8 @@ The following ranges are transcribed from the approved M1-02 `docs/schema.md`, s
 | `Break.StrengthPsi` | 1–10,000 PSI; warn below 3,000 on 28-day breaks | Client doc / FR-5, Decision 3 (28-day scope is a team proposal pending client confirmation) |
 | `Curing.AmbientTempF` | Reject outside 0–150°F; warn outside 60–80°F | Team plausibility / ASTM C31 as recorded in schema |
 | `Curing.InternalTempF` | Reject outside 0–200°F | Team plausibility |
-| `Curing.MoisturePct`, `RelativeHumidityPct` | 0–100% | FR-6 |
+| `Curing.MoisturePct` | Reject outside 0–15% of sample weight; normal 2–4%, warn outside | FR-6 / SCRUM-201 |
+| `Curing.RelativeHumidityPct` | 0–100% relative humidity | FR-6 |
 | `Curing.ResistivityOhmPerFt` | At least 0.01 ohms/ft | FR-6 |
 | `Curing.Co2Ppm` | Nonnegative ppm | FR-6 |
 
@@ -108,9 +110,13 @@ Each specimen's break starts from the ADR-005 estimate: the Nurse-Saul equivalen
 | Effect | Size | Applies to |
 |---|---|---|
 | Water-to-cementitious ratio | −2% per 0.01 above 0.50 (minimum multiplier 0.50) | Every age |
-| Moisture loss, day 1 to day 3 | −8% per point of batch-average moisture lost; losses under 1.5 points are normal variation and ignored | Every age |
+| Moisture loss, day 1 to day 3 | −16% per percentage point of batch-average moisture lost; losses under 0.2 percentage points are treated as normal variation and ignored | Every age |
 | SCM content | Day 3 reduced by 10% of the SCM share of cementitious mass, shrinking linearly to nothing at day 28 | 3- and 7-day breaks |
 | Scatter | Deterministic ±5% per specimen (seed 176), then rounded to whole PSI | Every break |
+
+Synthetic moisture readings represent a percentage of sample weight, not relative humidity. Normal cylinders remain around 2–4%, using a baseline of 3.0% with deterministic variation. VM-SYN-003 receives an additional 1.3-percentage-point moisture-loss ramp from 24 to 72 hours, producing readings below 2%.
+
+The moisture-loss strength coefficient (`MOISTURE_SLOPE = 0.16`), variation threshold (`MOISTURE_NOISE = 0.2`), and loss ramp (`MOISTURE_DROP = 1.3`) are **made up for testing** (SLA 1.3). They are not experimentally calibrated concrete-strength relationships.
 
 The seed was chosen so that, with ±5% scatter, only the named demo cases below are flagged. That choice is part of the made-up data.
 
@@ -120,11 +126,11 @@ The seed was chosen so that, with ±5% scatter, only the named demo cases below 
 |---|---|---|---|
 | VM-SYN-001 | On track | Daily readings added; breaks recalculated | No warnings. Projected 6,242 PSI against 6,200 |
 | VM-SYN-002 | Cold-cured | Internal and ambient temperatures 25 °F lower (ambient 42–46 °F); daily readings added | Ambient warning on every reading (150); at risk before any break and after (projected 5,028 PSI, 10.21% short) |
-| VM-SYN-003 | Moisture loss | Moisture falls 2 points between 24 h and 72 h; daily readings added | No input warning; at risk once the 3- and 7-day breaks come in low (projected 4,503 PSI, 24.95% short) |
+| VM-SYN-003 | Moisture loss | Moisture drops below 2% of sample weight after a 1.3-point loss ramp from 24–72 h; daily readings added | 94 low-moisture reading warnings, summarized as one moisture reason; at risk after the 3- and 7-day breaks (projected 4,535 PSI, approximately 24.42% short) |
 | VM-SYN-006 | High w/c | Daily readings added; breaks recalculated (w/cm 0.603 unchanged) | w/cm warning, expected-final-vs-w/cm warning, at risk (projected 4,733 PSI, 23.66% short) |
 | VM-SYN-009 | pH | Daily readings added; breaks recalculated (mix-water pH 7.6 unchanged) | pH warning; on track |
 
-All other batches are on track with no warnings. Moisture has no warning range and trends don't trigger warnings in M2 (client-decisions §13), so the moisture-loss batch is flagged by its projected shortfall, not by a moisture warning.
+All other batches remain on track with no warnings. Under SCRUM-201, moisture readings now use the percentage-of-sample-weight scale, with warnings outside the normal 2–4% range. VM-SYN-003 produces 94 low-moisture reading warnings, while the early-warning evaluation summarizes the moisture condition as a single reason. Its at-risk classification remains driven by the projected strength shortfall. No other synthetic batch produces moisture warnings.
 
 ### Running the generator
 
@@ -152,7 +158,7 @@ All timestamps use UTC ISO 8601 with a `Z` suffix. Synthetic casts occur in June
 
 Most synthetic batches use mix-water pH values within the normal 7.0–7.5 range. VM-SYN-009 intentionally uses a `MixWaterPh` of **7.6**, which remains within the accepted 1–9 range but is slightly outside the normal range. This provides a demonstration case for the application's pH warning behavior.
 
-Intentional warnings in this dataset, all by design: VM-SYN-002 ambient temperature (all 150 readings), VM-SYN-006 w/cm (0.603), and VM-SYN-009 mix-water pH (7.6). Several 3-day breaks are below 3,000 PSI, but the 3,000 PSI warning applies to 28-day breaks only (client-decisions §3). Any other warning raised on import indicates a validation or data error; `generate.mjs --check` enforces this.
+Intentional input warnings in this dataset are VM-SYN-002 ambient temperature (150 readings), VM-SYN-003 low moisture (94 readings), VM-SYN-006 w/cm (0.603), and VM-SYN-009 mix-water pH (7.6). This produces 246 persisted input warnings in total. Several 3-day breaks are below 3,000 PSI, but the 3,000 PSI warning applies to 28-day breaks only (client-decisions §3). Any other input warning raised on import indicates a validation or data error; `generate.mjs --check` enforces the expected warning cases.
 
 If the Project Lead requires pH at every curing interval, a schema change to M1-02 must be approved first; per-reading pH fields should not be silently added to the dataset.
 
@@ -164,10 +170,8 @@ If the Project Lead requires pH at every curing interval, a schema change to M1-
 
 The JSON is a nested interchange fixture, not an EF Core database export. An importer must create each batch and its composition and oxide record in the same transaction, assign generated IDs and foreign keys, and allow the audit interceptor to populate audit fields.
 
-
 **How it loads.** With `SeedSyntheticData` on (`--SeedSyntheticData=true` on the command line, or the environment variable), the app loads this file once at startup, next to any real batches. It does nothing if synthetic batches already exist, and skips any batch number that's already taken.
 
 Warnings represented by the synthetic scenarios, including chemistry or mix-water pH warnings, are produced by the application's validators when the data loads (`SyntheticDataSeeder`), not hard-coded into the fixture as `RecordWarning` records.
 
 Synthetic data must remain clearly labeled in the UI and reports. This fixture must never be presented as real laboratory evidence.
-

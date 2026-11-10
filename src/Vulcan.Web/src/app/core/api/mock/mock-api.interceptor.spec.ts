@@ -182,6 +182,18 @@ describe('mockApiInterceptor', () => {
     }
   });
 
+  it('reports 94 moisture warnings for VM-SYN-003', async () => {
+    const api = setUp(true);
+
+    const detail = await firstValueFrom(api.getBatch('VM-SYN-003'));
+
+    const moistureWarnings = detail.warnings.filter(
+      (warning) => warning.limitKey === 'Curing.MoisturePct',
+    );
+
+    expect(moistureWarnings).toHaveLength(94);
+  });
+
   it('answers an unknown batch number with a 404', async () => {
     const api = setUp(true);
 

@@ -99,7 +99,7 @@ describe('curingChartConfig', () => {
   it.each([
     ['internalTempF', 78.8889, '°F'],
     ['ambientTempF', 69.5, '°F'],
-    ['moisturePct', 91.1222, '%'],
+    ['moisturePct', 3.0, '%'],
     ['relativeHumidityPct', 95.9444, '%'],
     ['resistivityOhmPerFt', 14.7222, 'Ω/ft'],
     ['co2Ppm', 420.9222, 'ppm'],

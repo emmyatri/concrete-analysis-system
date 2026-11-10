@@ -161,11 +161,17 @@ public class EarlyWarningServiceTests()
         syn002.ShortfallPct.ShouldBe(10.21);
         syn002.EarlyWarnings.Count(w => w.LimitKey == LimitKeys.AmbientTempF).ShouldBe(1);
 
-        // Moisture loss: at risk once the 3- and 7-day breaks come in low; no input warning.
+        // Moisture loss: at risk after the 3- and 7-day breaks.
+        // Low moisture is also flagged as an input warning.
         var syn003 = await Evaluate("VM-SYN-003");
         syn003.AtRisk.ShouldBeTrue();
-        syn003.Projected28DayPsi.ShouldBe(4503d);
-        syn003.EarlyWarnings.Single().LimitKey.ShouldBe(LimitKeys.PredictionShortfallPct);
+        syn003.Projected28DayPsi.ShouldBe(4535d);
+
+        syn003.EarlyWarnings.ShouldContain(
+            w => w.LimitKey == LimitKeys.PredictionShortfallPct);
+
+        syn003.EarlyWarnings.Count(
+            w => w.LimitKey == LimitKeys.MoisturePct).ShouldBe(1);
 
         // pH: flagged on entry but on track.
         var syn009 = await Evaluate("VM-SYN-009");
@@ -177,8 +183,9 @@ public class EarlyWarningServiceTests()
             (await Evaluate(onTrack)).EarlyWarnings.ShouldBeEmpty(onTrack);
         }
 
-        // 150 cold ambient readings, the VM-SYN-006 w/c and the VM-SYN-009 pH. No early breaks.
-        db.RecordWarning.Count().ShouldBe(152);
+        // 150 cold ambient readings, 94 moisture readings,
+        // one w/c warning, and one pH warning.
+        db.RecordWarning.Count().ShouldBe(246);
     }
 
     [Fact]
@@ -258,7 +265,7 @@ public class EarlyWarningServiceTests()
             TakenAt = castAt.AddDays(1),
             InternalTempF = 75m,
             AmbientTempF = 70m,
-            MoisturePct = 90m,
+            MoisturePct = 3m,
             RelativeHumidityPct = 95m,
             ResistivityOhmPerFt = 20m,
             Co2Ppm = 400m
@@ -269,7 +276,7 @@ public class EarlyWarningServiceTests()
             TakenAt = castAt.AddDays(2),
             InternalTempF = 75m,
             AmbientTempF = 70m,
-            MoisturePct = 90m,
+            MoisturePct = 3m,
             RelativeHumidityPct = 95m,
             ResistivityOhmPerFt = 20m,
             Co2Ppm = 400m

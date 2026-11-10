@@ -21,11 +21,16 @@ import { pathToFileURL } from 'node:url';
 export const SEED = 176;
 export const WATER_REFERENCE = 0.5; // w/cm above this lowers strength
 export const WATER_SLOPE = 2.0; // 2% per 0.01 of w/cm above the reference
-export const MOISTURE_SLOPE = 0.08; // 8% per point of batch-average moisture lost, day 1 to day 3
-export const MOISTURE_NOISE = 1.5; // average losses below this many points are normal variation
+
+// Synthetic moisture values are percentages of sample weight.
+// These coefficients are MADE UP FOR TESTING (SLA 1.3).
+export const MOISTURE_BASELINE = 3.0;
+export const MOISTURE_VARIATION = 0.3;
+export const MOISTURE_SLOPE = 0.16;
+export const MOISTURE_NOISE = 0.2;
+export const MOISTURE_DROP = 1.3;
 export const SCM_DELAY = 0.1; // day-3 reduction = 10% of the SCM share of cementitious mass
 export const COLD_SHIFT_F = 25; // cold-cured case: °F below the M1 temperatures
-export const MOISTURE_DROP = 2; // moisture-loss case: points lost between 24 h and 72 h
 export const COLD_CASE = 'VM-SYN-002';
 export const MOISTURE_CASE = 'VM-SYN-003';
 
@@ -70,7 +75,17 @@ export function extendReadings(batch) {
         TakenAt: isoAt(batch.CastAt, hours),
         InternalTempF: round1(internal + 0.3 * noise(batch.BatchNumber, specimen.Label, 'internal', hours)),
         AmbientTempF: ambient,
-        MoisturePct: round1(last.MoisturePct - (0.03 * (hours - 72)) / 24 + 0.2 * noise(batch.BatchNumber, specimen.Label, 'moisture', hours)),
+          MoisturePct: round1(
+              Math.max(
+                  0,
+                  Math.min(
+                      15,
+                      last.MoisturePct -
+                      (0.03 * (hours - 72)) / 24 +
+                      0.2 * noise(batch.BatchNumber, specimen.Label, 'moisture', hours),
+                  ),
+              ),
+          ),
         RelativeHumidityPct: round1(Math.min(100, mean('RelativeHumidityPct') + 0.4 * noise(batch.BatchNumber, specimen.Label, 'rh', hours))),
         ResistivityOhmPerFt: round2(last.ResistivityOhmPerFt * (1 + 0.5 * Math.log(hours / 72)) + 0.2 * noise(batch.BatchNumber, specimen.Label, 'res', hours)),
         Co2Ppm: round1(mean('Co2Ppm') + 4 * noise(batch.BatchNumber, specimen.Label, 'co2', hours)),
@@ -166,35 +181,83 @@ export function calculateBreak(batch, specimen, calibration) {
   );
 }
 
-export function generate(source, calibration) {
-  const result = structuredClone(source);
-  for (const batch of result.Batches) {
-    const readings = batch.Specimens.flatMap(specimen => specimen.CuringReadings);
+/**
+ * Converts legacy synthetic moisture readings to percentages of sample weight.
+ * Applied only when legacy readings (> 15%) are detected.
+ *
+ * All values and effects are MADE UP FOR TESTING (SLA 1.3).
+ */
+function migrateMoistureReadings(batch) {
+    const readings = batch.Specimens.flatMap(
+        specimen => specimen.CuringReadings,
+    );
 
-    // Applied once: an already-cold batch has every ambient reading below 60 °F.
-    if (batch.BatchNumber === COLD_CASE && readings.some(reading => reading.AmbientTempF >= 60)) {
-      for (const reading of readings) {
-        reading.InternalTempF = round1(reading.InternalTempF - COLD_SHIFT_F);
-        reading.AmbientTempF = round1(reading.AmbientTempF - COLD_SHIFT_F);
-      }
+    // Already converted: leave the readings unchanged.
+    if (!readings.some(reading => reading.MoisturePct > 15)) {
+        return;
     }
-
-    // Applied once: skipped when the batch already loses more than MOISTURE_NOISE points.
-    if (batch.BatchNumber === MOISTURE_CASE && moistureLoss(batch) < MOISTURE_NOISE) {
-      for (const reading of readings) {
-        const hours = hoursAfterCast(batch, reading);
-        reading.MoisturePct = round1(reading.MoisturePct - MOISTURE_DROP * Math.max(0, Math.min(1, (hours - 24) / 48)));
-      }
-    }
-
-    extendReadings(batch);
 
     for (const specimen of batch.Specimens) {
-      specimen.BreakResult.StrengthPsi = calculateBreak(batch, specimen, calibration);
+        for (const reading of specimen.CuringReadings) {
+            const hours = hoursAfterCast(batch, reading);
+
+            const variation = MOISTURE_VARIATION * noise(
+                batch.BatchNumber,
+                specimen.Label,
+                'moisture-scale',
+                hours,
+            );
+
+            const loss = batch.BatchNumber === MOISTURE_CASE
+                ? MOISTURE_DROP * Math.max(0, Math.min(1, (hours - 24) / 48))
+                : 0;
+
+            reading.MoisturePct = round1(
+                MOISTURE_BASELINE + variation - loss,
+            );
+        }
     }
-  }
-  return result;
 }
+
+
+export function generate(source, calibration) {
+    const result = structuredClone(source);
+
+    for (const batch of result.Batches) {
+        const readings = batch.Specimens.flatMap(
+            specimen => specimen.CuringReadings,
+        );
+
+        // Applied once: an already-cold batch has every ambient reading below 60 °F.
+        if (
+            batch.BatchNumber === COLD_CASE &&
+            readings.some(reading => reading.AmbientTempF >= 60)
+        ) {
+            for (const reading of readings) {
+                reading.InternalTempF = round1(reading.InternalTempF - COLD_SHIFT_F);
+                reading.AmbientTempF = round1(reading.AmbientTempF - COLD_SHIFT_F);
+            }
+        }
+
+        // Convert legacy moisture readings once for every batch.
+        migrateMoistureReadings(batch);
+
+        // Add readings only when they have not already been extended.
+        extendReadings(batch);
+
+        // Recalculate specimen break strengths using the updated moisture model.
+        for (const specimen of batch.Specimens) {
+            specimen.BreakResult.StrengthPsi = calculateBreak(
+                batch,
+                specimen,
+                calibration,
+            );
+        }
+    }
+
+    return result;
+}
+
 
 /** Throws if any value would be rejected by the configured limits. */
 export function validate(dataset, limits) {
@@ -230,7 +293,7 @@ export function flags(dataset, limits) {
 export const INTENDED_FLAGS = {
   'VM-SYN-001': {},
   'VM-SYN-002': { 'Curing.AmbientTempF': 150 },
-  'VM-SYN-003': {},
+  'VM-SYN-003': { 'Curing.MoisturePct': 94 },
   'VM-SYN-004': {},
   'VM-SYN-005': {},
   'VM-SYN-006': { 'Composition.WaterCementRatio': 1 },
@@ -257,12 +320,10 @@ function* valuesToCheck(batch) {
     for (const reading of specimen.CuringReadings) {
         yield ['Curing.InternalTempF', reading.InternalTempF];
         yield ['Curing.AmbientTempF', reading.AmbientTempF];
-
-        // SCRUM-201: Legacy synthetic moisture uses the previous measurement scale.
-        // SCRUM-202 will regenerate the dataset and restore this validation.
+        yield ['Curing.MoisturePct', reading.MoisturePct];
         yield ['Curing.RelativeHumidityPct', reading.RelativeHumidityPct];
-      yield ['Curing.ResistivityOhmPerFt', reading.ResistivityOhmPerFt];
-      yield ['Curing.Co2Ppm', reading.Co2Ppm];
+        yield ['Curing.ResistivityOhmPerFt', reading.ResistivityOhmPerFt];
+        yield ['Curing.Co2Ppm', reading.Co2Ppm];
     }
     if (specimen.BreakResult) {
       // Rejection limits apply to every break; the warning only to 28-day breaks.

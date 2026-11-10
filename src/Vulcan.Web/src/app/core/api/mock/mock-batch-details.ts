@@ -96,12 +96,7 @@ function warningsFor(batch: Omit<BatchDetail, 'warnings'>): SavedWarning[] {
     }
     for (const reading of specimen.curingReadings) {
       check('CuringReading', reading.id, 'Curing.AmbientTempF', reading.ambientTempF);
-
-      // Historical synthetic moisture readings use the original measurement
-      // definition and must not be revalidated against the new weight-based limits.
-      if (!batch.isSynthetic) {
-        check('CuringReading', reading.id, 'Curing.MoisturePct', reading.moisturePct);
-      }
+      check('CuringReading', reading.id, 'Curing.MoisturePct', reading.moisturePct);
     }
   }
   return warnings;
