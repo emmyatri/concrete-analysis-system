@@ -67,7 +67,7 @@ const ROWS: Row[] = [
     limitKey: 'Curing.AmbientTempF',
   },
   {
-    label: 'Moisture change (% of sample weight)',
+    label: 'Moisture change',
     value: change('moisturePct'),
     format: (v) => `${signed(v, '1.1-1')} percentage points`,
   },
