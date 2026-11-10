@@ -42,7 +42,7 @@ export type CuringMeasurement = Exclude<
 export const measurementLabels: Record<CuringMeasurement, string> = {
   internalTempF: 'Internal temperature (°F)',
   ambientTempF: 'Ambient temperature (°F)',
-  moisturePct: 'Moisture (%)',
+  moisturePct: 'Moisture (% of sample weight)',
   relativeHumidityPct: 'Relative humidity (%)',
   resistivityOhmPerFt: 'Resistivity (Ω/ft)',
   co2Ppm: 'CO₂ (ppm)',
@@ -50,13 +50,15 @@ export const measurementLabels: Record<CuringMeasurement, string> = {
 
 /** The configuration instructions for the curing chart.*/
 /**
- * The smallest y-axis range for each measurement, so normal sensor noise reads as flat instead of
- * filling the strip (e.g. moisture moving between 91% and 93% on a 90–94% axis).
+ * Minimum y-axis span for each measurement.
+ * Prevents small sensor fluctuations from excessively expanding the chart.
+ * Moisture uses a 4-percentage-point span to accommodate its 2–4%
+ * normal range without exaggerating minor variations.
  */
 export const MIN_Y_SPAN: Record<CuringMeasurement, number> = {
   internalTempF: 20,
   ambientTempF: 20,
-  moisturePct: 10,
+  moisturePct: 4,
   relativeHumidityPct: 10,
   resistivityOhmPerFt: 10,
   co2Ppm: 40,

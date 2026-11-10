@@ -58,6 +58,7 @@ const FIELDS: Record<string, { label: string; short?: string; digits: string }> 
   'Oxide.SulfurTrioxidePct': { label: 'Sulfur trioxide SO₃ (%)', short: 'SO₃', digits: '1.2-2' },
   'Break.StrengthPsi': { label: 'Break strength (PSI)', digits: '1.0-0' },
   'Curing.AmbientTempF': { label: 'Ambient temp (°F)', digits: '1.1-1' },
+  'Curing.MoisturePct': { label: 'Moisture (% of sample weight)', digits: '1.1-1' },
 };
 
 /**
