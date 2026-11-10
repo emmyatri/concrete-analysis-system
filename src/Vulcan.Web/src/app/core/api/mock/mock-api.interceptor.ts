@@ -23,6 +23,18 @@ import { MOCK_BATCH_DETAILS, mockBatchDetailFromRequest } from './mock-batch-det
 import { MOCK_BATCHES, MOCK_SPECIFIC_GRAVITIES, MOCK_VALIDATION_LIMITS } from './mock-data';
 import { mockEarlyWarnings, mockStrength } from './mock-strength';
 
+// Keep Search and Home warning counts aligned with Batch Detail.
+// The detailed warnings are calculated using the current validation limits.
+for (const summary of MOCK_BATCHES) {
+  const detail = MOCK_BATCH_DETAILS.find(
+    (batch) => batch.batchNumber === summary.batchNumber,
+  );
+
+  if (detail) {
+    summary.warningCount = detail.warnings.length;
+  }
+}
+
 /** Batches saved while the app is open, so a new batch shows up in the list until you reload. */
 const savedBatches: BatchSummary[] = [];
 /** The same batches in full, so Batch Detail can open one right after it's saved. */
