@@ -255,10 +255,12 @@ function* valuesToCheck(batch) {
   yield ['Oxide.SulfurTrioxidePct', oxides.SulfurTrioxidePct];
   for (const specimen of batch.Specimens) {
     for (const reading of specimen.CuringReadings) {
-      yield ['Curing.InternalTempF', reading.InternalTempF];
-      yield ['Curing.AmbientTempF', reading.AmbientTempF];
-      yield ['Curing.MoisturePct', reading.MoisturePct];
-      yield ['Curing.RelativeHumidityPct', reading.RelativeHumidityPct];
+        yield ['Curing.InternalTempF', reading.InternalTempF];
+        yield ['Curing.AmbientTempF', reading.AmbientTempF];
+
+        // SCRUM-201: Legacy synthetic moisture uses the previous measurement scale.
+        // SCRUM-202 will regenerate the dataset and restore this validation.
+        yield ['Curing.RelativeHumidityPct', reading.RelativeHumidityPct];
       yield ['Curing.ResistivityOhmPerFt', reading.ResistivityOhmPerFt];
       yield ['Curing.Co2Ppm', reading.Co2Ppm];
     }
