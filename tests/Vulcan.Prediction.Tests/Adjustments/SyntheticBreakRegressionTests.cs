@@ -176,7 +176,7 @@ public class SyntheticBreakRegressionTests
         {
             ["VM-SYN-001"] = 4443,
             ["VM-SYN-002"] = 3119,
-            ["VM-SYN-003"] = 4268,
+            ["VM-SYN-003"] = 4287,
             ["VM-SYN-004"] = 4192,
             ["VM-SYN-005"] = 4123,
             ["VM-SYN-006"] = 4450,
@@ -261,7 +261,7 @@ public class SyntheticBreakRegressionTests
         {
             ["VM-SYN-001"] = 6242,
             ["VM-SYN-002"] = 5028,
-            ["VM-SYN-003"] = 4503,
+            ["VM-SYN-003"] = 4535,
             ["VM-SYN-004"] = 5848,
             ["VM-SYN-005"] = 6106,
             ["VM-SYN-006"] = 4733,

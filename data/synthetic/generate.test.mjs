@@ -48,13 +48,56 @@ test('a higher water ratio alone lowers strength', () => {
   assert.ok(calculateBreak(wet, specimen(wet, 'Day28'), calibration) < calculateBreak(normal, specimen(normal, 'Day28'), calibration));
 });
 
+
 test('moisture loss lowers strength only above normal variation', () => {
-  const moist = batch('VM-SYN-003');
-  assert.ok(moistureLoss(moist) >= MOISTURE_NOISE);
-  const kept = structuredClone(moist);
-  for (const s of kept.Specimens) for (const r of s.CuringReadings) r.MoisturePct = 90;
-  assert.ok(calculateBreak(moist, specimen(moist, 'Day28'), calibration) < calculateBreak(kept, specimen(kept, 'Day28'), calibration));
-  assert.ok(moistureLoss(batch('VM-SYN-001')) < MOISTURE_NOISE);
+    const moist = batch('VM-SYN-003');
+
+    // The moisture-loss demo must exceed normal variation.
+    assert.ok(moistureLoss(moist) >= MOISTURE_NOISE);
+
+    // Remove moisture loss while keeping moisture at a normal 3% by weight.
+    const kept = structuredClone(moist);
+
+    for (const s of kept.Specimens) {
+        for (const r of s.CuringReadings) {
+            r.MoisturePct = 3.0;
+        }
+    }
+
+    // Moisture loss must reduce the calculated break strength.
+    assert.ok(
+        calculateBreak(moist, specimen(moist, 'Day28'), calibration) <
+        calculateBreak(kept, specimen(kept, 'Day28'), calibration)
+    );
+
+    // An ordinary batch must remain below the moisture-loss threshold.
+    assert.ok(moistureLoss(batch('VM-SYN-001')) < MOISTURE_NOISE);
+});
+
+
+test('synthetic moisture uses the sample-weight percentage scale', () => {
+    for (const b of dataset.Batches) {
+        const values = b.Specimens.flatMap(s =>
+            s.CuringReadings.map(r => r.MoisturePct)
+        );
+
+        assert.ok(
+            values.every(value => value >= 0 && value <= 15),
+            `${b.BatchNumber} has moisture outside the accepted range`
+        );
+
+        if (b.BatchNumber === 'VM-SYN-003') {
+            assert.ok(
+                values.some(value => value < 2),
+                'VM-SYN-003 must contain low-moisture readings'
+            );
+        } else {
+            assert.ok(
+                values.every(value => value >= 2 && value <= 4),
+                `${b.BatchNumber} must remain within normal moisture limits`
+            );
+        }
+    }
 });
 
 test('SCM delays early strength and leaves day 28 unchanged', () => {
