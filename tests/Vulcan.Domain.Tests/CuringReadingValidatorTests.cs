@@ -158,7 +158,7 @@ public class CuringReadingValidatorTests
             Assert.Equal("Max 1 decimal place", error.Message);
         }
     }
-    
+
     // -------------------------------------------------------------------------
     // Moisture: % of sample weight
     // Reject outside 0–15%, warn outside 2–4%.
@@ -188,7 +188,7 @@ public class CuringReadingValidatorTests
 
         Assert.Equal(expected, ResultFor(outcome, LimitKeys.MoisturePct));
     }
-    
+
     [Theory]
     [InlineData("1.5")]
     [InlineData("4.5")]
@@ -207,7 +207,7 @@ public class CuringReadingValidatorTests
         Assert.Equal(LimitKeys.MoisturePct, warning.Key);
         Assert.Contains("2-4% of sample weight", warning.Message);
     }
-    
+
     // -------------------------------------------------------------------------
     // Relative humidity: 0–100% 
     // -------------------------------------------------------------------------
@@ -229,7 +229,7 @@ public class CuringReadingValidatorTests
             expected,
             ResultFor(outcome, LimitKeys.RelativeHumidityPct));
     }
-    
+
     // -------------------------------------------------------------------------
     // Resistivity: more than 0. CO2: at least 0.
     // -------------------------------------------------------------------------
