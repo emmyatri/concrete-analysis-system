@@ -1,5 +1,6 @@
 # Client Decisions
 
+**Proposed Update** November 10, 2026 **Status** Pending Leads Approval
 **Last updated:** October 15, 2026 · **Contract reference:** SLA section 6.3 · **Requirements:** A-3, A-4, A-6, A-7
 
 When we started building, a handful of things in the client's requirements weren't spelled out: units, which ranges
