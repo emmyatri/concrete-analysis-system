@@ -26,9 +26,7 @@ import { mockEarlyWarnings, mockStrength } from './mock-strength';
 // Keep Search and Home warning counts aligned with Batch Detail.
 // The detailed warnings are calculated using the current validation limits.
 for (const summary of MOCK_BATCHES) {
-  const detail = MOCK_BATCH_DETAILS.find(
-    (batch) => batch.batchNumber === summary.batchNumber,
-  );
+  const detail = MOCK_BATCH_DETAILS.find((batch) => batch.batchNumber === summary.batchNumber);
 
   if (detail) {
     summary.warningCount = detail.warnings.length;
