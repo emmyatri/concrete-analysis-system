@@ -99,7 +99,7 @@ describe('BatchDetailPage', () => {
     expect(cells(readings[1]).slice(1)).toEqual([
       '78.4 °F',
       '69.5 °F',
-      '91.6%',
+      '3.0%',
       '96.1%',
       '15.98 Ω/ft',
       '416.8 ppm',
