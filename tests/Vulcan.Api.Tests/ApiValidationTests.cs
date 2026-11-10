@@ -903,7 +903,7 @@ public sealed class ApiValidationTests
             ["TakenAt"] = DateTime.UtcNow.AddMinutes(-5),
             ["InternalTempF"] = 72.5,
             ["AmbientTempF"] = 72.0,
-            ["MoisturePct"] = 65.0,
+            ["MoisturePct"] = 3.0,
             ["RelativeHumidityPct"] = 55.0,
             ["ResistivityOhmPerFt"] = 12.5,
             ["Co2Ppm"] = 450.0

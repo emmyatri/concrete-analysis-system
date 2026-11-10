@@ -270,9 +270,7 @@ describe('CuringReadingsPage', () => {
     await settle();
 
     expect(status(newRows()[0])).toBe('Not saved');
-    expect(messages()).toEqual([
-      'Row 1 · Moisture (% of sample weight) — Moisture is too wet',
-    ]);
+    expect(messages()).toEqual(['Row 1 · Moisture (% of sample weight) — Moisture is too wet']);
     expect(inputs(newRows()[0])[3].classList).toContain('cell--error');
   });
 
