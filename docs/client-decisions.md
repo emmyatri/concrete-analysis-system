@@ -1,7 +1,6 @@
 # Client Decisions
 
-**Proposed Update** November 10, 2026 **Status** Pending Leads Approval
-**Last updated:** October 15, 2026 · **Contract reference:** SLA section 6.3 · **Requirements:** A-3, A-4, A-6, A-7
+**Last updated:** November 10, 2026 · **Status:** Approved (11/10) · **Contract reference:** SLA section 6.3 · **Requirements:** A-3, A-4, A-6, A-7, FR-5, FR-6, SC-4
 
 When we started building, a handful of things in the client's requirements weren't spelled out: units, which ranges
 block a save, how some numbers get calculated. Instead of waiting on email replies, we answered each question from
@@ -129,6 +128,9 @@ revert `BreakResultValidator` to warn regardless of `TestAgeDays` and re-run `da
 
 *Affects (M2 change):* `BreakResultValidator`, `SpecimenService`, `SyntheticDataSeeder`, the break dialog, and
 `data/synthetic/generate.mjs`
+
+**Client answer (2026-11-02).** Don answered the M2 question: the 3,000 PSI warning stays a 28-day rule, and early
+breaks get their own bands instead. See §14. The M2 change above stands.
 
 ## 4. pH is the mix water's pH
 
@@ -355,7 +357,7 @@ The following warning ranges require clarification from Vulcan:
 | Measurement | Client-provided information | Remaining clarification |
 |---|---|---|
 | Internal temperature (°F) | Not provided | Normal curing range and hard limits |
-| Moisture (%) | 3.5–5% of total batch weight | Confirm warning versus rejection thresholds |
+| Moisture (%) | ~~3.5–5% of total batch weight~~ Replaced by 2–4% of sample weight (Nov 2, see §14) | Confirm rejection limits |
 | Relative humidity (%) | Below 75% | Treat 75% or above as outside the normal range; confirm warning versus rejection threshold |
 | Electrical resistance (Ω) | Below 7,000–9,000 Ω, measured end to end | Confirm exact upper threshold, testing method, and compatibility with stored resistivity (ohms/ft) |
 | CO₂ (%) | 0.5–0.7% of total batch weight | Supersedes decision 9; API, schema, contract, seed data, and mock updates tracked separately |
