@@ -261,13 +261,22 @@
         "Source": "Plausibility"
     },
     {
-        "Key": "Curing.MoisturePct",
-        "Severity": "Reject",
-        "Min": 0,
-        "Max": 100,
-        "Unit": "%",
-        "Message": "Moisture percent must be a valid percentage [0-100]",
-        "Source": "FR-6"
+      "Key": "Curing.MoisturePct",
+      "Severity": "Reject",
+      "Min": 0,
+      "Max": 15,
+      "Unit": "%",
+      "Message": "Moisture (% of sample weight) must be within the accepted range [0-15]",
+      "Source": "M3-02 — provisional accepted range, pending client confirmation"
+    },
+    {
+      "Key": "Curing.MoisturePct",
+      "Severity": "Warn",
+      "Min": 2,
+      "Max": 4,
+      "Unit": "%",
+      "Message": "Moisture content is outside the normal range of 2-4% of sample weight.",
+      "Source": "Don, Nov 2, 2026"
     },
     {
         "Key": "Curing.RelativeHumidityPct",

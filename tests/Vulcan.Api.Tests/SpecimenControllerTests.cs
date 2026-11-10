@@ -248,7 +248,7 @@ public sealed class SpecimenControllerTests
                 takenAt = DateTime.UtcNow.AddMinutes(-5),
                 internalTempF = 72.5,
                 ambientTempF,
-                moisturePct = 65.0,
+                moisturePct = 3.0,
                 relativeHumidityPct = 55.0,
                 resistivityOhmPerFt = 12.5,
                 co2Ppm = 450.0,

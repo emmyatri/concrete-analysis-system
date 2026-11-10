@@ -250,7 +250,7 @@ describe('mockApiInterceptor', () => {
     const reading = {
       internalTempF: 72,
       ambientTempF: 70,
-      moisturePct: 93,
+      moisturePct: 3,
       relativeHumidityPct: 95,
       resistivityOhmPerFt: 15,
       co2Ppm: 420,

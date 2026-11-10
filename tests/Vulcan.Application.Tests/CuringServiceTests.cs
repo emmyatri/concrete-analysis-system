@@ -126,7 +126,7 @@ public class CuringServiceTests(DatabaseFixture dbFixture)
                 2026, 10, 2, 12, 0, 0, DateTimeKind.Utc),
             InternalTempF = 75m,
             AmbientTempF = 59m,
-            MoisturePct = 5m,
+            MoisturePct = 3m,
             RelativeHumidityPct = 50m,
             ResistivityOhmPerFt = 1000m,
             Co2Ppm = 400m

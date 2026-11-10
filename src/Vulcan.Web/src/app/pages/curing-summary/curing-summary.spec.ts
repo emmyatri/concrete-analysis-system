@@ -37,7 +37,7 @@ describe('CuringSummary', () => {
       ['Internal temp (avg)', '81.0 °F', '77.6 °F'],
       ['Temp rise since cast (peak)', '+6.4 °F', '+1.2 °F'],
       ['Ambient temp (avg)', '68.5 °F', '70.0 °F'],
-      ['Moisture change', '+0.6%', '+0.9%'],
+      ['Moisture change', '+0.6 pts', '+0.9 pts'],
       ['Relative humidity (avg)', '95.2%', '95.0%'],
       ['Resistivity change', '+3.4 Ω/ft', '+8.6 Ω/ft'],
       ['CO₂ (avg)', '423 ppm', '419 ppm'],
