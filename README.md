@@ -215,6 +215,7 @@ readonly mixWaterPh = new FormControl<number | null>(null);
 | -------------------------------------------------------- | ------------------------------------------------------------------------------------- |
 | [`docs/schema.md`](docs/schema.md)                       | Every field the app stores: name, type, unit, rules, plus the ERD diagram             |
 | [`docs/validation-matrix.md`](docs/validation-matrix.md) | Every validation rule, its range, severity (Reject/Warn) and message                  |
+| [`docs/calculation-method.md`](docs/calculation-method.md) | Strength prediction methodology, maturity equations, calibration coefficients, break-test adjustments, early warnings, and the VM-SYN-006 worked example |
 | [`docs/api.md`](docs/api.md)                             | Every server endpoint, request/response shape and status code                         |
 | [`docs/client-decisions.md`](docs/client-decisions.md)   | Decisions adopted from the client's Rev 1 spec and industry standards, with sources   |
 | [`docs/adr/`](docs/adr/)                                 | Architecture decisions (SQLite, in-process API, canonical units, Angular in WebView2) |
