@@ -77,12 +77,17 @@ export class EstimateCards {
   });
 }
 
+/** Returns the raw, unrounded, percentage of the actual break. */
+function percentOff(estimated: number, actual: number): number {
+  return ((estimated - actual) / actual) * 100;
+}
+
 /**
  * ADR-005 Equation 7 in words: "Estimate was 91 PSI (1.9%) above the actual break", "… below …",
  * or "Estimate matched the actual break" when they agree to within 0.05%.
  */
 function difference(estimatedPsi: number, actualPsi: number): string {
-  const pct = Math.round(((estimatedPsi - actualPsi) / actualPsi) * 1000) / 10;
+  const pct = Math.round(percentOff(estimatedPsi, actualPsi) * 10) / 10;
   if (pct === 0) return 'Estimate matched the actual break';
   const psi = formatNumber(Math.abs(Math.round(estimatedPsi - actualPsi)), 'en-US', '1.0-0');
   const percent = formatNumber(Math.abs(pct), 'en-US', '1.1-1');
