@@ -4,9 +4,9 @@
 **Purpose:** Engineering explanation of maturity, compressive-strength estimation, break-based re-fitting, warning thresholds, and calibration
 **Requirements:** FR-13, FR-14, FR-15, FR-17, NFR-7
 **Baseline:** Calibration `v1` | **Method:** Nurse–Saul maturity and ACI 209R-92 strength-development relationship
-**Reference decision:** ADR-005 — *Concrete Strength Estimation Method* (approved October 21, 2026; see the repository's ADR-005 file)
+**Reference decision:** [ADR-005: Concrete Strength Estimation Method](adr/005-strength-estimation.md) (approved October 21, 2026)
 
-> **Scope and interpretation.** CBAS produces deterministic engineering *estimates*, not certified cylinder-test results. Its initial model uses the batch's entered expected final compressive strength, measured specimen temperatures, and, when available, measured 3- and 7-day cylinder breaks. It does not train a machine-learning model or call an external prediction service. This document describes the implementation reviewed for SCRUM-209. Source labels in configuration identify the team's documented rationale; they should not be read as claims that a referenced standard mandates each application-specific warning threshold.
+> **Scope and interpretation.** CBAS produces deterministic engineering *estimates*, not certified cylinder-test results. Its initial model uses the batch's entered expected final compressive strength, measured specimen temperatures, and, when available, measured 3- and 7-day cylinder breaks. It does not train a machine-learning model or call an external prediction service. This document describes calibration v1 as implemented in CBAS. Source labels in configuration identify the team's documented rationale; they should not be read as claims that a referenced standard mandates each application-specific warning threshold.
 
 ## 1. Calculation overview
 
@@ -65,7 +65,7 @@ The seeded `calibration-v1.json` contains:
 1. Establish a new, uniquely identified calibration version (for example, `v2`) based on measured data and documented engineering review. Preserve the existing `v1` baseline for traceability.
 2. Record the chosen maturity constants, cement-type coefficients, supporting dataset, method, limitations, and change rationale in the version's parameter record and accompanying documentation.
 3. Run regression tests and backtest the proposed version against recorded breaks before activating it. Report unrounded accuracy values when assessing the 5% objective.
-4. Use the application's **existing calibration-version registration and current-selection mechanism** to activate the new version. Both the strength API service and the save interceptor request `ICalibrationProvider.Current()`; the exact registration/activation procedure was not part of the reviewed source and must be confirmed before giving operational instructions.
+4. Add the new version as a `CalibrationVersion` row. It becomes current immediately: `ICalibrationProvider.Current()` returns the most recently created version, and both the strength API and the save interceptor use it. There is no separate activation step, so a new version must be backtested before it is added.
 5. Confirm new persisted predictions are labeled with the selected calibration version, and compare displayed recalculated curves with stored estimates when switching versions.
 
 Do not silently edit historical `v1` coefficients or imply that the empty `Factors` object currently adjusts v1 strength predictions.
@@ -220,7 +220,7 @@ The estimator returns its original daily curve and horizon estimates separately 
 
 ## 6. Worked example: VM-SYN-006
 
-**Dataset:** the supplied synthetic batch fixture; all results below were independently recalculated from its nine specimens using the reviewed `MaturityCalculator`, `MaturityIntervalBuilder`, `StrengthEstimator`, and `BreakAdjustmentCalculator` formulas. Values are shown with extra precision for auditability; the API rounds displayed curve PSI to the nearest whole PSI, with midpoint rounding away from zero.
+**Dataset:** `data/synthetic/batches.json`; all results below were recalculated from its nine specimens using the `MaturityCalculator`, `MaturityIntervalBuilder`, `StrengthEstimator`, and `BreakAdjustmentCalculator` formulas. Values are shown with extra precision for auditability; the API rounds displayed curve PSI to the nearest whole PSI, with midpoint rounding away from zero.
 
 ### 6.1 Batch and input assumptions
 
@@ -235,7 +235,7 @@ The estimator returns its original daily curve and horizon estimates separately 
 | Eligible specimens | 9: three day-3, three day-7, and three day-28 cylinders |
 | Temperature records | 7 per day-3 specimen, 11 per day-7 specimen, 32 per day-28 specimen (150 total) |
 
-**Important:** All nine qualifying specimens contribute to the batch equivalent age at all three horizons. For a 28-day target, the day-3 and day-7 specimens' missing later temperature intervals use the mean-temperature assumption; the day-28 specimens provide measurements through day 28. Consequently, these numbers describe a calculation made with the **complete supplied synthetic record**, not a cast-day forecast or a historical day-3 snapshot.
+**Important:** All nine qualifying specimens contribute to the batch equivalent age at all three horizons. For a 28-day target, the day-3 and day-7 specimens' missing later temperature intervals use the mean-temperature assumption; the day-28 specimens provide measurements through day 28. Consequently, these numbers describe a calculation made with the **complete synthetic record**, not a cast-day forecast or a historical day-3 snapshot.
 
 ### 6.2 Average maturity and original predictions
 
@@ -287,7 +287,7 @@ $$
 
 ### 6.4 Accuracy assessment
 
-CBAS evaluates the absolute percentage error against the measured 28-day break average:
+Accuracy is measured as the absolute percentage error against the measured 28-day break average. The estimate card shows the signed difference (for example, "261 PSI (5.2%) below the actual break"), and SCRUM-205 adds a pass or miss against the 5% target on the 28-day card:
 
 $$
 \mathrm{Error\ (\%)}=
@@ -304,9 +304,9 @@ The combined re-fit substantially reduces the prediction error. **However, 5.220
 
 ## 7. Validation and warning thresholds
 
-The following values are transcribed from the supplied `validation-limits.json`. `Warn` marks a value for review; `Reject` is an input-acceptance constraint. Bounds are reproduced as configured. An absent bound means no limit on that side in this entry.
+The following values are from `src/Vulcan.Infrastructure/Seed/validation-limits.json`. `Warn` marks a value for review; `Reject` is an input-acceptance constraint. Bounds are reproduced as configured. An absent bound means no limit on that side in this entry.
 
-> **Interpretation caveat:** These are **configured thresholds**, not a verified exhaustive list of factors emitted by `EarlyWarningService`. That service's decision/mapping logic was not supplied for this review. Likewise, the `Source` text is configuration provenance, not independent confirmation that the cited standard prescribes the exact value.
+> **How these become early warnings:** `EarlyWarningService` emits the three prediction warnings in 7.1 (`Prediction.MinimumPsi`, `Prediction.ShortfallPct`, `Batch.ExpectedFinalVsWcmPct`), plus each input warning saved at entry (7.2), grouped as one reason per limit key (client-decisions §13). The `Source` text records where each value came from; it does not claim the cited standard prescribes that exact threshold.
 
 ### 7.1 Prediction and mix-related warnings
 
@@ -345,7 +345,7 @@ ADR-005 specifies that ratios below 0.33 skip this plausibility check, and ratio
 | `Curing.AmbientTempF` | Outside 60–80°F | ASTM C31 initial curing (source label in configuration) |
 | `Curing.MoisturePct` | Outside **2–4% of sample weight** | **Don, Nov. 2, 2026** |
 
-No separate `Warn` range appears in the supplied configuration for internal temperature, relative humidity, resistivity, or CO₂. Those fields do have input-rejection constraints below. The moisture acceptance bound is explicitly **provisional** pending client confirmation, whereas the 2–4% normal range is attributed to Don.
+No separate `Warn` range is configured for internal temperature, relative humidity, resistivity, or CO₂. Those fields do have input-rejection constraints below. The moisture acceptance bound is explicitly **provisional** pending client confirmation, whereas the 2–4% normal range is attributed to Don.
 
 ### 7.3 Input-rejection limits (not strength-model coefficients)
 
@@ -412,8 +412,6 @@ A “How this was calculated” view or link should communicate, at minimum:
 - Whether presented values came from the latest **stored prediction** or a freshly **recalculated curve**.
 - The distinction between predicted strength, early-warning flags, and measured laboratory breaks.
 
-The reviewed files expose calculation-basis and version fields; linking this document from the application's UI and README is **an integration task**, not something that occurs merely by adding this Markdown file.
-
 ## 9. Assumptions and limitations
 
 1. **Empirical model:** ACI 209R-92 coefficients are an initial engineering approximation. Type II borrows Type I coefficients; the ADR records that the primary ACI source values for Type I/III still warrant verification.
@@ -429,9 +427,9 @@ The reviewed files expose calculation-basis and version fields; linking this doc
 
 ## 10. Source and implementation references
 
-**Project sources reviewed for this document**
+**Implementation references**
 
-- `docs/ADR-005` — Approved *Concrete Strength Estimation Method* (Oct. 21, 2026); exact repository filename may differ.
+- [ADR-005: Concrete Strength Estimation Method](adr/005-strength-estimation.md) — approved October 21, 2026.
 - `calibration-v1.json` — Stored calibration version, coefficient values, and maturity settings.
 - `validation-limits.json` — Warning/rejection limits and their source labels.
 - Synthetic batch dataset containing `VM-SYN-006` — Per-specimen readings and 3-, 7-, 28-day breaks used in Section 6.
