@@ -1,5 +1,6 @@
 using Vulcan.Application.Contracts;
 using Vulcan.Application.Interfaces;
+using Vulcan.Domain.Constants;
 using Vulcan.Domain.Enums;
 using Vulcan.Domain.Interfaces;
 using Vulcan.Prediction.Adjustments;
@@ -13,6 +14,7 @@ public sealed class StrengthService(
     IPredictionRepository predictionRepository,
     IStrengthEstimateService strengthEstimateService,
     ICalibrationProvider calibrationProvider,
+    ILimitProvider limitProvider,
     IEarlyWarningEvaluator? earlyWarningEvaluator = null)
 {
     public async Task<GetBatchStrengthResponse?> GetByBatchNumberAsync(
@@ -269,6 +271,8 @@ public sealed class StrengthService(
             ShortfallPct = warningEvaluation is not null
                 ? warningEvaluation.ShortfallPct
                 : shortfallPct,
+
+            AccuracyTargetPct = (double?)limitProvider.Get(LimitKeys.PredictionAccuracyTargetPct).Warn?.Max,
 
             CurvePoints = curvePoints,
             UnadjustedCurvePoints = unadjustedCurvePoints,

@@ -32,6 +32,8 @@ public class GetBatchStrengthResponse
 
     public double? ShortfallPct { get; init; }
 
+    public double? AccuracyTargetPct { get; init; }
+
     [Required]
     public required List<StrengthCurvePointDTO> CurvePoints { get; init; } = [];
 

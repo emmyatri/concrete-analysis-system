@@ -31,5 +31,6 @@ public static class LimitKeys
     public const string Co2Ppm = "Curing.Co2Ppm";
     public const string PredictionMinimumPsi = "Prediction.MinimumPsi";
     public const string PredictionShortfallPct = "Prediction.ShortfallPct";
+    public const string PredictionAccuracyTargetPct = "Prediction.AccuracyTargetPct";
     public const string ExpectedFinalVsWcmPct = "Batch.ExpectedFinalVsWcmPct";
 }

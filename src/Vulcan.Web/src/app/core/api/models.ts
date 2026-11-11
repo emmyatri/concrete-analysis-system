@@ -294,6 +294,8 @@ export interface BatchStrength {
   /** ExpectedFinalBreakPsi minus projected28DayPsi. Negative means above target. */
   shortfallPsi: number | null;
   shortfallPct: number | null;
+  /** Allowed % difference between the 28-day estimate and the actual 28-day break. Null when no percentage assigned. */
+  accuracyTargetPct: number | null;
   /** Days 1–28. Empty when status is InsufficientCuringData. */
   curvePoints: StrengthCurvePoint[];
   /** The curve before the re-fit. Empty when no estimate was adjusted. */
