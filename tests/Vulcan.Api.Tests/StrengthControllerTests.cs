@@ -58,6 +58,24 @@ public class StrengthControllerTests
         };
     }
 
+    private static async Task<GetBatchStrengthResponse> GetStrengthAsync(HttpClient client, string batchNumber)
+    {
+        var response = await client.GetAsync(
+            $"/api/batches/{batchNumber}/strength");
+
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
+
+        var content = await response.Content
+            .ReadFromJsonAsync<GetBatchStrengthResponse>(
+                new JsonSerializerOptions(JsonSerializerDefaults.Web)
+                {
+                    Converters = { new JsonStringEnumConverter() }
+                });
+
+        content.ShouldNotBeNull();
+        return content;
+    }
+
     [Fact]
     public async Task Get_strength_existing_batch_returns_ok()
     {
@@ -91,19 +109,8 @@ public class StrengthControllerTests
             await db.SaveChangesAsync();
         }
 
-        var response = await client.GetAsync(
-            "/api/batches/VM-STRENGTH-001/strength");
+        var content = await GetStrengthAsync(client, "VM-STRENGTH-001");
 
-        response.StatusCode.ShouldBe(HttpStatusCode.OK);
-
-        var content = await response.Content
-            .ReadFromJsonAsync<GetBatchStrengthResponse>(
-                new JsonSerializerOptions(JsonSerializerDefaults.Web)
-                {
-                    Converters = { new JsonStringEnumConverter() }
-                });
-
-        content.ShouldNotBeNull();
         content.BatchNumber.ShouldBe("VM-STRENGTH-001");
         content.ExpectedFinalBreakPsi.ShouldBe(4500);
         content.AccuracyTargetPct.ShouldBe(5);
@@ -181,19 +188,8 @@ public class StrengthControllerTests
             await db.SaveChangesAsync();
         }
 
-        var response = await client.GetAsync(
-            "/api/batches/VM-STRENGTH-002/strength");
+        var content = await GetStrengthAsync(client, "VM-STRENGTH-002");
 
-        response.StatusCode.ShouldBe(HttpStatusCode.OK);
-
-        var content = await response.Content
-            .ReadFromJsonAsync<GetBatchStrengthResponse>(
-                new JsonSerializerOptions(JsonSerializerDefaults.Web)
-                {
-                    Converters = { new JsonStringEnumConverter() }
-                });
-
-        content.ShouldNotBeNull();
         content.BatchNumber.ShouldBe("VM-STRENGTH-002");
         content.ExpectedFinalBreakPsi.ShouldBe(4500);
 
@@ -315,19 +311,8 @@ public class StrengthControllerTests
             await db.SaveChangesAsync();
         }
 
-        var response = await client.GetAsync(
-            "/api/batches/VM-STRENGTH-SYN-001/strength");
+        var content = await GetStrengthAsync(client, "VM-STRENGTH-SYN-001");
 
-        response.StatusCode.ShouldBe(HttpStatusCode.OK);
-
-        var content = await response.Content
-            .ReadFromJsonAsync<GetBatchStrengthResponse>(
-                new JsonSerializerOptions(JsonSerializerDefaults.Web)
-                {
-                    Converters = { new JsonStringEnumConverter() }
-                });
-
-        content.ShouldNotBeNull();
         content.IsSynthetic.ShouldBeTrue();
         content.CuringPoints.Count.ShouldBe(7);
     }
@@ -392,19 +377,7 @@ public class StrengthControllerTests
             await db.SaveChangesAsync();
         }
 
-        var response = await client.GetAsync(
-            "/api/batches/VM-STRENGTH-003/strength");
-
-        response.StatusCode.ShouldBe(HttpStatusCode.OK);
-
-        var content = await response.Content
-            .ReadFromJsonAsync<GetBatchStrengthResponse>(
-                new JsonSerializerOptions(JsonSerializerDefaults.Web)
-                {
-                    Converters = { new JsonStringEnumConverter() }
-                });
-
-        content.ShouldNotBeNull();
+        var content = await GetStrengthAsync(client, "VM-STRENGTH-003");
 
         foreach (var estimate in content.Estimates)
         {
@@ -491,19 +464,8 @@ public class StrengthControllerTests
             await db.SaveChangesAsync();
         }
 
-        var response = await client.GetAsync(
-            "/api/batches/VM-STRENGTH-BREAK-001/strength");
+        var content = await GetStrengthAsync(client, "VM-STRENGTH-BREAK-001");
 
-        response.StatusCode.ShouldBe(HttpStatusCode.OK);
-
-        var content = await response.Content
-            .ReadFromJsonAsync<GetBatchStrengthResponse>(
-                new JsonSerializerOptions(JsonSerializerDefaults.Web)
-                {
-                    Converters = { new JsonStringEnumConverter() }
-                });
-
-        content.ShouldNotBeNull();
         content.MeasuredBreaks.Count.ShouldBe(1);
 
         var measuredBreak = content.MeasuredBreaks.Single();
@@ -552,19 +514,7 @@ public class StrengthControllerTests
             await db.SaveChangesAsync();
         }
 
-        var response = await client.GetAsync(
-            "/api/batches/VM-STRENGTH-WARNING-001/strength");
-
-        response.StatusCode.ShouldBe(HttpStatusCode.OK);
-
-        var content = await response.Content
-            .ReadFromJsonAsync<GetBatchStrengthResponse>(
-                new JsonSerializerOptions(JsonSerializerDefaults.Web)
-                {
-                    Converters = { new JsonStringEnumConverter() }
-                });
-
-        content.ShouldNotBeNull();
+        var content = await GetStrengthAsync(client, "VM-STRENGTH-WARNING-001");
 
         content.Status.ShouldBe("Estimated");
         content.AtRisk.ShouldBeTrue();
