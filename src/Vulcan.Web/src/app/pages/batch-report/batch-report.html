@@ -51,9 +51,13 @@
     @case ('loaded') {
       @if (batch(); as batch) {
 
-        <main class="report-document" data-testid="report-document">
+        <main
+          class="report-document"
+          data-testid="report-document"
+          [style.--report-title]="'&quot;' + batch.batchNumber + ' Batch Report&quot;'"
+        >
 
-          <!-- ========================================= -->
+        <!-- ========================================= -->
           <!-- REPORT HEADER                             -->
           <!-- ========================================= -->
 
@@ -498,6 +502,167 @@
             </p>
           </section>
 
+          <!-- =========================================
+               SECTION 05 — STRENGTH CHART
+               ========================================= -->
+
+          <section
+            class="report-section strength-report-section"
+            data-testid="report-strength-section"
+          >
+            <div class="section-heading">
+              <span class="section-number">05</span>
+              <h2>Strength Development</h2>
+            </div>
+
+            <p class="section-description">
+              Concrete compressive strength over the 28-day evaluation
+              period, including predicted strength, recorded breaks,
+              and the expected final strength.
+            </p>
+
+            <div class="report-strength-chart">
+              <app-strength-chart
+                [state]="strengthChartState()"
+                [castAt]="batch.castAt"
+                [minimumPsi]="null"
+                [printMode]="true"
+                height="360px"
+                [fontSize]="12"
+              />
+            </div>
+
+            <p class="report-note">
+              Predicted values are calculated using the CBAS strength
+              estimation engine. Recorded breaks represent measured
+              compressive strength from individual specimens.
+            </p>
+          </section>
+
+          <!-- ========================================= -->
+          <!-- 06 — STRENGTH PREDICTIONS AND CALIBRATION -->
+          <!-- ========================================= -->
+
+          <section
+            class="report-section"
+            aria-labelledby="predictions-title"
+            data-testid="report-predictions"
+          >
+            <div class="section-heading">
+              <span class="section-number">06</span>
+              <h2 id="predictions-title">
+                Strength Predictions and Calibration
+              </h2>
+            </div>
+
+            <p class="section-description">
+              Estimated compressive strengths at the standard 3-, 7-,
+              and 28-day evaluation ages. Values reflect the
+              calculation basis and calibration version recorded
+              by the prediction engine.
+            </p>
+
+            @if (strength(); as strength) {
+
+              <div class="prediction-summary">
+                <div class="prediction-stat">
+                  <span>Expected 28-day strength</span>
+                  <strong>
+                    {{ strength.expectedFinalBreakPsi | number:'1.0-0' }} PSI
+                  </strong>
+                </div>
+
+                <div class="prediction-stat">
+                  <span>Projected 28-day strength</span>
+                  <strong>
+                    @if (strength.projected28DayPsi !== null) {
+                      {{ strength.projected28DayPsi | number:'1.0-0' }} PSI
+                    } @else {
+                      Not available
+                    }
+                  </strong>
+                </div>
+              </div>
+
+              @if (strength.estimates.length > 0) {
+                <div class="report-table-wrapper">
+                  <table class="report-table predictions-table">
+                    <thead>
+                    <tr>
+                      <th scope="col">Age</th>
+                      <th scope="col">Estimated PSI</th>
+                      <th scope="col">Equivalent age</th>
+                      <th scope="col">Adjustment</th>
+                    </tr>
+                    </thead>
+
+                    <tbody>
+                      @for (estimate of strength.estimates; track estimate.horizonDays) {
+                        <tr>
+                          <td>Day {{ estimate.horizonDays }}</td>
+
+                          <td>
+                            @if (estimate.estimatedPsi !== null) {
+                              <strong>
+                                {{ estimate.estimatedPsi | number:'1.0-0' }}
+                              </strong>
+                            } @else {
+                              <span class="pending-value">Unavailable</span>
+                            }
+                          </td>
+
+                          <td>
+                            @if (estimate.equivalentAgeDays !== null) {
+                              {{ estimate.equivalentAgeDays | number:'1.1-2' }} days
+                            } @else {
+                              —
+                            }
+                          </td>
+
+                          <td>{{ adjustmentLabel(estimate.adjustmentStage) }}</td>
+                        </tr>
+                      }
+                    </tbody>
+                  </table>
+                </div>
+
+                <h3 class="prediction-subheading">
+                  Calculation Method and Calibration
+                </h3>
+
+                @for (detail of calibrationDetails(); track $index) {
+                  <div class="calibration-detail">
+                    <div class="calibration-detail-header">
+                      <strong>
+                        @for (day of detail.horizons; track day) {
+                          Day {{ day }}{{ $last ? '' : ', ' }}
+                        }
+                      </strong>
+
+                      <span>
+                      Calibration version: {{ detail.version }}
+                      </span>
+                    </div>
+
+                    <p>{{ detail.basis }}</p>
+                  </div>
+                }
+
+              } @else {
+                <p class="report-empty" data-testid="no-predictions">
+                  No strength predictions are available for this batch.
+                </p>
+              }
+
+              @if (strength.status === 'InsufficientCuringData') {
+                <p class="report-note" data-testid="insufficient-curing-data">
+                  Not enough curing data yet. Strength estimates require
+                  sufficient curing readings before they can be calculated.
+                </p>
+              }
+
+            }
+          </section>
 
           <!-- ========================================= -->
           <!-- REPORT FOOTER                             -->

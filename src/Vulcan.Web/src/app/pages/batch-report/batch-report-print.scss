@@ -9,7 +9,46 @@
 
 @page {
   size: letter portrait;
-  margin: 0.5in;
+
+  /* Extra space for running header and footer. */
+  margin: 0.8in 0.65in 0.75in;
+
+  /* Running header — every printed page. */
+  @top-left {
+    content: "VULCAN CBAS";
+    color: #234e70;
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 9pt;
+    font-weight: 700;
+    letter-spacing: 1px;
+    border-bottom: 1px solid #cbd5e1;
+  }
+
+  @top-right {
+    content: "CONCRETE BATCH REPORT";
+    color: #64748b;
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 8pt;
+    border-bottom: 1px solid #cbd5e1;
+  }
+
+  /* Running footer — every printed page. */
+  @bottom-left {
+    content: "Vulcan CBAS | Engineering Report";
+    color: #64748b;
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 8pt;
+    border-top: 1px solid #cbd5e1;
+  }
+
+  @bottom-right {
+    content: "Page " counter(page) " of " counter(pages);
+    color: #234e70;
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 8pt;
+    font-weight: 700;
+    border-top: 1px solid #cbd5e1;
+  }
 }
 
 @media print {
@@ -30,14 +69,48 @@
     padding: 0;
   }
 
+
   app-batch-report .report-document {
     box-sizing: border-box;
+    display: block;
     width: 100%;
     max-width: none;
     min-height: 0;
     margin: 0;
     padding: 0;
-    box-shadow: none;
+    border: none;
+    border-radius: 0;
+    box-shadow: none !important;
+    background: #ffffff;
+  }
+
+  /* Remove screen-only layout constraints when printing. */
+  html,
+  body {
+    margin: 0 !important;
+    padding: 0 !important;
+    background: #ffffff !important;
+  }
+
+  app-batch-report .batch-report {
+    width: 100%;
+    max-width: none;
+    margin: 0;
+    padding: 0;
+    background: #ffffff;
+  }
+
+  /* Prevent the report from inheriting screen card styling. */
+  app-batch-report .strength-report-section {
+    width: 100%;
+    margin-top: 0;
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  /* Running page-margin boxes replace the document footer. */
+  app-batch-report .report-footer {
+    display: none !important;
   }
 
   /* =========================================
@@ -98,4 +171,26 @@
     break-inside: avoid;
     page-break-inside: avoid;
   }
+
+  /* =========================================
+     STRENGTH CHART PRINT LAYOUT
+     ========================================= */
+
+  app-batch-report .strength-report-section {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  app-batch-report .report-strength-chart {
+    width: 100%;
+    margin: 12px 0;
+    padding: 0;
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  app-batch-report .report-strength-chart canvas {
+    max-width: 100% !important;
+  }
+
 }
