@@ -1128,6 +1128,10 @@ Use to get the strength predictions for a given batch.
         "shortfallPct": {
             "type": ["number", "null"]
         },
+        "accuracyTargetPct": {
+            "type": ["number", "null"],
+            "description": "Allowed % difference between the 28-day estimate and the actual 28-day break (Prediction.AccuracyTargetPct). Null when not configured."
+        },
         "curvePoints": {
             "type": "array",
             "default": [],

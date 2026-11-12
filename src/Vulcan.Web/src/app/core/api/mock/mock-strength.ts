@@ -37,6 +37,12 @@ const MINIMUM_PSI = 3000;
 const SHORTFALL_PCT = 5;
 const EXPECTED_FINAL_VS_WCM_PCT = 30;
 
+/**
+ * The prediction engine will use an initial accuracy target of within 5% of the actual 28-day
+ * compressive strength (client-decisions section 14.2).
+ */
+const ACCURACY_TARGET_PCT = 5;
+
 /** ADR-005 section 4.5: ACI 211.1-97 Table 6.3.4(a), non-air-entrained: [w/cm, 28-day PSI]. */
 const ACI_WCM_TABLE: [number, number][] = [
   [0.33, 7000],
@@ -191,6 +197,7 @@ export function mockStrength(batch: BatchDetail): BatchStrength {
     projected28DayPsi: null,
     shortfallPsi: null,
     shortfallPct: null,
+    accuracyTargetPct: ACCURACY_TARGET_PCT,
     curvePoints: [],
     unadjustedCurvePoints: [],
     estimates: [],

@@ -58,24 +58,49 @@ public class StrengthControllerTests
         };
     }
 
+    private static async Task<GetBatchStrengthResponse> GetStrengthAsync(HttpClient client, string batchNumber)
+    {
+        var response = await client.GetAsync(
+            $"/api/batches/{batchNumber}/strength");
+
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
+
+        var content = await response.Content
+            .ReadFromJsonAsync<GetBatchStrengthResponse>(
+                new JsonSerializerOptions(JsonSerializerDefaults.Web)
+                {
+                    Converters = { new JsonStringEnumConverter() }
+                });
+
+        content.ShouldNotBeNull();
+        return content;
+    }
+
+    private static async Task SeedAsync(WebApplication app, Func<VulcanDbContext, Task> seed)
+    {
+        using var scope = app.Services.CreateScope();
+
+        var db = scope.ServiceProvider
+            .GetRequiredService<VulcanDbContext>();
+
+        var httpContextAccessor = scope.ServiceProvider
+            .GetRequiredService<IHttpContextAccessor>();
+
+        httpContextAccessor.HttpContext = new DefaultHttpContext();
+        httpContextAccessor.HttpContext.Request.Headers[TechnicianHeader.Name] =
+            "Test Technician";
+
+        await seed(db);
+    }
+
     [Fact]
     public async Task Get_strength_existing_batch_returns_ok()
     {
         await using var app = await StartAsync();
         using var client = ClientFor(app);
 
-        using (var scope = app.Services.CreateScope())
+        await SeedAsync(app, async db =>
         {
-            var db = scope.ServiceProvider
-                .GetRequiredService<VulcanDbContext>();
-
-            var httpContextAccessor = scope.ServiceProvider
-                .GetRequiredService<IHttpContextAccessor>();
-
-            httpContextAccessor.HttpContext = new DefaultHttpContext();
-            httpContextAccessor.HttpContext.Request.Headers[TechnicianHeader.Name] =
-                "Test Technician";
-
             db.Batch.Add(new Batch
             {
                 BatchNumber = "VM-STRENGTH-001",
@@ -89,24 +114,13 @@ public class StrengthControllerTests
             });
 
             await db.SaveChangesAsync();
-        }
+        });
 
-        var response = await client.GetAsync(
-            "/api/batches/VM-STRENGTH-001/strength");
+        var content = await GetStrengthAsync(client, "VM-STRENGTH-001");
 
-        response.StatusCode.ShouldBe(HttpStatusCode.OK);
-
-        var content = await response.Content
-            .ReadFromJsonAsync<GetBatchStrengthResponse>(
-                new JsonSerializerOptions(JsonSerializerDefaults.Web)
-                {
-                    Converters = { new JsonStringEnumConverter() }
-                });
-
-        content.ShouldNotBeNull();
         content.BatchNumber.ShouldBe("VM-STRENGTH-001");
         content.ExpectedFinalBreakPsi.ShouldBe(4500);
-
+        content.AccuracyTargetPct.ShouldBe(5);
         content.Status.ShouldBe("InsufficientCuringData");
         content.Estimates.Count.ShouldBe(3);
         content.Estimates.ShouldAllBe(
@@ -123,17 +137,8 @@ public class StrengthControllerTests
 
         var castAt = DateTime.UtcNow.AddDays(-4);
 
-        using (var scope = app.Services.CreateScope())
+        await SeedAsync(app, async db =>
         {
-            var db = scope.ServiceProvider
-                .GetRequiredService<VulcanDbContext>();
-
-            var httpContextAccessor = scope.ServiceProvider
-                .GetRequiredService<IHttpContextAccessor>();
-
-            httpContextAccessor.HttpContext = new DefaultHttpContext();
-            httpContextAccessor.HttpContext.Request.Headers[TechnicianHeader.Name] =
-                "Test Technician";
 
             var batch = new Batch
             {
@@ -179,21 +184,10 @@ public class StrengthControllerTests
             }
 
             await db.SaveChangesAsync();
-        }
+        });
 
-        var response = await client.GetAsync(
-            "/api/batches/VM-STRENGTH-002/strength");
+        var content = await GetStrengthAsync(client, "VM-STRENGTH-002");
 
-        response.StatusCode.ShouldBe(HttpStatusCode.OK);
-
-        var content = await response.Content
-            .ReadFromJsonAsync<GetBatchStrengthResponse>(
-                new JsonSerializerOptions(JsonSerializerDefaults.Web)
-                {
-                    Converters = { new JsonStringEnumConverter() }
-                });
-
-        content.ShouldNotBeNull();
         content.BatchNumber.ShouldBe("VM-STRENGTH-002");
         content.ExpectedFinalBreakPsi.ShouldBe(4500);
 
@@ -257,17 +251,8 @@ public class StrengthControllerTests
 
         var castAt = DateTime.UtcNow.AddDays(-4);
 
-        using (var scope = app.Services.CreateScope())
+        await SeedAsync(app, async db =>
         {
-            var db = scope.ServiceProvider
-                .GetRequiredService<VulcanDbContext>();
-
-            var httpContextAccessor = scope.ServiceProvider
-                .GetRequiredService<IHttpContextAccessor>();
-
-            httpContextAccessor.HttpContext = new DefaultHttpContext();
-            httpContextAccessor.HttpContext.Request.Headers[TechnicianHeader.Name] =
-                "Test Technician";
 
             var batch = new Batch
             {
@@ -313,21 +298,10 @@ public class StrengthControllerTests
             }
 
             await db.SaveChangesAsync();
-        }
+        });
 
-        var response = await client.GetAsync(
-            "/api/batches/VM-STRENGTH-SYN-001/strength");
+        var content = await GetStrengthAsync(client, "VM-STRENGTH-SYN-001");
 
-        response.StatusCode.ShouldBe(HttpStatusCode.OK);
-
-        var content = await response.Content
-            .ReadFromJsonAsync<GetBatchStrengthResponse>(
-                new JsonSerializerOptions(JsonSerializerDefaults.Web)
-                {
-                    Converters = { new JsonStringEnumConverter() }
-                });
-
-        content.ShouldNotBeNull();
         content.IsSynthetic.ShouldBeTrue();
         content.CuringPoints.Count.ShouldBe(7);
     }
@@ -338,18 +312,8 @@ public class StrengthControllerTests
         await using var app = await StartAsync();
         using var client = ClientFor(app);
 
-        using (var scope = app.Services.CreateScope())
+        await SeedAsync(app, async db =>
         {
-            var db = scope.ServiceProvider
-                .GetRequiredService<VulcanDbContext>();
-
-            var httpContextAccessor = scope.ServiceProvider
-                .GetRequiredService<IHttpContextAccessor>();
-
-            httpContextAccessor.HttpContext = new DefaultHttpContext();
-            httpContextAccessor.HttpContext.Request.Headers[TechnicianHeader.Name] =
-                "Test Technician";
-
             var calibrationVersion = db.Set<CalibrationVersion>()
                 .First();
 
@@ -390,21 +354,9 @@ public class StrengthControllerTests
             }
 
             await db.SaveChangesAsync();
-        }
+        });
 
-        var response = await client.GetAsync(
-            "/api/batches/VM-STRENGTH-003/strength");
-
-        response.StatusCode.ShouldBe(HttpStatusCode.OK);
-
-        var content = await response.Content
-            .ReadFromJsonAsync<GetBatchStrengthResponse>(
-                new JsonSerializerOptions(JsonSerializerDefaults.Web)
-                {
-                    Converters = { new JsonStringEnumConverter() }
-                });
-
-        content.ShouldNotBeNull();
+        var content = await GetStrengthAsync(client, "VM-STRENGTH-003");
 
         foreach (var estimate in content.Estimates)
         {
@@ -437,19 +389,10 @@ public class StrengthControllerTests
 
         var castAt = DateTime.UtcNow.AddDays(-4);
 
-        int specimenId;
+        int specimenId = 0;
 
-        using (var scope = app.Services.CreateScope())
+        await SeedAsync(app, async db =>
         {
-            var db = scope.ServiceProvider
-                .GetRequiredService<VulcanDbContext>();
-
-            var httpContextAccessor = scope.ServiceProvider
-                .GetRequiredService<IHttpContextAccessor>();
-
-            httpContextAccessor.HttpContext = new DefaultHttpContext();
-            httpContextAccessor.HttpContext.Request.Headers[TechnicianHeader.Name] =
-                "Test Technician";
 
             var batch = new Batch
             {
@@ -489,21 +432,10 @@ public class StrengthControllerTests
             });
 
             await db.SaveChangesAsync();
-        }
+        });
 
-        var response = await client.GetAsync(
-            "/api/batches/VM-STRENGTH-BREAK-001/strength");
+        var content = await GetStrengthAsync(client, "VM-STRENGTH-BREAK-001");
 
-        response.StatusCode.ShouldBe(HttpStatusCode.OK);
-
-        var content = await response.Content
-            .ReadFromJsonAsync<GetBatchStrengthResponse>(
-                new JsonSerializerOptions(JsonSerializerDefaults.Web)
-                {
-                    Converters = { new JsonStringEnumConverter() }
-                });
-
-        content.ShouldNotBeNull();
         content.MeasuredBreaks.Count.ShouldBe(1);
 
         var measuredBreak = content.MeasuredBreaks.Single();
@@ -525,17 +457,8 @@ public class StrengthControllerTests
 
         using var client = ClientFor(app);
 
-        using (var scope = app.Services.CreateScope())
+        await SeedAsync(app, async db =>
         {
-            var db = scope.ServiceProvider
-                .GetRequiredService<VulcanDbContext>();
-
-            var httpContextAccessor = scope.ServiceProvider
-                .GetRequiredService<IHttpContextAccessor>();
-
-            httpContextAccessor.HttpContext = new DefaultHttpContext();
-            httpContextAccessor.HttpContext.Request.Headers[TechnicianHeader.Name] =
-                "Test Technician";
 
             db.Batch.Add(new Batch
             {
@@ -550,21 +473,9 @@ public class StrengthControllerTests
             });
 
             await db.SaveChangesAsync();
-        }
+        });
 
-        var response = await client.GetAsync(
-            "/api/batches/VM-STRENGTH-WARNING-001/strength");
-
-        response.StatusCode.ShouldBe(HttpStatusCode.OK);
-
-        var content = await response.Content
-            .ReadFromJsonAsync<GetBatchStrengthResponse>(
-                new JsonSerializerOptions(JsonSerializerDefaults.Web)
-                {
-                    Converters = { new JsonStringEnumConverter() }
-                });
-
-        content.ShouldNotBeNull();
+        var content = await GetStrengthAsync(client, "VM-STRENGTH-WARNING-001");
 
         content.Status.ShouldBe("Estimated");
         content.AtRisk.ShouldBeTrue();
