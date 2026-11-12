@@ -39,6 +39,7 @@ export class EstimateCards {
     const strength = state.status === 'loaded' ? state.strength : null;
     const batch = this.batch();
     const atRisk = strength?.atRisk ?? false;
+    const targetPct = strength?.accuracyTargetPct ?? null;
 
     return AGES.map(({ horizon, testAge }) => {
       const estimate = strength?.estimates.find((e) => e.horizonDays === horizon) ?? null;
@@ -57,7 +58,13 @@ export class EstimateCards {
         actual: actual === null ? null : Math.round(actual),
         breakCount: breaks.length,
         difference:
-          actual === null || estimatedPsi === null ? null : difference(estimatedPsi, actual),
+          actual === null || estimatedPsi === null
+            ? null
+            : difference(estimatedPsi, actual, horizon === 28 ? targetPct : null),
+        target:
+          actual === null || estimatedPsi === null || horizon !== 28 || targetPct === null
+            ? null
+            : accuracyTarget(estimatedPsi, actual, targetPct),
         dueAt: new Date(Date.parse(batch.castAt) + horizon * DAY_MS),
         atRisk: horizon === 28 && atRisk,
       };
@@ -82,14 +89,50 @@ function percentOff(estimated: number, actual: number): number {
   return ((estimated - actual) / actual) * 100;
 }
 
+/** Miss % as display text. Adds decimals (up to 3) when one decimal would
+ * make an over-target miss look within the target.
+ */
+function formatPct(rawPct: number, targetPct: number | null): string {
+  const maxDecimals = 3;
+  const miss = Math.abs(rawPct);
+
+  if (targetPct === null || miss <= targetPct) {
+    const rounded = Math.round(miss * 10) / 10;
+    return formatNumber(rounded, 'en-US', '1.1-1');
+  }
+
+  for (let d = 1; d <= maxDecimals; d++) {
+    const factor = 10 ** d;
+    const rounded = Math.round(miss * factor) / factor;
+
+    if (rounded > targetPct) {
+      return formatNumber(rounded, 'en-US', `1.${d}-${d}`);
+    }
+  }
+
+  return '>' + formatNumber(targetPct, 'en-US', `1.${maxDecimals}-${maxDecimals}`);
+}
+
 /**
  * ADR-005 Equation 7 in words: "Estimate was 91 PSI (1.9%) above the actual break", "… below …",
- * or "Estimate matched the actual break" when they agree to within 0.05%.
+ * or "Estimate matched the actual break" when they agree to within 0.05%. Also adds
+ * precision near the accuracy target (client-decisions section 14.2) so an over-target
+ * miss never displays as within.
  */
-function difference(estimatedPsi: number, actualPsi: number): string {
-  const pct = Math.round(percentOff(estimatedPsi, actualPsi) * 10) / 10;
+function difference(estimatedPsi: number, actualPsi: number, targetPct: number | null): string {
+  const raw = percentOff(estimatedPsi, actualPsi);
+  const pct = Math.round(raw * 10) / 10;
   if (pct === 0) return 'Estimate matched the actual break';
   const psi = formatNumber(Math.abs(Math.round(estimatedPsi - actualPsi)), 'en-US', '1.0-0');
-  const percent = formatNumber(Math.abs(pct), 'en-US', '1.1-1');
+  const percent = formatPct(raw, targetPct);
   return `Estimate was ${psi} PSI (${percent}%) ${pct > 0 ? 'above' : 'below'} the actual break`;
+}
+
+/** Displays notification at the 28-day mark whether prediction variance is within/outside
+ * the accuracy target (client-decisions section 14.2).
+ */
+function accuracyTarget(estimatedPsi: number, actualPsi: number, targetPct: number): string {
+  const miss = Math.abs(percentOff(estimatedPsi, actualPsi));
+  const within = miss <= targetPct;
+  return within ? `Within the ${targetPct}% target` : `Outside the ${targetPct}% target`;
 }
