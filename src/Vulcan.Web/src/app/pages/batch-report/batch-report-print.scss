@@ -193,4 +193,40 @@
     max-width: 100% !important;
   }
 
+  /* =========================================
+     SECTION 07 — PRINT LAYOUT
+     ========================================= */
+
+  /* Keep the risk assessment together where possible. */
+  app-batch-report .report-risk-assessment {
+    break-inside: avoid;
+    page-break-inside: avoid;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  /* Avoid orphaned subsection headings. */
+  app-batch-report [data-testid='report-warnings']
+  .prediction-subheading {
+    break-after: avoid;
+    page-break-after: avoid;
+  }
+
+  /* Repeat warning table headings when spanning pages. */
+  app-batch-report [data-testid='report-validation-warnings'] thead {
+    display: table-header-group;
+  }
+
+  /* Allow a long warning table to continue on another page. */
+  app-batch-report [data-testid='report-validation-warnings'] {
+    break-inside: auto;
+    page-break-inside: auto;
+  }
+
+  /* Keep individual warning records together. */
+  app-batch-report [data-testid='report-validation-warnings'] tr {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
 }

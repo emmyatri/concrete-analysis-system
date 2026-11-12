@@ -387,6 +387,84 @@ app-batch-report {
   }
 
   /* =========================================
+     07 — WARNINGS AND RECOMMENDATIONS
+     ========================================= */
+
+  .report-risk-assessment {
+    margin: 12px 0 20px;
+    padding: 14px 16px;
+    border: 1px solid #e8c4c4;
+    border-left: 3px solid #a94442;
+    border-radius: 4px;
+    background: #fff8f7;
+    color: #334155;
+    font-size: 11px;
+    line-height: 1.6;
+
+    > strong {
+      display: block;
+      margin-bottom: 8px;
+      color: #913737;
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    ul {
+      margin: 8px 0 0;
+      padding-left: 20px;
+    }
+
+    li {
+      margin-bottom: 6px;
+      padding-left: 2px;
+      overflow-wrap: anywhere;
+    }
+
+    li:last-child {
+      margin-bottom: 0;
+    }
+
+    p {
+      margin: 8px 0 0;
+    }
+  }
+
+  /* Recorded validation warnings */
+
+  .report-table[data-testid='report-validation-warnings'] {
+    table-layout: fixed;
+
+    th,
+    td {
+      padding: 9px 8px;
+      font-size: 10px;
+      line-height: 1.5;
+      overflow-wrap: anywhere;
+    }
+
+    th:nth-child(1),
+    td:nth-child(1) {
+      width: 23%;
+    }
+
+    th:nth-child(2),
+    td:nth-child(2) {
+      width: 25%;
+    }
+
+    th:nth-child(3),
+    td:nth-child(3) {
+      width: 12%;
+      font-variant-numeric: tabular-nums;
+    }
+
+    th:nth-child(4),
+    td:nth-child(4) {
+      width: 40%;
+    }
+  }
+
+  /* =========================================
      EMPTY STATES
      ========================================= */
 

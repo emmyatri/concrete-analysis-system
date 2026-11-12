@@ -1,4 +1,4 @@
-
+import { DOCUMENT, DatePipe, DecimalPipe, formatNumber } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
 import {
   Component,
@@ -8,22 +8,25 @@ import {
   input,
   signal,
 } from '@angular/core';
-import { DOCUMENT } from '@angular/common';
 import { toObservable, toSignal } from '@angular/core/rxjs-interop';
 import { RouterLink } from '@angular/router';
 import { catchError, forkJoin, map, of, startWith, switchMap } from 'rxjs';
 
 import { describeApiError } from '../../core/api/api-errors';
-import { BatchDetail, BatchStrength, Specimen } from '../../core/api/models';
+import { earlyWarningsShortfallFirst } from '../../core/api/early-warnings';
+import {
+  BatchDetail,
+  BatchStrength,
+  EarlyWarning,
+  SavedWarning,
+  Specimen,
+} from '../../core/api/models';
 import { VulcanApiService } from '../../core/api/vulcan-api.service';
-
-import { DatePipe, DecimalPipe } from '@angular/common';
 
 import {
   StrengthChart,
   type StrengthLoad,
 } from '../strength-chart/strength-chart';
-
 
 type ReportState =
   | { status: 'loading' }
@@ -99,6 +102,126 @@ export class BatchReport {
     return state.status === 'loaded' ? state.strength : null;
   });
 
+  // ---------- Early-strength warnings ----------
+
+  /**
+   * Orders early-strength warning reasons consistently with Batch Detail:
+   * strength shortfalls first, followed by mix and curing factors.
+   */
+  protected readonly earlyWarningReasons = computed((): EarlyWarning[] => {
+    const strength = this.strength();
+
+    if (!strength) {
+      return [];
+    }
+
+    return earlyWarningsShortfallFirst(strength.earlyWarnings);
+  });
+
+  /**
+   * Uses the same risk assessment title as Batch Detail.
+   */
+  protected readonly earlyWarningTitle = computed(() => {
+    const strength = this.strength();
+
+    return strength?.atRisk
+      ? `${strength.batchNumber} is at risk of missing its target`
+      : 'Early warning';
+  });
+
+
+  /** Recorded validation warnings with readable report labels. */
+  protected readonly warningRows = computed(() => {
+    const batch = this.batch();
+    if (!batch) return [];
+
+    return batch.warnings.map((warning) => ({
+      warning,
+      record: this.describeWarningRecord(batch, warning),
+      field: this.warningFieldLabel(warning),
+      value: formatNumber(
+        warning.value,
+        'en-US',
+        this.warningDigits(warning.limitKey),
+      ),
+    }));
+  });
+
+  private warningFieldLabel(warning: SavedWarning): string {
+    const labels: Record<string, string> = {
+      'Batch.FinalWeightLb': 'Sample weight (lb)',
+      'Batch.MixWaterPh': 'Mix water pH',
+      'Batch.CementSurfacePh': 'Cement surface pH',
+      'Composition.WaterCementRatio': 'Water / cementitious',
+      'Oxide.AluminaPct': 'Alumina Al₂O₃ (%)',
+      'Oxide.IronOxidePct': 'Iron oxide Fe₂O₃ (%)',
+      'Oxide.MagnesiumOxidePct': 'Magnesium oxide MgO (%)',
+      'Oxide.SulfurTrioxidePct': 'Sulfur trioxide SO₃ (%)',
+      'Break.StrengthPsi': 'Break strength (PSI)',
+      'Curing.AmbientTempF': 'Ambient temp (°F)',
+      'Curing.MoisturePct': 'Moisture (% of sample weight)',
+    };
+
+    return labels[warning.limitKey] ?? warning.fieldName;
+  }
+
+  private warningDigits(limitKey: string): string {
+    switch (limitKey) {
+      case 'Batch.MixWaterPh':
+      case 'Batch.CementSurfacePh':
+        return '1.1-2';
+
+      case 'Curing.MoisturePct':
+      case 'Curing.AmbientTempF':
+        return '1.1-1';
+
+      case 'Composition.WaterCementRatio':
+        return '1.2-3';
+
+      case 'Break.StrengthPsi':
+        return '1.0-0';
+
+      default:
+        return '1.0-2';
+    }
+  }
+
+  private describeWarningRecord(
+    batch: BatchDetail,
+    warning: SavedWarning,
+  ): string {
+    switch (warning.entityType) {
+      case 'Batch':
+        return 'Batch';
+      case 'Composition':
+        return 'Recipe';
+      case 'CementOxideAnalysis':
+        return 'Cement chemistry';
+      case 'BreakResult': {
+        const specimen = batch.specimens.find(
+          (s) => s.breakResult?.id === warning.entityId,
+        );
+        return specimen ? `Cylinder ${specimen.label} · break` : 'Break';
+      }
+      case 'CuringReading': {
+        const specimen = batch.specimens.find((s) =>
+          s.curingReadings.some((r) => r.id === warning.entityId),
+        );
+        return specimen
+          ? `Cylinder ${specimen.label} · curing reading`
+          : 'Curing reading';
+      }
+      case 'Specimen': {
+        const specimen = batch.specimens.find(
+          (s) => s.id === warning.entityId,
+        );
+        return specimen ? `Cylinder ${specimen.label}` : 'Cylinder';
+      }
+    }
+  }
+
+  // ---------- Strength chart ----------
+
   /**
    * Adapts the report's existing strength response
    * for the reusable StrengthChart component.
@@ -129,6 +252,8 @@ export class BatchReport {
         return { status: 'loading' };
     }
   });
+
+  // ---------- Prediction calibration ----------
 
   /**
    * Groups estimates that share the same calculation basis
@@ -175,18 +300,23 @@ export class BatchReport {
     switch (stage) {
       case 'ThreeAndSevenDay':
         return '3- and 7-day break adjustment';
+
       case 'SingleBreak':
         return 'Single-break adjustment';
+
       case null:
       case '':
         return 'Not specified';
+
       default:
         return stage;
     }
   }
 
+  // ---------- Print configuration ----------
+
   /**
-   * Configures the running print header and synthetic-data footer
+   * Configures the running print header and synthetic-data footer.
    */
   private readonly printHeaderEffect = effect((onCleanup) => {
     const state = this.state();
@@ -207,24 +337,22 @@ export class BatchReport {
     style.setAttribute('data-batch-report-print-header', '');
 
     style.textContent = `
-    @page {
-      @top-right {
-        content: ${cssTitle};
-      }
+      @page {
+        @top-right {
+          content: ${cssTitle};
+        }
 
-      @bottom-center {
-        content: ${batch.isSynthetic
-      ? '"SYNTHETIC TEST DATA"'
-      : 'none'};
-        color: #9b3434;
-        font-family: Arial, Helvetica, sans-serif;
-        font-size: 8pt;
-        font-weight: 700;
-        letter-spacing: 0.4px;
-        border-top: 1px solid #cbd5e1;
+        @bottom-center {
+          content: ${batch.isSynthetic ? '"SYNTHETIC TEST DATA"' : 'none'};
+          color: #9b3434;
+          font-family: Arial, Helvetica, sans-serif;
+          font-size: 8pt;
+          font-weight: 700;
+          letter-spacing: 0.4px;
+          border-top: 1px solid #cbd5e1;
+        }
       }
-    }
-  `;
+    `;
 
     this.document.head.appendChild(style);
 
@@ -232,6 +360,8 @@ export class BatchReport {
       style.remove();
     });
   });
+
+  // ---------- Report metadata ----------
 
   protected readonly generatedAt = new Date();
 
@@ -241,6 +371,8 @@ export class BatchReport {
       (specimen) => specimen.breakResult !== null,
     ).length;
   }
+
+  // ---------- Report actions ----------
 
   protected printReport(): void {
     window.print();

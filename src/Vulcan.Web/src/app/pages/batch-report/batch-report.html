@@ -664,6 +664,99 @@
             }
           </section>
 
+          <!-- SECTION 07: WARNINGS AND RECOMMENDATIONS -->
+          <section
+            class="report-section"
+            aria-labelledby="warnings-title"
+            data-testid="report-warnings"
+          >
+            <div class="section-heading">
+              <span class="section-number">07</span>
+              <h2 id="warnings-title">Warnings and Recommendations</h2>
+            </div>
+
+            <p class="section-description">
+              Strength risk assessment and recorded validation warnings
+              associated with this batch.
+            </p>
+
+            @if (strength(); as strength) {
+              <h3 class="prediction-subheading">Strength Risk Assessment</h3>
+
+              @if (strength.atRisk) {
+                <div class="report-risk-assessment" data-testid="report-at-risk">
+                  <strong>{{ earlyWarningTitle() }}</strong>
+
+                  @if (earlyWarningReasons().length > 0) {
+                    <ul>
+                      @for (
+                        reason of earlyWarningReasons();
+                        track reason.limitKey + reason.warning
+                        ) {
+                        <li [attr.data-limit-key]="reason.limitKey">
+                          {{ reason.warning }}
+                        </li>
+                      }
+                    </ul>
+                  } @else {
+                    <p>
+                      The current strength assessment indicates a risk of
+                      missing the target. No detailed warning factors were returned.
+                    </p>
+                  }
+                </div>
+              } @else if (earlyWarningReasons().length > 0) {
+                <div class="report-risk-assessment" data-testid="report-early-warnings">
+                  <strong>{{ earlyWarningTitle() }}</strong>
+                  <ul>
+                    @for (
+                      reason of earlyWarningReasons();
+                      track reason.limitKey + reason.warning
+                      ) {
+                      <li [attr.data-limit-key]="reason.limitKey">
+                        {{ reason.warning }}
+                      </li>
+                    }
+                  </ul>
+                </div>
+              } @else {
+                <p class="report-empty" data-testid="report-no-strength-warnings">
+                  No early-strength warnings were reported for this batch.
+                </p>
+              }
+            }
+            <h3 class="prediction-subheading">Recorded Validation Warnings</h3>
+
+            @if (warningRows().length > 0) {
+              <div class="report-table-wrapper">
+                <table class="report-table" data-testid="report-validation-warnings">
+                  <thead>
+                  <tr>
+                    <th scope="col">Record</th>
+                    <th scope="col">Field</th>
+                    <th scope="col">Value</th>
+                    <th scope="col">Message</th>
+                  </tr>
+                  </thead>
+                  <tbody>
+                    @for (row of warningRows(); track row.warning.id) {
+                      <tr>
+                        <td>{{ row.record }}</td>
+                        <td>{{ row.field }}</td>
+                        <td>{{ row.value }}</td>
+                        <td>{{ row.warning.message }}</td>
+                      </tr>
+                    }
+                  </tbody>
+                </table>
+              </div>
+            } @else {
+              <p class="report-empty" data-testid="report-no-validation-warnings">
+                No recorded validation warnings for this batch.
+              </p>
+            }
+          </section>
+
           <!-- ========================================= -->
           <!-- REPORT FOOTER                             -->
           <!-- ========================================= -->
