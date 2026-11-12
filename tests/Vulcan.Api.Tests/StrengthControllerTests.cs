@@ -106,7 +106,7 @@ public class StrengthControllerTests
         content.ShouldNotBeNull();
         content.BatchNumber.ShouldBe("VM-STRENGTH-001");
         content.ExpectedFinalBreakPsi.ShouldBe(4500);
-
+        content.AccuracyTargetPct.ShouldBe(5);
         content.Status.ShouldBe("InsufficientCuringData");
         content.Estimates.Count.ShouldBe(3);
         content.Estimates.ShouldAllBe(
