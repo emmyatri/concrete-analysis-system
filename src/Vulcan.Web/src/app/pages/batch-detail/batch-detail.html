@@ -48,6 +48,15 @@
           pButton
           [outlined]="true"
           class="quiet"
+          [routerLink]="['/batches', batch.batchNumber, 'report']"
+          data-testid="batch-report"
+        >
+          <span pButtonLabel>Report</span>
+        </a>
+        <a
+          pButton
+          [outlined]="true"
+          class="quiet"
           [routerLink]="['/batches', batch.batchNumber, 'edit']"
           ><span pButtonLabel>Edit batch</span></a
         >

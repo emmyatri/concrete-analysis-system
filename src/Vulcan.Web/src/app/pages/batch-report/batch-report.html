@@ -1,0 +1,524 @@
+
+<div class="batch-report">
+
+  <!-- Actions are visible on screen but hidden when printing. -->
+  <nav class="report-actions" aria-label="Report actions">
+    <a
+      [routerLink]="['/batches', batchNumber()]"
+      class="action-button secondary"
+      data-testid="back-to-batch"
+    >
+      Back to batch
+    </a>
+
+    <button
+      type="button"
+      class="action-button primary"
+      (click)="printReport()"
+      [disabled]="state().status !== 'loaded'"
+      data-testid="print-report"
+    >
+      Print report
+    </button>
+  </nav>
+
+  @switch (state().status) {
+
+    @case ('loading') {
+      <div class="report-message" data-testid="report-loading">
+        Loading batch report…
+      </div>
+    }
+
+    @case ('not-found') {
+      <div class="report-message">
+        <h1>Batch not found</h1>
+        <p>No batch exists with number {{ batchNumber() }}.</p>
+        <a routerLink="/batches">Return to batches</a>
+      </div>
+    }
+
+    @case ('failed') {
+      <div class="report-message">
+        <h1>Unable to load report</h1>
+        <p>
+          {{ state().status === 'failed' ? $any(state()).message : '' }}
+        </p>
+        <button type="button" (click)="retry()">Try again</button>
+      </div>
+    }
+
+    @case ('loaded') {
+      @if (batch(); as batch) {
+
+        <main class="report-document" data-testid="report-document">
+
+          <!-- ========================================= -->
+          <!-- REPORT HEADER                             -->
+          <!-- ========================================= -->
+
+          <header class="report-header" data-testid="report-header">
+
+            <div class="report-branding">
+              <div>
+                <p class="report-brand">VULCAN CBAS</p>
+                <h1>Concrete Batch Report</h1>
+                <p class="report-subtitle">
+                  Concrete Batch Analysis &amp; Strength Prediction
+                </p>
+              </div>
+
+              @if (batch.isSynthetic) {
+                <div
+                  class="synthetic-stamp"
+                  data-testid="report-synthetic"
+                >
+                  SYNTHETIC TEST DATA
+                </div>
+              }
+            </div>
+
+            <div class="header-divider"></div>
+
+            <dl class="report-metadata">
+
+              <div class="metadata-item">
+                <dt>Batch number</dt>
+                <dd>{{ batch.batchNumber }}</dd>
+              </div>
+
+              <div class="metadata-item">
+                <dt>Cement type</dt>
+                <dd>
+                  @switch (batch.cementType) {
+                    @case ('TypeI') { Type I }
+                    @case ('TypeII') { Type II }
+                    @case ('TypeIII') { Type III }
+                  }
+                </dd>
+              </div>
+
+              <div class="metadata-item">
+                <dt>Cast date</dt>
+                <dd>{{ batch.castAt | date:'MM/dd/yyyy HH:mm':'UTC' }} UTC</dd>
+              </div>
+
+              <div class="metadata-item">
+                <dt>Technician</dt>
+                <dd>{{ batch.createdBy }}</dd>
+              </div>
+
+              <div class="metadata-item">
+                <dt>Report generated</dt>
+                <dd>{{ generatedAt | date:'MM/dd/yyyy HH:mm' }}</dd>
+              </div>
+
+              <div class="metadata-item">
+                <dt>Expected 28-day strength</dt>
+                <dd>{{ batch.expectedFinalBreakPsi | number:'1.0-0' }} PSI</dd>
+              </div>
+
+            </dl>
+          </header>
+
+          <!-- ========================================= -->
+          <!-- BATCH RECORD                              -->
+          <!-- ========================================= -->
+
+          <section
+            class="report-section"
+            aria-labelledby="batch-record-title"
+            data-testid="report-batch-record"
+          >
+            <div class="section-heading">
+              <span class="section-number">01</span>
+              <h2 id="batch-record-title">Batch Record</h2>
+            </div>
+
+            <div class="report-table-wrapper">
+              <table class="report-table">
+                <tbody>
+                <tr>
+                  <th scope="row">Batch number</th>
+                  <td>{{ batch.batchNumber }}</td>
+                </tr>
+
+                <tr>
+                  <th scope="row">Sample weight</th>
+                  <td>
+                    {{ batch.finalWeightLb | number:'1.0-2' }} lb
+                  </td>
+                </tr>
+
+                <tr>
+                  <th scope="row">Mix water pH</th>
+                  <td>
+                    {{ batch.mixWaterPh | number:'1.1-2' }}
+                  </td>
+                </tr>
+
+                <tr>
+                  <th scope="row">Cement surface pH</th>
+                  <td>
+                    @if (batch.cementSurfacePh !== null) {
+                      {{ batch.cementSurfacePh | number:'1.1-2' }}
+                    } @else {
+                      Not recorded
+                    }
+                  </td>
+                </tr>
+
+                <tr>
+                  <th scope="row">Water / cementitious ratio</th>
+                  <td>
+                    @if (batch.composition.waterCementRatio !== null) {
+                      {{ batch.composition.waterCementRatio | number:'1.2-3' }}
+                    } @else {
+                      Not available
+                    }
+                  </td>
+                </tr>
+
+                <tr>
+                  <th scope="row">Created by</th>
+                  <td>{{ batch.createdBy }}</td>
+                </tr>
+
+                <tr>
+                  <th scope="row">Created at</th>
+                  <td>
+                    {{ batch.createdAtUtc | date:'MM/dd/yyyy HH:mm':'UTC' }} UTC
+                  </td>
+                </tr>
+
+                  @if (batch.modifiedAtUtc) {
+                    <tr>
+                      <th scope="row">Last modified</th>
+                      <td>
+                        {{ batch.modifiedAtUtc | date:'MM/dd/yyyy HH:mm':'UTC' }} UTC
+                        @if (batch.modifiedBy) {
+                          — {{ batch.modifiedBy }}
+                        }
+                      </td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+          </section>
+
+
+          <!-- ========================================= -->
+          <!-- 02 — MIX COMPOSITION                      -->
+          <!-- ========================================= -->
+
+          <section
+            class="report-section"
+            aria-labelledby="composition-title"
+            data-testid="report-composition"
+          >
+            <div class="section-heading">
+              <span class="section-number">02</span>
+              <h2 id="composition-title">Mix Composition</h2>
+            </div>
+
+            <p class="section-description">
+              Mix proportions expressed as percentages of absolute volume.
+            </p>
+
+            <div class="report-table-wrapper">
+              <table class="report-table composition-table">
+                <thead>
+                <tr>
+                  <th scope="col">Material</th>
+                  <th scope="col">Composition (%)</th>
+                </tr>
+                </thead>
+
+                <tbody>
+                <tr>
+                  <td>Cement</td>
+                  <td>{{ batch.composition.cementPct | number:'1.2-2' }}%</td>
+                </tr>
+
+                <tr>
+                  <td>Water</td>
+                  <td>{{ batch.composition.waterPct | number:'1.2-2' }}%</td>
+                </tr>
+
+                <tr>
+                  <td>Coarse aggregate</td>
+                  <td>
+                    {{ batch.composition.coarseAggregatePct | number:'1.2-2' }}%
+                  </td>
+                </tr>
+
+                <tr>
+                  <td>Fine aggregate</td>
+                  <td>
+                    {{ batch.composition.fineAggregatePct | number:'1.2-2' }}%
+                  </td>
+                </tr>
+
+                <tr>
+                  <td>
+                    Supplementary cementitious material (SCM)
+                    <span class="material-detail">
+              @switch (batch.composition.scmType) {
+                @case ('None') { None }
+                @case ('FlyAsh') { Fly ash }
+                @case ('Slag') { Slag }
+                @case ('SilicaFume') { Silica fume }
+              }
+            </span>
+                  </td>
+                  <td>{{ batch.composition.scmPct | number:'1.2-2' }}%</td>
+                </tr>
+
+                <tr>
+                  <td>Air / other</td>
+                  <td>
+                    {{ batch.composition.airOtherPct | number:'1.2-2' }}%
+                  </td>
+                </tr>
+                </tbody>
+
+                <tfoot>
+                <tr class="table-total">
+                  <th scope="row">Total including air / other </th>
+                  <td>
+                    {{
+                      (batch.composition.totalPct + batch.composition.airOtherPct)
+                        | number:'1.2-2'
+                    }}%
+                  </td>
+                </tr>
+                </tfoot>
+              </table>
+            </div>
+
+            <div class="composition-summary">
+              <span>Water / cementitious ratio</span>
+
+              <strong>
+                @if (batch.composition.waterCementRatio !== null) {
+                  {{ batch.composition.waterCementRatio | number:'1.2-3' }}
+                } @else {
+                  Not available
+                }
+              </strong>
+            </div>
+          </section>
+
+
+          <!-- ========================================= -->
+          <!-- 03 — CEMENT OXIDE ANALYSIS                 -->
+          <!-- ========================================= -->
+
+          <section
+            class="report-section"
+            aria-labelledby="oxides-title"
+            data-testid="report-oxides"
+          >
+            <div class="section-heading">
+              <span class="section-number">03</span>
+              <h2 id="oxides-title">Cement Oxide Analysis</h2>
+            </div>
+
+            <p class="section-description">
+              Cement oxide concentrations expressed as percentages
+              of cement mass.
+            </p>
+
+            <div class="report-table-wrapper">
+              <table class="report-table oxides-table">
+                <thead>
+                <tr>
+                  <th scope="col">Oxide</th>
+                  <th scope="col">Chemical formula</th>
+                  <th scope="col">Concentration (%)</th>
+                </tr>
+                </thead>
+
+                <tbody>
+                <tr>
+                  <td>Alumina</td>
+                  <td>Al₂O₃</td>
+                  <td>{{ batch.oxides.aluminaPct | number:'1.2-2' }}%</td>
+                </tr>
+
+                <tr>
+                  <td>Iron oxide</td>
+                  <td>Fe₂O₃</td>
+                  <td>{{ batch.oxides.ironOxidePct | number:'1.2-2' }}%</td>
+                </tr>
+
+                <tr>
+                  <td>Magnesium oxide</td>
+                  <td>MgO</td>
+                  <td>{{ batch.oxides.magnesiumOxidePct | number:'1.2-2' }}%</td>
+                </tr>
+
+                <tr>
+                  <td>Sulfur trioxide</td>
+                  <td>SO₃</td>
+                  <td>{{ batch.oxides.sulfurTrioxidePct | number:'1.2-2' }}%</td>
+                </tr>
+                </tbody>
+              </table>
+            </div>
+
+            <p class="report-note">
+              Recorded cement chemistry values. Any associated
+              validation warnings are listed in the Warnings
+              and Recommendations section.
+            </p>
+          </section>
+
+
+          <!-- ========================================= -->
+          <!-- 04 — SPECIMENS AND BREAK RESULTS          -->
+          <!-- ========================================= -->
+
+          <section
+            class="report-section"
+            aria-labelledby="specimens-title"
+            data-testid="report-specimens"
+          >
+            <div class="section-heading">
+              <span class="section-number">04</span>
+              <h2 id="specimens-title">Specimens and Break Results</h2>
+            </div>
+
+            <p class="section-description">
+              Recorded test cylinders and their measured compressive
+              strengths. Pending specimens are included for completeness.
+            </p>
+
+            <!-- Summary -->
+            <div class="specimen-summary">
+              <div class="specimen-stat">
+                <span>Total specimens</span>
+                <strong>{{ batch.specimens.length }}</strong>
+              </div>
+
+              <div class="specimen-stat">
+                <span>Breaks recorded</span>
+                <strong>
+                  {{ recordedBreakCount(batch.specimens) }}
+                </strong>
+              </div>
+
+              <div class="specimen-stat">
+                <span>Pending breaks</span>
+                <strong>
+                  {{
+                    batch.specimens.length -
+                    recordedBreakCount(batch.specimens)
+                  }}
+                </strong>
+              </div>
+            </div>
+
+            @if (batch.specimens.length === 0) {
+              <p class="report-empty" data-testid="no-specimens">
+                No specimens recorded yet.
+              </p>
+            } @else {
+
+              <div class="report-table-wrapper">
+                <table class="report-table specimens-table">
+                  <thead>
+                  <tr>
+                    <th scope="col">Cylinder</th>
+                    <th scope="col">Test age</th>
+                    <th scope="col">Dimensions (in)</th>
+                    <th scope="col">Break date</th>
+                    <th scope="col">Strength (PSI)</th>
+                  </tr>
+                  </thead>
+
+                  <tbody>
+                    @for (specimen of batch.specimens; track specimen.id) {
+                      <tr>
+                        <td>{{ specimen.label }}</td>
+
+                        <td>
+                          @switch (specimen.testAgeDays) {
+                            @case ('Day3') { Day 3 }
+                            @case ('Day7') { Day 7 }
+                            @case ('Day28') { Day 28 }
+                          }
+                        </td>
+
+                        <td>
+                          {{ specimen.lengthIn | number:'1.2-2' }}
+                          ×
+                          {{ specimen.widthIn | number:'1.2-2' }}
+                        </td>
+
+                        <td>
+                          @if (specimen.breakResult; as result) {
+                            {{ result.brokenAt | date:'MM/dd/yyyy HH:mm':'UTC' }}
+                          } @else {
+                            <span class="pending-value">Pending</span>
+                          }
+                        </td>
+
+                        <td>
+                          @if (specimen.breakResult; as result) {
+                            <strong>
+                              {{ result.strengthPsi | number:'1.0-0' }}
+                            </strong>
+                          } @else {
+                            <span class="pending-value">—</span>
+                          }
+                        </td>
+                      </tr>
+                    }
+                  </tbody>
+                </table>
+              </div>
+            }
+
+            <!-- Required FR-19 empty-break state -->
+            @if (recordedBreakCount(batch.specimens) === 0) {
+              <p
+                class="report-empty"
+                data-testid="no-breaks"
+              >
+                No breaks recorded yet
+              </p>
+            }
+
+            <p class="report-note">
+              Compressive strength values represent recorded cylinder
+              break tests. Predicted strengths are reported separately
+              in the Strength Predictions section.
+            </p>
+          </section>
+
+
+          <!-- ========================================= -->
+          <!-- REPORT FOOTER                             -->
+          <!-- ========================================= -->
+
+          <footer class="report-footer">
+            <span>Vulcan CBAS · {{ batch.batchNumber }}</span>
+
+            @if (batch.isSynthetic) {
+              <strong data-testid="report-synthetic-footer">
+                SYNTHETIC TEST DATA
+              </strong>
+            }
+
+            <span>
+              Generated {{ generatedAt | date:'MM/dd/yyyy' }}
+            </span>
+          </footer>
+
+        </main>
+      }
+    }
+  }
+</div>
