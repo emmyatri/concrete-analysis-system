@@ -272,7 +272,7 @@ public sealed class StrengthService(
                 ? warningEvaluation.ShortfallPct
                 : shortfallPct,
 
-            AccuracyTargetPct = (double?)limitProvider.Get(LimitKeys.PredictionAccuracyTargetPct).Warn?.Max,
+            AccuracyTargetPct = TryGetAccuracyTargetPct(),
 
             CurvePoints = curvePoints,
             UnadjustedCurvePoints = unadjustedCurvePoints,
@@ -281,5 +281,17 @@ public sealed class StrengthService(
             EarlyWarnings = warningEvaluation?.EarlyWarnings.ToList() ?? [],
             CuringPoints = curingPoints
         };
+    }
+
+    private double? TryGetAccuracyTargetPct()
+    {
+        try
+        {
+            return (double?)limitProvider.Get(LimitKeys.PredictionAccuracyTargetPct).Warn?.Max;
+        }
+        catch (KeyNotFoundException)
+        {
+            return null;
+        }
     }
 }
