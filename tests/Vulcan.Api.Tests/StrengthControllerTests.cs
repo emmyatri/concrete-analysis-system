@@ -76,24 +76,31 @@ public class StrengthControllerTests
         return content;
     }
 
+    private static async Task SeedAsync(WebApplication app, Func<VulcanDbContext, Task> seed)
+    {
+        using var scope = app.Services.CreateScope();
+
+        var db = scope.ServiceProvider
+            .GetRequiredService<VulcanDbContext>();
+
+        var httpContextAccessor = scope.ServiceProvider
+            .GetRequiredService<IHttpContextAccessor>();
+
+        httpContextAccessor.HttpContext = new DefaultHttpContext();
+        httpContextAccessor.HttpContext.Request.Headers[TechnicianHeader.Name] =
+            "Test Technician";
+
+        await seed(db);
+    }
+
     [Fact]
     public async Task Get_strength_existing_batch_returns_ok()
     {
         await using var app = await StartAsync();
         using var client = ClientFor(app);
 
-        using (var scope = app.Services.CreateScope())
+        await SeedAsync(app, async db =>
         {
-            var db = scope.ServiceProvider
-                .GetRequiredService<VulcanDbContext>();
-
-            var httpContextAccessor = scope.ServiceProvider
-                .GetRequiredService<IHttpContextAccessor>();
-
-            httpContextAccessor.HttpContext = new DefaultHttpContext();
-            httpContextAccessor.HttpContext.Request.Headers[TechnicianHeader.Name] =
-                "Test Technician";
-
             db.Batch.Add(new Batch
             {
                 BatchNumber = "VM-STRENGTH-001",
@@ -107,7 +114,7 @@ public class StrengthControllerTests
             });
 
             await db.SaveChangesAsync();
-        }
+        });
 
         var content = await GetStrengthAsync(client, "VM-STRENGTH-001");
 
@@ -130,17 +137,8 @@ public class StrengthControllerTests
 
         var castAt = DateTime.UtcNow.AddDays(-4);
 
-        using (var scope = app.Services.CreateScope())
+        await SeedAsync(app, async db =>
         {
-            var db = scope.ServiceProvider
-                .GetRequiredService<VulcanDbContext>();
-
-            var httpContextAccessor = scope.ServiceProvider
-                .GetRequiredService<IHttpContextAccessor>();
-
-            httpContextAccessor.HttpContext = new DefaultHttpContext();
-            httpContextAccessor.HttpContext.Request.Headers[TechnicianHeader.Name] =
-                "Test Technician";
 
             var batch = new Batch
             {
@@ -186,7 +184,7 @@ public class StrengthControllerTests
             }
 
             await db.SaveChangesAsync();
-        }
+        });
 
         var content = await GetStrengthAsync(client, "VM-STRENGTH-002");
 
@@ -253,17 +251,8 @@ public class StrengthControllerTests
 
         var castAt = DateTime.UtcNow.AddDays(-4);
 
-        using (var scope = app.Services.CreateScope())
+        await SeedAsync(app, async db =>
         {
-            var db = scope.ServiceProvider
-                .GetRequiredService<VulcanDbContext>();
-
-            var httpContextAccessor = scope.ServiceProvider
-                .GetRequiredService<IHttpContextAccessor>();
-
-            httpContextAccessor.HttpContext = new DefaultHttpContext();
-            httpContextAccessor.HttpContext.Request.Headers[TechnicianHeader.Name] =
-                "Test Technician";
 
             var batch = new Batch
             {
@@ -309,7 +298,7 @@ public class StrengthControllerTests
             }
 
             await db.SaveChangesAsync();
-        }
+        });
 
         var content = await GetStrengthAsync(client, "VM-STRENGTH-SYN-001");
 
@@ -323,18 +312,8 @@ public class StrengthControllerTests
         await using var app = await StartAsync();
         using var client = ClientFor(app);
 
-        using (var scope = app.Services.CreateScope())
+        await SeedAsync(app, async db =>
         {
-            var db = scope.ServiceProvider
-                .GetRequiredService<VulcanDbContext>();
-
-            var httpContextAccessor = scope.ServiceProvider
-                .GetRequiredService<IHttpContextAccessor>();
-
-            httpContextAccessor.HttpContext = new DefaultHttpContext();
-            httpContextAccessor.HttpContext.Request.Headers[TechnicianHeader.Name] =
-                "Test Technician";
-
             var calibrationVersion = db.Set<CalibrationVersion>()
                 .First();
 
@@ -375,7 +354,7 @@ public class StrengthControllerTests
             }
 
             await db.SaveChangesAsync();
-        }
+        });
 
         var content = await GetStrengthAsync(client, "VM-STRENGTH-003");
 
@@ -410,19 +389,10 @@ public class StrengthControllerTests
 
         var castAt = DateTime.UtcNow.AddDays(-4);
 
-        int specimenId;
+        int specimenId = 0;
 
-        using (var scope = app.Services.CreateScope())
+        await SeedAsync(app, async db =>
         {
-            var db = scope.ServiceProvider
-                .GetRequiredService<VulcanDbContext>();
-
-            var httpContextAccessor = scope.ServiceProvider
-                .GetRequiredService<IHttpContextAccessor>();
-
-            httpContextAccessor.HttpContext = new DefaultHttpContext();
-            httpContextAccessor.HttpContext.Request.Headers[TechnicianHeader.Name] =
-                "Test Technician";
 
             var batch = new Batch
             {
@@ -462,7 +432,7 @@ public class StrengthControllerTests
             });
 
             await db.SaveChangesAsync();
-        }
+        });
 
         var content = await GetStrengthAsync(client, "VM-STRENGTH-BREAK-001");
 
@@ -487,17 +457,8 @@ public class StrengthControllerTests
 
         using var client = ClientFor(app);
 
-        using (var scope = app.Services.CreateScope())
+        await SeedAsync(app, async db =>
         {
-            var db = scope.ServiceProvider
-                .GetRequiredService<VulcanDbContext>();
-
-            var httpContextAccessor = scope.ServiceProvider
-                .GetRequiredService<IHttpContextAccessor>();
-
-            httpContextAccessor.HttpContext = new DefaultHttpContext();
-            httpContextAccessor.HttpContext.Request.Headers[TechnicianHeader.Name] =
-                "Test Technician";
 
             db.Batch.Add(new Batch
             {
@@ -512,7 +473,7 @@ public class StrengthControllerTests
             });
 
             await db.SaveChangesAsync();
-        }
+        });
 
         var content = await GetStrengthAsync(client, "VM-STRENGTH-WARNING-001");
 
