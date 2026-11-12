@@ -1,6 +1,10 @@
 /* Global styles. Fonts and icons are bundled from node_modules (NFR-3: no CDN, no Google Fonts). */
 @use 'styles/page-shared';
 
+/* SCRUM-211 — Printable batch report */
+@use './app/pages/batch-report/batch-report-print';
+@use './app/pages/batch-report/batch-report-shared';
+
 html,
 body {
   margin: 0;

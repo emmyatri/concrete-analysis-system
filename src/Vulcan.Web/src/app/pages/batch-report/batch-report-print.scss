@@ -1,0 +1,101 @@
+﻿
+/* =========================================
+   M3-31 — PRINTABLE BATCH REPORT
+   US Letter, portrait orientation
+
+   Global stylesheet:
+   Imported through src/styles.scss
+   ========================================= */
+
+@page {
+  size: letter portrait;
+  margin: 0.5in;
+}
+
+@media print {
+
+  /* =========================================
+     REPORT CONTAINER
+     ========================================= */
+
+  app-batch-report {
+    display: block;
+    min-height: 0;
+    background: white !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  app-batch-report .batch-report {
+    padding: 0;
+  }
+
+  app-batch-report .report-document {
+    box-sizing: border-box;
+    width: 100%;
+    max-width: none;
+    min-height: 0;
+    margin: 0;
+    padding: 0;
+    box-shadow: none;
+  }
+
+  /* =========================================
+     HIDE APPLICATION CONTROLS
+     ========================================= */
+
+  app-batch-report .report-actions,
+  app-batch-report .report-message {
+    display: none !important;
+  }
+
+  /* =========================================
+     PAGE BREAKS
+     ========================================= */
+
+  app-batch-report .report-header,
+  app-batch-report .section-heading {
+    break-after: avoid;
+  }
+
+  /* Start each report section on a new page. */
+
+  app-batch-report .report-section {
+    break-before: page;
+  }
+
+  app-batch-report .report-section:first-of-type {
+    break-before: auto;
+  }
+
+  /* =========================================
+     TABLE PAGINATION
+     ========================================= */
+
+  app-batch-report .report-table tr {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  /* Repeat headings on multi-page tables. */
+
+  app-batch-report .composition-table thead,
+  app-batch-report .specimens-table thead {
+    display: table-header-group;
+  }
+
+  app-batch-report .composition-table tfoot {
+    display: table-footer-group;
+  }
+
+  /* =========================================
+     KEEP RELATED CONTENT TOGETHER
+     ========================================= */
+
+  app-batch-report .composition-summary,
+  app-batch-report .specimen-summary,
+  app-batch-report .report-footer {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+}
