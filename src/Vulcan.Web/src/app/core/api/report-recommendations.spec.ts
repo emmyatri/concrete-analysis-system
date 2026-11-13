@@ -131,4 +131,13 @@ describe('buildReportRecommendations', () => {
       codes(strengthWith({ atRisk: true }), [savedWarning('Composition.WaterCementRatio')]),
     ).toEqual(['strength-risk', 'water-cement-ratio']);
   });
+
+  it('includes general guidance when recognized and unknown warnings coexist', () => {
+    expect(
+      codes(strengthWith(), [
+        savedWarning('Composition.WaterCementRatio'),
+        savedWarning('Unknown.WarningCode'),
+      ]),
+    ).toEqual(['water-cement-ratio', 'validation-review']);
+  });
 });

@@ -116,8 +116,27 @@ export function buildReportRecommendations(
     );
   }
 
-  // General follow-up for warning types without a dedicated rule.
-  if (warningCodes.size > 0 && recommendations.length === 0) {
+  // General follow-up for warning codes without a dedicated rule.
+  const handledWarningCodes = new Set<string>([
+    'Composition.WaterCementRatio',
+    'Curing.AmbientTempF',
+    'Curing.MoisturePct',
+    'Break.StrengthPsi',
+    'Batch.MixWaterPh',
+    'Batch.CementSurfacePh',
+    ...oxideCodes,
+  ]);
+
+  // These prediction factors are already covered by the strength-risk
+  // recommendation when the batch is classified as at risk.
+  if (strength.atRisk) {
+    handledWarningCodes.add('Prediction.ShortfallPct');
+    handledWarningCodes.add('Batch.ExpectedFinalVsWcmPct');
+  }
+
+  const hasUnhandledWarnings = [...warningCodes].some((code) => !handledWarningCodes.has(code));
+
+  if (hasUnhandledWarnings) {
     add(
       'validation-review',
       'Review reported warning conditions',
