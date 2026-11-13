@@ -715,25 +715,6 @@
                 No recorded validation warnings for this batch.
               </p>
             }
-
-            <!-- Dynamic engineering recommendations -->
-            <h3 class="prediction-subheading">Engineering Recommendations</h3>
-
-            @if (recommendations().length > 0) {
-              <div class="report-recommendations" data-testid="report-recommendations">
-                @for (recommendation of recommendations(); track recommendation.code) {
-                  <div class="report-recommendation">
-                    <strong>{{ recommendation.title }}</strong>
-                    <p>{{ recommendation.description }}</p>
-                  </div>
-                }
-              </div>
-            } @else {
-              <p class="report-empty" data-testid="report-no-recommendations">
-                No additional engineering recommendations were generated from the current strength
-                assessment and warning conditions.
-              </p>
-            }
           </section>
 
           <!-- ========================================= -->

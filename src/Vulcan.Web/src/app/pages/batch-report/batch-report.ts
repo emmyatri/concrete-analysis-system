@@ -1,11 +1,17 @@
 import { DOCUMENT, DatePipe, DecimalPipe, formatNumber } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
-import { Component, computed, effect, inject, input, signal } from '@angular/core';
+import {
+  Component,
+  computed,
+  effect,
+  inject,
+  input,
+  signal,
+} from '@angular/core';
 import { toObservable, toSignal } from '@angular/core/rxjs-interop';
 import { RouterLink } from '@angular/router';
 import { catchError, forkJoin, map, of, startWith, switchMap } from 'rxjs';
 
-import { buildReportRecommendations } from '../../core/api/report-recommendations';
 import { describeApiError } from '../../core/api/api-errors';
 import { earlyWarningsShortfallFirst } from '../../core/api/early-warnings';
 import {
@@ -33,7 +39,7 @@ type ReportState =
   selector: 'app-batch-report',
   imports: [RouterLink, DatePipe, DecimalPipe, StrengthChart],
   templateUrl: './batch-report.html',
-  styleUrl: './batch-report.scss',
+  styleUrls: ['./batch-report.scss', './batch-report-print.scss'],
 })
 export class BatchReport {
   private readonly api = inject(VulcanApiService);
@@ -129,23 +135,6 @@ export class BatchReport {
       field: this.warningFieldLabel(warning),
       value: formatNumber(warning.value, 'en-US', this.warningDigits(warning.limitKey)),
     }));
-  });
-
-  /**
-   * Generates advisory engineering recommendations from
-   * the current strength assessment and recorded warnings.
-   *
-   * Recalculates automatically when the report data changes.
-   */
-  protected readonly recommendations = computed(() => {
-    const batch = this.batch();
-    const strength = this.strength();
-
-    if (!batch || !strength) {
-      return [];
-    }
-
-    return buildReportRecommendations(strength, batch.warnings);
   });
 
   private warningFieldLabel(warning: SavedWarning): string {

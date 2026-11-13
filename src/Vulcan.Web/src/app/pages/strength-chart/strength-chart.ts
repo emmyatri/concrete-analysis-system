@@ -102,7 +102,7 @@ export class StrengthChart {
       if (legend && legend.labels) {
         legend.labels.font = {
           size: 10,
-          family: 'Inter, sans-serif',
+          family: this.colors().font,
         };
 
         legend.labels.padding = 8;
