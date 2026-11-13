@@ -1,17 +1,11 @@
 import { DOCUMENT, DatePipe, DecimalPipe, formatNumber } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
-import {
-  Component,
-  computed,
-  effect,
-  inject,
-  input,
-  signal,
-} from '@angular/core';
+import { Component, computed, effect, inject, input, signal } from '@angular/core';
 import { toObservable, toSignal } from '@angular/core/rxjs-interop';
 import { RouterLink } from '@angular/router';
 import { catchError, forkJoin, map, of, startWith, switchMap } from 'rxjs';
 
+import { buildReportRecommendations } from '../../core/api/report-recommendations';
 import { describeApiError } from '../../core/api/api-errors';
 import { earlyWarningsShortfallFirst } from '../../core/api/early-warnings';
 import {
@@ -23,18 +17,15 @@ import {
 } from '../../core/api/models';
 import { VulcanApiService } from '../../core/api/vulcan-api.service';
 
-import {
-  StrengthChart,
-  type StrengthLoad,
-} from '../strength-chart/strength-chart';
+import { StrengthChart, type StrengthLoad } from '../strength-chart/strength-chart';
 
 type ReportState =
   | { status: 'loading' }
   | {
-  status: 'loaded';
-  batch: BatchDetail;
-  strength: BatchStrength;
-}
+      status: 'loaded';
+      batch: BatchDetail;
+      strength: BatchStrength;
+    }
   | { status: 'not-found' }
   | { status: 'failed'; message: string };
 
@@ -68,21 +59,19 @@ export class BatchReport {
           batch: this.api.getBatch(batchNumber),
           strength: this.api.getStrength(batchNumber),
         }).pipe(
-          map(
-            ({ batch, strength }): ReportState => ({
-              status: 'loaded',
-              batch,
-              strength,
-            }),
-          ),
+          map(({ batch, strength }): ReportState => ({
+            status: 'loaded',
+            batch,
+            strength,
+          })),
           catchError((error: unknown) =>
             of<ReportState>(
               error instanceof HttpErrorResponse && error.status === 404
                 ? { status: 'not-found' }
                 : {
-                  status: 'failed',
-                  message: describeApiError(error).message,
-                },
+                    status: 'failed',
+                    message: describeApiError(error).message,
+                  },
             ),
           ),
           startWith<ReportState>({ status: 'loading' }),
@@ -129,7 +118,6 @@ export class BatchReport {
       : 'Early warning';
   });
 
-
   /** Recorded validation warnings with readable report labels. */
   protected readonly warningRows = computed(() => {
     const batch = this.batch();
@@ -139,12 +127,25 @@ export class BatchReport {
       warning,
       record: this.describeWarningRecord(batch, warning),
       field: this.warningFieldLabel(warning),
-      value: formatNumber(
-        warning.value,
-        'en-US',
-        this.warningDigits(warning.limitKey),
-      ),
+      value: formatNumber(warning.value, 'en-US', this.warningDigits(warning.limitKey)),
     }));
+  });
+
+  /**
+   * Generates advisory engineering recommendations from
+   * the current strength assessment and recorded warnings.
+   *
+   * Recalculates automatically when the report data changes.
+   */
+  protected readonly recommendations = computed(() => {
+    const batch = this.batch();
+    const strength = this.strength();
+
+    if (!batch || !strength) {
+      return [];
+    }
+
+    return buildReportRecommendations(strength, batch.warnings);
   });
 
   private warningFieldLabel(warning: SavedWarning): string {
@@ -186,10 +187,7 @@ export class BatchReport {
     }
   }
 
-  private describeWarningRecord(
-    batch: BatchDetail,
-    warning: SavedWarning,
-  ): string {
+  private describeWarningRecord(batch: BatchDetail, warning: SavedWarning): string {
     switch (warning.entityType) {
       case 'Batch':
         return 'Batch';
@@ -198,23 +196,17 @@ export class BatchReport {
       case 'CementOxideAnalysis':
         return 'Cement chemistry';
       case 'BreakResult': {
-        const specimen = batch.specimens.find(
-          (s) => s.breakResult?.id === warning.entityId,
-        );
+        const specimen = batch.specimens.find((s) => s.breakResult?.id === warning.entityId);
         return specimen ? `Cylinder ${specimen.label} · break` : 'Break';
       }
       case 'CuringReading': {
         const specimen = batch.specimens.find((s) =>
           s.curingReadings.some((r) => r.id === warning.entityId),
         );
-        return specimen
-          ? `Cylinder ${specimen.label} · curing reading`
-          : 'Curing reading';
+        return specimen ? `Cylinder ${specimen.label} · curing reading` : 'Curing reading';
       }
       case 'Specimen': {
-        const specimen = batch.specimens.find(
-          (s) => s.id === warning.entityId,
-        );
+        const specimen = batch.specimens.find((s) => s.id === warning.entityId);
         return specimen ? `Cylinder ${specimen.label}` : 'Cylinder';
       }
     }
@@ -329,9 +321,7 @@ export class BatchReport {
     const title = `${batch.batchNumber} Batch Report`;
 
     // Safely serialize the dynamic title as a CSS string.
-    const cssTitle = JSON.stringify(title)
-      .replace(/</g, '\\3C ')
-      .replace(/>/g, '\\3E ');
+    const cssTitle = JSON.stringify(title).replace(/</g, '\\3C ').replace(/>/g, '\\3E ');
 
     const style = this.document.createElement('style');
     style.setAttribute('data-batch-report-print-header', '');
@@ -367,9 +357,7 @@ export class BatchReport {
 
   /** Number of cylinders with recorded compressive strength tests. */
   protected recordedBreakCount(specimens: Specimen[]): number {
-    return specimens.filter(
-      (specimen) => specimen.breakResult !== null,
-    ).length;
+    return specimens.filter((specimen) => specimen.breakResult !== null).length;
   }
 
   // ---------- Report actions ----------

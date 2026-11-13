@@ -1,6 +1,4 @@
-
 <div class="batch-report">
-
   <!-- Actions are visible on screen but hidden when printing. -->
   <nav class="report-actions" aria-label="Report actions">
     <a
@@ -23,11 +21,8 @@
   </nav>
 
   @switch (state().status) {
-
     @case ('loading') {
-      <div class="report-message" data-testid="report-loading">
-        Loading batch report…
-      </div>
+      <div class="report-message" data-testid="report-loading">Loading batch report…</div>
     }
 
     @case ('not-found') {
@@ -50,33 +45,25 @@
 
     @case ('loaded') {
       @if (batch(); as batch) {
-
         <main
           class="report-document"
           data-testid="report-document"
           [style.--report-title]="'&quot;' + batch.batchNumber + ' Batch Report&quot;'"
         >
-
-        <!-- ========================================= -->
+          <!-- ========================================= -->
           <!-- REPORT HEADER                             -->
           <!-- ========================================= -->
 
           <header class="report-header" data-testid="report-header">
-
             <div class="report-branding">
               <div>
                 <p class="report-brand">VULCAN CBAS</p>
                 <h1>Concrete Batch Report</h1>
-                <p class="report-subtitle">
-                  Concrete Batch Analysis &amp; Strength Prediction
-                </p>
+                <p class="report-subtitle">Concrete Batch Analysis &amp; Strength Prediction</p>
               </div>
 
               @if (batch.isSynthetic) {
-                <div
-                  class="synthetic-stamp"
-                  data-testid="report-synthetic"
-                >
+                <div class="synthetic-stamp" data-testid="report-synthetic">
                   SYNTHETIC TEST DATA
                 </div>
               }
@@ -85,7 +72,6 @@
             <div class="header-divider"></div>
 
             <dl class="report-metadata">
-
               <div class="metadata-item">
                 <dt>Batch number</dt>
                 <dd>{{ batch.batchNumber }}</dd>
@@ -95,16 +81,22 @@
                 <dt>Cement type</dt>
                 <dd>
                   @switch (batch.cementType) {
-                    @case ('TypeI') { Type I }
-                    @case ('TypeII') { Type II }
-                    @case ('TypeIII') { Type III }
+                    @case ('TypeI') {
+                      Type I
+                    }
+                    @case ('TypeII') {
+                      Type II
+                    }
+                    @case ('TypeIII') {
+                      Type III
+                    }
                   }
                 </dd>
               </div>
 
               <div class="metadata-item">
                 <dt>Cast date</dt>
-                <dd>{{ batch.castAt | date:'MM/dd/yyyy HH:mm':'UTC' }} UTC</dd>
+                <dd>{{ batch.castAt | date: 'MM/dd/yyyy HH:mm' : 'UTC' }} UTC</dd>
               </div>
 
               <div class="metadata-item">
@@ -114,14 +106,13 @@
 
               <div class="metadata-item">
                 <dt>Report generated</dt>
-                <dd>{{ generatedAt | date:'MM/dd/yyyy HH:mm' }}</dd>
+                <dd>{{ generatedAt | date: 'MM/dd/yyyy HH:mm' }}</dd>
               </div>
 
               <div class="metadata-item">
                 <dt>Expected 28-day strength</dt>
-                <dd>{{ batch.expectedFinalBreakPsi | number:'1.0-0' }} PSI</dd>
+                <dd>{{ batch.expectedFinalBreakPsi | number: '1.0-0' }} PSI</dd>
               </div>
-
             </dl>
           </header>
 
@@ -142,64 +133,60 @@
             <div class="report-table-wrapper">
               <table class="report-table">
                 <tbody>
-                <tr>
-                  <th scope="row">Batch number</th>
-                  <td>{{ batch.batchNumber }}</td>
-                </tr>
+                  <tr>
+                    <th scope="row">Batch number</th>
+                    <td>{{ batch.batchNumber }}</td>
+                  </tr>
 
-                <tr>
-                  <th scope="row">Sample weight</th>
-                  <td>
-                    {{ batch.finalWeightLb | number:'1.0-2' }} lb
-                  </td>
-                </tr>
+                  <tr>
+                    <th scope="row">Sample weight</th>
+                    <td>{{ batch.finalWeightLb | number: '1.0-2' }} lb</td>
+                  </tr>
 
-                <tr>
-                  <th scope="row">Mix water pH</th>
-                  <td>
-                    {{ batch.mixWaterPh | number:'1.1-2' }}
-                  </td>
-                </tr>
+                  <tr>
+                    <th scope="row">Mix water pH</th>
+                    <td>
+                      {{ batch.mixWaterPh | number: '1.1-2' }}
+                    </td>
+                  </tr>
 
-                <tr>
-                  <th scope="row">Cement surface pH</th>
-                  <td>
-                    @if (batch.cementSurfacePh !== null) {
-                      {{ batch.cementSurfacePh | number:'1.1-2' }}
-                    } @else {
-                      Not recorded
-                    }
-                  </td>
-                </tr>
+                  <tr>
+                    <th scope="row">Cement surface pH</th>
+                    <td>
+                      @if (batch.cementSurfacePh !== null) {
+                        {{ batch.cementSurfacePh | number: '1.1-2' }}
+                      } @else {
+                        Not recorded
+                      }
+                    </td>
+                  </tr>
 
-                <tr>
-                  <th scope="row">Water / cementitious ratio</th>
-                  <td>
-                    @if (batch.composition.waterCementRatio !== null) {
-                      {{ batch.composition.waterCementRatio | number:'1.2-3' }}
-                    } @else {
-                      Not available
-                    }
-                  </td>
-                </tr>
+                  <tr>
+                    <th scope="row">Water / cementitious ratio</th>
+                    <td>
+                      @if (batch.composition.waterCementRatio !== null) {
+                        {{ batch.composition.waterCementRatio | number: '1.2-3' }}
+                      } @else {
+                        Not available
+                      }
+                    </td>
+                  </tr>
 
-                <tr>
-                  <th scope="row">Created by</th>
-                  <td>{{ batch.createdBy }}</td>
-                </tr>
+                  <tr>
+                    <th scope="row">Created by</th>
+                    <td>{{ batch.createdBy }}</td>
+                  </tr>
 
-                <tr>
-                  <th scope="row">Created at</th>
-                  <td>
-                    {{ batch.createdAtUtc | date:'MM/dd/yyyy HH:mm':'UTC' }} UTC
-                  </td>
-                </tr>
+                  <tr>
+                    <th scope="row">Created at</th>
+                    <td>{{ batch.createdAtUtc | date: 'MM/dd/yyyy HH:mm' : 'UTC' }} UTC</td>
+                  </tr>
 
                   @if (batch.modifiedAtUtc) {
                     <tr>
                       <th scope="row">Last modified</th>
                       <td>
-                        {{ batch.modifiedAtUtc | date:'MM/dd/yyyy HH:mm':'UTC' }} UTC
+                        {{ batch.modifiedAtUtc | date: 'MM/dd/yyyy HH:mm' : 'UTC' }} UTC
                         @if (batch.modifiedBy) {
                           — {{ batch.modifiedBy }}
                         }
@@ -210,7 +197,6 @@
               </table>
             </div>
           </section>
-
 
           <!-- ========================================= -->
           <!-- 02 — MIX COMPOSITION                      -->
@@ -233,70 +219,72 @@
             <div class="report-table-wrapper">
               <table class="report-table composition-table">
                 <thead>
-                <tr>
-                  <th scope="col">Material</th>
-                  <th scope="col">Composition (%)</th>
-                </tr>
+                  <tr>
+                    <th scope="col">Material</th>
+                    <th scope="col">Composition (%)</th>
+                  </tr>
                 </thead>
 
                 <tbody>
-                <tr>
-                  <td>Cement</td>
-                  <td>{{ batch.composition.cementPct | number:'1.2-2' }}%</td>
-                </tr>
+                  <tr>
+                    <td>Cement</td>
+                    <td>{{ batch.composition.cementPct | number: '1.2-2' }}%</td>
+                  </tr>
 
-                <tr>
-                  <td>Water</td>
-                  <td>{{ batch.composition.waterPct | number:'1.2-2' }}%</td>
-                </tr>
+                  <tr>
+                    <td>Water</td>
+                    <td>{{ batch.composition.waterPct | number: '1.2-2' }}%</td>
+                  </tr>
 
-                <tr>
-                  <td>Coarse aggregate</td>
-                  <td>
-                    {{ batch.composition.coarseAggregatePct | number:'1.2-2' }}%
-                  </td>
-                </tr>
+                  <tr>
+                    <td>Coarse aggregate</td>
+                    <td>{{ batch.composition.coarseAggregatePct | number: '1.2-2' }}%</td>
+                  </tr>
 
-                <tr>
-                  <td>Fine aggregate</td>
-                  <td>
-                    {{ batch.composition.fineAggregatePct | number:'1.2-2' }}%
-                  </td>
-                </tr>
+                  <tr>
+                    <td>Fine aggregate</td>
+                    <td>{{ batch.composition.fineAggregatePct | number: '1.2-2' }}%</td>
+                  </tr>
 
-                <tr>
-                  <td>
-                    Supplementary cementitious material (SCM)
-                    <span class="material-detail">
-              @switch (batch.composition.scmType) {
-                @case ('None') { None }
-                @case ('FlyAsh') { Fly ash }
-                @case ('Slag') { Slag }
-                @case ('SilicaFume') { Silica fume }
-              }
-            </span>
-                  </td>
-                  <td>{{ batch.composition.scmPct | number:'1.2-2' }}%</td>
-                </tr>
+                  <tr>
+                    <td>
+                      Supplementary cementitious material (SCM)
+                      <span class="material-detail">
+                        @switch (batch.composition.scmType) {
+                          @case ('None') {
+                            None
+                          }
+                          @case ('FlyAsh') {
+                            Fly ash
+                          }
+                          @case ('Slag') {
+                            Slag
+                          }
+                          @case ('SilicaFume') {
+                            Silica fume
+                          }
+                        }
+                      </span>
+                    </td>
+                    <td>{{ batch.composition.scmPct | number: '1.2-2' }}%</td>
+                  </tr>
 
-                <tr>
-                  <td>Air / other</td>
-                  <td>
-                    {{ batch.composition.airOtherPct | number:'1.2-2' }}%
-                  </td>
-                </tr>
+                  <tr>
+                    <td>Air / other</td>
+                    <td>{{ batch.composition.airOtherPct | number: '1.2-2' }}%</td>
+                  </tr>
                 </tbody>
 
                 <tfoot>
-                <tr class="table-total">
-                  <th scope="row">Total including air / other </th>
-                  <td>
-                    {{
-                      (batch.composition.totalPct + batch.composition.airOtherPct)
-                        | number:'1.2-2'
-                    }}%
-                  </td>
-                </tr>
+                  <tr class="table-total">
+                    <th scope="row">Total including air / other</th>
+                    <td>
+                      {{
+                        batch.composition.totalPct + batch.composition.airOtherPct
+                          | number: '1.2-2'
+                      }}%
+                    </td>
+                  </tr>
                 </tfoot>
               </table>
             </div>
@@ -306,14 +294,13 @@
 
               <strong>
                 @if (batch.composition.waterCementRatio !== null) {
-                  {{ batch.composition.waterCementRatio | number:'1.2-3' }}
+                  {{ batch.composition.waterCementRatio | number: '1.2-3' }}
                 } @else {
                   Not available
                 }
               </strong>
             </div>
           </section>
-
 
           <!-- ========================================= -->
           <!-- 03 — CEMENT OXIDE ANALYSIS                 -->
@@ -330,55 +317,52 @@
             </div>
 
             <p class="section-description">
-              Cement oxide concentrations expressed as percentages
-              of cement mass.
+              Cement oxide concentrations expressed as percentages of cement mass.
             </p>
 
             <div class="report-table-wrapper">
               <table class="report-table oxides-table">
                 <thead>
-                <tr>
-                  <th scope="col">Oxide</th>
-                  <th scope="col">Chemical formula</th>
-                  <th scope="col">Concentration (%)</th>
-                </tr>
+                  <tr>
+                    <th scope="col">Oxide</th>
+                    <th scope="col">Chemical formula</th>
+                    <th scope="col">Concentration (%)</th>
+                  </tr>
                 </thead>
 
                 <tbody>
-                <tr>
-                  <td>Alumina</td>
-                  <td>Al₂O₃</td>
-                  <td>{{ batch.oxides.aluminaPct | number:'1.2-2' }}%</td>
-                </tr>
+                  <tr>
+                    <td>Alumina</td>
+                    <td>Al₂O₃</td>
+                    <td>{{ batch.oxides.aluminaPct | number: '1.2-2' }}%</td>
+                  </tr>
 
-                <tr>
-                  <td>Iron oxide</td>
-                  <td>Fe₂O₃</td>
-                  <td>{{ batch.oxides.ironOxidePct | number:'1.2-2' }}%</td>
-                </tr>
+                  <tr>
+                    <td>Iron oxide</td>
+                    <td>Fe₂O₃</td>
+                    <td>{{ batch.oxides.ironOxidePct | number: '1.2-2' }}%</td>
+                  </tr>
 
-                <tr>
-                  <td>Magnesium oxide</td>
-                  <td>MgO</td>
-                  <td>{{ batch.oxides.magnesiumOxidePct | number:'1.2-2' }}%</td>
-                </tr>
+                  <tr>
+                    <td>Magnesium oxide</td>
+                    <td>MgO</td>
+                    <td>{{ batch.oxides.magnesiumOxidePct | number: '1.2-2' }}%</td>
+                  </tr>
 
-                <tr>
-                  <td>Sulfur trioxide</td>
-                  <td>SO₃</td>
-                  <td>{{ batch.oxides.sulfurTrioxidePct | number:'1.2-2' }}%</td>
-                </tr>
+                  <tr>
+                    <td>Sulfur trioxide</td>
+                    <td>SO₃</td>
+                    <td>{{ batch.oxides.sulfurTrioxidePct | number: '1.2-2' }}%</td>
+                  </tr>
                 </tbody>
               </table>
             </div>
 
             <p class="report-note">
-              Recorded cement chemistry values. Any associated
-              validation warnings are listed in the Warnings
-              and Recommendations section.
+              Recorded cement chemistry values. Any associated validation warnings are listed in the
+              Warnings and Recommendations section.
             </p>
           </section>
-
 
           <!-- ========================================= -->
           <!-- 04 — SPECIMENS AND BREAK RESULTS          -->
@@ -395,8 +379,8 @@
             </div>
 
             <p class="section-description">
-              Recorded test cylinders and their measured compressive
-              strengths. Pending specimens are included for completeness.
+              Recorded test cylinders and their measured compressive strengths. Pending specimens
+              are included for completeness.
             </p>
 
             <!-- Summary -->
@@ -416,30 +400,24 @@
               <div class="specimen-stat">
                 <span>Pending breaks</span>
                 <strong>
-                  {{
-                    batch.specimens.length -
-                    recordedBreakCount(batch.specimens)
-                  }}
+                  {{ batch.specimens.length - recordedBreakCount(batch.specimens) }}
                 </strong>
               </div>
             </div>
 
             @if (batch.specimens.length === 0) {
-              <p class="report-empty" data-testid="no-specimens">
-                No specimens recorded yet.
-              </p>
+              <p class="report-empty" data-testid="no-specimens">No specimens recorded yet.</p>
             } @else {
-
               <div class="report-table-wrapper">
                 <table class="report-table specimens-table">
                   <thead>
-                  <tr>
-                    <th scope="col">Cylinder</th>
-                    <th scope="col">Test age</th>
-                    <th scope="col">Dimensions (in)</th>
-                    <th scope="col">Break date</th>
-                    <th scope="col">Strength (PSI)</th>
-                  </tr>
+                    <tr>
+                      <th scope="col">Cylinder</th>
+                      <th scope="col">Test age</th>
+                      <th scope="col">Dimensions (in)</th>
+                      <th scope="col">Break date</th>
+                      <th scope="col">Strength (PSI)</th>
+                    </tr>
                   </thead>
 
                   <tbody>
@@ -449,21 +427,27 @@
 
                         <td>
                           @switch (specimen.testAgeDays) {
-                            @case ('Day3') { Day 3 }
-                            @case ('Day7') { Day 7 }
-                            @case ('Day28') { Day 28 }
+                            @case ('Day3') {
+                              Day 3
+                            }
+                            @case ('Day7') {
+                              Day 7
+                            }
+                            @case ('Day28') {
+                              Day 28
+                            }
                           }
                         </td>
 
                         <td>
-                          {{ specimen.lengthIn | number:'1.2-2' }}
+                          {{ specimen.lengthIn | number: '1.2-2' }}
                           ×
-                          {{ specimen.widthIn | number:'1.2-2' }}
+                          {{ specimen.widthIn | number: '1.2-2' }}
                         </td>
 
                         <td>
                           @if (specimen.breakResult; as result) {
-                            {{ result.brokenAt | date:'MM/dd/yyyy HH:mm':'UTC' }}
+                            {{ result.brokenAt | date: 'MM/dd/yyyy HH:mm' : 'UTC' }}
                           } @else {
                             <span class="pending-value">Pending</span>
                           }
@@ -472,7 +456,7 @@
                         <td>
                           @if (specimen.breakResult; as result) {
                             <strong>
-                              {{ result.strengthPsi | number:'1.0-0' }}
+                              {{ result.strengthPsi | number: '1.0-0' }}
                             </strong>
                           } @else {
                             <span class="pending-value">—</span>
@@ -487,18 +471,12 @@
 
             <!-- Required FR-19 empty-break state -->
             @if (recordedBreakCount(batch.specimens) === 0) {
-              <p
-                class="report-empty"
-                data-testid="no-breaks"
-              >
-                No breaks recorded yet
-              </p>
+              <p class="report-empty" data-testid="no-breaks">No breaks recorded yet</p>
             }
 
             <p class="report-note">
-              Compressive strength values represent recorded cylinder
-              break tests. Predicted strengths are reported separately
-              in the Strength Predictions section.
+              Compressive strength values represent recorded cylinder break tests. Predicted
+              strengths are reported separately in the Strength Predictions section.
             </p>
           </section>
 
@@ -516,9 +494,8 @@
             </div>
 
             <p class="section-description">
-              Concrete compressive strength over the 28-day evaluation
-              period, including predicted strength, recorded breaks,
-              and the expected final strength.
+              Concrete compressive strength over the 28-day evaluation period, including predicted
+              strength, recorded breaks, and the expected final strength.
             </p>
 
             <div class="report-strength-chart">
@@ -533,9 +510,8 @@
             </div>
 
             <p class="report-note">
-              Predicted values are calculated using the CBAS strength
-              estimation engine. Recorded breaks represent measured
-              compressive strength from individual specimens.
+              Predicted values are calculated using the CBAS strength estimation engine. Recorded
+              breaks represent measured compressive strength from individual specimens.
             </p>
           </section>
 
@@ -550,33 +526,27 @@
           >
             <div class="section-heading">
               <span class="section-number">06</span>
-              <h2 id="predictions-title">
-                Strength Predictions and Calibration
-              </h2>
+              <h2 id="predictions-title">Strength Predictions and Calibration</h2>
             </div>
 
             <p class="section-description">
-              Estimated compressive strengths at the standard 3-, 7-,
-              and 28-day evaluation ages. Values reflect the
-              calculation basis and calibration version recorded
-              by the prediction engine.
+              Estimated compressive strengths at the standard 3-, 7-, and 28-day evaluation ages.
+              Values reflect the calculation basis and calibration version recorded by the
+              prediction engine.
             </p>
 
             @if (strength(); as strength) {
-
               <div class="prediction-summary">
                 <div class="prediction-stat">
                   <span>Expected 28-day strength</span>
-                  <strong>
-                    {{ strength.expectedFinalBreakPsi | number:'1.0-0' }} PSI
-                  </strong>
+                  <strong> {{ strength.expectedFinalBreakPsi | number: '1.0-0' }} PSI </strong>
                 </div>
 
                 <div class="prediction-stat">
                   <span>Projected 28-day strength</span>
                   <strong>
                     @if (strength.projected28DayPsi !== null) {
-                      {{ strength.projected28DayPsi | number:'1.0-0' }} PSI
+                      {{ strength.projected28DayPsi | number: '1.0-0' }} PSI
                     } @else {
                       Not available
                     }
@@ -588,12 +558,12 @@
                 <div class="report-table-wrapper">
                   <table class="report-table predictions-table">
                     <thead>
-                    <tr>
-                      <th scope="col">Age</th>
-                      <th scope="col">Estimated PSI</th>
-                      <th scope="col">Equivalent age</th>
-                      <th scope="col">Adjustment</th>
-                    </tr>
+                      <tr>
+                        <th scope="col">Age</th>
+                        <th scope="col">Estimated PSI</th>
+                        <th scope="col">Equivalent age</th>
+                        <th scope="col">Adjustment</th>
+                      </tr>
                     </thead>
 
                     <tbody>
@@ -604,7 +574,7 @@
                           <td>
                             @if (estimate.estimatedPsi !== null) {
                               <strong>
-                                {{ estimate.estimatedPsi | number:'1.0-0' }}
+                                {{ estimate.estimatedPsi | number: '1.0-0' }}
                               </strong>
                             } @else {
                               <span class="pending-value">Unavailable</span>
@@ -613,7 +583,7 @@
 
                           <td>
                             @if (estimate.equivalentAgeDays !== null) {
-                              {{ estimate.equivalentAgeDays | number:'1.1-2' }} days
+                              {{ estimate.equivalentAgeDays | number: '1.1-2' }} days
                             } @else {
                               —
                             }
@@ -626,9 +596,7 @@
                   </table>
                 </div>
 
-                <h3 class="prediction-subheading">
-                  Calculation Method and Calibration
-                </h3>
+                <h3 class="prediction-subheading">Calculation Method and Calibration</h3>
 
                 @for (detail of calibrationDetails(); track $index) {
                   <div class="calibration-detail">
@@ -639,15 +607,12 @@
                         }
                       </strong>
 
-                      <span>
-                      Calibration version: {{ detail.version }}
-                      </span>
+                      <span> Calibration version: {{ detail.version }} </span>
                     </div>
 
                     <p>{{ detail.basis }}</p>
                   </div>
                 }
-
               } @else {
                 <p class="report-empty" data-testid="no-predictions">
                   No strength predictions are available for this batch.
@@ -656,11 +621,10 @@
 
               @if (strength.status === 'InsufficientCuringData') {
                 <p class="report-note" data-testid="insufficient-curing-data">
-                  Not enough curing data yet. Strength estimates require
-                  sufficient curing readings before they can be calculated.
+                  Not enough curing data yet. Strength estimates require sufficient curing readings
+                  before they can be calculated.
                 </p>
               }
-
             }
           </section>
 
@@ -676,8 +640,7 @@
             </div>
 
             <p class="section-description">
-              Strength risk assessment and recorded validation warnings
-              associated with this batch.
+              Strength risk assessment and recorded validation warnings associated with this batch.
             </p>
 
             @if (strength(); as strength) {
@@ -692,7 +655,7 @@
                       @for (
                         reason of earlyWarningReasons();
                         track reason.limitKey + reason.warning
-                        ) {
+                      ) {
                         <li [attr.data-limit-key]="reason.limitKey">
                           {{ reason.warning }}
                         </li>
@@ -700,8 +663,8 @@
                     </ul>
                   } @else {
                     <p>
-                      The current strength assessment indicates a risk of
-                      missing the target. No detailed warning factors were returned.
+                      The current strength assessment indicates a risk of missing the target. No
+                      detailed warning factors were returned.
                     </p>
                   }
                 </div>
@@ -709,10 +672,7 @@
                 <div class="report-risk-assessment" data-testid="report-early-warnings">
                   <strong>{{ earlyWarningTitle() }}</strong>
                   <ul>
-                    @for (
-                      reason of earlyWarningReasons();
-                      track reason.limitKey + reason.warning
-                      ) {
+                    @for (reason of earlyWarningReasons(); track reason.limitKey + reason.warning) {
                       <li [attr.data-limit-key]="reason.limitKey">
                         {{ reason.warning }}
                       </li>
@@ -731,12 +691,12 @@
               <div class="report-table-wrapper">
                 <table class="report-table" data-testid="report-validation-warnings">
                   <thead>
-                  <tr>
-                    <th scope="col">Record</th>
-                    <th scope="col">Field</th>
-                    <th scope="col">Value</th>
-                    <th scope="col">Message</th>
-                  </tr>
+                    <tr>
+                      <th scope="col">Record</th>
+                      <th scope="col">Field</th>
+                      <th scope="col">Value</th>
+                      <th scope="col">Message</th>
+                    </tr>
                   </thead>
                   <tbody>
                     @for (row of warningRows(); track row.warning.id) {
@@ -755,6 +715,25 @@
                 No recorded validation warnings for this batch.
               </p>
             }
+
+            <!-- Dynamic engineering recommendations -->
+            <h3 class="prediction-subheading">Engineering Recommendations</h3>
+
+            @if (recommendations().length > 0) {
+              <div class="report-recommendations" data-testid="report-recommendations">
+                @for (recommendation of recommendations(); track recommendation.code) {
+                  <div class="report-recommendation">
+                    <strong>{{ recommendation.title }}</strong>
+                    <p>{{ recommendation.description }}</p>
+                  </div>
+                }
+              </div>
+            } @else {
+              <p class="report-empty" data-testid="report-no-recommendations">
+                No additional engineering recommendations were generated from the current strength
+                assessment and warning conditions.
+              </p>
+            }
           </section>
 
           <!-- ========================================= -->
@@ -765,16 +744,11 @@
             <span>Vulcan CBAS · {{ batch.batchNumber }}</span>
 
             @if (batch.isSynthetic) {
-              <strong data-testid="report-synthetic-footer">
-                SYNTHETIC TEST DATA
-              </strong>
+              <strong data-testid="report-synthetic-footer"> SYNTHETIC TEST DATA </strong>
             }
 
-            <span>
-              Generated {{ generatedAt | date:'MM/dd/yyyy' }}
-            </span>
+            <span> Generated {{ generatedAt | date: 'MM/dd/yyyy' }} </span>
           </footer>
-
         </main>
       }
     }

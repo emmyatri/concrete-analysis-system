@@ -63,10 +63,7 @@ export const routes: Routes = [
     // do not appear in the printed report.
     path: 'batches/:batchNumber/report',
     canActivate: [technicianGuard],
-    loadComponent: () =>
-      import('./pages/batch-report/batch-report').then(
-        (m) => m.BatchReport,
-      ),
+    loadComponent: () => import('./pages/batch-report/batch-report').then((m) => m.BatchReport),
   },
   { path: '**', redirectTo: '' },
 ];
