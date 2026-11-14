@@ -16,6 +16,17 @@ Every early warning returned by `GET /api/batches/{batchNumber}/strength` and `G
 | `Prediction.ShortfallPct` | Projected 28-day strength of {projected} PSI is {pct}% below the expected {expected} PSI | "Projected 28-day strength of 4,733 PSI is 23.66% below the expected 6,200 PSI" |
 | `Batch.ExpectedFinalVsWcmPct` | Expected final of {expected} PSI is {pct}% above the {aci} PSI typical for a w/cm of {ratio} | "Expected final of 6,200 PSI is 67.6% above the 3,700 PSI typical for a w/cm of 0.603" |
 
+### Early break warnings (SCRUM-203, client-decisions §14.1)
+
+Built from the average break for that age. `Value` is the average as a percent of 3,000 PSI; `Limit` is the band.
+
+| Limit key | Message | Example |
+|---|---|---|
+| `Break.Day3WarnPct` | {3}-day breaks averaged {average} PSI, below {band} PSI ({pct}% of 3,000 PSI). Check the 7-day breaks. | "3-day breaks averaged 800 PSI, below 1,200 PSI (40% of 3,000 PSI). Check the 7-day breaks." |
+| `Break.Day7FailPct` | {7}-day breaks averaged {average} PSI, below {band} PSI ({pct}% of 3,000 PSI). The batch will probably fail. | "7-day breaks averaged 1,700 PSI, below 2,100 PSI (70% of 3,000 PSI). The batch will probably fail." |
+
+Either one puts the batch at risk. None of the synthetic batches trigger them (lowest averages: 1,942 PSI at 3 days, 3,098 PSI at 7 days).
+
 ### Input warnings (configured messages from `validation-limits.json`)
 
 These are the 10 measurements with a `Warn` range. The message is the configured text; the screen shows the measured value next to it.
@@ -32,7 +43,7 @@ These are the 10 measurements with a `Warn` range. The message is the configured
 | `Oxide.SulfurTrioxidePct` | The sulfur trioxide percent is outside the normal range [1.3-3.0] |
 | `Curing.AmbientTempF` | Ambient temperature is outside the normal range [60-80] |
 
-`Break.StrengthPsi` also has a warning range (28-day breaks below 3,000 PSI, client-decisions §3), but saved break warnings are not early warnings (client-decisions §13). They appear in the Warnings tab and on the strength chart, not in the early-warning list.
+`Break.StrengthPsi` also has a warning range (28-day breaks below 3,000 PSI, client-decisions §3), but saved break warnings are not early warnings (client-decisions §13). They appear in the Warnings tab and on the strength chart, not in the early-warning list. Low 3- and 7-day breaks are covered by the early break warnings above.
 
 Each input factor is listed once per batch, even when many records carry the same warning. A cold-cured batch has a saved ambient-temperature warning on every reading, but the early-warning list shows one "Ambient temperature is outside the normal range [60-80]" line. The Warnings tab still lists every reading.
 
@@ -49,8 +60,11 @@ Internal temperature, moisture, relative humidity, resistivity, CO₂, SCM perce
 ## Ordering
 
 1. Prediction warnings: minimum PSI, then projected shortfall
-2. Saved input warnings, in the order they were recorded
-3. Expected final vs. w/cm
+2. Early break warnings: 3-day, then 7-day
+3. Saved input warnings, in the order they were recorded
+4. Expected final vs. w/cm
+
+The Home list and the Batch Detail banner re-sort for display (`earlyWarningsShortfallFirst`): projected shortfall, minimum PSI, 7-day break, 3-day break, then everything else.
 
 ## Missing data
 

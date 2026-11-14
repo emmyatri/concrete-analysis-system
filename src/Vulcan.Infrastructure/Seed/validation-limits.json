@@ -234,6 +234,24 @@
         "Source": "Client doc / FR-5"
     },
     {
+        "Key": "Break.Day3WarnPct",
+        "Severity": "Warn",
+        "Min": 40,
+        "Max": null,
+        "Unit": "%",
+        "Message": "Average 3-day break is below 40% of 3,000 PSI. Check the 7-day breaks.",
+        "Source": "Client answers, Nov 2, 2026 (client-decisions §14.1)"
+    },
+    {
+        "Key": "Break.Day7FailPct",
+        "Severity": "Warn",
+        "Min": 70,
+        "Max": null,
+        "Unit": "%",
+        "Message": "Average 7-day break is below 70% of 3,000 PSI. The batch will probably fail.",
+        "Source": "Client answers, Nov 2, 2026 (client-decisions §14.1)"
+    },
+    {
         "Key": "Curing.InternalTempF",
         "Severity": "Reject",
         "Min": 0,

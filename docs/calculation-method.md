@@ -306,7 +306,7 @@ The combined re-fit substantially reduces the prediction error. **However, 5.220
 
 The following values are from `src/Vulcan.Infrastructure/Seed/validation-limits.json`. `Warn` marks a value for review; `Reject` is an input-acceptance constraint. Bounds are reproduced as configured. An absent bound means no limit on that side in this entry.
 
-> **How these become early warnings:** `EarlyWarningService` emits the three prediction warnings in 7.1 (`Prediction.MinimumPsi`, `Prediction.ShortfallPct`, `Batch.ExpectedFinalVsWcmPct`), plus each input warning saved at entry (7.2), grouped as one reason per limit key (client-decisions §13). The `Source` text records where each value came from; it does not claim the cited standard prescribes that exact threshold.
+> **How these become early warnings:** `EarlyWarningService` emits the three prediction warnings in 7.1 (`Prediction.MinimumPsi`, `Prediction.ShortfallPct`, `Batch.ExpectedFinalVsWcmPct`), the two early break warnings in 7.1 (`Break.Day3WarnPct`, `Break.Day7FailPct`, from the average break at that age), plus each input warning saved at entry (7.2), grouped as one reason per limit key (client-decisions §13). The `Source` text records where each value came from; it does not claim the cited standard prescribes that exact threshold.
 
 ### 7.1 Prediction and mix-related warnings
 
@@ -315,6 +315,8 @@ The following values are from `src/Vulcan.Infrastructure/Seed/validation-limits.
 | `Prediction.MinimumPsi` | Projected strength **below 3,000 PSI** | ACI 211.1-97 Table 6.3.4(a); ADR-005 |
 | `Prediction.ShortfallPct` | Projected 28-day strength **more than 5% below `ExpectedFinalBreakPsi`** | ACI 211.1-97 Table 6.3.4(a); ADR-005 |
 | `Batch.ExpectedFinalVsWcmPct` | Expected final strength **more than 30% above** the w/cm table estimate | ACI 211.1-97 Table 6.3.4(a); ADR-005 |
+| `Break.Day3WarnPct` | Average 3-day break **below 40% of 3,000 PSI** (1,200 PSI) | Client answers, Nov 2, 2026 (client-decisions §14.1) |
+| `Break.Day7FailPct` | Average 7-day break **below 70% of 3,000 PSI** (2,100 PSI); the batch will probably fail | Client answers, Nov 2, 2026 (client-decisions §14.1) |
 | `Composition.WaterCementRatio` | Outside 0.40–0.60 | Client hydration document |
 
 For the w/cm check, ADR-005 specifies this **non-air-entrained** ACI 211.1-97 Table 6.3.4(a) lookup with linear interpolation:

@@ -257,6 +257,26 @@ describe('mockApiInterceptor', () => {
     expect(strength.earlyWarnings.map((w) => w.limitKey)).toEqual(['Composition.WaterCementRatio']);
   });
 
+  it('warns from a low 3-day break before there is an estimate', async () => {
+    const api = setUp(true);
+
+    await firstValueFrom(
+      api.createBreakResult(14201, { brokenAt: '2026-10-02T12:00:00.000Z', strengthPsi: 800 }),
+    );
+    const strength = await firstValueFrom(api.getStrength('VM-2026-0142'));
+
+    expect(strength.status).toBe('InsufficientCuringData');
+    expect(strength.atRisk).toBe(true);
+    expect(strength.earlyWarnings[0]).toEqual({
+      warning:
+        '3-day breaks averaged 800 PSI, below 1,200 PSI (40% of 3,000 PSI). Check the 7-day breaks.',
+      field: 'day3AverageBreakPct',
+      value: 26.7,
+      limitKey: 'Break.Day3WarnPct',
+      limit: 40,
+    });
+  });
+
   it('estimates a batch once a cylinder has readings a day apart', async () => {
     const api = setUp(true);
     const reading = {

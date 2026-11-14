@@ -23,4 +23,20 @@ describe('earlyWarningsShortfallFirst', () => {
       'Batch.ExpectedFinalVsWcmPct',
     ]);
   });
+
+  it('puts low early breaks after the shortfall, the 7-day one first', () => {
+    const ordered = earlyWarningsShortfallFirst([
+      warning('Batch.MixWaterPh', 'pH'),
+      warning('Break.Day3WarnPct', '3-day'),
+      warning('Break.Day7FailPct', '7-day'),
+      warning('Prediction.ShortfallPct', 'shortfall'),
+    ]);
+
+    expect(ordered.map((w) => w.limitKey)).toEqual([
+      'Prediction.ShortfallPct',
+      'Break.Day7FailPct',
+      'Break.Day3WarnPct',
+      'Batch.MixWaterPh',
+    ]);
+  });
 });
