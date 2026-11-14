@@ -38,6 +38,29 @@ const SHORTFALL_PCT = 5;
 const EXPECTED_FINAL_VS_WCM_PCT = 30;
 
 /**
+ * Client-decisions section 14.1 (SCRUM-203): the average 3- and 7-day breaks as a percent of the
+ * 3,000 PSI break minimum, not the batch's expected final. Mirrors Break.Day3WarnPct and Break.Day7FailPct.
+ */
+const EARLY_BREAK_BANDS = [
+  {
+    age: 'Day3',
+    days: 3,
+    limitKey: 'Break.Day3WarnPct',
+    field: 'day3AverageBreakPct',
+    limit: 40,
+    outcome: 'Check the 7-day breaks.',
+  },
+  {
+    age: 'Day7',
+    days: 7,
+    limitKey: 'Break.Day7FailPct',
+    field: 'day7AverageBreakPct',
+    limit: 70,
+    outcome: 'The batch will probably fail.',
+  },
+] as const;
+
+/**
  * The prediction engine will use an initial accuracy target of within 5% of the actual 28-day
  * compressive strength (client-decisions section 14.2).
  */
@@ -186,6 +209,7 @@ export function mockStrength(batch: BatchDetail): BatchStrength {
       isSynthetic: specimen.isSynthetic,
     }));
 
+  const breakWarnings = breakBandWarnings(batch);
   const result: BatchStrength = {
     id: batch.id,
     batchNumber: batch.batchNumber,
@@ -193,7 +217,7 @@ export function mockStrength(batch: BatchDetail): BatchStrength {
     expectedFinalBreakPsi: batch.expectedFinalBreakPsi,
     cementType: batch.cementType,
     status: 'InsufficientCuringData',
-    atRisk: false,
+    atRisk: breakWarnings.length > 0,
     projected28DayPsi: null,
     shortfallPsi: null,
     shortfallPct: null,
@@ -202,7 +226,7 @@ export function mockStrength(batch: BatchDetail): BatchStrength {
     unadjustedCurvePoints: [],
     estimates: [],
     measuredBreaks,
-    earlyWarnings: [...rangeWarnings(batch), ...waterCementWarnings(batch)],
+    earlyWarnings: [...breakWarnings, ...rangeWarnings(batch), ...waterCementWarnings(batch)],
     curingPoints,
   };
 
@@ -278,7 +302,7 @@ export function mockStrength(batch: BatchDetail): BatchStrength {
   return {
     ...result,
     status: 'Estimated',
-    atRisk: predictionWarnings.length > 0,
+    atRisk: predictionWarnings.length > 0 || result.atRisk,
     projected28DayPsi: projected,
     shortfallPsi,
     shortfallPct,
@@ -320,6 +344,30 @@ export function mockEarlyWarnings(
       shortfallPct: strength.shortfallPct,
       earlyWarnings: strength.earlyWarnings,
     }));
+}
+
+/**
+ * Low average 3- and 7-day breaks (client-decisions section 14.1), worded like the server's
+ * EarlyWarningService. Worked out from the breaks each time, since the average moves as cylinders are entered.
+ */
+function breakBandWarnings(batch: BatchDetail): EarlyWarning[] {
+  return EARLY_BREAK_BANDS.flatMap(({ age, days, limitKey, field, limit, outcome }) => {
+    const mean = averageBreak(batch, age);
+    if (mean === null) return [];
+    const averagePsi = Math.round(mean);
+    const pct = round((averagePsi / MINIMUM_PSI) * 100, 1);
+    if (pct >= limit) return [];
+    const bandPsi = Math.round((limit * MINIMUM_PSI) / 100);
+    return [
+      {
+        warning: `${days}-day breaks averaged ${psi(averagePsi)}, below ${psi(bandPsi)} (${limit}% of ${psi(MINIMUM_PSI)}). ${outcome}`,
+        field,
+        value: pct,
+        limitKey,
+        limit,
+      },
+    ];
+  });
 }
 
 /**

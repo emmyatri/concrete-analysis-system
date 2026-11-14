@@ -3,6 +3,7 @@ using Vulcan.Application.Contracts;
 using Vulcan.Application.Interfaces;
 using Vulcan.Domain.Constants;
 using Vulcan.Domain.Entities;
+using Vulcan.Domain.Enums;
 using Vulcan.Domain.Interfaces;
 using Vulcan.Domain.Services;
 
@@ -22,7 +23,8 @@ public class EarlyWarningService(
         var predictions = await prediction.GetByBatchIdAsync(batch.Id);
         var batchRecordWarnings = await recordWarning.GetForBatchesAsync([batch]);
 
-        // Break results aren't early warnings (client-decisions §13). One entry per factor: a cold
+        // Saved break warnings (28-day breaks below 3,000 PSI) aren't early warnings (client-decisions §13);
+        // the 3- and 7-day bands are worked out in EvaluateEarlyBreaks instead. One entry per factor: a cold
         // batch has a saved ambient warning on every reading, but it is one reason, listed once.
         var savedWarnings = batchRecordWarnings
             .Where(rw => rw.EntityType != nameof(BreakResult))
@@ -31,6 +33,7 @@ public class EarlyWarningService(
             .Select(EarlyWarning.FromRecordWarning);
 
         var (shortfallPct, shortfallPsi, projected28DayPsi, warnings) = EvaluateBatch(batch, predictions);
+        var breakWarnings = EvaluateEarlyBreaks(batch);
 
         var predictionWarnings = warnings
             .Where(w => w.LimitKey.StartsWith("Prediction.", StringComparison.Ordinal))
@@ -38,11 +41,62 @@ public class EarlyWarningService(
         var batchWarnings = warnings.Except(predictionWarnings);
 
         return new EarlyWarningEvaluation(
-            AtRisk: predictionWarnings.Count > 0,
+            AtRisk: predictionWarnings.Count > 0 || breakWarnings.Count > 0,
             Projected28DayPsi: projected28DayPsi,
             ShortfallPsi: shortfallPsi,
             ShortfallPct: shortfallPct,
-            EarlyWarnings: [.. predictionWarnings.Concat(savedWarnings).Concat(batchWarnings).Select(w => w.ToDTO())]);
+            EarlyWarnings: [.. predictionWarnings
+                .Concat(breakWarnings)
+                .Concat(savedWarnings)
+                .Concat(batchWarnings)
+                .Select(w => w.ToDTO())]);
+    }
+
+    private static readonly (TestAgeDays Age, string Key, string Field, string Outcome)[] _earlyBreakBands =
+    [
+        (TestAgeDays.Day3, LimitKeys.BreakDay3WarnPct, "day3AverageBreakPct", "Check the 7-day breaks."),
+        (TestAgeDays.Day7, LimitKeys.BreakDay7FailPct, "day7AverageBreakPct", "The batch will probably fail.")
+    ];
+
+    /// <summary>
+    /// Client-decisions §14.1: a low average 3-day break is an early warning, and a low average 7-day
+    /// break means the batch will probably fail. The bands are a percent of the 3,000 PSI break minimum
+    /// (the Break.StrengthPsi Warn Min), not of the batch's expected final. Worked out from the breaks on
+    /// every evaluation rather than saved with each break, because the average moves as cylinders are entered.
+    /// </summary>
+    private List<EarlyWarning> EvaluateEarlyBreaks(Batch batch)
+    {
+        var warnings = new List<EarlyWarning>();
+        if (limitProvider.Get(LimitKeys.StrengthPsi).Warn?.Min is not { } minimum || minimum <= 0)
+        {
+            return warnings;
+        }
+
+        var minimumPsi = (double)minimum;
+        foreach (var (age, key, field, outcome) in _earlyBreakBands)
+        {
+            var breaks = batch.Specimens
+                .Where(s => s.TestAgeDays == age && s.BreakResult is not null)
+                .Select(s => s.BreakResult!.StrengthPsi)
+                .ToList();
+            if (breaks.Count == 0)
+            {
+                continue;
+            }
+
+            var averagePsi = Math.Round(breaks.Average(), 0, MidpointRounding.AwayFromZero);
+            var pctOfMinimum = Math.Round(averagePsi / minimumPsi * 100, 1, MidpointRounding.AwayFromZero);
+
+            if (Check(key, pctOfMinimum, field) is { } warning)
+            {
+                var bandPsi = Math.Round(warning.Limit * minimumPsi / 100, 0, MidpointRounding.AwayFromZero);
+                warning.Warning =
+                    $"{(int)age}-day breaks averaged {Psi(averagePsi)}, below {Psi(bandPsi)} ({warning.Limit.ToString("0.#", CultureInfo.InvariantCulture)}% of {Psi(minimumPsi)}). {outcome}";
+                warnings.Add(warning);
+            }
+        }
+
+        return warnings;
     }
 
     /// <summary>

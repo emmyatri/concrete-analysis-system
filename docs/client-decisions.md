@@ -435,6 +435,29 @@ The percentage ranges reflect the client's specified warning
 criteria. Exact warning boundaries will be established during
 implementation using these confirmed ranges.
 
+**Implementation (SCRUM-203):**
+
+The warning fires below the top of each band, so any average inside
+the client's range is flagged:
+
+| Limit key | Severity | Min | Unit | Fires when |
+|---|---|---:|---|---|
+| `Break.Day3WarnPct` | Warn | 40 | % | Average 3-day break below 1,200 PSI |
+| `Break.Day7FailPct` | Warn | 70 | % | Average 7-day break below 2,100 PSI |
+
+- The base is the `Break.StrengthPsi` Warn minimum (3,000 PSI), not
+  the batch's expected final.
+- The check uses the average of that age's breaks and is worked out
+  each time the batch is evaluated, so it updates as each cylinder
+  is entered. It is not saved as a `RecordWarning`.
+- Either warning puts the batch at risk, so it shows on Home and in
+  the Batch Detail banner even before there is enough curing data
+  for an estimate.
+- Breaks from 1 to 10,000 PSI stay enterable at every age. The
+  3,000 PSI warning still applies only to 28-day breaks.
+- Moving a boundary (for example to 30% and 60%) is a change to
+  `validation-limits.json`, not code.
+
 *Affects:* FR-5, FR-16; sections 3 and 13.
 
 ### 14.2 Prediction accuracy benchmark
