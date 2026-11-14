@@ -180,4 +180,88 @@ describe('BatchReport — FR-19 acceptance tests', () => {
 
     expect(root.querySelector('[data-testid="report-document"]')).toBeNull();
   });
+
+  it('posts the PDF export request with the current batch number', async () => {
+    const postMessage = vi.fn();
+
+    vi.stubGlobal('chrome', {
+      webview: { postMessage },
+    });
+
+    try {
+      const root = await render('VM-SYN-006');
+
+      const button = root.querySelector<HTMLButtonElement>('[data-testid="save-report-pdf"]');
+
+      expect(button).not.toBeNull();
+      expect(button?.disabled).toBe(false);
+
+      button?.click();
+
+      expect(postMessage).toHaveBeenCalledExactlyOnceWith({
+        type: 'save-report-pdf',
+        batchNumber: 'VM-SYN-006',
+      });
+    } finally {
+      vi.unstubAllGlobals();
+    }
+  });
+
+  it('posts the print request when running in WebView2', async () => {
+    const postMessage = vi.fn();
+
+    vi.stubGlobal('chrome', {
+      webview: { postMessage },
+    });
+
+    try {
+      const root = await render('VM-SYN-006');
+
+      const button = root.querySelector<HTMLButtonElement>('[data-testid="print-report"]');
+
+      expect(button).not.toBeNull();
+
+      button?.click();
+
+      expect(postMessage).toHaveBeenCalledExactlyOnceWith({
+        type: 'print-report',
+      });
+    } finally {
+      vi.unstubAllGlobals();
+    }
+  });
+
+  it('falls back to window.print when WebView2 is unavailable', async () => {
+    vi.stubGlobal('chrome', undefined);
+
+    const print = vi.spyOn(window, 'print').mockImplementation(() => undefined);
+
+    try {
+      const root = await render('VM-SYN-006');
+
+      const button = root.querySelector<HTMLButtonElement>('[data-testid="print-report"]');
+
+      expect(button).not.toBeNull();
+
+      button?.click();
+
+      expect(print).toHaveBeenCalledOnce();
+    } finally {
+      print.mockRestore();
+      vi.unstubAllGlobals();
+    }
+  });
+
+  it('hides Save as PDF when WebView2 is unavailable', async () => {
+    vi.stubGlobal('chrome', undefined);
+
+    try {
+      const root = await render('VM-SYN-006');
+
+      expect(root.querySelector('[data-testid="save-report-pdf"]')).toBeNull();
+      expect(root.querySelector('[data-testid="print-report"]')).not.toBeNull();
+    } finally {
+      vi.unstubAllGlobals();
+    }
+  });
 });

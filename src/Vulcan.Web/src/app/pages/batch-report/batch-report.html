@@ -18,6 +18,18 @@
     >
       Print report
     </button>
+
+    @if (isDesktopHost) {
+      <button
+        type="button"
+        class="action-button primary"
+        (click)="saveReportPdf()"
+        [disabled]="state().status !== 'loaded'"
+        data-testid="save-report-pdf"
+      >
+        Save as PDF
+      </button>
+    }
   </nav>
 
   @switch (state().status) {

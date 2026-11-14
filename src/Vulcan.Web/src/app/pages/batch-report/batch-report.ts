@@ -344,8 +344,46 @@ export class BatchReport {
 
   // ---------- Report actions ----------
 
+  /**
+   * Opens the print dialog through WebView2.
+   * Falls back to browser printing during development.
+   */
   protected printReport(): void {
+    const webview = this.getWebView();
+
+    if (webview) {
+      webview.postMessage({ type: 'print-report' });
+      return;
+    }
+
     window.print();
+  }
+
+  protected saveReportPdf(): void {
+    const webview = this.getWebView();
+
+    if (!webview) {
+      return;
+    }
+
+    webview.postMessage({
+      type: 'save-report-pdf',
+      batchNumber: this.batchNumber(),
+    });
+  }
+
+  protected readonly isDesktopHost = !!this.getWebView();
+
+  private getWebView(): { postMessage: (message: unknown) => void } | undefined {
+    return (
+      window as Window & {
+        chrome?: {
+          webview?: {
+            postMessage: (message: unknown) => void;
+          };
+        };
+      }
+    ).chrome?.webview;
   }
 
   protected retry(): void {
