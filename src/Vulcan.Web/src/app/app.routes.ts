@@ -56,5 +56,14 @@ export const routes: Routes = [
       },
     ],
   },
+
+  {
+    // Standalone printable report (M3-31 / FR-19).
+    // Outside Shell so the application menu and header
+    // do not appear in the printed report.
+    path: 'batches/:batchNumber/report',
+    canActivate: [technicianGuard],
+    loadComponent: () => import('./pages/batch-report/batch-report').then((m) => m.BatchReport),
+  },
   { path: '**', redirectTo: '' },
 ];

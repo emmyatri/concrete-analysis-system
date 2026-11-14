@@ -43,16 +43,26 @@ export class StrengthChart {
   readonly hoveredDayChange = output<number | null>();
   private readonly chartWidget = viewChild(UIChart);
 
-  protected readonly plugins: Plugin<'line'>[] = [
-    endLabelsPlugin,
-    /** Hovered day plugin (M2-44, M2 hi-fi mock). */
-    chartHoverPlugin(
-      () => this.hoveredDay(),
-      (day) => this.hoveredDayChange.emit(day),
-    ),
-  ];
+  /** Render the chart without interactive behavior for reports. */
+  readonly printMode = input(false);
+
+  protected readonly plugins = computed<Plugin<'line'>[]>(() => {
+    if (this.printMode()) {
+      return [endLabelsPlugin];
+    }
+
+    return [
+      endLabelsPlugin,
+      chartHoverPlugin(
+        () => this.hoveredDay(),
+        (day) => this.hoveredDayChange.emit(day),
+      ),
+    ];
+  });
 
   private readonly redrawOnHover = effect(() => {
+    if (this.printMode()) return;
+
     this.hoveredDay();
     this.chartWidget()?.chart?.draw();
   });
@@ -69,15 +79,39 @@ export class StrengthChart {
 
   protected readonly config = computed(() => {
     const strength = this.strength();
-    return strength
-      ? strengthChartConfig(
-          strength,
-          this.minimumPsi(),
-          this.flaggedSpecimenIds(),
-          this.colors(),
-          this.fontSize(),
-        )
-      : null;
+    if (!strength) return null;
+
+    const config = strengthChartConfig(
+      strength,
+      this.minimumPsi(),
+      this.flaggedSpecimenIds(),
+      this.colors(),
+      this.fontSize(),
+    );
+
+    if (this.printMode()) {
+      config.options.events = [];
+
+      if (config.options.plugins?.tooltip) {
+        config.options.plugins.tooltip.enabled = false;
+      }
+
+      // Keep the report legend compact without changing Batch Detail.
+      const legend = config.options.plugins?.legend;
+
+      if (legend && legend.labels) {
+        legend.labels.font = {
+          size: 10,
+          family: this.colors().font,
+        };
+
+        legend.labels.padding = 8;
+        legend.labels.boxWidth = 10;
+        legend.labels.boxHeight = 5;
+      }
+    }
+
+    return config;
   });
 
   /** Read out by screen readers in place of the chart. */
