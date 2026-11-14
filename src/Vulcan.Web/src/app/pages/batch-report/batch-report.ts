@@ -349,15 +349,7 @@ export class BatchReport {
    * Falls back to browser printing during development.
    */
   protected printReport(): void {
-    const webview = (
-      window as Window & {
-        chrome?: {
-          webview?: {
-            postMessage: (message: unknown) => void;
-          };
-        };
-      }
-    ).chrome?.webview;
+    const webview = this.getWebView();
 
     if (webview) {
       webview.postMessage({ type: 'print-report' });
@@ -367,19 +359,8 @@ export class BatchReport {
     window.print();
   }
 
-  /**
-   * Requests PDF export through the WPF desktop host.
-   */
   protected saveReportPdf(): void {
-    const webview = (
-      window as Window & {
-        chrome?: {
-          webview?: {
-            postMessage: (message: unknown) => void;
-          };
-        };
-      }
-    ).chrome?.webview;
+    const webview = this.getWebView();
 
     if (!webview) {
       return;
@@ -389,6 +370,20 @@ export class BatchReport {
       type: 'save-report-pdf',
       batchNumber: this.batchNumber(),
     });
+  }
+
+  protected readonly isDesktopHost = !!this.getWebView();
+
+  private getWebView(): { postMessage: (message: unknown) => void } | undefined {
+    return (
+      window as Window & {
+        chrome?: {
+          webview?: {
+            postMessage: (message: unknown) => void;
+          };
+        };
+      }
+    ).chrome?.webview;
   }
 
   protected retry(): void {

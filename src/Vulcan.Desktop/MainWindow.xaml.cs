@@ -243,8 +243,20 @@ public partial class MainWindow : Window
                 return;
             }
 
+            // ADR-007: Preserve report background colors and warning indicators
+            // when exporting to PDF. Disable WebView2's default headers and
+            // footers so the report's own print styling controls the layout.
+            var settings = Browser.CoreWebView2.Environment.CreatePrintSettings();
+
+            settings.ShouldPrintBackgrounds = true;
+            settings.ShouldPrintHeaderAndFooter = false;
+            settings.Orientation = CoreWebView2PrintOrientation.Portrait;
+            settings.PageWidth = 8.5;
+            settings.PageHeight = 11;
+
             var saved = await Browser.CoreWebView2.PrintToPdfAsync(
-                dialog.FileName);
+                dialog.FileName,
+                settings);
 
             if (!saved)
             {
