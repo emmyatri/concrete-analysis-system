@@ -344,8 +344,51 @@ export class BatchReport {
 
   // ---------- Report actions ----------
 
+  /**
+   * Opens the print dialog through WebView2.
+   * Falls back to browser printing during development.
+   */
   protected printReport(): void {
+    const webview = (
+      window as Window & {
+        chrome?: {
+          webview?: {
+            postMessage: (message: unknown) => void;
+          };
+        };
+      }
+    ).chrome?.webview;
+
+    if (webview) {
+      webview.postMessage({ type: 'print-report' });
+      return;
+    }
+
     window.print();
+  }
+
+  /**
+   * Requests PDF export through the WPF desktop host.
+   */
+  protected saveReportPdf(): void {
+    const webview = (
+      window as Window & {
+        chrome?: {
+          webview?: {
+            postMessage: (message: unknown) => void;
+          };
+        };
+      }
+    ).chrome?.webview;
+
+    if (!webview) {
+      return;
+    }
+
+    webview.postMessage({
+      type: 'save-report-pdf',
+      batchNumber: this.batchNumber(),
+    });
   }
 
   protected retry(): void {
