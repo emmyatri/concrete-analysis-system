@@ -19,6 +19,7 @@ public partial class MainWindow : Window
         "WebView2");
 
     private readonly Uri _uiAddress;
+    private bool _isPdfExportInProgress;
 
     public MainWindow(Uri uiAddress)
     {
@@ -83,129 +84,197 @@ public partial class MainWindow : Window
             args.Handled = true;
         };
     }
-    
-    
-private async void OnWebMessageReceived(
-    object? sender,
-    CoreWebView2WebMessageReceivedEventArgs e)
-{
-    try
+
+    private bool TryGetCurrentReportBatchNumber(out string batchNumber)
     {
-        // Only accept messages originating from our application.
-        if (!IsAppAddress(e.Source))
+        batchNumber = string.Empty;
+
+        var source = Browser.CoreWebView2?.Source;
+
+        if (string.IsNullOrWhiteSpace(source) ||
+            !IsAppAddress(source) ||
+            !Uri.TryCreate(source, UriKind.Absolute, out var uri))
         {
-            Log.Warning("Rejected WebView2 message from {Source}", e.Source);
+            return false;
+        }
+
+        var segments = uri.AbsolutePath.Split(
+            '/', StringSplitOptions.RemoveEmptyEntries);
+
+        if (segments.Length != 3 ||
+            !segments[0].Equals("batches", StringComparison.OrdinalIgnoreCase) ||
+            !segments[2].Equals("report", StringComparison.OrdinalIgnoreCase))
+        {
+            return false;
+        }
+
+        var candidate = Uri.UnescapeDataString(segments[1]);
+
+        // Restrict batch numbers to safe filename characters.
+        if (candidate.Length is < 1 or > 100 ||
+            !candidate.All(c =>
+                char.IsAsciiLetterOrDigit(c) || c is '-' or '_'))
+        {
+            return false;
+        }
+
+        batchNumber = candidate;
+        return true;
+    }
+
+    private async void OnWebMessageReceived(
+        object? sender,
+        CoreWebView2WebMessageReceivedEventArgs e)
+    {
+        try
+        {
+            // Only accept messages originating from our application.
+            if (!IsAppAddress(e.Source))
+            {
+                Log.Warning("Rejected WebView2 message from {Source}", e.Source);
+                return;
+            }
+
+            if (!TryGetCurrentReportBatchNumber(out var reportBatchNumber))
+            {
+                Log.Warning("Rejected report command outside a valid batch report");
+                return;
+            }
+
+            using var document = JsonDocument.Parse(e.WebMessageAsJson);
+            var root = document.RootElement;
+
+            if (root.ValueKind != JsonValueKind.Object ||
+                !root.TryGetProperty("type", out var typeElement) ||
+                typeElement.ValueKind != JsonValueKind.String)
+            {
+                Log.Warning("Ignored invalid WebView2 message");
+                return;
+            }
+
+            var command = typeElement.GetString();
+
+            switch (command)
+            {
+                case "print-report":
+                    await PrintReportAsync();
+                    break;
+
+                case "save-report-pdf":
+                    if (!root.TryGetProperty("batchNumber", out var batchElement) ||
+                        batchElement.ValueKind != JsonValueKind.String ||
+                        !string.Equals(
+                            batchElement.GetString(),
+                            reportBatchNumber,
+                            StringComparison.Ordinal))
+                    {
+                        Log.Warning("Rejected PDF export with invalid or mismatched batch number");
+                        return;
+                    }
+
+                    await SaveReportPdfAsync(reportBatchNumber);
+                    break;
+            }
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex, "Failed to handle WebView2 report command");
+
+            MessageBox.Show(
+                "The report operation could not be completed.",
+                "Vulcan CBAS",
+                MessageBoxButton.OK,
+                MessageBoxImage.Error);
+        }
+    }
+
+    private Task PrintReportAsync()
+    {
+        // SCRUM-212: Use WebView2's browser print dialog instead of the
+        // native Windows system dialog. The system dialog does not provide
+        // a document preview, making it difficult to verify that the
+        // exported PDF matches the printed report (acceptance criterion 5).
+        // The browser dialog preserves print preview while still allowing
+        // users to select their installed Windows printers.
+        Browser.CoreWebView2.ShowPrintUI(
+            CoreWebView2PrintDialogKind.Browser);
+
+        Log.Information("Opened print dialog for batch report");
+
+        return Task.CompletedTask;
+    }
+
+    private async Task SaveReportPdfAsync(string batchNumber)
+    {
+        if (_isPdfExportInProgress)
+        {
+            Log.Warning(
+                "Ignored overlapping PDF export request for {BatchNumber}",
+                batchNumber);
             return;
         }
 
-        using var document = JsonDocument.Parse(e.WebMessageAsJson);
-        var root = document.RootElement;
+        _isPdfExportInProgress = true;
 
-        if (root.ValueKind != JsonValueKind.Object ||
-            !root.TryGetProperty("type", out var typeElement) ||
-            typeElement.ValueKind != JsonValueKind.String)
+        try
         {
-            Log.Warning("Ignored invalid WebView2 message");
-            return;
+            var documents = Environment.GetFolderPath(
+                Environment.SpecialFolder.MyDocuments);
+
+            var defaultName =
+                $"{batchNumber} report {DateTime.Now:yyyy-MM-dd}.pdf";
+
+            var dialog = new SaveFileDialog
+            {
+                Title = "Save Batch Report as PDF",
+                Filter = "PDF files (*.pdf)|*.pdf",
+                DefaultExt = ".pdf",
+                AddExtension = true,
+                FileName = defaultName,
+                InitialDirectory = documents,
+                OverwritePrompt = true
+            };
+
+            if (dialog.ShowDialog(this) != true)
+            {
+                Log.Information(
+                    "PDF export cancelled for {BatchNumber}",
+                    batchNumber);
+                return;
+            }
+
+            var saved = await Browser.CoreWebView2.PrintToPdfAsync(
+                dialog.FileName);
+
+            if (!saved)
+            {
+                throw new IOException(
+                    "WebView2 reported PDF export failure.");
+            }
+
+            Log.Information(
+                "Saved batch report PDF for {BatchNumber} to {Path}",
+                batchNumber,
+                dialog.FileName);
         }
-
-        var command = typeElement.GetString();
-
-        switch (command)
+        catch (Exception ex)
         {
-            case "print-report":
-                await PrintReportAsync();
-                break;
+            Log.Error(
+                ex,
+                "Failed to save batch report PDF for {BatchNumber}",
+                batchNumber);
 
-            case "save-report-pdf":
-                if (!root.TryGetProperty("batchNumber", out var batchElement) ||
-                    batchElement.ValueKind != JsonValueKind.String)
-                {
-                    Log.Warning("PDF export requested without a batch number");
-                    return;
-                }
-
-                await SaveReportPdfAsync(batchElement.GetString() ?? "");
-                break;
+            MessageBox.Show(
+                "Couldn't save the PDF. Check the folder isn't read-only.",
+                "Vulcan CBAS",
+                MessageBoxButton.OK,
+                MessageBoxImage.Error);
         }
-    }
-    catch (Exception ex)
-    {
-        Log.Error(ex, "Failed to handle WebView2 report command");
-
-        MessageBox.Show(
-            "The report operation could not be completed.",
-            "Vulcan CBAS",
-            MessageBoxButton.OK,
-            MessageBoxImage.Error);
-    }
-}
-
-private async Task PrintReportAsync()
-{
-    // Opens the WebView2 print dialog rather than printing silently.
-    Browser.CoreWebView2.ShowPrintUI(
-        CoreWebView2PrintDialogKind.Browser);
-
-    Log.Information("Opened print dialog for batch report");
-
-    await Task.CompletedTask;
-}
-
-private async Task SaveReportPdfAsync(string batchNumber)
-{
-    var documents = Environment.GetFolderPath(
-        Environment.SpecialFolder.MyDocuments);
-
-    var defaultName =
-        $"{batchNumber} report {DateTime.Now:yyyy-MM-dd}.pdf";
-
-    var dialog = new SaveFileDialog
-    {
-        Title = "Save Batch Report as PDF",
-        Filter = "PDF files (*.pdf)|*.pdf",
-        DefaultExt = ".pdf",
-        AddExtension = true,
-        FileName = defaultName,
-        InitialDirectory = documents,
-        OverwritePrompt = true
-    };
-
-    if (dialog.ShowDialog(this) != true)
-    {
-        Log.Information("PDF export cancelled for {BatchNumber}", batchNumber);
-        return;
-    }
-
-    try
-    {
-        var saved = await Browser.CoreWebView2.PrintToPdfAsync(
-            dialog.FileName);
-
-        if (!saved)
+        finally
         {
-            throw new IOException("WebView2 reported PDF export failure.");
+            _isPdfExportInProgress = false;
         }
-
-        Log.Information(
-            "Saved batch report PDF for {BatchNumber} to {Path}",
-            batchNumber,
-            dialog.FileName);
     }
-    catch (Exception ex)
-    {
-        Log.Error(
-            ex,
-            "Failed to save batch report PDF for {BatchNumber}",
-            batchNumber);
-
-        MessageBox.Show(
-            "Couldn't save the PDF. Check the folder isn't read-only.",
-            "Vulcan CBAS",
-            MessageBoxButton.OK,
-            MessageBoxImage.Error);
-    }
-}
 
     private bool IsAppAddress(string uri) =>
         Uri.TryCreate(uri, UriKind.Absolute, out var target)
