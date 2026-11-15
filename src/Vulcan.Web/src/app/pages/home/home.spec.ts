@@ -16,6 +16,7 @@ import { TECHNICIAN_SETTINGS_URL, TechnicianSession } from '../../core/session/t
 import { VulcanPreset } from '../../theme/vulcan-preset';
 import { PlaceholderPage } from '../placeholder-page';
 import { HomePage } from './home';
+import { EarlyWarningBatch } from '../../core/api/models';
 
 describe('HomePage', () => {
   let root: HTMLElement;
@@ -210,5 +211,40 @@ describe('HomePage', () => {
 
     expect(text('[data-testid="recent-message"]')).not.toBe('');
     expect(root.querySelector('[data-testid="recent"]')).toBeNull();
+  });
+
+  it("shows the top reason's recommendation as a tooltip", async () => {
+    const batch: EarlyWarningBatch = {
+      id: 1,
+      batchNumber: 'VM-TEST-001',
+      isSynthetic: false,
+      atRisk: true,
+      projected28DayPsi: null,
+      shortfallPsi: null,
+      shortfallPct: null,
+      earlyWarnings: [
+        {
+          warning: '3-day breaks averaged 800 PSI, below 1,200 PSI (40% of 3,000 PSI).',
+          recommendation: 'Watch this batch at the 7-day break.',
+          field: 'day3AverageBreakPct',
+          value: 26.7,
+          limitKey: 'Break.Day3WarnPct',
+          limit: 40,
+        },
+      ],
+    };
+    await open(false);
+    TestBed.inject(HttpTestingController)
+      .expectOne((r) => r.url === '/api/batches')
+      .flush([]);
+    TestBed.inject(HttpTestingController)
+      .expectOne((r) => r.url.startsWith('/api/warnings/early'))
+      .flush([batch]);
+
+    harness.detectChanges();
+
+    expect(root.querySelector('[data-testid="at-risk"] td.reason')?.getAttribute('title')).toBe(
+      'Watch this batch at the 7-day break.',
+    );
   });
 });
