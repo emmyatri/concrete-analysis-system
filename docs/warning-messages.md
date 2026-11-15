@@ -22,10 +22,23 @@ Built from the average break for that age. `Value` is the average as a percent o
 
 | Limit key | Message | Example |
 |---|---|---|
-| `Break.Day3WarnPct` | {3}-day breaks averaged {average} PSI, below {band} PSI ({pct}% of 3,000 PSI). Check the 7-day breaks. | "3-day breaks averaged 800 PSI, below 1,200 PSI (40% of 3,000 PSI). Check the 7-day breaks." |
+| `Break.Day3WarnPct` | {3}-day breaks averaged {average} PSI, below {band} PSI ({pct}% of 3,000 PSI). | "3-day breaks averaged 800 PSI, below 1,200 PSI (40% of 3,000 PSI)." |
 | `Break.Day7FailPct` | {7}-day breaks averaged {average} PSI, below {band} PSI ({pct}% of 3,000 PSI). The batch will probably fail. | "7-day breaks averaged 1,700 PSI, below 2,100 PSI (70% of 3,000 PSI). The batch will probably fail." |
 
 Either one puts the batch at risk. None of the synthetic batches trigger them (lowest averages: 1,942 PSI at 3 days, 3,098 PSI at 7 days).
+
+### Early break recommendations (SCRUM-204, client-decisions §14.4)
+
+Recommendations appear in `EarlyWarningDTO.Recommendation`, shown under the reason in the Batch Detail banner and the Home "Top reason" tooltip, and they are null for every other warning.
+
+| 3-day | 7-day | Recommendation | On which warning |
+|---|---|---|---|
+| Low | Not tested yet | "Watch this batch at the 7-day break." | `Break.Day3WarnPct` |
+| Low | Low | "Both early breaks are low. Vulcan's practice is to abandon this batch and start a new one." | `Break.Day7FailPct` |
+| Low | Passed | None | `Break.Day3WarnPct` |
+| Not low | Low | None | `Break.Day7FailPct` |
+
+Once 7-day breaks exist, "watch" is out of date, so it's dropped; the 3-day warning itself stays (lead decision).
 
 ### Input warnings (configured messages from `validation-limits.json`)
 
