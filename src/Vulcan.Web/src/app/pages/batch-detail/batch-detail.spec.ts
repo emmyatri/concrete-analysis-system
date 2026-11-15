@@ -18,6 +18,7 @@ import { USE_MOCKS } from '../../core/api/use-mocks';
 import { VulcanPreset } from '../../theme/vulcan-preset';
 import { StrengthChart } from '../strength-chart/strength-chart';
 import { BatchDetailPage } from './batch-detail';
+import { mockStrength } from '../../core/api/mock/mock-strength';
 
 /** Stands in for p-chart, since jsdom can't draw on a canvas. */
 // eslint-disable-next-line @angular-eslint/component-selector -- must match PrimeNG's selector
@@ -415,6 +416,43 @@ describe('BatchDetailPage', () => {
     await open('VM-SYN-001');
 
     expect(root.querySelector('[data-testid="early-warnings"]')).toBeNull();
+  });
+
+  it('shows a recommendation under the reason that has one', async () => {
+    await open('VM-SYN-006', false);
+
+    const batch = MOCK_BATCH_DETAILS.find((b) => b.batchNumber === 'VM-SYN-006')!;
+    const strength = {
+      ...mockStrength(batch),
+      earlyWarnings: [
+        {
+          warning: '3-day breaks averaged 800 PSI, below 1,200 PSI (40% of 3,000 PSI).',
+          recommendation: 'Watch this batch at the 7-day break.',
+          field: 'day3AverageBreakPct',
+          value: 26.7,
+          limitKey: 'Break.Day3WarnPct',
+          limit: 40,
+        },
+        {
+          warning: 'The water to cement ratio is outside the normal range [0.4-0.6]',
+          field: 'waterCementRatio',
+          value: 0.603,
+          limitKey: 'Composition.WaterCementRatio',
+          limit: 0,
+        },
+      ],
+    };
+
+    const http = TestBed.inject(HttpTestingController);
+    http.expectOne('/api/batches/VM-SYN-006').flush(batch);
+    http.expectOne('/api/batches/VM-SYN-006/strength').flush(strength);
+
+    harness.detectChanges();
+
+    expect(root.querySelectorAll('[data-testid="early-warning-recommendation"]').length).toBe(1);
+    expect(text('[data-testid="early-warning-recommendation"]')).toBe(
+      'Watch this batch at the 7-day break.',
+    );
   });
 
   it('shows the 3, 7 and 28-day estimates and the Day 1 / Day 3 summary', async () => {
