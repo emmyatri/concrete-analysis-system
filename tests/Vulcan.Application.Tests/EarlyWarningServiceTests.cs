@@ -1,4 +1,3 @@
-using System.Runtime.InteropServices.JavaScript;
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging.Abstractions;
@@ -36,8 +35,8 @@ public class EarlyWarningServiceTests()
     {
         await db.Database.MigrateAsync();
         db.SeedCalibrationVersionV1(); // required for prediction
-        db.SeedValidationLimits(); // required for early warning service
-        db.SeedSpecificGravities(); // required for water cement ratio calculator
+        db.SeedValidationLimits();     // required for early warning service
+        db.SeedSpecificGravities();    // required for water cement ratio calculator
         await db.SaveChangesAsync();
     }
 
@@ -152,7 +151,7 @@ public class EarlyWarningServiceTests()
             "Projected 28-day strength of 4,733 PSI is 23.66% below the expected 6,200 PSI");
         syn006.EarlyWarnings.ShouldContain(w => w.LimitKey == LimitKeys.WaterCementRatio);
         syn006.EarlyWarnings.ShouldContain(w => w.Warning ==
-                                                "Expected final of 6,200 PSI is 67.6% above the 3,700 PSI typical for a w/cm of 0.603");
+            "Expected final of 6,200 PSI is 67.6% above the 3,700 PSI typical for a w/cm of 0.603");
         syn006.EarlyWarnings.ShouldNotContain(w => w.LimitKey == LimitKeys.StrengthPsi);
 
         // Cold-cured: at risk, with one ambient reason (not one per reading).
@@ -168,9 +167,11 @@ public class EarlyWarningServiceTests()
         syn003.AtRisk.ShouldBeTrue();
         syn003.Projected28DayPsi.ShouldBe(4535d);
 
-        syn003.EarlyWarnings.ShouldContain(w => w.LimitKey == LimitKeys.PredictionShortfallPct);
+        syn003.EarlyWarnings.ShouldContain(
+            w => w.LimitKey == LimitKeys.PredictionShortfallPct);
 
-        syn003.EarlyWarnings.Count(w => w.LimitKey == LimitKeys.MoisturePct).ShouldBe(1);
+        syn003.EarlyWarnings.Count(
+            w => w.LimitKey == LimitKeys.MoisturePct).ShouldBe(1);
 
         // pH: flagged on entry but on track.
         var syn009 = await Evaluate("VM-SYN-009");
@@ -207,7 +208,6 @@ public class EarlyWarningServiceTests()
         {
             specimen.BreakResult = null;
         }
-
         // save
         await batchService.CreateAsync(vmSyn);
 
@@ -290,9 +290,9 @@ public class EarlyWarningServiceTests()
 
         var batchWithPredictions = await db.Batch
             .Include(b => b.Specimens)
-            .ThenInclude(s => s.CuringReadings)
+                .ThenInclude(s => s.CuringReadings)
             .Include(b => b.Specimens)
-            .ThenInclude(s => s.BreakResult)
+                .ThenInclude(s => s.BreakResult)
             .FirstAsync(b => b.BatchNumber == "VM-TEST-001");
 
         var evaluator = SetupEarlyWarningService(db);
@@ -349,7 +349,6 @@ public class EarlyWarningServiceTests()
         {
             await batchService.CreateAsync(batch);
         }
-
         var evaluator = SetupEarlyWarningService(db);
 
         var warnings = new List<EarlyWarningDTO>();
@@ -454,7 +453,7 @@ public class EarlyWarningServiceTests()
     }
 
     [Fact]
-    public async Task Low_3_day_break_only_says_watch_and_never_abandon()
+    public async Task Low_3_day_only_says_watch_and_never_abandon()
     {
         using var connection = new SqliteConnection("Filename=:memory:");
         await connection.OpenAsync();
@@ -468,5 +467,37 @@ public class EarlyWarningServiceTests()
         var day3 = result.EarlyWarnings.Single(w => w.LimitKey == LimitKeys.BreakDay3WarnPct);
         day3.Recommendation.ShouldBe("Watch this batch at the 7-day break.");
         result.EarlyWarnings.ShouldNotContain(w => w.Recommendation != null && w.Recommendation.Contains("abandon"));
+    }
+
+    [Fact]
+    public async Task Low_3_day_then_passing_7_day_has_no_recommendation()
+    {
+        using var connection = new SqliteConnection("Filename=:memory:");
+        await connection.OpenAsync();
+        var db = GetDbContext(connection);
+        await InitTestDb(db);
+        var evaluator = SetupEarlyWarningService(db);
+
+        var result = await evaluator.Evaluate(
+            BatchWithBreaks((TestAgeDays.Day3, 800), (TestAgeDays.Day7, 2400)));
+
+        var day3 = result.EarlyWarnings.Single(w => w.LimitKey == LimitKeys.BreakDay3WarnPct);
+        day3.Recommendation.ShouldBeNull();
+    }
+
+    [Fact]
+    public async Task Low_7_day_only_has_no_recommendation()
+    {
+        using var connection = new SqliteConnection("Filename=:memory:");
+        await connection.OpenAsync();
+        var db = GetDbContext(connection);
+        await InitTestDb(db);
+        var evaluator = SetupEarlyWarningService(db);
+
+        var result = await evaluator.Evaluate(
+            BatchWithBreaks((TestAgeDays.Day7, 1700)));
+
+        var day7 = result.EarlyWarnings.Single(w => w.LimitKey == LimitKeys.BreakDay7FailPct);
+        day7.Recommendation.ShouldBeNull();
     }
 }
