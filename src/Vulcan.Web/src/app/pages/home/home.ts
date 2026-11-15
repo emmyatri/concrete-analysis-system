@@ -37,6 +37,7 @@ type AtRiskRow = EarlyWarningBatch & {
   target: string;
   shortfall: string;
   topReason: string;
+  topRecommendation: string | null;
 };
 
 /**
@@ -124,18 +125,23 @@ export class HomePage {
 
   protected readonly atRiskRows = computed((): AtRiskRow[] => {
     const atRisk = this.atRisk();
+
     if (atRisk.status !== 'loaded') return [];
-    return atRisk.batches.map((batch) => ({
-      ...batch,
-      projected: psi(batch.projected28DayPsi),
-      // shortfallPsi is ExpectedFinalBreakPsi minus the projection (API contract), so this is the target.
-      target:
-        batch.projected28DayPsi == null || batch.shortfallPsi == null
-          ? '—'
-          : psi(batch.projected28DayPsi + batch.shortfallPsi),
-      shortfall: shortfallLabel(batch),
-      topReason: earlyWarningsShortfallFirst(batch.earlyWarnings)[0]?.warning ?? '',
-    }));
+    return atRisk.batches.map((batch) => {
+      const top = earlyWarningsShortfallFirst(batch.earlyWarnings)[0];
+      return {
+        ...batch,
+        projected: psi(batch.projected28DayPsi),
+        // shortfallPsi is ExpectedFinalBreakPsi minus the projection (API contract), so this is the target.
+        target:
+          batch.projected28DayPsi == null || batch.shortfallPsi == null
+            ? '—'
+            : psi(batch.projected28DayPsi + batch.shortfallPsi),
+        shortfall: shortfallLabel(batch),
+        topReason: top?.warning ?? '',
+        topRecommendation: top?.recommendation ?? null,
+      };
+    });
   });
 
   protected readonly atRiskMessage = computed(() => {
