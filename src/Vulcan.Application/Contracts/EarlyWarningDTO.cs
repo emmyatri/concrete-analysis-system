@@ -5,4 +5,5 @@ public sealed record EarlyWarningDTO(
     string Field,
     double Value,
     string LimitKey,
-    double Limit);
+    double Limit,
+    string? Recommendation = null);

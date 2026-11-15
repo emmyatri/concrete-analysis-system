@@ -54,7 +54,7 @@ public class EarlyWarningService(
 
     private static readonly (TestAgeDays Age, string Key, string Field, string Outcome)[] _earlyBreakBands =
     [
-        (TestAgeDays.Day3, LimitKeys.BreakDay3WarnPct, "day3AverageBreakPct", "Check the 7-day breaks."),
+        (TestAgeDays.Day3, LimitKeys.BreakDay3WarnPct, "day3AverageBreakPct", ""),
         (TestAgeDays.Day7, LimitKeys.BreakDay7FailPct, "day7AverageBreakPct", "The batch will probably fail.")
     ];
 
@@ -90,10 +90,31 @@ public class EarlyWarningService(
             if (Check(key, pctOfMinimum, field) is { } warning)
             {
                 var bandPsi = Math.Round(warning.Limit * minimumPsi / 100, 0, MidpointRounding.AwayFromZero);
+                // Only add the outcome when there is one, so there's no stray space.
+                var ending = outcome == "" ? "" : " " + outcome;
                 warning.Warning =
-                    $"{(int)age}-day breaks averaged {Psi(averagePsi)}, below {Psi(bandPsi)} ({warning.Limit.ToString("0.#", CultureInfo.InvariantCulture)}% of {Psi(minimumPsi)}). {outcome}";
+                    $"{(int)age}-day breaks averaged {Psi(averagePsi)}, below {Psi(bandPsi)} ({warning.Limit.ToString("0.#", CultureInfo.InvariantCulture)}% of {Psi(minimumPsi)}).{ending}";
                 warnings.Add(warning);
             }
+        }
+
+        // Recommendations (client-decisions §14, SCRUM-204): "watch" only until 7-day breaks exist;
+        // "abandon" only when both are low.
+        var day3Warning = warnings.FirstOrDefault(w => w.LimitKey == LimitKeys.BreakDay3WarnPct);
+        var day7Warning = warnings.FirstOrDefault(w => w.LimitKey == LimitKeys.BreakDay7FailPct);
+
+        var hasDay7Breaks = batch.Specimens
+            .Any(s => s.TestAgeDays == TestAgeDays.Day7 && s.BreakResult is not null);
+
+        if (day3Warning is not null && !hasDay7Breaks)
+        {
+            day3Warning.Recommendation = "Watch this batch at the 7-day break.";
+        }
+
+        if (day3Warning is not null && day7Warning is not null)
+        {
+            day7Warning.Recommendation =
+                "Both early breaks are low. Vulcan's practice is to abandon this batch and start a new one.";
         }
 
         return warnings;
