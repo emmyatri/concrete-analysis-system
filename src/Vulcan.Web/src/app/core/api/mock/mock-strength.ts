@@ -48,7 +48,7 @@ const EARLY_BREAK_BANDS = [
     limitKey: 'Break.Day3WarnPct',
     field: 'day3AverageBreakPct',
     limit: 40,
-    outcome: 'Check the 7-day breaks.',
+    outcome: '',
   },
   {
     age: 'Day7',
@@ -351,23 +351,43 @@ export function mockEarlyWarnings(
  * EarlyWarningService. Worked out from the breaks each time, since the average moves as cylinders are entered.
  */
 function breakBandWarnings(batch: BatchDetail): EarlyWarning[] {
-  return EARLY_BREAK_BANDS.flatMap(({ age, days, limitKey, field, limit, outcome }) => {
-    const mean = averageBreak(batch, age);
-    if (mean === null) return [];
-    const averagePsi = Math.round(mean);
-    const pct = round((averagePsi / MINIMUM_PSI) * 100, 1);
-    if (pct >= limit) return [];
-    const bandPsi = Math.round((limit * MINIMUM_PSI) / 100);
-    return [
-      {
-        warning: `${days}-day breaks averaged ${psi(averagePsi)}, below ${psi(bandPsi)} (${limit}% of ${psi(MINIMUM_PSI)}). ${outcome}`,
-        field,
-        value: pct,
-        limitKey,
-        limit,
-      },
-    ];
-  });
+  const warnings: EarlyWarning[] = EARLY_BREAK_BANDS.flatMap(
+    ({ age, days, limitKey, field, limit, outcome }) => {
+      const mean = averageBreak(batch, age);
+      if (mean === null) return [];
+      const averagePsi = Math.round(mean);
+      const pct = round((averagePsi / MINIMUM_PSI) * 100, 1);
+      if (pct >= limit) return [];
+      const bandPsi = Math.round((limit * MINIMUM_PSI) / 100);
+      const ending = outcome === '' ? '' : ' ' + outcome;
+      return [
+        {
+          warning: `${days}-day breaks averaged ${psi(averagePsi)}, below ${psi(bandPsi)} (${limit}% of ${psi(MINIMUM_PSI)}).${ending}`,
+          field,
+          value: pct,
+          limitKey,
+          limit,
+        },
+      ];
+    },
+  );
+
+  // Recommendations (client-decisions §14, SCRUM-204): "watch" only until 7-day breaks exist;
+  // "abandon" only when both are low.
+  const day3Warning = warnings.find((w) => w.limitKey === 'Break.Day3WarnPct');
+  const day7Warning = warnings.find((w) => w.limitKey === 'Break.Day7FailPct');
+
+  const hasDay7Breaks = averageBreak(batch, 'Day7') !== null;
+
+  if (day3Warning && !hasDay7Breaks) {
+    day3Warning.recommendation = 'Watch this batch at the 7-day break.';
+  }
+  if (day3Warning && day7Warning) {
+    day7Warning.recommendation =
+      "Both early breaks are low. Vulcan's practice is to abandon this batch and start a new one.";
+  }
+
+  return warnings;
 }
 
 /**
