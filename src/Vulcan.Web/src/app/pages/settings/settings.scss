@@ -1,0 +1,71 @@
+// SCRUM-214. Colors from theme tokens only.
+
+.settings {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  max-width: 760px;
+}
+
+.page-title {
+  margin: 0;
+  font-size: 22px;
+  font-weight: 600;
+}
+
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 16px 18px;
+  background: var(--p-surface-0);
+  border: 1px solid var(--p-content-border-color);
+  border-radius: 6px;
+}
+
+.card-title {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.hint {
+  margin: 0;
+  font-size: 13px;
+  color: var(--p-text-muted-color);
+}
+
+.value {
+  margin: 0;
+  font-size: 14px;
+}
+
+.path {
+  font-family: ui-monospace, Consolas, monospace;
+  word-break: break-all;
+}
+
+.not-set {
+  color: var(--p-text-muted-color);
+  font-style: italic;
+}
+
+.message {
+  margin: 0;
+  font-size: 13px;
+}
+
+.error {
+  color: var(--p-red-600);
+}
+
+.warning {
+  color: var(--p-orange-700);
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}

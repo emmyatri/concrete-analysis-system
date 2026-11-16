@@ -716,6 +716,37 @@ Send with the `200` response.
 }
 ```
 
+### Export Batch Data
+
+Returns a batch's data as a zip of CSV files that open in Excel. Read-only; no technician header is needed.
+
+**Endpoint:** `GET /api/batches/{batchNumber}/export`
+
+**Request Parameters:**
+
+* `batchNumber`: from route. The batch number. Matching ignores upper/lowercase.
+
+**Response Status Codes:**
+
+* `200`: the zip was created
+* `404`: no batch with that number
+
+**Response:**
+
+Sent with the `200` response as `application/zip`, named `{batchNumber}-export.zip`. Each file is UTF-8 with a byte order mark so Excel shows °F, Ω and CO₂ correctly. Every file has a header row, even when it has no data rows.
+
+| File | One row per | Columns |
+|---|---|---|
+| `batch.csv` | batch | Batch number, Cast at (UTC), Final weight (lb), Expected final break (PSI), Cement type, Mix water pH, Cement surface pH, Cement (%), SCM (%), SCM type, Coarse aggregate (%), Fine aggregate (%), Water (%), Alumina (%), Iron oxide (%), Magnesium oxide (%), Sulfur trioxide (%), IsSynthetic |
+| `curing-readings.csv` | curing reading | Batch number, Specimen label, Taken at (UTC), Internal temperature (°F), Ambient temperature (°F), Moisture (% of sample weight), Relative humidity (%), Resistivity (Ω/ft), CO₂ (ppm), IsSynthetic |
+| `breaks.csv` | break result | Batch number, Specimen label, Test age (days), Broken at (UTC), Compressive strength (PSI), IsSynthetic |
+| `predictions.csv` | stored prediction | Batch number, Calibration version, Basis, Horizon (days), Estimated strength (PSI), Equivalent age (days), Adjustment stage, Unadjusted strength (PSI), Created at (UTC), IsSynthetic |
+
+* Timestamps are UTC, ISO 8601.
+* Numbers use a `.` decimal point regardless of regional settings. Predictions keep full stored precision; the app rounds them for display.
+* Text that starts with `=`, `+`, `-` or `@` is prefixed with `'` so Excel doesn't run it as a formula. Numbers are never prefixed.
+* `IsSynthetic` is `true` for synthetic batches and specimens.
+
 ## Specimen
 
 ### Create Specimen
@@ -2496,3 +2527,68 @@ Status Code: `200`
     }
 ]
 ```
+
+## Settings
+
+Settings that belong to this computer, saved in `%LOCALAPPDATA%\VulcanCBAS\settings.json` (not the database).
+
+### Get Cloud Folder
+
+Returns the folder that "Save to cloud" on a batch report writes to (SCRUM-214, ADR-007 §2.3).
+
+**Endpoint:** `GET /api/settings/cloud-folder`
+
+**Response Status Codes:**
+
+* `200`: always
+
+**Response Schema:**
+
+```json
+{
+    "title": "CloudFolderResponse",
+    "type": "object",
+    "properties": {
+        "path": {
+            "type": ["string", "null"],
+            "description": "Full folder path. Null when no folder is set."
+        },
+        "exists": {
+            "type": "boolean",
+            "description": "False when no folder is set or the saved folder can't be found."
+        }
+    },
+    "required": ["path", "exists"]
+}
+```
+
+### Set Cloud Folder
+
+Saves the cloud folder. Needs the technician header, like every save.
+
+**Endpoint:** `PUT /api/settings/cloud-folder`
+
+**Request Body:**
+
+```json
+{
+    "path": "C:\\Users\\jrivera\\OneDrive\\Lab"
+}
+```
+
+The path is saved without a trailing separator.
+
+**Response Status Codes:**
+
+* `204`: saved
+* `400`: blank, not a full path, or the folder doesn't exist. The message is under `CloudFolder.Path` (see [`400` Response](#400-response)).
+
+### Clear Cloud Folder
+
+Sets the cloud folder back to not set. Needs the technician header.
+
+**Endpoint:** `DELETE /api/settings/cloud-folder`
+
+**Response Status Codes:**
+
+* `204`: cleared

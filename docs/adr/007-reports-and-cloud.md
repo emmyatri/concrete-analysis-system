@@ -79,6 +79,14 @@ The external synchronization client will be responsible for uploading the file t
 
 The synchronization client is responsible for transferring locally saved files when connectivity becomes available.
 
+**Implementation (SCRUM-214):**
+
+- The folder is chosen on the Settings page with the Windows folder picker and saved on the computer (`%LOCALAPPDATA%\VulcanCBAS\settings.json`), not in the database.
+- "Save to cloud" on the batch report writes both the report PDF and the data export to `<cloud folder>\CBAS\<batch number>\`, using the same file names as Save as PDF and Export data. Saving again replaces the export, and the PDF from the same day.
+- Files are written to a temporary file first and then moved, so a sync client never picks up a half-written file.
+- With no folder set, the app says "Choose a cloud folder in Settings first." If the folder can't be found, it says so and saves nothing.
+- Nothing is written until the operator clicks Save to cloud (SC-6).
+
 **Pending confirmation from Don:** Whether saving to a locally synchronized folder satisfies the requirement to upload reports to a cloud storage platform.
 
 ### 2.4 Offline Operation (NFR-3)

@@ -39,6 +39,16 @@
       >
         Export data
       </button>
+
+      <button
+        type="button"
+        class="action-button primary"
+        (click)="saveToCloud()"
+        [disabled]="state().status !== 'loaded'"
+        data-testid="save-to-cloud"
+      >
+        Save to cloud
+      </button>
     }
   </nav>
 

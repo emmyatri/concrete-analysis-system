@@ -50,6 +50,7 @@ describe('Shell', () => {
       'Search batches',
       'Break results',
       'Curing readings',
+      'Settings',
     ]);
   });
 

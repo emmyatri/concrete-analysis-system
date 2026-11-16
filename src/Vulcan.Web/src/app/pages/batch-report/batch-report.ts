@@ -389,6 +389,23 @@ export class BatchReport {
     });
   }
 
+  /**
+   * SCRUM-214: saves the PDF and the data export to the cloud folder chosen in Settings.
+   * WPF writes the files and explains when no folder is set or it can't be found.
+   */
+  protected saveToCloud(): void {
+    const webview = this.getWebView();
+
+    if (!webview) {
+      return;
+    }
+
+    webview.postMessage({
+      type: 'save-to-cloud',
+      batchNumber: this.batchNumber(),
+    });
+  }
+
   protected readonly isDesktopHost = !!this.getWebView();
 
   private getWebView(): { postMessage: (message: unknown) => void } | undefined {
