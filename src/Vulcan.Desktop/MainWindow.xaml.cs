@@ -1,4 +1,5 @@
 using System.IO;
+using System.Net.Http;
 using System.Text.Json;
 using System.Windows;
 using Microsoft.Web.WebView2.Core;
@@ -20,6 +21,8 @@ public partial class MainWindow : Window
 
     private readonly Uri _uiAddress;
     private bool _isPdfExportInProgress;
+    private readonly HttpClient _exportClient = new();
+    private bool _isDataExportInProgress;
 
     public MainWindow(Uri uiAddress)
     {
@@ -174,6 +177,23 @@ public partial class MainWindow : Window
 
                     await SaveReportPdfAsync(reportBatchNumber);
                     break;
+
+                case "save-batch-data":
+                    if (!root.TryGetProperty("batchNumber", out var exportBatchElement) ||
+                        exportBatchElement.ValueKind != JsonValueKind.String ||
+                        !string.Equals(
+                            exportBatchElement.GetString(),
+                            reportBatchNumber,
+                            StringComparison.Ordinal))
+                    {
+                        Log.Warning(
+                            "Rejected data export with invalid or mismatched batch number");
+                        return;
+                    }
+
+                    await SaveBatchDataAsync(reportBatchNumber);
+                    break;
+
             }
         }
         catch (Exception ex)
@@ -285,6 +305,116 @@ public partial class MainWindow : Window
         finally
         {
             _isPdfExportInProgress = false;
+        }
+    }
+
+    private async Task SaveBatchDataAsync(string batchNumber)
+    {
+        if (_isDataExportInProgress)
+        {
+            Log.Warning(
+                "Ignored overlapping data export request for {BatchNumber}",
+                batchNumber);
+            return;
+        }
+
+        _isDataExportInProgress = true;
+
+        try
+        {
+            var documents = Environment.GetFolderPath(
+                Environment.SpecialFolder.MyDocuments);
+
+            var dialog = new SaveFileDialog
+            {
+                Title = "Export Batch Data",
+                Filter = "ZIP archives (*.zip)|*.zip",
+                DefaultExt = ".zip",
+                AddExtension = true,
+                FileName = $"{batchNumber}-export.zip",
+                InitialDirectory = documents,
+                OverwritePrompt = true
+            };
+
+            if (dialog.ShowDialog(this) != true)
+            {
+                Log.Information(
+                    "Data export cancelled for {BatchNumber}",
+                    batchNumber);
+                return;
+            }
+
+            // Retrieve the archive from the local in-process API.
+            var requestUri = new Uri(
+                _uiAddress,
+                $"/api/batches/{Uri.EscapeDataString(batchNumber)}/export");
+
+            using var response = await _exportClient.GetAsync(
+                requestUri,
+                HttpCompletionOption.ResponseHeadersRead);
+
+            response.EnsureSuccessStatusCode();
+
+            if (response.Content.Headers.ContentType?.MediaType
+                != "application/zip")
+            {
+                throw new InvalidDataException(
+                    "The export endpoint did not return a ZIP archive.");
+            }
+
+            // Download into a temporary file first so an interrupted
+            // request does not leave a partially written export.
+            var temporaryPath = Path.Combine(
+                Path.GetTempPath(),
+                $"{Guid.NewGuid():N}.zip");
+
+            try
+            {
+                await using (var destination = new FileStream(
+                    temporaryPath,
+                    FileMode.CreateNew,
+                    FileAccess.Write,
+                    FileShare.None))
+                {
+                    await response.Content.CopyToAsync(destination);
+                }
+
+                // Do not overwrite the chosen file until the
+                // complete download has succeeded.
+                File.Move(
+                    temporaryPath,
+                    dialog.FileName,
+                    overwrite: true);
+            }
+            finally
+            {
+                if (File.Exists(temporaryPath))
+                {
+                    File.Delete(temporaryPath);
+                }
+            }
+
+            Log.Information(
+                "Exported batch data for {BatchNumber} to {Path}",
+                batchNumber,
+                dialog.FileName);
+        }
+        catch (Exception ex)
+        {
+            Log.Error(
+                ex,
+                "Failed to export batch data for {BatchNumber}",
+                batchNumber);
+
+            MessageBox.Show(
+                "Couldn't export the batch data. Check the selected folder and try again.",
+                "Vulcan CBAS",
+                MessageBoxButton.OK,
+                MessageBoxImage.Error);
+        }
+        finally
+        {
+            _isDataExportInProgress = false;
         }
     }
 

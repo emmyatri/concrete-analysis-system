@@ -372,6 +372,23 @@ export class BatchReport {
     });
   }
 
+  /**
+   * Requests a ZIP export containing the batch's CSV data.
+   * WPF handles the native Save dialog and local API download.
+   */
+  protected exportBatchData(): void {
+    const webview = this.getWebView();
+
+    if (!webview) {
+      return;
+    }
+
+    webview.postMessage({
+      type: 'save-batch-data',
+      batchNumber: this.batchNumber(),
+    });
+  }
+
   protected readonly isDesktopHost = !!this.getWebView();
 
   private getWebView(): { postMessage: (message: unknown) => void } | undefined {

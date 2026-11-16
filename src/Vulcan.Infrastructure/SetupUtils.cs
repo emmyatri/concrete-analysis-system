@@ -66,6 +66,7 @@ public static class SetupUtils
         services.AddScoped<CuringReadingValidator>();
 
         services.AddScoped<BatchService>();
+        services.AddScoped<BatchExportService>();
         services.AddScoped<SpecimenService>();
         services.AddScoped<CuringService>();
         services.AddScoped<SpecificGravityService>();
