@@ -12,6 +12,7 @@ using Vulcan.Api.Technicians;
 using Vulcan.Domain.Entities;
 using Vulcan.Domain.Enums;
 using Vulcan.Infrastructure;
+using Vulcan.Infrastructure.Seed;
 
 namespace Vulcan.Api.Tests;
 
@@ -541,6 +542,87 @@ public class BatchExportTests
 
         // Neither specimen has a break result.
         DataRows(breaksCsv).ShouldBeEmpty();
+    }
+
+    [Fact]
+    public async Task Export_VM_SYN_006_includes_all_seeded_records()
+    {
+        await using var app = ApiHost.Create(["--environment=Testing"]);
+        await app.StartAsync();
+
+        using var client = ClientFor(app);
+
+        const string batchNumber = "VM-SYN-006";
+
+        // Arrange: seed the real synthetic dataset used by CBAS.
+        using (var scope = app.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider
+                .GetRequiredService<VulcanDbContext>();
+
+            var accessor = scope.ServiceProvider
+                .GetRequiredService<IHttpContextAccessor>();
+
+            accessor.HttpContext = new DefaultHttpContext();
+            accessor.HttpContext.Request.Headers[
+                TechnicianHeader.Name] = "Test Technician";
+
+            SyntheticDataSeeder.Seed(db);
+        }
+
+        // Act: export the seeded batch through the real HTTP endpoint.
+        using var response = await client.GetAsync(
+            $"/api/batches/{batchNumber}/export");
+
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
+
+        using var stream = new MemoryStream(
+            await response.Content.ReadAsByteArrayAsync());
+
+        using var archive = new ZipArchive(
+            stream, ZipArchiveMode.Read);
+
+        // Assert: all four required CSV files are present.
+        archive.Entries.Count.ShouldBe(4);
+
+        var expectedCounts = new Dictionary<string, int>
+        {
+            ["batch.csv"] = 1,
+            ["curing-readings.csv"] = 150,
+            ["breaks.csv"] = 9,
+            ["predictions.csv"] = 3
+        };
+
+        foreach (var (filename, expectedCount) in expectedCounts)
+        {
+            var csv = await ReadCsvAsync(archive, filename);
+            var rows = DataRows(csv);
+
+            // Confirm the exact number of exported data records.
+            rows.Length.ShouldBe(
+                expectedCount,
+                $"Unexpected row count in {filename}");
+
+            // The final column must identify synthetic data.
+            var header = csv.Split('\n')[0].TrimEnd('\r');
+            header.TrimStart('\uFEFF')
+                .Split(',')
+                .Last()
+                .ShouldBe("IsSynthetic");
+
+            foreach (var row in rows)
+            {
+                row.Split(',').Last().ShouldBe(
+                    "true",
+                    $"Non-synthetic record found in {filename}");
+            }
+
+            // Every exported record belongs to VM-SYN-006.
+            foreach (var row in rows)
+            {
+                row.ShouldStartWith(batchNumber + ",");
+            }
+        }
     }
 
     private static async Task<string> ReadCsvAsync(
