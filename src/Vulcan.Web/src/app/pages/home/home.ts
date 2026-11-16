@@ -128,7 +128,11 @@ export class HomePage {
 
     if (atRisk.status !== 'loaded') return [];
     return atRisk.batches.map((batch) => {
-      const top = earlyWarningsShortfallFirst(batch.earlyWarnings)[0];
+      // Prioritize warnings with actionable recommendations.
+      // If none exist, preserve the original warning order.
+      const sortedWarnings = earlyWarningsShortfallFirst(batch.earlyWarnings);
+
+      const top = sortedWarnings.find((warning) => warning.recommendation) ?? sortedWarnings[0];
       return {
         ...batch,
         projected: psi(batch.projected28DayPsi),

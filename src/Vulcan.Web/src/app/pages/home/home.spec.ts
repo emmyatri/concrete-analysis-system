@@ -247,4 +247,53 @@ describe('HomePage', () => {
       'Watch this batch at the 7-day break.',
     );
   });
+
+  it('prioritizes the 7-day abandonment recommendation when both early breaks are low', async () => {
+    const batch: EarlyWarningBatch = {
+      id: 1,
+      batchNumber: 'VM-TEST-001',
+      isSynthetic: false,
+      atRisk: true,
+      projected28DayPsi: null,
+      shortfallPsi: null,
+      shortfallPct: null,
+      earlyWarnings: [
+        {
+          warning: '3-day breaks averaged 800 PSI, below 1,200 PSI (40% of 3,000 PSI).',
+          recommendation: null,
+          field: 'day3AverageBreakPct',
+          value: 26.7,
+          limitKey: 'Break.Day3WarnPct',
+          limit: 40,
+        },
+        {
+          warning:
+            '7-day breaks averaged 1,700 PSI, below 2,100 PSI (70% of 3,000 PSI). The batch will probably fail.',
+          recommendation:
+            "Both early breaks are low. Vulcan's practice is to abandon this batch and start a new one.",
+          field: 'day7AverageBreakPct',
+          value: 56.7,
+          limitKey: 'Break.Day7FailPct',
+          limit: 70,
+        },
+      ],
+    };
+
+    await open(false);
+
+    TestBed.inject(HttpTestingController)
+      .expectOne((r) => r.url === '/api/batches')
+      .flush([]);
+
+    flushWarnings([batch]);
+    harness.detectChanges();
+
+    const topReason = root.querySelector('[data-testid="at-risk"] td.reason');
+
+    expect(topReason).not.toBeNull();
+    expect(topReason?.textContent).toContain('7-day breaks averaged 1,700 PSI');
+    expect(topReason?.getAttribute('title')).toBe(
+      "Both early breaks are low. Vulcan's practice is to abandon this batch and start a new one.",
+    );
+  });
 });
