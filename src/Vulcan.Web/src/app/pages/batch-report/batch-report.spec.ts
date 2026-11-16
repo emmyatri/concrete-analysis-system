@@ -291,6 +291,27 @@ describe('BatchReport — FR-19 acceptance tests', () => {
     }
   });
 
+  it('posts the save-to-cloud request with the current batch number', async () => {
+    const postMessage = vi.fn();
+
+    vi.stubGlobal('chrome', {
+      webview: { postMessage },
+    });
+
+    try {
+      const root = await render('VM-SYN-006');
+
+      root.querySelector<HTMLButtonElement>('[data-testid="save-to-cloud"]')?.click();
+
+      expect(postMessage).toHaveBeenCalledExactlyOnceWith({
+        type: 'save-to-cloud',
+        batchNumber: 'VM-SYN-006',
+      });
+    } finally {
+      vi.unstubAllGlobals();
+    }
+  });
+
   it('hides desktop export actions when WebView2 is unavailable', async () => {
     vi.stubGlobal('chrome', undefined);
 
@@ -299,6 +320,7 @@ describe('BatchReport — FR-19 acceptance tests', () => {
 
       expect(root.querySelector('[data-testid="save-report-pdf"]')).toBeNull();
       expect(root.querySelector('[data-testid="export-batch-data"]')).toBeNull();
+      expect(root.querySelector('[data-testid="save-to-cloud"]')).toBeNull();
 
       expect(root.querySelector('[data-testid="print-report"]')).not.toBeNull();
     } finally {

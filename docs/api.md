@@ -2527,3 +2527,68 @@ Status Code: `200`
     }
 ]
 ```
+
+## Settings
+
+Settings that belong to this computer, saved in `%LOCALAPPDATA%\VulcanCBAS\settings.json` (not the database).
+
+### Get Cloud Folder
+
+Returns the folder that "Save to cloud" on a batch report writes to (SCRUM-214, ADR-007 §2.3).
+
+**Endpoint:** `GET /api/settings/cloud-folder`
+
+**Response Status Codes:**
+
+* `200`: always
+
+**Response Schema:**
+
+```json
+{
+    "title": "CloudFolderResponse",
+    "type": "object",
+    "properties": {
+        "path": {
+            "type": ["string", "null"],
+            "description": "Full folder path. Null when no folder is set."
+        },
+        "exists": {
+            "type": "boolean",
+            "description": "False when no folder is set or the saved folder can't be found."
+        }
+    },
+    "required": ["path", "exists"]
+}
+```
+
+### Set Cloud Folder
+
+Saves the cloud folder. Needs the technician header, like every save.
+
+**Endpoint:** `PUT /api/settings/cloud-folder`
+
+**Request Body:**
+
+```json
+{
+    "path": "C:\\Users\\jrivera\\OneDrive\\Lab"
+}
+```
+
+The path is saved without a trailing separator.
+
+**Response Status Codes:**
+
+* `204`: saved
+* `400`: blank, not a full path, or the folder doesn't exist. The message is under `CloudFolder.Path` (see [`400` Response](#400-response)).
+
+### Clear Cloud Folder
+
+Sets the cloud folder back to not set. Needs the technician header.
+
+**Endpoint:** `DELETE /api/settings/cloud-folder`
+
+**Response Status Codes:**
+
+* `204`: cleared

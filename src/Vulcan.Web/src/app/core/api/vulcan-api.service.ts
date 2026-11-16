@@ -7,6 +7,7 @@ import {
   BatchQuery,
   BatchStrength,
   BatchSummary,
+  CloudFolderSetting,
   CreateBreakResultRequest,
   CreateBreakResultResponse,
   CreateCuringReadingRequest,
@@ -18,6 +19,9 @@ import {
   SpecificGravity,
   ValidationLimit,
 } from './models';
+
+/** Settings' cloud folder (SCRUM-214). */
+export const CLOUD_FOLDER_URL = '/api/settings/cloud-folder';
 
 /**
  * Every call the screens make to the local API (M1-60), one method per request. All paths are under /api.
@@ -102,5 +106,19 @@ export class VulcanApiService {
   getEarlyWarnings(includeSynthetic: boolean) {
     const params = new HttpParams().set('includeSynthetic', String(includeSynthetic));
     return this.http.get<EarlyWarningBatch[]>('/api/warnings/early', { params });
+  }
+
+  /** The folder "Save to cloud" writes to (SCRUM-214). Saved on this computer, like the technician name. */
+  getCloudFolder() {
+    return this.http.get<CloudFolderSetting>(CLOUD_FOLDER_URL);
+  }
+
+  /** A 400 lists the problem under "CloudFolder.Path" (not a full path, or the folder doesn't exist). */
+  setCloudFolder(path: string) {
+    return this.http.put<void>(CLOUD_FOLDER_URL, { path });
+  }
+
+  clearCloudFolder() {
+    return this.http.delete<void>(CLOUD_FOLDER_URL);
   }
 }

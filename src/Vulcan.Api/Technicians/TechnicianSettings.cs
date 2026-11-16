@@ -4,8 +4,8 @@ using Microsoft.Extensions.Configuration;
 namespace Vulcan.Api.Technicians;
 
 /// <summary>
-/// Remembers the last technician name on this computer (M1-42), in
-/// %LOCALAPPDATA%\VulcanCBAS\settings.json. Not in the database: it belongs to the computer, not the data.
+/// Settings that belong to this computer, in %LOCALAPPDATA%\VulcanCBAS\settings.json: the last technician
+/// name (M1-42) and the cloud folder (SCRUM-214). Not in the database: they belong to the computer, not the data.
 /// </summary>
 public sealed class TechnicianSettings
 {
@@ -45,10 +45,35 @@ public sealed class TechnicianSettings
     {
         lock (_lock)
         {
-            var file = Read() with { LastTechnician = name };
-            Directory.CreateDirectory(Path.GetDirectoryName(_path)!);
-            File.WriteAllText(_path, JsonSerializer.Serialize(file, _json));
+            Write(Read() with { LastTechnician = name });
         }
+    }
+
+    /// <summary>The folder "Save to cloud" writes to (SCRUM-214), or null if none is set.</summary>
+    public string? CloudFolder
+    {
+        get
+        {
+            lock (_lock)
+            {
+                return Read().CloudFolder;
+            }
+        }
+    }
+
+    /// <summary>Saves the cloud folder, or clears it when <paramref name="path"/> is null.</summary>
+    public void SaveCloudFolder(string? path)
+    {
+        lock (_lock)
+        {
+            Write(Read() with { CloudFolder = path });
+        }
+    }
+
+    private void Write(SettingsFile file)
+    {
+        Directory.CreateDirectory(Path.GetDirectoryName(_path)!);
+        File.WriteAllText(_path, JsonSerializer.Serialize(file, _json));
     }
 
     /// <summary>A missing or unreadable file counts as empty, so the app still starts.</summary>
@@ -72,5 +97,7 @@ public sealed class TechnicianSettings
     private sealed record SettingsFile
     {
         public string? LastTechnician { get; init; }
+
+        public string? CloudFolder { get; init; }
     }
 }

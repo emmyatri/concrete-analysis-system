@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.OpenApi;
 using Vulcan.Api.Controllers;
+using Vulcan.Api.Settings;
 using Vulcan.Api.Technicians;
 using Vulcan.Application.Interfaces;
 using Vulcan.Application.Services;
@@ -104,6 +105,7 @@ public static class ApiHost
         api.MapGet("/health", () => Results.Ok(new { status = "ok" }));
 
         api.MapTechnicianEndpoints();
+        api.MapCloudFolderEndpoints();
         if (earlyWarningsEnabled)
         {
             api.MapEarlyWarningEndpoints();

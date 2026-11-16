@@ -39,6 +39,9 @@ const savedBatches: BatchSummary[] = [];
 const savedDetails: BatchDetail[] = [];
 let nextId = 1000;
 
+/** Settings' cloud folder in mock mode. Any path counts as existing. */
+let mockCloudFolder: string | null = null;
+
 /** The fake batches as they were at start-up. Saved cylinders and breaks change them, so tests put them back. */
 const originalBatches = structuredClone(MOCK_BATCHES);
 const originalDetails = structuredClone(MOCK_BATCH_DETAILS);
@@ -48,6 +51,7 @@ const originalDetails = structuredClone(MOCK_BATCH_DETAILS);
  * show up in another.
  */
 export function clearSavedMockBatches(): void {
+  mockCloudFolder = null;
   savedBatches.length = 0;
   savedDetails.length = 0;
   MOCK_BATCHES.splice(0, MOCK_BATCHES.length, ...structuredClone(originalBatches));
@@ -79,6 +83,7 @@ export const mockApiInterceptor: HttpInterceptorFn = (request, next) => {
     return createBreak(request, path);
   if (request.method === 'POST' && /^\/api\/specimens\/\d+\/readings$/.test(path))
     return createReading(request, path);
+  if (path === '/api/settings/cloud-folder') return cloudFolder(request);
   if (request.method === 'GET' && path === '/api/warnings/early')
     return ok(
       mockEarlyWarnings(
@@ -92,6 +97,18 @@ export const mockApiInterceptor: HttpInterceptorFn = (request, next) => {
 
 function ok<T>(body: T, status = 200): Observable<HttpResponse<T>> {
   return of(new HttpResponse({ status, body }));
+}
+
+function cloudFolder(request: HttpRequest<unknown>) {
+  if (request.method === 'PUT') {
+    mockCloudFolder = (request.body as { path: string }).path;
+    return ok(null, 204);
+  }
+  if (request.method === 'DELETE') {
+    mockCloudFolder = null;
+    return ok(null, 204);
+  }
+  return ok({ path: mockCloudFolder, exists: mockCloudFolder !== null });
 }
 
 function findBatches(request: HttpRequest<unknown>): BatchSummary[] {

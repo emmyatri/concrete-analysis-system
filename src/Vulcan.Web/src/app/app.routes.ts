@@ -54,6 +54,10 @@ export const routes: Routes = [
         loadComponent: () =>
           import('./pages/curing-readings/curing-readings').then((m) => m.CuringReadingsPage),
       },
+      {
+        path: 'settings',
+        loadComponent: () => import('./pages/settings/settings').then((m) => m.SettingsPage),
+      },
     ],
   },
 

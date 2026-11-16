@@ -307,6 +307,13 @@ export interface BatchStrength {
   curingPoints: CuringPoint[];
 }
 
+/** GET /api/settings/cloud-folder (SCRUM-214). `path` is null when no folder is set. */
+export interface CloudFolderSetting {
+  path: string | null;
+  /** False when the saved folder can't be found, e.g. the sync app was removed. */
+  exists: boolean;
+}
+
 /** GET /api/warnings/early: one batch with at least one early warning (Home, batches at risk). */
 export interface EarlyWarningBatch {
   id: number;
