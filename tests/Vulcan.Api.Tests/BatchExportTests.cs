@@ -1,4 +1,5 @@
 
+using System.Globalization;
 using System.IO.Compression;
 using System.Net;
 using System.Text;
@@ -312,6 +313,9 @@ public class BatchExportTests
         breaksCsv.ShouldContain("Compressive strength (PSI)");
         predictionsCsv.ShouldContain("Estimated strength (PSI)");
 
+        // Prediction exports include the persisted creation timestamp.
+        predictionsCsv.ShouldContain("Created at (UTC)");
+
         // Verify actual engineering values.
         readingsCsv.ShouldContain("75.5");
         readingsCsv.ShouldContain("78.5");
@@ -338,9 +342,6 @@ public class BatchExportTests
                 row.Split(',').Last().ShouldBe("true");
             }
         }
-
-        Console.WriteLine("EXPORTED CURING READINGS:");
-        Console.WriteLine(readingsCsv);
 
         // Verify UTF-8-compatible timestamp formatting.
         readingsCsv.ShouldContain("2026-10-01T12:00:00");
@@ -499,7 +500,7 @@ public class BatchExportTests
                             {
                                 TakenAt = DateTime.UtcNow.AddDays(-2),
                                 InternalTempF = 77m,
-                                AmbientTempF = 72m,
+                                AmbientTempF = -12.5m,
                                 MoisturePct = 3.5m,
                                 RelativeHumidityPct = 87m,
                                 ResistivityOhmPerFt = 125m,
@@ -539,6 +540,10 @@ public class BatchExportTests
 
         // Formula-like values must be treated as text.
         readingsCsv.ShouldContain("'=SUM(1+1)");
+
+        // Negative numeric measurements must remain numeric.
+        readingsCsv.ShouldContain(",77.0,-12.5,3.5,87.0,125.0,410.0,");
+        readingsCsv.ShouldNotContain("'-12.5");
 
         // Neither specimen has a break result.
         DataRows(breaksCsv).ShouldBeEmpty();
@@ -622,6 +627,42 @@ public class BatchExportTests
             {
                 row.ShouldStartWith(batchNumber + ",");
             }
+        }
+
+        var predictionsCsv = await ReadCsvAsync(
+            archive, "predictions.csv");
+
+        predictionsCsv.ShouldContain("Created at (UTC)");
+
+        // Compare against an actual stored prediction.
+        using (var scope = app.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider
+                .GetRequiredService<VulcanDbContext>();
+
+            var batch = await db.Batch
+                .SingleAsync(b => b.BatchNumber == batchNumber);
+
+            var prediction = await db.Prediction
+                .AsNoTracking()
+                .Where(p => p.BatchId == batch.Id &&
+                            p.EstimatedPsi != null)
+                .OrderBy(p => p.HorizonDays)
+                .FirstAsync();
+
+            // Verify that the exported estimate has not been rounded.
+            var expectedPsi = prediction.EstimatedPsi!.Value
+                .ToString(CultureInfo.InvariantCulture);
+
+            predictionsCsv.ShouldContain(expectedPsi);
+
+            // SQLite may return UTC timestamps with an unspecified Kind.
+            var createdAtUtc = DateTime.SpecifyKind(
+                prediction.CreatedAtUtc,
+                DateTimeKind.Utc);
+
+            predictionsCsv.ShouldContain(
+                createdAtUtc.ToString("O", CultureInfo.InvariantCulture));
         }
     }
 

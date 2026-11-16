@@ -92,16 +92,16 @@ public sealed class BatchExportService(
         var oxides = batch.CementOxideAnalysis;
 
         AppendRow(csv,
-            batch.BatchNumber,
+            ProtectText(batch.BatchNumber),
             FormatDate(batch.CastAt),
             Format(batch.FinalWeightLb),
             Format(batch.ExpectedFinalBreakPsi),
-            batch.CementType.ToString(),
+            ProtectText(batch.CementType.ToString()),
             Format(batch.MixWaterPh),
             Format(batch.CementSurfacePh),
             Format(composition?.CementPct),
             Format(composition?.ScmPct),
-            composition?.ScmType.ToString() ?? "",
+            ProtectText(composition?.ScmType.ToString() ?? ""),
             Format(composition?.CoarseAggregatePct),
             Format(composition?.FineAggregatePct),
             Format(composition?.WaterPct),
@@ -143,8 +143,8 @@ public sealed class BatchExportService(
             var reading = item.reading;
 
             AppendRow(csv,
-                batch.BatchNumber,
-                item.specimen.Label,
+                ProtectText(batch.BatchNumber),
+                ProtectText(item.specimen.Label),
                 FormatDate(reading.TakenAt),
                 Format(reading.InternalTempF),
                 Format(reading.AmbientTempF),
@@ -180,8 +180,8 @@ public sealed class BatchExportService(
             var result = specimen.BreakResult!;
 
             AppendRow(csv,
-                batch.BatchNumber,
-                specimen.Label,
+                ProtectText(batch.BatchNumber),
+                ProtectText(specimen.Label),
                 Format(Convert.ToInt32(specimen.TestAgeDays)),
                 FormatDate(result.BrokenAt),
                 Format(result.StrengthPsi),
@@ -206,22 +206,27 @@ public sealed class BatchExportService(
             "Equivalent age (days)",
             "Adjustment stage",
             "Unadjusted strength (PSI)",
+            "Created at (UTC)",
             "IsSynthetic");
 
+        // Export stored prediction values at full decimal precision.
+        // Rounding is presentation-only; CSV data must preserve the
+        // original values for engineering analysis and recalculation.
         foreach (var prediction in predictions
                      .OrderBy(p => p.HorizonDays)
                      .ThenBy(p => p.CalibrationVersion, StringComparer.Ordinal)
                      .ThenBy(p => p.Id))
         {
             AppendRow(csv,
-                batch.BatchNumber,
-                prediction.CalibrationVersion,
-                prediction.Basis,
+                ProtectText(batch.BatchNumber),
+                ProtectText(prediction.CalibrationVersion),
+                ProtectText(prediction.Basis),
                 Format(prediction.HorizonDays),
                 Format(prediction.EstimatedPsi),
                 Format(prediction.EquivalentAgeDays),
-                prediction.AdjustmentStage?.ToString() ?? "",
+                ProtectText(prediction.AdjustmentStage?.ToString() ?? ""),
                 Format(prediction.UnadjustedPsi),
+                FormatDate(prediction.CreatedAtUtc),
                 Format(prediction.IsSynthetic));
         }
 
@@ -235,18 +240,24 @@ public sealed class BatchExportService(
         csv.AppendLine(string.Join(",", values.Select(EscapeCsv)));
     }
 
-    private static string EscapeCsv(string value)
+    private static string ProtectText(string value)
     {
         // Prevent Excel from interpreting exported text as a formula.
-        if (value.Length > 0 &&
-            (value[0] is '=' or '+' or '-' or '@' ||
-             (char.IsWhiteSpace(value[0]) &&
-              value.TrimStart().Length > 0 &&
-              value.TrimStart()[0] is '=' or '+' or '-' or '@')))
+        // Numeric measurements are deliberately excluded from this check.
+        var trimmed = value.TrimStart();
+
+        if (trimmed.Length > 0 &&
+            trimmed[0] is '=' or '+' or '-' or '@')
         {
-            value = "'" + value;
+            return "'" + value;
         }
 
+        return value;
+    }
+
+    private static string EscapeCsv(string value)
+    {
+        // CSV escaping applies to every field, regardless of type.
         if (value.Contains(',') ||
             value.Contains('"') ||
             value.Contains('\n') ||
