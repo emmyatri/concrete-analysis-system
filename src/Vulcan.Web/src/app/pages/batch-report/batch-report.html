@@ -29,6 +29,16 @@
       >
         Save as PDF
       </button>
+
+      <button
+        type="button"
+        class="action-button primary"
+        (click)="exportBatchData()"
+        [disabled]="state().status !== 'loaded'"
+        data-testid="export-batch-data"
+      >
+        Export data
+      </button>
     }
   </nav>
 

@@ -113,7 +113,7 @@ public class BatchController(
         var result = await batchService.UpdateAsync(batchNumber, request.ToDomain(batchNumber));
         return HandleBatchResult(result);
     }
-    
+
     [HttpGet("{batchNumber}/export")]
     public async Task<IActionResult> ExportBatch(
         [FromRoute] string batchNumber)
@@ -133,7 +133,7 @@ public class BatchController(
             "application/zip",
             $"{normalizedBatchNumber}-export.zip");
     }
-    
+
     private IActionResult HandleBatchResult(ServiceResult<Batch> batchResult,
         int successStatusCode = StatusCodes.Status200OK)
     {

@@ -207,6 +207,32 @@ describe('BatchReport — FR-19 acceptance tests', () => {
     }
   });
 
+  it('posts the batch data export request with the current batch number', async () => {
+    const postMessage = vi.fn();
+
+    vi.stubGlobal('chrome', {
+      webview: { postMessage },
+    });
+
+    try {
+      const root = await render('VM-SYN-006');
+
+      const button = root.querySelector<HTMLButtonElement>('[data-testid="export-batch-data"]');
+
+      expect(button).not.toBeNull();
+      expect(button?.disabled).toBe(false);
+
+      button?.click();
+
+      expect(postMessage).toHaveBeenCalledExactlyOnceWith({
+        type: 'save-batch-data',
+        batchNumber: 'VM-SYN-006',
+      });
+    } finally {
+      vi.unstubAllGlobals();
+    }
+  });
+
   it('posts the print request when running in WebView2', async () => {
     const postMessage = vi.fn();
 
@@ -260,6 +286,44 @@ describe('BatchReport — FR-19 acceptance tests', () => {
 
       expect(root.querySelector('[data-testid="save-report-pdf"]')).toBeNull();
       expect(root.querySelector('[data-testid="print-report"]')).not.toBeNull();
+    } finally {
+      vi.unstubAllGlobals();
+    }
+  });
+
+  it('hides desktop export actions when WebView2 is unavailable', async () => {
+    vi.stubGlobal('chrome', undefined);
+
+    try {
+      const root = await render('VM-SYN-006');
+
+      expect(root.querySelector('[data-testid="save-report-pdf"]')).toBeNull();
+      expect(root.querySelector('[data-testid="export-batch-data"]')).toBeNull();
+
+      expect(root.querySelector('[data-testid="print-report"]')).not.toBeNull();
+    } finally {
+      vi.unstubAllGlobals();
+    }
+  });
+
+  it('disables batch data export when the report is unavailable', async () => {
+    const postMessage = vi.fn();
+
+    vi.stubGlobal('chrome', {
+      webview: { postMessage },
+    });
+
+    try {
+      const root = await render('VM-NOPE');
+
+      const button = root.querySelector<HTMLButtonElement>('[data-testid="export-batch-data"]');
+
+      expect(button).not.toBeNull();
+      expect(button?.disabled).toBe(true);
+
+      button?.click();
+
+      expect(postMessage).not.toHaveBeenCalled();
     } finally {
       vi.unstubAllGlobals();
     }

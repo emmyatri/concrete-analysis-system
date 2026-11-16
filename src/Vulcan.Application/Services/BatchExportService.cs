@@ -1,4 +1,4 @@
-﻿
+
 using System.Globalization;
 using System.IO.Compression;
 using System.Text;
@@ -270,7 +270,7 @@ public sealed class BatchExportService(
     private static string Format(bool value) =>
         value ? "true" : "false";
 
-    
+
     private static string FormatDate(DateTime value)
     {
         // CBAS persists timestamps in UTC.
