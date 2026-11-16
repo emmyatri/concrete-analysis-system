@@ -259,6 +259,7 @@ export interface MeasuredBreak {
 /** An early warning (SCRUM-180). limitKey matches ValidationLimit.key; limit is the bound it crossed. */
 export interface EarlyWarning {
   warning: string;
+  recommendation?: string | null;
   field: string;
   value: number;
   limitKey: string;

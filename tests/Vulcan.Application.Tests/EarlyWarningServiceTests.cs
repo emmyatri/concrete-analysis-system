@@ -408,15 +408,18 @@ public class EarlyWarningServiceTests()
 
         var day3 = result.EarlyWarnings.Single(w => w.LimitKey == LimitKeys.BreakDay3WarnPct);
         day3.Warning.ShouldBe(
-            "3-day breaks averaged 800 PSI, below 1,200 PSI (40% of 3,000 PSI). Check the 7-day breaks.");
+            "3-day breaks averaged 800 PSI, below 1,200 PSI (40% of 3,000 PSI).");
         day3.Value.ShouldBe(26.7);
         day3.Limit.ShouldBe(40d);
+        day3.Recommendation.ShouldBeNull();
 
         var day7 = result.EarlyWarnings.Single(w => w.LimitKey == LimitKeys.BreakDay7FailPct);
         day7.Warning.ShouldBe(
             "7-day breaks averaged 1,700 PSI, below 2,100 PSI (70% of 3,000 PSI). The batch will probably fail.");
         day7.Value.ShouldBe(56.7);
         day7.Limit.ShouldBe(70d);
+        day7.Recommendation.ShouldBe(
+            "Both early breaks are low. Vulcan's practice is to abandon this batch and start a new one.");
 
         // The 28-day break is checked by BreakResultValidator when it's saved, not here.
         result.EarlyWarnings.ShouldNotContain(w => w.LimitKey == LimitKeys.StrengthPsi);
@@ -447,5 +450,54 @@ public class EarlyWarningServiceTests()
                 })
             ]
         };
+    }
+
+    [Fact]
+    public async Task Low_3_day_only_says_watch_and_never_abandon()
+    {
+        using var connection = new SqliteConnection("Filename=:memory:");
+        await connection.OpenAsync();
+        var db = GetDbContext(connection);
+        await InitTestDb(db);
+        var evaluator = SetupEarlyWarningService(db);
+
+        var result = await evaluator.Evaluate(
+            BatchWithBreaks((TestAgeDays.Day3, 800)));
+
+        var day3 = result.EarlyWarnings.Single(w => w.LimitKey == LimitKeys.BreakDay3WarnPct);
+        day3.Recommendation.ShouldBe("Watch this batch at the 7-day break.");
+        result.EarlyWarnings.ShouldNotContain(w => w.Recommendation != null && w.Recommendation.Contains("abandon"));
+    }
+
+    [Fact]
+    public async Task Low_3_day_then_passing_7_day_has_no_recommendation()
+    {
+        using var connection = new SqliteConnection("Filename=:memory:");
+        await connection.OpenAsync();
+        var db = GetDbContext(connection);
+        await InitTestDb(db);
+        var evaluator = SetupEarlyWarningService(db);
+
+        var result = await evaluator.Evaluate(
+            BatchWithBreaks((TestAgeDays.Day3, 800), (TestAgeDays.Day7, 2400)));
+
+        var day3 = result.EarlyWarnings.Single(w => w.LimitKey == LimitKeys.BreakDay3WarnPct);
+        day3.Recommendation.ShouldBeNull();
+    }
+
+    [Fact]
+    public async Task Low_7_day_only_has_no_recommendation()
+    {
+        using var connection = new SqliteConnection("Filename=:memory:");
+        await connection.OpenAsync();
+        var db = GetDbContext(connection);
+        await InitTestDb(db);
+        var evaluator = SetupEarlyWarningService(db);
+
+        var result = await evaluator.Evaluate(
+            BatchWithBreaks((TestAgeDays.Day7, 1700)));
+
+        var day7 = result.EarlyWarnings.Single(w => w.LimitKey == LimitKeys.BreakDay7FailPct);
+        day7.Recommendation.ShouldBeNull();
     }
 }
