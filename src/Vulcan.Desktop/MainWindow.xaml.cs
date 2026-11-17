@@ -25,6 +25,9 @@ public partial class MainWindow : Window
     private bool _isDataExportInProgress;
     private bool _isCloudSaveInProgress;
 
+    private const string _excelContentType =
+        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
+
     public MainWindow(Uri uiAddress)
     {
         InitializeComponent();
@@ -337,10 +340,10 @@ public partial class MainWindow : Window
             var dialog = new SaveFileDialog
             {
                 Title = "Export Batch Data",
-                Filter = "ZIP archives (*.zip)|*.zip",
-                DefaultExt = ".zip",
+                Filter = "Excel workbooks (*.xlsx)|*.xlsx",
+                DefaultExt = ".xlsx",
                 AddExtension = true,
-                FileName = ExportZipFileName(batchNumber),
+                FileName = ExportFileName(batchNumber),
                 InitialDirectory = documents,
                 OverwritePrompt = true
             };
@@ -424,11 +427,33 @@ public partial class MainWindow : Window
                 return;
             }
 
-            var destination = Directory.CreateDirectory(
-                Path.Combine(cloudFolder, "CBAS", batchNumber)).FullName;
+            var destination = Path.Combine(cloudFolder, "CBAS", batchNumber);
+            var pdfPath = Path.Combine(destination, ReportPdfFileName(batchNumber));
+            var exportPath = Path.Combine(destination, ExportFileName(batchNumber));
 
-            await WriteReportPdfAsync(Path.Combine(destination, ReportPdfFileName(batchNumber)));
-            await DownloadExportAsync(batchNumber, Path.Combine(destination, ExportZipFileName(batchNumber)));
+            // SC-6: nothing is written to the cloud folder until the operator confirms.
+            var replaces = File.Exists(pdfPath) || File.Exists(exportPath)
+                ? "\n\nThis replaces the copies saved there earlier."
+                : string.Empty;
+
+            var answer = MessageBox.Show(
+                this,
+                $"Save the report and data for {batchNumber} to:\n{destination}\n\n" +
+                "Your sync app will then upload them to the cloud." + replaces,
+                "Save to cloud",
+                MessageBoxButton.YesNo,
+                MessageBoxImage.Question);
+
+            if (answer != MessageBoxResult.Yes)
+            {
+                Log.Information("Cloud save cancelled for {BatchNumber}", batchNumber);
+                return;
+            }
+
+            Directory.CreateDirectory(destination);
+
+            await WriteReportPdfAsync(pdfPath);
+            await DownloadExportAsync(batchNumber, exportPath);
 
             Log.Information(
                 "Saved report and data for {BatchNumber} to cloud folder {Path}",
@@ -544,10 +569,10 @@ public partial class MainWindow : Window
         }
     }
 
-    /// <summary>Downloads the batch's export zip from the local API to <paramref name="path"/>.</summary>
+    /// <summary>Downloads the batch's Excel workbook from the local API to <paramref name="path"/>.</summary>
     private async Task DownloadExportAsync(string batchNumber, string path)
     {
-        // Retrieve the archive from the local in-process API.
+        // Retrieve the workbook from the local in-process API.
         var requestUri = new Uri(
             _uiAddress,
             $"/api/batches/{Uri.EscapeDataString(batchNumber)}/export");
@@ -559,17 +584,17 @@ public partial class MainWindow : Window
         response.EnsureSuccessStatusCode();
 
         if (response.Content.Headers.ContentType?.MediaType
-            != "application/zip")
+            != _excelContentType)
         {
             throw new InvalidDataException(
-                "The export endpoint did not return a ZIP archive.");
+                "The export endpoint did not return an Excel workbook.");
         }
 
         // Download into a temporary file first so an interrupted
         // request does not leave a partially written export.
         var temporaryPath = Path.Combine(
             Path.GetTempPath(),
-            $"{Guid.NewGuid():N}.zip");
+            $"{Guid.NewGuid():N}.xlsx");
 
         try
         {
@@ -601,8 +626,8 @@ public partial class MainWindow : Window
     private static string ReportPdfFileName(string batchNumber) =>
         $"{batchNumber} report {DateTime.Now:yyyy-MM-dd}.pdf";
 
-    private static string ExportZipFileName(string batchNumber) =>
-        $"{batchNumber}-export.zip";
+    private static string ExportFileName(string batchNumber) =>
+        $"{batchNumber}-export.xlsx";
 
     private bool IsCurrentPage(string page)
     {

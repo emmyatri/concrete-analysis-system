@@ -373,7 +373,7 @@ export class BatchReport {
   }
 
   /**
-   * Requests a ZIP export containing the batch's CSV data.
+   * Requests the batch's data as one Excel workbook, a tab per table.
    * WPF handles the native Save dialog and local API download.
    */
   protected exportBatchData(): void {

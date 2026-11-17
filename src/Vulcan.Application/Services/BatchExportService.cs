@@ -1,16 +1,27 @@
-
-using System.Globalization;
-using System.IO.Compression;
-using System.Text;
+using ClosedXML.Excel;
 using Vulcan.Application.Interfaces;
 using Vulcan.Domain.Entities;
 
 namespace Vulcan.Application.Services;
 
+/// <summary>
+/// Exports a batch as one Excel workbook (SCRUM-213, ADR-007 §2.2): a tab each for the batch, its curing
+/// readings, its breaks and its predictions. Numbers and dates are real Excel values, not text, and text is
+/// never read as a formula. ClosedXML is MIT-licensed, so the export adds no cost for Vulcan.
+/// </summary>
 public sealed class BatchExportService(
     BatchService batchService,
     IPredictionRepository predictionRepository)
 {
+    public const string ContentType = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
+
+    public const string BatchSheet = "Batch";
+    public const string CuringReadingsSheet = "Curing readings";
+    public const string BreaksSheet = "Breaks";
+    public const string PredictionsSheet = "Predictions";
+
+    private const string _dateFormat = "yyyy-mm-dd hh:mm:ss";
+
     public async Task<byte[]?> ExportAsync(string batchNumber)
     {
         var batch = await batchService.GetByNumberAsync(batchNumber);
@@ -23,283 +34,259 @@ public sealed class BatchExportService(
         var predictions =
             await predictionRepository.GetByBatchIdAsync(batch.Id);
 
+        using var workbook = new XLWorkbook();
+
+        AddSheet(workbook, BatchSheet, _batchHeaders, [BatchRow(batch)]);
+        AddSheet(workbook, CuringReadingsSheet, _curingReadingHeaders, CuringReadingRows(batch));
+        AddSheet(workbook, BreaksSheet, _breakHeaders, BreakRows(batch));
+        AddSheet(workbook, PredictionsSheet, _predictionHeaders, PredictionRows(batch, predictions));
+
         using var stream = new MemoryStream();
-
-        using (var archive = new ZipArchive(
-                   stream,
-                   ZipArchiveMode.Create,
-                   leaveOpen: true))
-        {
-            WriteEntry(archive, "batch.csv", BuildBatchCsv(batch));
-
-            WriteEntry(
-                archive,
-                "curing-readings.csv",
-                BuildCuringReadingsCsv(batch));
-
-            WriteEntry(archive, "breaks.csv", BuildBreaksCsv(batch));
-
-            WriteEntry(
-                archive,
-                "predictions.csv",
-                BuildPredictionsCsv(batch, predictions));
-        }
-
+        workbook.SaveAs(stream);
         return stream.ToArray();
     }
 
-    private static void WriteEntry(
-        ZipArchive archive,
-        string filename,
-        string content)
+    private static readonly string[] _batchHeaders =
+    [
+        "Batch number",
+        "Cast at (UTC)",
+        "Final weight (lb)",
+        "Expected final break (PSI)",
+        "Cement type",
+        "Mix water pH",
+        "Cement surface pH",
+        "Cement (%)",
+        "SCM (%)",
+        "SCM type",
+        "Coarse aggregate (%)",
+        "Fine aggregate (%)",
+        "Water (%)",
+        "Alumina (%)",
+        "Iron oxide (%)",
+        "Magnesium oxide (%)",
+        "Sulfur trioxide (%)",
+        "IsSynthetic"
+    ];
+
+    private static object?[] BatchRow(Batch batch)
     {
-        var entry = archive.CreateEntry(
-            filename,
-            CompressionLevel.Optimal);
-
-        using var writer = new StreamWriter(
-            entry.Open(),
-            new UTF8Encoding(encoderShouldEmitUTF8Identifier: true));
-
-        writer.Write(content);
-    }
-
-    private static string BuildBatchCsv(Batch batch)
-    {
-        var csv = new StringBuilder();
-
-        AppendRow(csv,
-            "Batch number",
-            "Cast at (UTC)",
-            "Final weight (lb)",
-            "Expected final break (PSI)",
-            "Cement type",
-            "Mix water pH",
-            "Cement surface pH",
-            "Cement (%)",
-            "SCM (%)",
-            "SCM type",
-            "Coarse aggregate (%)",
-            "Fine aggregate (%)",
-            "Water (%)",
-            "Alumina (%)",
-            "Iron oxide (%)",
-            "Magnesium oxide (%)",
-            "Sulfur trioxide (%)",
-            "IsSynthetic");
-
         var composition = batch.Composition;
         var oxides = batch.CementOxideAnalysis;
 
-        AppendRow(csv,
-            ProtectText(batch.BatchNumber),
-            FormatDate(batch.CastAt),
-            Format(batch.FinalWeightLb),
-            Format(batch.ExpectedFinalBreakPsi),
-            ProtectText(batch.CementType.ToString()),
-            Format(batch.MixWaterPh),
-            Format(batch.CementSurfacePh),
-            Format(composition?.CementPct),
-            Format(composition?.ScmPct),
-            ProtectText(composition?.ScmType.ToString() ?? ""),
-            Format(composition?.CoarseAggregatePct),
-            Format(composition?.FineAggregatePct),
-            Format(composition?.WaterPct),
-            Format(oxides?.AluminaPct),
-            Format(oxides?.IronOxidePct),
-            Format(oxides?.MagnesiumOxidePct),
-            Format(oxides?.SulfurTrioxidePct),
-            Format(batch.IsSynthetic));
-
-        return csv.ToString();
+        return
+        [
+            batch.BatchNumber,
+            batch.CastAt,
+            batch.FinalWeightLb,
+            batch.ExpectedFinalBreakPsi,
+            batch.CementType.ToString(),
+            batch.MixWaterPh,
+            batch.CementSurfacePh,
+            composition?.CementPct,
+            composition?.ScmPct,
+            composition?.ScmType.ToString(),
+            composition?.CoarseAggregatePct,
+            composition?.FineAggregatePct,
+            composition?.WaterPct,
+            oxides?.AluminaPct,
+            oxides?.IronOxidePct,
+            oxides?.MagnesiumOxidePct,
+            oxides?.SulfurTrioxidePct,
+            batch.IsSynthetic
+        ];
     }
 
-    private static string BuildCuringReadingsCsv(Batch batch)
-    {
-        var csv = new StringBuilder();
+    private static readonly string[] _curingReadingHeaders =
+    [
+        "Batch number",
+        "Specimen label",
+        "Taken at (UTC)",
+        "Internal temperature (°F)",
+        "Ambient temperature (°F)",
+        "Moisture (% of sample weight)",
+        "Relative humidity (%)",
+        "Resistivity (Ω/ft)",
+        "CO₂ (ppm)",
+        "IsSynthetic"
+    ];
 
-        AppendRow(csv,
-            "Batch number",
-            "Specimen label",
-            "Taken at (UTC)",
-            "Internal temperature (°F)",
-            "Ambient temperature (°F)",
-            "Moisture (% of sample weight)",
-            "Relative humidity (%)",
-            "Resistivity (Ω/ft)",
-            "CO₂ (ppm)",
-            "IsSynthetic");
-
-        var readings = batch.Specimens
-            .SelectMany(specimen =>
-                specimen.CuringReadings.Select(reading =>
-                    new { specimen, reading }))
+    private static IEnumerable<object?[]> CuringReadingRows(Batch batch) =>
+        batch.Specimens
+            .SelectMany(specimen => specimen.CuringReadings.Select(reading => (specimen, reading)))
             .OrderBy(x => x.reading.TakenAt)
             .ThenBy(x => x.specimen.Label, StringComparer.Ordinal)
-            .ThenBy(x => x.reading.Id);
+            .ThenBy(x => x.reading.Id)
+            .Select(x => new object?[]
+            {
+                batch.BatchNumber,
+                x.specimen.Label,
+                x.reading.TakenAt,
+                x.reading.InternalTempF,
+                x.reading.AmbientTempF,
+                x.reading.MoisturePct,
+                x.reading.RelativeHumidityPct,
+                x.reading.ResistivityOhmPerFt,
+                x.reading.Co2Ppm,
+                batch.IsSynthetic || x.specimen.IsSynthetic
+            });
 
-        foreach (var item in readings)
-        {
-            var reading = item.reading;
+    private static readonly string[] _breakHeaders =
+    [
+        "Batch number",
+        "Specimen label",
+        "Test age (days)",
+        "Broken at (UTC)",
+        "Compressive strength (PSI)",
+        "IsSynthetic"
+    ];
 
-            AppendRow(csv,
-                ProtectText(batch.BatchNumber),
-                ProtectText(item.specimen.Label),
-                FormatDate(reading.TakenAt),
-                Format(reading.InternalTempF),
-                Format(reading.AmbientTempF),
-                Format(reading.MoisturePct),
-                Format(reading.RelativeHumidityPct),
-                Format(reading.ResistivityOhmPerFt),
-                Format(reading.Co2Ppm),
-                Format(batch.IsSynthetic || item.specimen.IsSynthetic));
-        }
-
-        return csv.ToString();
-    }
-
-    private static string BuildBreaksCsv(Batch batch)
-    {
-        var csv = new StringBuilder();
-
-        AppendRow(csv,
-            "Batch number",
-            "Specimen label",
-            "Test age (days)",
-            "Broken at (UTC)",
-            "Compressive strength (PSI)",
-            "IsSynthetic");
-
-        var specimens = batch.Specimens
+    private static IEnumerable<object?[]> BreakRows(Batch batch) =>
+        batch.Specimens
             .Where(s => s.BreakResult is not null)
             .OrderBy(s => (int)s.TestAgeDays)
-            .ThenBy(s => s.Label, StringComparer.Ordinal);
+            .ThenBy(s => s.Label, StringComparer.Ordinal)
+            .Select(s => new object?[]
+            {
+                batch.BatchNumber,
+                s.Label,
+                (int)s.TestAgeDays,
+                s.BreakResult!.BrokenAt,
+                s.BreakResult!.StrengthPsi,
+                batch.IsSynthetic || s.IsSynthetic
+            });
 
-        foreach (var specimen in specimens)
-        {
-            var result = specimen.BreakResult!;
+    private static readonly string[] _predictionHeaders =
+    [
+        "Batch number",
+        "Calibration version",
+        "Basis",
+        "Horizon (days)",
+        "Estimated strength (PSI)",
+        "Equivalent age (days)",
+        "Adjustment stage",
+        "Unadjusted strength (PSI)",
+        "Created at (UTC)",
+        "IsSynthetic"
+    ];
 
-            AppendRow(csv,
-                ProtectText(batch.BatchNumber),
-                ProtectText(specimen.Label),
-                Format(Convert.ToInt32(specimen.TestAgeDays)),
-                FormatDate(result.BrokenAt),
-                Format(result.StrengthPsi),
-                Format(batch.IsSynthetic || specimen.IsSynthetic));
-        }
-
-        return csv.ToString();
-    }
-
-    private static string BuildPredictionsCsv(
+    // Stored values at full precision: rounding is for the screen, and engineers may recalculate from these.
+    private static IEnumerable<object?[]> PredictionRows(
         Batch batch,
-        IReadOnlyList<PredictionEntity> predictions)
+        IReadOnlyList<PredictionEntity> predictions) =>
+        predictions
+            .OrderBy(p => p.HorizonDays)
+            .ThenBy(p => p.CalibrationVersion, StringComparer.Ordinal)
+            .ThenBy(p => p.Id)
+            .Select(p => new object?[]
+            {
+                batch.BatchNumber,
+                p.CalibrationVersion,
+                p.Basis,
+                p.HorizonDays,
+                p.EstimatedPsi,
+                p.EquivalentAgeDays,
+                p.AdjustmentStage?.ToString(),
+                p.UnadjustedPsi,
+                p.CreatedAtUtc,
+                p.IsSynthetic
+            });
+
+    private static void AddSheet(
+        XLWorkbook workbook,
+        string name,
+        string[] headers,
+        IEnumerable<object?[]> rows)
     {
-        var csv = new StringBuilder();
+        var sheet = workbook.Worksheets.Add(name);
 
-        AppendRow(csv,
-            "Batch number",
-            "Calibration version",
-            "Basis",
-            "Horizon (days)",
-            "Estimated strength (PSI)",
-            "Equivalent age (days)",
-            "Adjustment stage",
-            "Unadjusted strength (PSI)",
-            "Created at (UTC)",
-            "IsSynthetic");
+        // Rows can be tall when Basis wraps; keep every value at the top of its row.
+        sheet.Style.Alignment.Vertical = XLAlignmentVerticalValues.Top;
 
-        // Export stored prediction values at full decimal precision.
-        // Rounding is presentation-only; CSV data must preserve the
-        // original values for engineering analysis and recalculation.
-        foreach (var prediction in predictions
-                     .OrderBy(p => p.HorizonDays)
-                     .ThenBy(p => p.CalibrationVersion, StringComparer.Ordinal)
-                     .ThenBy(p => p.Id))
+        for (var column = 0; column < headers.Length; column++)
         {
-            AppendRow(csv,
-                ProtectText(batch.BatchNumber),
-                ProtectText(prediction.CalibrationVersion),
-                ProtectText(prediction.Basis),
-                Format(prediction.HorizonDays),
-                Format(prediction.EstimatedPsi),
-                Format(prediction.EquivalentAgeDays),
-                ProtectText(prediction.AdjustmentStage?.ToString() ?? ""),
-                Format(prediction.UnadjustedPsi),
-                FormatDate(prediction.CreatedAtUtc),
-                Format(prediction.IsSynthetic));
+            sheet.Cell(1, column + 1).Value = headers[column];
+
+            if (headers[column] == "Basis")
+            {
+                // The estimate's explanation is a paragraph: wrap it in a fixed width.
+                sheet.Column(column + 1).Width = 60;
+                sheet.Column(column + 1).Style.Alignment.WrapText = true;
+            }
+            else
+            {
+                // Dates show as yyyy-mm-dd hh:mm:ss, wider than their headers.
+                sheet.Column(column + 1).Width = headers[column].EndsWith("(UTC)", StringComparison.Ordinal)
+                    ? 21
+                    : Math.Max(14, headers[column].Length + 4);
+            }
         }
 
-        return csv.ToString();
-    }
+        var header = sheet.Range(1, 1, 1, headers.Length);
+        header.Style.Font.Bold = true;
+        header.Style.Fill.BackgroundColor = XLColor.FromHtml("#E7E2D7");
+        sheet.SheetView.FreezeRows(1);
 
-    private static void AppendRow(
-        StringBuilder csv,
-        params string[] values)
-    {
-        csv.AppendLine(string.Join(",", values.Select(EscapeCsv)));
-    }
+        var basisColumn = Array.IndexOf(headers, "Basis");
 
-    private static string ProtectText(string value)
-    {
-        // Prevent Excel from interpreting exported text as a formula.
-        // Numeric measurements are deliberately excluded from this check.
-        var trimmed = value.TrimStart();
-
-        if (trimmed.Length > 0 &&
-            trimmed[0] is '=' or '+' or '-' or '@')
+        var rowNumber = 2;
+        foreach (var row in rows)
         {
-            return "'" + value;
+            for (var column = 0; column < row.Length; column++)
+            {
+                var cell = sheet.Cell(rowNumber, column + 1);
+                cell.Value = ToCellValue(row[column]);
+
+                if (row[column] is DateTime)
+                {
+                    cell.Style.DateFormat.Format = _dateFormat;
+                }
+                else if (row[column] is decimal or int && DisplayFormat(headers[column]) is { } format)
+                {
+                    // Shown rounded like the app; the cell keeps the full stored value.
+                    cell.Style.NumberFormat.Format = format;
+                }
+            }
+
+            if (basisColumn >= 0 && row[basisColumn] is string basis)
+            {
+                // Excel doesn't resize rows for wrapped text it didn't type, so size them here:
+                // about 55 characters per line at width 60, 15 points per line.
+                sheet.Row(rowNumber).Height = 15 * Math.Max(1, Math.Ceiling(basis.Length / 55.0));
+            }
+
+            rowNumber++;
         }
 
-        return value;
-    }
-
-    private static string EscapeCsv(string value)
-    {
-        // CSV escaping applies to every field, regardless of type.
-        if (value.Contains(',') ||
-            value.Contains('"') ||
-            value.Contains('\n') ||
-            value.Contains('\r'))
+        if (rowNumber > 2)
         {
-            return "\"" + value.Replace("\"", "\"\"") + "\"";
+            sheet.Range(1, 1, rowNumber - 1, headers.Length).SetAutoFilter();
         }
-
-        return value;
     }
 
-    private static string Format(decimal value) =>
-        value.ToString(CultureInfo.InvariantCulture);
+    /// <summary>How a stored decimal is shown: PSI as whole numbers, equivalent age to 2 places.</summary>
+    private static string? DisplayFormat(string header) =>
+        header.Contains("(PSI)", StringComparison.Ordinal) ? "#,##0"
+        : header == "Equivalent age (days)" ? "0.00"
+        : null;
 
-    private static string Format(decimal? value) =>
-        value?.ToString(CultureInfo.InvariantCulture) ?? "";
-
-    private static string Format(int value) =>
-        value.ToString(CultureInfo.InvariantCulture);
-
-    private static string Format(bool value) =>
-        value ? "true" : "false";
-
-
-    private static string FormatDate(DateTime value)
+    /// <summary>
+    /// A string is always stored as text, so a value like "=SUM(1+1)" is never run as a formula.
+    /// </summary>
+    private static XLCellValue ToCellValue(object? value) => value switch
     {
-        // CBAS persists timestamps in UTC.
-        // SQLite may return them with DateTimeKind.Unspecified.
-        // Preserve their UTC clock values rather than treating
-        // them as local timestamps.
-        var utc = value.Kind switch
-        {
-            DateTimeKind.Utc => value,
+        null => Blank.Value,
+        string text => text,
+        bool flag => flag,
+        int number => (double)number,
+        decimal number => (double)number,
+        DateTime date => AsUtc(date),
+        _ => value.ToString() ?? string.Empty
+    };
 
-            DateTimeKind.Unspecified =>
-                DateTime.SpecifyKind(value, DateTimeKind.Utc),
-
-            DateTimeKind.Local => value.ToUniversalTime(),
-
-            _ => throw new ArgumentOutOfRangeException(nameof(value))
-        };
-
-        return utc.ToString("O", CultureInfo.InvariantCulture);
-    }
+    // CBAS saves UTC; SQLite can return it with an unspecified Kind. Keep the clock value as UTC.
+    private static DateTime AsUtc(DateTime value) => value.Kind switch
+    {
+        DateTimeKind.Local => value.ToUniversalTime(),
+        _ => DateTime.SpecifyKind(value, DateTimeKind.Utc)
+    };
 }

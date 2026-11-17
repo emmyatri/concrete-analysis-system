@@ -118,9 +118,9 @@ public class BatchController(
     public async Task<IActionResult> ExportBatch(
         [FromRoute] string batchNumber)
     {
-        var zip = await batchExportService.ExportAsync(batchNumber);
+        var workbook = await batchExportService.ExportAsync(batchNumber);
 
-        if (zip is null)
+        if (workbook is null)
         {
             return NotFound();
         }
@@ -129,9 +129,9 @@ public class BatchController(
             BatchValidator.NormalizeBatchNumber(batchNumber);
 
         return File(
-            zip,
-            "application/zip",
-            $"{normalizedBatchNumber}-export.zip");
+            workbook,
+            BatchExportService.ContentType,
+            $"{normalizedBatchNumber}-export.xlsx");
     }
 
     private IActionResult HandleBatchResult(ServiceResult<Batch> batchResult,
