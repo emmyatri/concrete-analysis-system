@@ -199,16 +199,34 @@ public sealed class BatchExportService(
     {
         var sheet = workbook.Worksheets.Add(name);
 
+        // Rows can be tall when Basis wraps; keep every value at the top of its row.
+        sheet.Style.Alignment.Vertical = XLAlignmentVerticalValues.Top;
+
         for (var column = 0; column < headers.Length; column++)
         {
             sheet.Cell(1, column + 1).Value = headers[column];
-            sheet.Column(column + 1).Width = Math.Max(14, headers[column].Length + 4);
+
+            if (headers[column] == "Basis")
+            {
+                // The estimate's explanation is a paragraph: wrap it in a fixed width.
+                sheet.Column(column + 1).Width = 60;
+                sheet.Column(column + 1).Style.Alignment.WrapText = true;
+            }
+            else
+            {
+                // Dates show as yyyy-mm-dd hh:mm:ss, wider than their headers.
+                sheet.Column(column + 1).Width = headers[column].EndsWith("(UTC)", StringComparison.Ordinal)
+                    ? 21
+                    : Math.Max(14, headers[column].Length + 4);
+            }
         }
 
         var header = sheet.Range(1, 1, 1, headers.Length);
         header.Style.Font.Bold = true;
         header.Style.Fill.BackgroundColor = XLColor.FromHtml("#E7E2D7");
         sheet.SheetView.FreezeRows(1);
+
+        var basisColumn = Array.IndexOf(headers, "Basis");
 
         var rowNumber = 2;
         foreach (var row in rows)
@@ -222,11 +240,18 @@ public sealed class BatchExportService(
                 {
                     cell.Style.DateFormat.Format = _dateFormat;
                 }
-                else if (row[column] is decimal && DisplayFormat(headers[column]) is { } format)
+                else if (row[column] is decimal or int && DisplayFormat(headers[column]) is { } format)
                 {
                     // Shown rounded like the app; the cell keeps the full stored value.
                     cell.Style.NumberFormat.Format = format;
                 }
+            }
+
+            if (basisColumn >= 0 && row[basisColumn] is string basis)
+            {
+                // Excel doesn't resize rows for wrapped text it didn't type, so size them here:
+                // about 55 characters per line at width 60, 15 points per line.
+                sheet.Row(rowNumber).Height = 15 * Math.Max(1, Math.Ceiling(basis.Length / 55.0));
             }
 
             rowNumber++;
