@@ -11,6 +11,7 @@ import {
 } from '../../core/api/mock/mock-api.interceptor';
 import { BatchReport } from './batch-report';
 import { StrengthChart } from '../strength-chart/strength-chart';
+import { CuringChart } from '../curing-chart/curing-chart';
 
 /**
  * Replace the real chart with a lightweight component so the
@@ -25,6 +26,23 @@ class FakeStrengthChart {
   readonly castAt = input<string>();
   readonly minimumPsi = input<number | null>();
   readonly printMode = input<boolean>();
+  readonly height = input<string>();
+  readonly fontSize = input<number>();
+}
+
+/** Stands in for the curing chart, so the report renders without chart.js. */
+@Component({
+  selector: 'app-curing-chart',
+  template: '<div data-testid="fake-curing-chart">{{ initialMeasurement() }}</div>',
+})
+class FakeCuringChart {
+  readonly readings = input<unknown>();
+  readonly warnings = input<unknown>();
+  readonly curingPoints = input<unknown>();
+  readonly castAt = input<string>();
+  readonly initialMeasurement = input<string>();
+  readonly printMode = input<boolean>();
+  readonly expandable = input<boolean>();
   readonly height = input<string>();
   readonly fontSize = input<number>();
 }
@@ -46,10 +64,10 @@ describe('BatchReport — FR-19 acceptance tests', () => {
 
     TestBed.overrideComponent(BatchReport, {
       remove: {
-        imports: [StrengthChart],
+        imports: [StrengthChart, CuringChart],
       },
       add: {
-        imports: [FakeStrengthChart],
+        imports: [FakeStrengthChart, FakeCuringChart],
       },
     });
   });
@@ -68,7 +86,7 @@ describe('BatchReport — FR-19 acceptance tests', () => {
   const text = (root: HTMLElement, selector: string): string =>
     root.querySelector(selector)?.textContent?.replace(/\s+/g, ' ').trim() ?? '';
 
-  it('renders all seven report sections for VM-SYN-006', async () => {
+  it('renders all eight report sections for VM-SYN-006', async () => {
     const root = await render('VM-SYN-006');
 
     const requiredSections = [
@@ -77,6 +95,7 @@ describe('BatchReport — FR-19 acceptance tests', () => {
       'report-oxides',
       'report-specimens',
       'report-strength-section',
+      'report-curing',
       'report-predictions',
       'report-warnings',
     ];
@@ -86,6 +105,43 @@ describe('BatchReport — FR-19 acceptance tests', () => {
     for (const section of requiredSections) {
       expect(root.querySelector(`[data-testid="${section}"]`)).not.toBeNull();
     }
+  });
+
+  it('shows one curing chart per measurement', async () => {
+    const root = await render('VM-SYN-006');
+
+    const charts = Array.from(
+      root.querySelectorAll('[data-testid="report-curing"] [data-testid="fake-curing-chart"]'),
+    ).map((chart) => chart.textContent?.trim());
+
+    expect(charts).toEqual([
+      'internalTempF',
+      'ambientTempF',
+      'moisturePct',
+      'relativeHumidityPct',
+      'resistivityOhmPerFt',
+      'co2Ppm',
+    ]);
+  });
+
+  it('shows a warning beside the value it is about, and in the warnings section', async () => {
+    const root = await render('VM-SYN-009');
+
+    const batchRecord = root.querySelector('[data-testid="report-batch-record"]')!;
+    const flags = Array.from(batchRecord.querySelectorAll('[data-testid="field-warning"]'));
+
+    expect(flags.map((flag) => flag.textContent)).toEqual([
+      expect.stringContaining('pH is outside the normal range'),
+    ]);
+    expect(text(root, '[data-testid="report-warnings"]')).toContain(
+      'pH is outside the normal range',
+    );
+  });
+
+  it('flags nothing beside the values of a batch with no warnings', async () => {
+    const root = await render('VM-SYN-001');
+
+    expect(root.querySelectorAll('[data-testid="field-warning"]').length).toBe(0);
   });
 
   it('renders the batch record and identifying information', async () => {

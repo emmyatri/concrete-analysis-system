@@ -90,6 +90,8 @@ export class StrengthChart {
     );
 
     if (this.printMode()) {
+      // Draw the report chart at 3x so it stays sharp when the PDF scales it.
+      config.options.devicePixelRatio = 3;
       config.options.events = [];
 
       if (config.options.plugins?.tooltip) {

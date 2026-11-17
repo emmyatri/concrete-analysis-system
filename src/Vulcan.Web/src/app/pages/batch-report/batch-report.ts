@@ -16,6 +16,8 @@ import {
 } from '../../core/api/models';
 import { VulcanApiService } from '../../core/api/vulcan-api.service';
 
+import { CuringChart } from '../curing-chart/curing-chart';
+import { type CuringMeasurement } from '../curing-chart/curing-chart-config';
 import { StrengthChart, type StrengthLoad } from '../strength-chart/strength-chart';
 
 type ReportState =
@@ -30,7 +32,7 @@ type ReportState =
 
 @Component({
   selector: 'app-batch-report',
-  imports: [RouterLink, DatePipe, DecimalPipe, StrengthChart],
+  imports: [RouterLink, DatePipe, DecimalPipe, StrengthChart, CuringChart],
   templateUrl: './batch-report.html',
   styleUrls: ['./batch-report.scss', './batch-report-print.scss'],
 })
@@ -116,6 +118,65 @@ export class BatchReport {
       ? `${strength.batchNumber} is at risk of missing its target`
       : 'Early warning';
   });
+
+  // ---------- Warnings beside their values ----------
+
+  /**
+   * Batch, recipe and cement chemistry warnings by limit key, so each flagged value can show its
+   * message where it appears. They are also listed under Warnings and Recommendations.
+   */
+  private readonly fieldWarnings = computed(() => {
+    const messages = new Map<string, string>();
+    for (const warning of this.batch()?.warnings ?? []) {
+      if (
+        ['Batch', 'Composition', 'CementOxideAnalysis'].includes(warning.entityType) &&
+        !messages.has(warning.limitKey)
+      ) {
+        messages.set(warning.limitKey, warning.message);
+      }
+    }
+    return messages;
+  });
+
+  /** Break warnings by break result id. */
+  private readonly breakWarnings = computed(() => {
+    const messages = new Map<number, string>();
+    for (const warning of this.batch()?.warnings ?? []) {
+      if (warning.entityType === 'BreakResult' && !messages.has(warning.entityId)) {
+        messages.set(warning.entityId, warning.message);
+      }
+    }
+    return messages;
+  });
+
+  /** The warning saved for a batch, recipe or cement chemistry value, if any. */
+  protected fieldWarning(limitKey: string): string | null {
+    return this.fieldWarnings().get(limitKey) ?? null;
+  }
+
+  /** The warning saved with a break result, if any. */
+  protected breakWarning(breakResultId: number): string | null {
+    return this.breakWarnings().get(breakResultId) ?? null;
+  }
+
+  // ---------- Curing conditions ----------
+
+  /** One chart per measurement, in the order Batch Detail lists them. */
+  protected readonly curingMeasurements: readonly CuringMeasurement[] = [
+    'internalTempF',
+    'ambientTempF',
+    'moisturePct',
+    'relativeHumidityPct',
+    'resistivityOhmPerFt',
+    'co2Ppm',
+  ];
+
+  /** Every curing reading with its cylinder label, as the curing chart expects. */
+  protected readonly curingReadings = computed(() =>
+    (this.batch()?.specimens ?? []).flatMap((specimen) =>
+      specimen.curingReadings.map((reading) => ({ label: specimen.label, reading })),
+    ),
+  );
 
   /** Recorded validation warnings with readable report labels. */
   protected readonly warningRows = computed(() => {
@@ -322,6 +383,14 @@ export class BatchReport {
           font-weight: 700;
           letter-spacing: 0.4px;
           border-top: 1px solid #cbd5e1;
+        }
+      }
+
+      /* Page 1 has the report's own title block, so no running title there. */
+      @page :first {
+        @top-right {
+          content: none;
+          border-bottom: none;
         }
       }
     `;

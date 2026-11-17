@@ -12,6 +12,33 @@ app-batch-report {
     margin-top: 28px;
   }
 
+  /* Six curing charts, two across. */
+  .report-curing-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px 16px;
+
+    app-curing-chart {
+      padding: 4px 0 8px;
+      break-inside: avoid;
+      page-break-inside: avoid;
+    }
+
+    .chart-title {
+      font-size: 11px;
+    }
+  }
+
+  /* A warning shown beside the value it is about. */
+  .field-warning {
+    display: block;
+    margin-top: 2px;
+    color: #9a3412;
+    font-size: 10px;
+    font-weight: 600;
+    line-height: 1.4;
+  }
+
   .section-heading {
     display: flex;
     align-items: center;
