@@ -718,7 +718,7 @@ Send with the `200` response.
 
 ### Export Batch Data
 
-Returns a batch's data as a zip of CSV files that open in Excel. Read-only; no technician header is needed.
+Returns a batch's data as one Excel workbook, with a tab per table. Read-only; no technician header is needed.
 
 **Endpoint:** `GET /api/batches/{batchNumber}/export`
 
@@ -728,24 +728,24 @@ Returns a batch's data as a zip of CSV files that open in Excel. Read-only; no t
 
 **Response Status Codes:**
 
-* `200`: the zip was created
+* `200`: the workbook was created
 * `404`: no batch with that number
 
 **Response:**
 
-Sent with the `200` response as `application/zip`, named `{batchNumber}-export.zip`. Each file is UTF-8 with a byte order mark so Excel shows °F, Ω and CO₂ correctly. Every file has a header row, even when it has no data rows.
+Sent with the `200` response as `application/vnd.openxmlformats-officedocument.spreadsheetml.sheet`, named `{batchNumber}-export.xlsx`. Every tab has a bold, frozen header row, even when it has no data rows, and a filter when it has data.
 
-| File | One row per | Columns |
+| Tab | One row per | Columns |
 |---|---|---|
-| `batch.csv` | batch | Batch number, Cast at (UTC), Final weight (lb), Expected final break (PSI), Cement type, Mix water pH, Cement surface pH, Cement (%), SCM (%), SCM type, Coarse aggregate (%), Fine aggregate (%), Water (%), Alumina (%), Iron oxide (%), Magnesium oxide (%), Sulfur trioxide (%), IsSynthetic |
-| `curing-readings.csv` | curing reading | Batch number, Specimen label, Taken at (UTC), Internal temperature (°F), Ambient temperature (°F), Moisture (% of sample weight), Relative humidity (%), Resistivity (Ω/ft), CO₂ (ppm), IsSynthetic |
-| `breaks.csv` | break result | Batch number, Specimen label, Test age (days), Broken at (UTC), Compressive strength (PSI), IsSynthetic |
-| `predictions.csv` | stored prediction | Batch number, Calibration version, Basis, Horizon (days), Estimated strength (PSI), Equivalent age (days), Adjustment stage, Unadjusted strength (PSI), Created at (UTC), IsSynthetic |
+| Batch | batch | Batch number, Cast at (UTC), Final weight (lb), Expected final break (PSI), Cement type, Mix water pH, Cement surface pH, Cement (%), SCM (%), SCM type, Coarse aggregate (%), Fine aggregate (%), Water (%), Alumina (%), Iron oxide (%), Magnesium oxide (%), Sulfur trioxide (%), IsSynthetic |
+| Curing readings | curing reading | Batch number, Specimen label, Taken at (UTC), Internal temperature (°F), Ambient temperature (°F), Moisture (% of sample weight), Relative humidity (%), Resistivity (Ω/ft), CO₂ (ppm), IsSynthetic |
+| Breaks | break result | Batch number, Specimen label, Test age (days), Broken at (UTC), Compressive strength (PSI), IsSynthetic |
+| Predictions | stored prediction | Batch number, Calibration version, Basis, Horizon (days), Estimated strength (PSI), Equivalent age (days), Adjustment stage, Unadjusted strength (PSI), Created at (UTC), IsSynthetic |
 
-* Timestamps are UTC, ISO 8601.
-* Numbers use a `.` decimal point regardless of regional settings. Predictions keep full stored precision; the app rounds them for display.
-* Text that starts with `=`, `+`, `-` or `@` is prefixed with `'` so Excel doesn't run it as a formula. Numbers are never prefixed.
-* `IsSynthetic` is `true` for synthetic batches and specimens.
+* Numbers are Excel numbers and timestamps are Excel dates (UTC, shown as `yyyy-mm-dd hh:mm:ss`), so they sort, filter and chart without conversion. Predictions keep full stored precision; the app rounds them for display.
+* Text is always stored as text, so a value like `=SUM(1+1)` is never run as a formula.
+* `IsSynthetic` is TRUE for synthetic batches and specimens.
+* Built with ClosedXML (MIT license; no cost to Vulcan).
 
 ## Specimen
 

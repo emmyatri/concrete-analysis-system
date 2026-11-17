@@ -1,7 +1,7 @@
 ﻿# ADR-007: Report Generation, Export, and Cloud Storage
 
 - **Status:** Proposed — leads approved November 11, 2026; cloud folder pending Don's confirmation (M3-80)
-- **Decision:** WebView2 PDF generation, CSV export, and a configurable cloud sync folder
+- **Decision:** WebView2 PDF generation, Excel workbook export, and a configurable cloud sync folder
 - **Requirements:** FR-19, NFR-3, SC-6, SLA 1.2, SLA Section 4
 
 ---
@@ -25,9 +25,9 @@ An alternative is to use the cloud synchronization clients already available on 
 
 ## 2. Decision
 
-The team will use **WebView2 for PDF generation, CSV for structured data export, and a configurable local cloud synchronization folder for cloud storage**.
+The team will use **WebView2 for PDF generation, an Excel workbook (`.xlsx`) for structured data export, and a configurable local cloud synchronization folder for cloud storage**.
 
-CSV was chosen over native Excel (`.xlsx`) so the export opens in Excel without adding any dependency. The cloud synchronization approach remains subject to confirmation from Don.
+The export was first built as a zip of CSV files and changed to one workbook before the final release, so the data opens as one file with a tab per table. The cloud synchronization approach remains subject to confirmation from Don.
 
 ### 2.1 PDF Generation
 
@@ -48,17 +48,17 @@ The generated PDF will represent the report as rendered in WebView2 rather than 
 
 ### 2.2 Data Export
 
-The data export format is UTF-8 CSV.
+The data export format is one Excel workbook (`.xlsx`) per batch, with a tab each for the batch, its curing readings, its breaks and its predictions.
 
-CSV files will contain structured analysis data that can be opened using Microsoft Excel or other spreadsheet applications.
+The workbook contains structured analysis data that opens in Microsoft Excel or other spreadsheet applications.
 
 - Exported values will use consistent formatting and the canonical measurement units established in ADR-003.
 - Column headers will identify the exported measurements and units.
-- CSV exports will contain data rather than formatted report layouts.
+- Exports will contain data rather than formatted report layouts. Numbers and dates are stored as Excel values, not text.
 - Exports will be generated locally and remain available offline.
-- Exported text fields will be escaped appropriately, including protection against spreadsheet formula injection.
+- Text is always stored as text, so exported values are never run as spreadsheet formulas.
 
-Native Excel workbooks were considered. They would need a library (Microsoft's Open XML SDK is free under the MIT license; EPPlus requires a paid license), so CSV was chosen to keep the export simple and dependency-free.
+The workbook is written with ClosedXML, which is free under the MIT license, so it adds no cost for Vulcan. EPPlus was not used because it requires a paid license. CSV was the first implementation; a single workbook replaced it so operators get one file with a tab per table instead of a zip of four files.
 
 ### 2.3 Cloud Storage
 
@@ -94,7 +94,7 @@ The synchronization client is responsible for transferring locally saved files w
 Report generation and export must remain functional without internet connectivity.
 
 - PDF reports will be generated entirely through the locally installed WebView2 runtime.
-- CSV exports will be generated locally.
+- Workbook exports will be generated locally.
 - Reports can be saved to ordinary local directories without a synchronization client.
 - Files can be written to a configured synchronization directory while offline, provided the directory remains locally available and writable.
 - Cloud synchronization is handled independently and may occur after connectivity returns.
@@ -127,7 +127,7 @@ QuestPDF was considered as an alternative. Its Community License has eligibility
 
 The team will not introduce QuestPDF or another commercial PDF dependency without additional review and approval.
 
-CSV export will use existing .NET functionality without requiring a separate spreadsheet generation library.
+The workbook export uses ClosedXML (MIT license). It and its dependencies are free to use commercially; no paid spreadsheet library is introduced.
 
 ### 2.7 Security
 
@@ -148,7 +148,7 @@ Operators and administrators remain responsible for ensuring that configured clo
 | Reuses the existing WebView2 runtime for PDF generation | PDF layout requires print-specific CSS and testing |
 | Avoids additional PDF generation dependencies and commercial licensing costs | Reports depend on WebView2 rendering behavior |
 | Reuses Angular report components and existing charts | Charts must finish rendering before PDF generation |
-| PDF and CSV exports work without internet connectivity | CSV does not provide native Excel formatting or embedded charts |
+| PDF and workbook exports work without internet connectivity | The workbook export adds one open-source library (ClosedXML) to maintain |
 | Avoids implementing cloud authentication and provider-specific APIs | Cloud synchronization requires an independently configured client |
 | Supports both OneDrive and Google Drive synchronization folders | CBAS cannot independently confirm successful cloud upload |
 | Keeps report generation and export within the existing desktop architecture | Missing or inaccessible synchronization folders require error handling |
