@@ -42,6 +42,27 @@ describe('CuringChart', () => {
       ?.textContent?.trim();
   };
 
+  it('on the report, is titled by its measurement with no selector or Expand', () => {
+    TestBed.overrideComponent(CuringChart, {
+      set: { imports: [FakeChart, SelectModule, FormsModule] },
+    });
+    fixture = TestBed.createComponent(CuringChart);
+    fixture.componentRef.setInput('curingPoints', allPoints);
+    fixture.componentRef.setInput('readings', readings);
+    fixture.componentRef.setInput('castAt', batch.castAt);
+    fixture.componentRef.setInput('initialMeasurement', 'moisturePct');
+    fixture.componentRef.setInput('printMode', true);
+    fixture.componentRef.setInput('expandable', false);
+    fixture.detectChanges();
+    const root = fixture.nativeElement as HTMLElement;
+
+    expect(root.querySelector('.chart-title')?.textContent?.trim()).toBe(
+      'Moisture (% of sample weight)',
+    );
+    expect(root.querySelector('p-select')).toBeNull();
+    expect(root.querySelector('[data-testid="expand-curing"]')).toBeNull();
+  });
+
   it('says when there are no readings yet', () => {
     expect(caption([], [])).toBe('No curing readings yet');
   });

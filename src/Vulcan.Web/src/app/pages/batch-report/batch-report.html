@@ -172,13 +172,25 @@
 
                   <tr>
                     <th scope="row">Sample weight</th>
-                    <td>{{ batch.finalWeightLb | number: '1.0-2' }} lb</td>
+                    <td>
+                      {{ batch.finalWeightLb | number: '1.0-2' }} lb
+                      @if (fieldWarning('Batch.FinalWeightLb'); as message) {
+                        <span class="field-warning" data-testid="field-warning"
+                          >⚠ {{ message }}</span
+                        >
+                      }
+                    </td>
                   </tr>
 
                   <tr>
                     <th scope="row">Mix water pH</th>
                     <td>
                       {{ batch.mixWaterPh | number: '1.1-2' }}
+                      @if (fieldWarning('Batch.MixWaterPh'); as message) {
+                        <span class="field-warning" data-testid="field-warning"
+                          >⚠ {{ message }}</span
+                        >
+                      }
                     </td>
                   </tr>
 
@@ -190,6 +202,11 @@
                       } @else {
                         Not recorded
                       }
+                      @if (fieldWarning('Batch.CementSurfacePh'); as message) {
+                        <span class="field-warning" data-testid="field-warning"
+                          >⚠ {{ message }}</span
+                        >
+                      }
                     </td>
                   </tr>
 
@@ -200,6 +217,11 @@
                         {{ batch.composition.waterCementRatio | number: '1.2-3' }}
                       } @else {
                         Not available
+                      }
+                      @if (fieldWarning('Composition.WaterCementRatio'); as message) {
+                        <span class="field-warning" data-testid="field-warning"
+                          >⚠ {{ message }}</span
+                        >
                       }
                     </td>
                   </tr>
@@ -260,22 +282,50 @@
                 <tbody>
                   <tr>
                     <td>Cement</td>
-                    <td>{{ batch.composition.cementPct | number: '1.2-2' }}%</td>
+                    <td>
+                      {{ batch.composition.cementPct | number: '1.2-2' }}%
+                      @if (fieldWarning('Composition.CementPct'); as message) {
+                        <span class="field-warning" data-testid="field-warning"
+                          >⚠ {{ message }}</span
+                        >
+                      }
+                    </td>
                   </tr>
 
                   <tr>
                     <td>Water</td>
-                    <td>{{ batch.composition.waterPct | number: '1.2-2' }}%</td>
+                    <td>
+                      {{ batch.composition.waterPct | number: '1.2-2' }}%
+                      @if (fieldWarning('Composition.WaterPct'); as message) {
+                        <span class="field-warning" data-testid="field-warning"
+                          >⚠ {{ message }}</span
+                        >
+                      }
+                    </td>
                   </tr>
 
                   <tr>
                     <td>Coarse aggregate</td>
-                    <td>{{ batch.composition.coarseAggregatePct | number: '1.2-2' }}%</td>
+                    <td>
+                      {{ batch.composition.coarseAggregatePct | number: '1.2-2' }}%
+                      @if (fieldWarning('Composition.CoarseAggregatePct'); as message) {
+                        <span class="field-warning" data-testid="field-warning"
+                          >⚠ {{ message }}</span
+                        >
+                      }
+                    </td>
                   </tr>
 
                   <tr>
                     <td>Fine aggregate</td>
-                    <td>{{ batch.composition.fineAggregatePct | number: '1.2-2' }}%</td>
+                    <td>
+                      {{ batch.composition.fineAggregatePct | number: '1.2-2' }}%
+                      @if (fieldWarning('Composition.FineAggregatePct'); as message) {
+                        <span class="field-warning" data-testid="field-warning"
+                          >⚠ {{ message }}</span
+                        >
+                      }
+                    </td>
                   </tr>
 
                   <tr>
@@ -298,7 +348,14 @@
                         }
                       </span>
                     </td>
-                    <td>{{ batch.composition.scmPct | number: '1.2-2' }}%</td>
+                    <td>
+                      {{ batch.composition.scmPct | number: '1.2-2' }}%
+                      @if (fieldWarning('Composition.ScmPct'); as message) {
+                        <span class="field-warning" data-testid="field-warning"
+                          >⚠ {{ message }}</span
+                        >
+                      }
+                    </td>
                   </tr>
 
                   <tr>
@@ -366,33 +423,61 @@
                   <tr>
                     <td>Alumina</td>
                     <td>Al₂O₃</td>
-                    <td>{{ batch.oxides.aluminaPct | number: '1.2-2' }}%</td>
+                    <td>
+                      {{ batch.oxides.aluminaPct | number: '1.2-2' }}%
+                      @if (fieldWarning('Oxide.AluminaPct'); as message) {
+                        <span class="field-warning" data-testid="field-warning"
+                          >⚠ {{ message }}</span
+                        >
+                      }
+                    </td>
                   </tr>
 
                   <tr>
                     <td>Iron oxide</td>
                     <td>Fe₂O₃</td>
-                    <td>{{ batch.oxides.ironOxidePct | number: '1.2-2' }}%</td>
+                    <td>
+                      {{ batch.oxides.ironOxidePct | number: '1.2-2' }}%
+                      @if (fieldWarning('Oxide.IronOxidePct'); as message) {
+                        <span class="field-warning" data-testid="field-warning"
+                          >⚠ {{ message }}</span
+                        >
+                      }
+                    </td>
                   </tr>
 
                   <tr>
                     <td>Magnesium oxide</td>
                     <td>MgO</td>
-                    <td>{{ batch.oxides.magnesiumOxidePct | number: '1.2-2' }}%</td>
+                    <td>
+                      {{ batch.oxides.magnesiumOxidePct | number: '1.2-2' }}%
+                      @if (fieldWarning('Oxide.MagnesiumOxidePct'); as message) {
+                        <span class="field-warning" data-testid="field-warning"
+                          >⚠ {{ message }}</span
+                        >
+                      }
+                    </td>
                   </tr>
 
                   <tr>
                     <td>Sulfur trioxide</td>
                     <td>SO₃</td>
-                    <td>{{ batch.oxides.sulfurTrioxidePct | number: '1.2-2' }}%</td>
+                    <td>
+                      {{ batch.oxides.sulfurTrioxidePct | number: '1.2-2' }}%
+                      @if (fieldWarning('Oxide.SulfurTrioxidePct'); as message) {
+                        <span class="field-warning" data-testid="field-warning"
+                          >⚠ {{ message }}</span
+                        >
+                      }
+                    </td>
                   </tr>
                 </tbody>
               </table>
             </div>
 
             <p class="report-note">
-              Recorded cement chemistry values. Any associated validation warnings are listed in the
-              Warnings and Recommendations section.
+              Recorded cement chemistry values. A value outside its normal range is flagged beside
+              it and listed again under Warnings and Recommendations.
             </p>
           </section>
 
@@ -490,6 +575,11 @@
                             <strong>
                               {{ result.strengthPsi | number: '1.0-0' }}
                             </strong>
+                            @if (breakWarning(result.id); as message) {
+                              <span class="field-warning" data-testid="field-warning"
+                                >⚠ {{ message }}</span
+                              >
+                            }
                           } @else {
                             <span class="pending-value">—</span>
                           }
@@ -536,7 +626,7 @@
                 [castAt]="batch.castAt"
                 [minimumPsi]="null"
                 [printMode]="true"
-                height="360px"
+                height="300px"
                 [fontSize]="12"
               />
             </div>
@@ -548,7 +638,50 @@
           </section>
 
           <!-- ========================================= -->
-          <!-- 06 — STRENGTH PREDICTIONS AND CALIBRATION -->
+          <!-- 06 — CURING CONDITIONS                    -->
+          <!-- ========================================= -->
+
+          <section
+            class="report-section curing-report-section"
+            aria-labelledby="curing-title"
+            data-testid="report-curing"
+          >
+            <div class="section-heading">
+              <span class="section-number">06</span>
+              <h2 id="curing-title">Curing Conditions</h2>
+            </div>
+
+            <p class="section-description">
+              Each measurement over the 28 days after casting: the line is the average of the
+              cylinders, the band runs from lowest to highest, and the darker lines mark Day 1 and
+              Day 3. Readings saved with a warning are marked in orange.
+            </p>
+
+            @if (strength(); as strength) {
+              @if (strength.curingPoints.length === 0) {
+                <p class="report-empty" data-testid="no-curing">No curing readings recorded yet.</p>
+              } @else {
+                <div class="report-curing-grid">
+                  @for (measurement of curingMeasurements; track measurement) {
+                    <app-curing-chart
+                      [readings]="curingReadings()"
+                      [warnings]="batch.warnings"
+                      [curingPoints]="strength.curingPoints"
+                      [castAt]="batch.castAt"
+                      [initialMeasurement]="measurement"
+                      [printMode]="true"
+                      [expandable]="false"
+                      height="130px"
+                      [fontSize]="10"
+                    />
+                  }
+                </div>
+              }
+            }
+          </section>
+
+          <!-- ========================================= -->
+          <!-- 07 — STRENGTH PREDICTIONS AND CALIBRATION -->
           <!-- ========================================= -->
 
           <section
@@ -557,7 +690,7 @@
             data-testid="report-predictions"
           >
             <div class="section-heading">
-              <span class="section-number">06</span>
+              <span class="section-number">07</span>
               <h2 id="predictions-title">Strength Predictions and Calibration</h2>
             </div>
 
@@ -667,7 +800,7 @@
             data-testid="report-warnings"
           >
             <div class="section-heading">
-              <span class="section-number">07</span>
+              <span class="section-number">08</span>
               <h2 id="warnings-title">Warnings and Recommendations</h2>
             </div>
 

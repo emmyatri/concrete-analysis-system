@@ -9,8 +9,8 @@
 @page {
   size: letter portrait;
 
-  /* Extra space for running header and footer. */
-  margin: 0.8in 0.65in 0.75in;
+  /* Room for the running header and footer, without wide side margins. */
+  margin: 0.6in 0.5in 0.6in;
 
   /* Running header — every printed page. */
   @top-left {
@@ -50,6 +50,19 @@
   }
 }
 
+/* Page 1 has the report's own title block, so it doesn't repeat the running header. */
+@page :first {
+  @top-left {
+    content: none;
+    border-bottom: none;
+  }
+
+  @top-right {
+    content: none;
+    border-bottom: none;
+  }
+}
+
 @media print {
   /* =========================================
      REPORT CONTAINER
@@ -64,17 +77,22 @@
   }
 
   app-batch-report .batch-report {
-    padding: 0;
+    padding: 0 !important;
   }
 
+  /*
+   * The page margins come from @page alone. !important because the screen styles in
+   * batch-report.scss (0.6in padding, 8.5in width) are more specific and otherwise add a second
+   * margin inside the page's.
+   */
   app-batch-report .report-document {
     box-sizing: border-box;
     display: block;
-    width: 100%;
-    max-width: none;
-    min-height: 0;
-    margin: 0;
-    padding: 0;
+    width: 100% !important;
+    max-width: none !important;
+    min-height: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
     border: none;
     border-radius: 0;
     box-shadow: none !important;
@@ -100,9 +118,6 @@
   /* Prevent the report from inheriting screen card styling. */
   app-batch-report .strength-report-section {
     width: 100%;
-    margin-top: 0;
-    break-inside: avoid;
-    page-break-inside: avoid;
   }
 
   /* Running page-margin boxes replace the document footer. */
@@ -123,19 +138,27 @@
      PAGE BREAKS
      ========================================= */
 
+  /*
+   * Sections flow one after another and may continue onto the next page. What must not happen
+   * is a heading, its description or a summary left at the bottom of a page with its content on
+   * the next, so those stay with whatever follows them.
+   */
   app-batch-report .report-header,
-  app-batch-report .section-heading {
+  app-batch-report .section-heading,
+  app-batch-report .section-description,
+  app-batch-report .specimen-summary,
+  app-batch-report .prediction-subheading {
     break-after: avoid;
+    page-break-after: avoid;
   }
 
-  /* Start each report section on a new page. */
-
+  /*
+   * Space between sections. Most of it is padding, because a top margin is dropped when a
+   * section starts a new page and padding is not, so it also clears the running header.
+   */
   app-batch-report .report-section {
-    break-before: page;
-  }
-
-  app-batch-report .report-section:first-of-type {
-    break-before: auto;
+    margin-top: 4px;
+    padding-top: 14px;
   }
 
   /* =========================================
@@ -143,6 +166,22 @@
      ========================================= */
 
   app-batch-report .report-table tr {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  /*
+   * Keep each table in one piece: a short table moves to the next page whole instead of
+   * splitting. A table taller than a page still continues, with its headings repeated.
+   */
+  app-batch-report .report-table-wrapper {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  /* Never split a paragraph across pages. */
+  app-batch-report .section-description,
+  app-batch-report .report-note {
     break-inside: avoid;
     page-break-inside: avoid;
   }
@@ -173,11 +212,7 @@
      STRENGTH CHART PRINT LAYOUT
      ========================================= */
 
-  app-batch-report .strength-report-section {
-    break-inside: avoid;
-    page-break-inside: avoid;
-  }
-
+  /* The chart itself never splits; its section can. */
   app-batch-report .report-strength-chart {
     width: 100%;
     margin: 12px 0;
@@ -200,12 +235,6 @@
     page-break-inside: avoid;
     -webkit-print-color-adjust: exact;
     print-color-adjust: exact;
-  }
-
-  /* Avoid orphaned subsection headings. */
-  app-batch-report [data-testid='report-warnings'] .prediction-subheading {
-    break-after: avoid;
-    page-break-after: avoid;
   }
 
   /* Repeat warning table headings when spanning pages. */
