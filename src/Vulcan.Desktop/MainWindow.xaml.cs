@@ -427,11 +427,33 @@ public partial class MainWindow : Window
                 return;
             }
 
-            var destination = Directory.CreateDirectory(
-                Path.Combine(cloudFolder, "CBAS", batchNumber)).FullName;
+            var destination = Path.Combine(cloudFolder, "CBAS", batchNumber);
+            var pdfPath = Path.Combine(destination, ReportPdfFileName(batchNumber));
+            var exportPath = Path.Combine(destination, ExportFileName(batchNumber));
 
-            await WriteReportPdfAsync(Path.Combine(destination, ReportPdfFileName(batchNumber)));
-            await DownloadExportAsync(batchNumber, Path.Combine(destination, ExportFileName(batchNumber)));
+            // SC-6: nothing is written to the cloud folder until the operator confirms.
+            var replaces = File.Exists(pdfPath) || File.Exists(exportPath)
+                ? "\n\nThis replaces the copies saved there earlier."
+                : string.Empty;
+
+            var answer = MessageBox.Show(
+                this,
+                $"Save the report and data for {batchNumber} to:\n{destination}\n\n" +
+                "Your sync app will then upload them to the cloud." + replaces,
+                "Save to cloud",
+                MessageBoxButton.YesNo,
+                MessageBoxImage.Question);
+
+            if (answer != MessageBoxResult.Yes)
+            {
+                Log.Information("Cloud save cancelled for {BatchNumber}", batchNumber);
+                return;
+            }
+
+            Directory.CreateDirectory(destination);
+
+            await WriteReportPdfAsync(pdfPath);
+            await DownloadExportAsync(batchNumber, exportPath);
 
             Log.Information(
                 "Saved report and data for {BatchNumber} to cloud folder {Path}",
