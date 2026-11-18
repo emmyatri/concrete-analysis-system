@@ -105,6 +105,9 @@ public sealed class BatchService(
         updatedBatch.BatchNumber =
             BatchValidator.NormalizeBatchNumber(updatedBatch.BatchNumber);
 
+        // Preserve the original cast date when validating an edit.
+        updatedBatch.CastAt = existingBatch.CastAt;
+
         var validation = ValidateAll(updatedBatch);
         var errors = validation.Errors.ToList();
 
@@ -122,8 +125,7 @@ public sealed class BatchService(
         {
             return ServiceResult<Batch>.Invalid(errors);
         }
-
-        existingBatch.CastAt = updatedBatch.CastAt;
+        
         existingBatch.FinalWeightLb = updatedBatch.FinalWeightLb;
         existingBatch.ExpectedFinalBreakPsi =
             updatedBatch.ExpectedFinalBreakPsi;
