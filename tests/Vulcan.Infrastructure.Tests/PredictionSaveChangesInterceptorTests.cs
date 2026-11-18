@@ -1183,7 +1183,7 @@ public sealed class PredictionSaveChangesInterceptorTests()
                 .ShouldBeTrue();
         }
     }
-    
+
     [Fact]
     public async Task Editing_batch_recalculates_stored_predictions()
     {
@@ -1247,7 +1247,7 @@ public sealed class PredictionSaveChangesInterceptorTests()
             updatedPrediction.CalibrationVersion.ShouldBe("v1");
         }
     }
-    
+
     // spot check on VM-SYN-006 following StrengthEstimator tests
     [Fact]
     public async Task Seeding_batch_data_has_correct_prediction()

@@ -125,7 +125,7 @@ public sealed class BatchService(
         {
             return ServiceResult<Batch>.Invalid(errors);
         }
-        
+
         existingBatch.FinalWeightLb = updatedBatch.FinalWeightLb;
         existingBatch.ExpectedFinalBreakPsi =
             updatedBatch.ExpectedFinalBreakPsi;
