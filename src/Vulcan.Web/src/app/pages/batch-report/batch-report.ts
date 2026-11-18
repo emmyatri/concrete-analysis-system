@@ -406,6 +406,14 @@ export class BatchReport {
 
   protected readonly generatedAt = new Date();
 
+  /**
+   * The API sends UTC times without a "Z", so the browser would read them as local time and
+   * the report's UTC display would be off by the local offset. Mark them as UTC first.
+   */
+  protected utc(value: string): string {
+    return /(Z|[+-]\d{2}:\d{2})$/i.test(value) ? value : `${value}Z`;
+  }
+
   /** Number of cylinders with recorded compressive strength tests. */
   protected recordedBreakCount(specimens: Specimen[]): number {
     return specimens.filter((specimen) => specimen.breakResult !== null).length;
