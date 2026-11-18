@@ -128,7 +128,7 @@
 
               <div class="metadata-item">
                 <dt>Cast date</dt>
-                <dd>{{ batch.castAt | date: 'MM/dd/yyyy HH:mm' : 'UTC' }} UTC</dd>
+                <dd>{{ utc(batch.castAt) | date: 'MM/dd/yyyy HH:mm' : 'UTC' }} UTC</dd>
               </div>
 
               <div class="metadata-item">
@@ -233,14 +233,14 @@
 
                   <tr>
                     <th scope="row">Created at</th>
-                    <td>{{ batch.createdAtUtc | date: 'MM/dd/yyyy HH:mm' : 'UTC' }} UTC</td>
+                    <td>{{ utc(batch.createdAtUtc) | date: 'MM/dd/yyyy HH:mm' : 'UTC' }} UTC</td>
                   </tr>
 
                   @if (batch.modifiedAtUtc) {
                     <tr>
                       <th scope="row">Last modified</th>
                       <td>
-                        {{ batch.modifiedAtUtc | date: 'MM/dd/yyyy HH:mm' : 'UTC' }} UTC
+                        {{ utc(batch.modifiedAtUtc) | date: 'MM/dd/yyyy HH:mm' : 'UTC' }} UTC
                         @if (batch.modifiedBy) {
                           — {{ batch.modifiedBy }}
                         }
@@ -564,7 +564,7 @@
 
                         <td>
                           @if (specimen.breakResult; as result) {
-                            {{ result.brokenAt | date: 'MM/dd/yyyy HH:mm' : 'UTC' }}
+                            {{ utc(result.brokenAt) | date: 'MM/dd/yyyy HH:mm' : 'UTC' }}
                           } @else {
                             <span class="pending-value">Pending</span>
                           }
