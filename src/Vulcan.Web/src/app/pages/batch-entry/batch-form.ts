@@ -7,7 +7,13 @@
 } from '@angular/forms';
 import { numberField } from '../../core/validation/number-field';
 import { parseNumber } from '../../core/validation/parse-number';
-import { CementType, CreateBatchRequest, ScmType } from '../../core/api/batches';
+import {
+  CementType,
+  CreateBatchRequest,
+  ScmType,
+  UpdateBatchRequest,
+} from '../../core/api/batches';
+import { BatchDetail } from '../../core/api/models';
 
 export const CEMENT_TYPES: { label: string; value: CementType }[] = [
   { label: 'Type I', value: 'TypeI' },
@@ -137,5 +143,57 @@ export function toCreateBatchRequest(form: BatchForm): CreateBatchRequest {
       magnesiumOxidePct: num(oxides.magnesiumOxidePct),
       sulfurTrioxidePct: num(oxides.sulfurTrioxidePct),
     },
+  };
+}
+
+/**
+ * Fills the form from a saved batch, for Edit batch. Numbers become text, as typed; a cement
+ * surface pH that was never recorded stays empty so the operator supplies it (client-decisions §12).
+ */
+export function fillBatchForm(form: BatchForm, batch: BatchDetail): void {
+  const text = (value: number | null) => (value === null ? '' : String(value));
+  form.setValue({
+    batch: {
+      batchNumber: batch.batchNumber,
+      castAt: new Date(batch.castAt),
+      finalWeightLb: text(batch.finalWeightLb),
+      expectedFinalBreakPsi: text(batch.expectedFinalBreakPsi),
+      cementType: batch.cementType,
+      mixWaterPh: text(batch.mixWaterPh),
+      cementSurfacePh: text(batch.cementSurfacePh),
+    },
+    composition: {
+      cementPct: text(batch.composition.cementPct),
+      waterPct: text(batch.composition.waterPct),
+      coarseAggregatePct: text(batch.composition.coarseAggregatePct),
+      fineAggregatePct: text(batch.composition.fineAggregatePct),
+      scmType: batch.composition.scmType,
+      scmPct: text(batch.composition.scmPct),
+    },
+    oxides: {
+      aluminaPct: text(batch.oxides.aluminaPct),
+      ironOxidePct: text(batch.oxides.ironOxidePct),
+      magnesiumOxidePct: text(batch.oxides.magnesiumOxidePct),
+      sulfurTrioxidePct: text(batch.oxides.sulfurTrioxidePct),
+    },
+  });
+}
+
+/**
+ * The PUT body for Edit batch. The cast date is sent exactly as it was loaded: it can't be edited,
+ * and round-tripping it through the date picker would shift it by the local time zone.
+ */
+export function toUpdateBatchRequest(form: BatchForm, saved: BatchDetail): UpdateBatchRequest {
+  const { batch, composition, oxides } = toCreateBatchRequest(form);
+  return {
+    castAt: saved.castAt,
+    finalWeightLb: batch.finalWeightLb,
+    expectedFinalBreakPsi: batch.expectedFinalBreakPsi,
+    cementType: batch.cementType,
+    mixWaterPh: batch.mixWaterPh,
+    cementSurfacePh: batch.cementSurfacePh,
+    isSynthetic: saved.isSynthetic,
+    composition,
+    oxides,
   };
 }

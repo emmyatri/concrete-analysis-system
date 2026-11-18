@@ -3,7 +3,6 @@ import { Routes } from '@angular/router';
 import { technicianGuard } from './core/session/technician.guard';
 import { Shell } from './layout/shell/shell';
 import { BatchEntry } from './pages/batch-entry/batch-entry';
-import { PlaceholderPage } from './pages/placeholder-page';
 import { StartSession } from './pages/start-session/start-session';
 
 export const routes: Routes = [
@@ -34,11 +33,8 @@ export const routes: Routes = [
         loadComponent: () =>
           import('./pages/batch-detail/batch-detail').then((m) => m.BatchDetailPage),
       },
-      {
-        path: 'batches/:batchNumber/edit',
-        component: PlaceholderPage,
-        data: { heading: 'Edit batch' },
-      },
+      // The New batch form, filled in from the saved batch.
+      { path: 'batches/:batchNumber/edit', component: BatchEntry },
       // Add cylinder is now a popup on Batch Detail.
       {
         path: 'batches/:batchNumber/cylinders/new',

@@ -157,6 +157,9 @@ public sealed class BatchService(
             existingBatch,
             validation.Warnings);
 
+        // Replace, not add: a value fixed in the edit drops its old warning, and an unchanged
+        // one isn't listed twice.
+        await recordWarningRepository.RemoveBatchFieldWarningsAsync(existingBatch.Id);
         await recordWarningRepository.AddRangeAsync(warningRecords);
 
         await batchRepository.SaveChangesAsync();

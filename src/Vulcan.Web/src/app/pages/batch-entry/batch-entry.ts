@@ -1,4 +1,5 @@
-﻿import { Component, computed, inject, signal } from '@angular/core';
+﻿import { HttpErrorResponse } from '@angular/common/http';
+import { Component, OnInit, computed, inject, input, signal } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { NonNullableFormBuilder, ReactiveFormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
@@ -14,6 +15,7 @@ import { parseNumber } from '../../core/validation/parse-number';
 
 import { ApiProblem, describeApiError, matchFieldErrors } from '../../core/api/api-errors';
 import { ReferenceDataService } from '../../core/api/reference-data.service';
+import { BatchDetail } from '../../core/api/models';
 import { VulcanApiService } from '../../core/api/vulcan-api.service';
 import {
   BATCH_NUMBER_HINT,
@@ -21,13 +23,17 @@ import {
   SCM_TYPES,
   controlsByKey,
   createBatchForm,
+  fillBatchForm,
   toCreateBatchRequest,
+  toUpdateBatchRequest,
 } from './batch-form';
 import { calculateComposition } from './composition-calc';
 
 /**
  * "New batch" screen (M1-43, mockup "03 · Batch Entry"): batch details, mix recipe and cement oxides,
- * with the composition totals calculated live.
+ * with the composition totals calculated live. At /batches/:batchNumber/edit it is Edit batch: the
+ * same form, filled in from the saved batch, saving with PUT. The batch number and cast date can't
+ * change there, because cylinders, readings and breaks are tied to them.
  */
 @Component({
   selector: 'app-batch-entry',
@@ -45,7 +51,7 @@ import { calculateComposition } from './composition-calc';
   // Every AppField on the page reports to this, for the summary next to Save.
   providers: [FieldIssues],
 })
-export class BatchEntry {
+export class BatchEntry implements OnInit {
   private readonly router = inject(Router);
   private readonly referenceData = inject(ReferenceDataService);
   private readonly api = inject(VulcanApiService);
@@ -59,6 +65,17 @@ export class BatchEntry {
 
   protected readonly form = createBatchForm(inject(NonNullableFormBuilder));
 
+  /** Set by the /batches/:batchNumber/edit route; empty on New batch. */
+  readonly batchNumber = input<string>();
+
+  protected readonly isEdit = computed(() => !!this.batchNumber());
+
+  /** Edit batch only: loading the saved batch into the form. */
+  protected readonly loadState = signal<'loading' | 'loaded' | 'not-found' | 'failed'>('loaded');
+
+  /** Edit batch only: the batch as loaded, for the fields the form doesn't send. */
+  private readonly saved = signal<BatchDetail | null>(null);
+
   /** Re-runs the calculated values below on any form change. */
   private readonly formChange = toSignal(this.form.events, { initialValue: null });
 
@@ -71,7 +88,9 @@ export class BatchEntry {
   /** Save stays disabled until every field is filled in and nothing is red. Warnings still save. */
   protected readonly canSave = computed(() => {
     this.formChange();
-    return this.form.valid && this.totalCheck().severity !== 'Reject';
+    return (
+      this.loadState() === 'loaded' && this.form.valid && this.totalCheck().severity !== 'Reject'
+    );
   });
 
   /**
@@ -148,6 +167,34 @@ export class BatchEntry {
     });
   }
 
+  ngOnInit(): void {
+    const batchNumber = this.batchNumber();
+    if (!batchNumber) return;
+
+    this.loadState.set('loading');
+    this.api.getBatch(batchNumber).subscribe({
+      next: (batch) => {
+        fillBatchForm(this.form, batch);
+        // Cylinders, readings and breaks are tied to these, so they stay as saved.
+        this.form.controls.batch.controls.batchNumber.disable();
+        this.form.controls.batch.controls.castAt.disable();
+        // Show the saved batch's warnings right away, not only after a field is clicked.
+        this.form.markAllAsTouched();
+        this.saved.set(batch);
+        this.loadState.set('loaded');
+      },
+      error: (error: unknown) => {
+        if (error instanceof HttpErrorResponse && error.status === 404) {
+          this.loadState.set('not-found');
+          this.saveErrors.set([`Batch ${batchNumber} was not found.`]);
+        } else {
+          this.loadState.set('failed');
+          this.saveErrors.set([describeApiError(error).message]);
+        }
+      },
+    });
+  }
+
   /**
    * Sends the batch. On success, opens it (Save batch) or its Add cylinder screen (Save & add cylinders).
    * A 400 puts each message next to its field; anything else shows in the banner at the top.
@@ -156,6 +203,21 @@ export class BatchEntry {
     if (!this.canSave() || this.saving()) return;
     this.saving.set(true);
     this.saveErrors.set([]);
+
+    const saved = this.saved();
+    if (this.isEdit() && saved) {
+      this.api.updateBatch(saved.batchNumber, toUpdateBatchRequest(this.form, saved)).subscribe({
+        next: () => {
+          this.saving.set(false);
+          this.router.navigate(['/batches', saved.batchNumber]);
+        },
+        error: (error: unknown) => {
+          this.saving.set(false);
+          this.showProblem(describeApiError(error));
+        },
+      });
+      return;
+    }
 
     this.api.createBatch(toCreateBatchRequest(this.form)).subscribe({
       next: ({ batchNumber }) => {
@@ -186,8 +248,10 @@ export class BatchEntry {
     this.saveErrors.set(unmatched.length > 0 || byKey.size > 0 ? unmatched : [problem.message]);
   }
 
+  /** Back to the batch when editing; Home when it's a new batch. */
   protected cancel(): void {
-    this.router.navigate(['/']);
+    const batchNumber = this.batchNumber();
+    this.router.navigate(batchNumber ? ['/batches', batchNumber] : ['/']);
   }
 }
 
