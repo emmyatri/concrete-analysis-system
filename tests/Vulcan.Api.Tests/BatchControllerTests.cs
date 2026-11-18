@@ -493,6 +493,81 @@ public class BatchControllerTests()
     }
 
     [Fact]
+    public async Task Update_replaces_the_batch_warnings_instead_of_adding_to_them()
+    {
+        await using var app = await StartAsync();
+        var client = ClientFor(app);
+
+        object Body(double mixWaterPh) => new
+        {
+            CastAt = DateTime.UtcNow.AddDays(-4),
+            FinalWeightLb = 25,
+            CementType = Domain.Enums.CementType.TypeI,
+            MixWaterPh = mixWaterPh,
+            CementSurfacePh = 7.5m,
+            ExpectedFinalBreakPsi = 4000,
+            IsSynthetic = false,
+            Oxides = new
+            {
+                IronOxidePct = 3.0,
+                AluminaPct = 5.0,
+                MagnesiumOxidePct = 2.0,
+                SulfurTrioxidePct = 2.0
+            },
+            Composition = new
+            {
+                CementPct = 12,
+                WaterPct = 16,
+                CoarseAggregatePct = 40,
+                FineAggregatePct = 25,
+                ScmType = "None",
+                ScmPct = 0,
+            }
+        };
+
+        await client.PostAsJsonAsync("/api/batches", new
+        {
+            Batch = new
+            {
+                BatchNumber = "VM-EDIT-001",
+                CastAt = DateTime.UtcNow.AddDays(-4),
+                FinalWeightLb = 25,
+                CementType = Domain.Enums.CementType.TypeI,
+                MixWaterPh = 7.2,
+                CementSurfacePh = 7.5m,
+                ExpectedFinalBreakPsi = 4000,
+                IsSynthetic = false
+            },
+            Oxides = new { IronOxidePct = 3.0, AluminaPct = 5.0, MagnesiumOxidePct = 2.0, SulfurTrioxidePct = 2.0 },
+            Composition = new
+            {
+                CementPct = 12,
+                WaterPct = 16,
+                CoarseAggregatePct = 40,
+                FineAggregatePct = 25,
+                ScmType = "None",
+                ScmPct = 0,
+            }
+        });
+
+        async Task<int> MixWaterPhWarningsAsync()
+        {
+            using var batch = JsonDocument.Parse(await client.GetStringAsync("/api/batches/VM-EDIT-001"));
+            return batch.RootElement.GetProperty("warnings").EnumerateArray()
+                .Count(w => w.GetProperty("limitKey").GetString() == "Batch.MixWaterPh");
+        }
+
+        // Out of range twice: one warning, not two.
+        (await client.PutAsJsonAsync("/api/batches/VM-EDIT-001", Body(6.5))).EnsureSuccessStatusCode();
+        (await client.PutAsJsonAsync("/api/batches/VM-EDIT-001", Body(6.5))).EnsureSuccessStatusCode();
+        (await MixWaterPhWarningsAsync()).ShouldBe(1);
+
+        // Fixed: the warning goes away.
+        (await client.PutAsJsonAsync("/api/batches/VM-EDIT-001", Body(7.2))).EnsureSuccessStatusCode();
+        (await MixWaterPhWarningsAsync()).ShouldBe(0);
+    }
+
+    [Fact]
     public async Task Update_unknown_number_is_not_found()
     {
         await using var app = await StartAsync();

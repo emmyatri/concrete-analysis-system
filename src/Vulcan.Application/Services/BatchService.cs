@@ -105,6 +105,9 @@ public sealed class BatchService(
         updatedBatch.BatchNumber =
             BatchValidator.NormalizeBatchNumber(updatedBatch.BatchNumber);
 
+        // Preserve the original cast date when validating an edit.
+        updatedBatch.CastAt = existingBatch.CastAt;
+
         var validation = ValidateAll(updatedBatch);
         var errors = validation.Errors.ToList();
 
@@ -123,7 +126,6 @@ public sealed class BatchService(
             return ServiceResult<Batch>.Invalid(errors);
         }
 
-        existingBatch.CastAt = updatedBatch.CastAt;
         existingBatch.FinalWeightLb = updatedBatch.FinalWeightLb;
         existingBatch.ExpectedFinalBreakPsi =
             updatedBatch.ExpectedFinalBreakPsi;
@@ -157,6 +159,9 @@ public sealed class BatchService(
             existingBatch,
             validation.Warnings);
 
+        // Replace, not add: a value fixed in the edit drops its old warning, and an unchanged
+        // one isn't listed twice.
+        await recordWarningRepository.RemoveBatchFieldWarningsAsync(existingBatch.Id);
         await recordWarningRepository.AddRangeAsync(warningRecords);
 
         await batchRepository.SaveChangesAsync();

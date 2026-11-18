@@ -7,7 +7,7 @@
 import { inject } from '@angular/core';
 import { Observable, of, throwError } from 'rxjs';
 
-import { CreateBatchRequest } from '../batches';
+import { CreateBatchRequest, UpdateBatchRequest } from '../batches';
 import {
   BatchDetail,
   BatchSummary,
@@ -73,6 +73,8 @@ export const mockApiInterceptor: HttpInterceptorFn = (request, next) => {
     return ok(MOCK_SPECIFIC_GRAVITIES);
   if (request.method === 'GET' && path === '/api/batches') return ok(findBatches(request));
   if (request.method === 'POST' && path === '/api/batches') return createBatch(request);
+  if (request.method === 'PUT' && /^\/api\/batches\/[^/]+$/.test(path))
+    return updateBatch(request, path);
   if (request.method === 'POST' && /^\/api\/batches\/[^/]+\/specimens$/.test(path))
     return createSpecimen(request, path);
   if (request.method === 'GET' && /^\/api\/batches\/[^/]+\/strength$/.test(path))
@@ -146,6 +148,58 @@ function getBatch(request: HttpRequest<unknown>, path: string) {
         error: { title: 'Not Found', status: 404, detail: `Batch ${batchNumber} was not found.` },
       }),
   );
+}
+
+/**
+ * Saves an edited batch in place, like the server's PUT: its number, cast date, cylinders, history
+ * and IsSynthetic stay as they were. Warnings on the batch, recipe and oxides are worked out again.
+ */
+function updateBatch(request: HttpRequest<unknown>, path: string) {
+  const batchNumber = decodeURIComponent(path.slice('/api/batches/'.length));
+  const list = [savedDetails, MOCK_BATCH_DETAILS].find((details) =>
+    details.some((row) => row.batchNumber.toLowerCase() === batchNumber.toLowerCase()),
+  );
+  if (!list) {
+    return problem(request, 404, 'Not Found', { detail: `Batch ${batchNumber} was not found.` });
+  }
+
+  const index = list.findIndex(
+    (row) => row.batchNumber.toLowerCase() === batchNumber.toLowerCase(),
+  );
+  const existing = list[index];
+  const body = request.body as UpdateBatchRequest;
+  const rebuilt = mockBatchDetailFromRequest(
+    existing.id,
+    {
+      batch: {
+        batchNumber: existing.batchNumber,
+        castAt: existing.castAt,
+        finalWeightLb: body.finalWeightLb,
+        expectedFinalBreakPsi: body.expectedFinalBreakPsi,
+        cementType: body.cementType,
+        mixWaterPh: body.mixWaterPh,
+        cementSurfacePh: body.cementSurfacePh,
+      },
+      composition: body.composition,
+      oxides: body.oxides,
+    },
+    existing.createdBy,
+  );
+
+  const batchLevel = ['Batch', 'Composition', 'CementOxideAnalysis'];
+  list[index] = {
+    ...rebuilt,
+    isSynthetic: existing.isSynthetic,
+    createdAtUtc: existing.createdAtUtc,
+    modifiedAtUtc: new Date().toISOString(),
+    modifiedBy: existing.createdBy,
+    specimens: existing.specimens,
+    warnings: [
+      ...rebuilt.warnings,
+      ...existing.warnings.filter((warning) => !batchLevel.includes(warning.entityType)),
+    ],
+  };
+  return ok(structuredClone(list[index]));
 }
 
 /**
