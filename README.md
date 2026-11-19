@@ -2,7 +2,8 @@
 
 A Windows desktop application for Vulcan Materials that records concrete batch data (mix recipe, cement chemistry, test
 cylinders, curing readings and break results), validates every value against DOT limits, and lets operators find any
-batch by its number. Later milestones add strength charts and 3/7/28-day strength predictions.
+batch by its number. It charts strength over time, predicts 3-, 7- and 28-day strength and calibrates against actual
+breaks, flags batches at risk early, and produces a printable batch report with PDF and Excel export.
 
 Built by the KSU Student Development Team for SWE 4713 (Section W01), under the signed Service Level Agreement with
 Vulcan Materials.
@@ -11,14 +12,16 @@ Vulcan Materials.
 
 ## Status
 
-| Milestone                               | Scope                                                                                    | Due                  |
-| --------------------------------------- | ---------------------------------------------------------------------------------------- | -------------------- |
-| **M1 — Batch Record & Data Validation** | Installable build, batch/cylinder/curing/break entry, validation, search by batch number | **Fri, Oct 9, 2026** |
-| M2 — Strength Charting & Prediction     | PSI-vs-time chart, 3/7/28-day predictions, early-warning flags                           | Fri, Oct 30, 2026    |
-| M3 — Calibration & Reporting            | Calibration against real breaks, printable/exportable reports                            | Fri, Nov 20, 2026    |
-| Final delivery                          | Signed installer, docs, training, source handoff                                         | Fri, Dec 4, 2026     |
+| Milestone                               | Scope                                                                                    | Due                   |
+| --------------------------------------- | ---------------------------------------------------------------------------------------- | --------------------- |
+| M1 — Batch Record & Data Validation     | Installable build, batch/cylinder/curing/break entry, validation, search by batch number | Fri, Oct 9, 2026      |
+| M2 — Strength Charting & Prediction     | PSI-vs-time chart, 3/7/28-day predictions, early-warning flags                           | Fri, Oct 30, 2026     |
+| **M3 — Calibration & Reporting**        | Calibration against real breaks, printable/exportable reports                            | **Fri, Nov 20, 2026** |
+| Final delivery                          | Signed installer, docs, training, source handoff                                         | Fri, Dec 4, 2026      |
 
 Current version: `1.0.0`
+
+**[Download the installer (VulcanCBAS-Setup.exe)](https://github.com/emmyatri/concrete-analysis-system/releases/latest/download/VulcanCBAS-Setup.exe)**. Windows only, about 265 MB. See [Installing Vulcan CBAS](#installing-vulcan-cbas) for the steps.
 
 ---
 
@@ -292,7 +295,7 @@ For personal overrides, use `appsettings.Development.local.json`. It's git-ignor
 For Vulcan and anyone using the app. No .NET, Node or internet connection needed.
 
 1. **Download the installer:**
-   **[VulcanCBAS-Setup.exe](https://github.com/emmyatri/concrete-analysis-system/releases/download/v1.0.0/VulcanCBAS-Setup.exe)**
+   **[VulcanCBAS-Setup.exe](https://github.com/emmyatri/concrete-analysis-system/releases/latest/download/VulcanCBAS-Setup.exe)**
    (about 265 MB, always the latest release). Older versions are on the
    [Releases page](https://github.com/emmyatri/concrete-analysis-system/releases).
 2. **Double-click it.** Windows may say **"Windows protected your PC"** because the installer isn't signed yet. Click
