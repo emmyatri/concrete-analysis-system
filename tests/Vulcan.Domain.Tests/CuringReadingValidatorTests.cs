@@ -160,7 +160,56 @@ public class CuringReadingValidatorTests
     }
 
     // -------------------------------------------------------------------------
-    // Moisture and relative humidity: 0–100 %
+    // Moisture: % of sample weight
+    // Reject outside 0–15%, warn outside 2–4%.
+    // The accepted range is provisional pending client confirmation.
+    // -------------------------------------------------------------------------
+
+    [Theory]
+    [InlineData("-0.1", "Reject")]
+    [InlineData("0", "Warn")]
+    [InlineData("1.5", "Warn")]
+    [InlineData("1.9", "Warn")]
+    [InlineData("2", "Ok")]
+    [InlineData("3", "Ok")]
+    [InlineData("4", "Ok")]
+    [InlineData("4.1", "Warn")]
+    [InlineData("4.5", "Warn")]
+    [InlineData("15", "Warn")]
+    [InlineData("15.1", "Reject")]
+    [InlineData("92", "Reject")]
+    public void Moisture_IsCheckedAgainstBothRanges(
+        string value, string expected)
+    {
+        var outcome = _validator.Validate(
+            CreateReading(moisturePct: decimal.Parse(value)),
+            _castAt,
+            _now);
+
+        Assert.Equal(expected, ResultFor(outcome, LimitKeys.MoisturePct));
+    }
+
+    [Theory]
+    [InlineData("1.5")]
+    [InlineData("4.5")]
+    public void Moisture_OutsideNormalRange_SavesWithWarning(
+        string value)
+    {
+        var outcome = _validator.Validate(
+            CreateReading(moisturePct: decimal.Parse(value)),
+            _castAt,
+            _now);
+
+        Assert.True(outcome.IsValid);
+        Assert.Empty(outcome.Errors);
+
+        var warning = Assert.Single(outcome.Warnings);
+        Assert.Equal(LimitKeys.MoisturePct, warning.Key);
+        Assert.Contains("2-4% of sample weight", warning.Message);
+    }
+
+    // -------------------------------------------------------------------------
+    // Relative humidity: 0–100% 
     // -------------------------------------------------------------------------
 
     [Theory]
@@ -168,25 +217,17 @@ public class CuringReadingValidatorTests
     [InlineData("0", "Ok")]
     [InlineData("100", "Ok")]
     [InlineData("100.1", "Reject")]
-    public void Moisture_IsChecked(string value, string expected)
+    public void RelativeHumidity_IsChecked(
+        string value, string expected)
     {
         var outcome = _validator.Validate(
-            CreateReading(moisturePct: decimal.Parse(value)), _castAt, _now);
+            CreateReading(relativeHumidityPct: decimal.Parse(value)),
+            _castAt,
+            _now);
 
-        Assert.Equal(expected, ResultFor(outcome, LimitKeys.MoisturePct));
-    }
-
-    [Theory]
-    [InlineData("-0.1", "Reject")]
-    [InlineData("0", "Ok")]
-    [InlineData("100", "Ok")]
-    [InlineData("100.1", "Reject")]
-    public void RelativeHumidity_IsChecked(string value, string expected)
-    {
-        var outcome = _validator.Validate(
-            CreateReading(relativeHumidityPct: decimal.Parse(value)), _castAt, _now);
-
-        Assert.Equal(expected, ResultFor(outcome, LimitKeys.RelativeHumidityPct));
+        Assert.Equal(
+            expected,
+            ResultFor(outcome, LimitKeys.RelativeHumidityPct));
     }
 
     // -------------------------------------------------------------------------
@@ -257,7 +298,7 @@ public class CuringReadingValidatorTests
         DateTime? takenAt = null,
         decimal internalTempF = 78.4m,
         decimal ambientTempF = 69.5m,
-        decimal moisturePct = 91.6m,
+        decimal moisturePct = 3.0m,
         decimal relativeHumidityPct = 96.1m,
         decimal resistivityOhmPerFt = 15.98m,
         decimal co2Ppm = 416.8m)

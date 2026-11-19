@@ -24,6 +24,25 @@ describe('EstimateCards', () => {
   const text = (root: HTMLElement, selector: string) =>
     root.querySelector(selector)?.textContent?.replace(/\s+/g, ' ').trim();
 
+  const renderMiss = (estimatedPsi: number) => {
+    const source = batchOf('VM-SYN-006');
+    const batch = {
+      ...source,
+      specimens: source.specimens.map((s) =>
+        s.testAgeDays === 'Day28' && s.breakResult
+          ? { ...s, breakResult: { ...s.breakResult, strengthPsi: 10000 } }
+          : s,
+      ),
+    };
+    const base = mockStrength(batch);
+    const strength = {
+      ...base,
+      estimates: base.estimates.map((e) => (e.horizonDays === 28 ? { ...e, estimatedPsi } : e)),
+    };
+
+    return render(batch, { status: 'loaded', strength });
+  };
+
   it('shows each estimate with the adjustment used and its calibration version', () => {
     const root = render(batchOf('VM-SYN-006'));
 
@@ -90,4 +109,48 @@ describe('EstimateCards', () => {
     expect(root.querySelectorAll('[data-testid="no-estimate"]')).toHaveLength(3);
     expect(text(root, '[data-testid="no-estimate"]')).toBe('Not enough curing data yet');
   });
+
+  it('shows the estimate as outside the target and only on the 28-day card', () => {
+    const root = render(batchOf('VM-SYN-006'));
+
+    expect(
+      root.querySelector('[data-testid="estimate-3"] [data-testid="accuracy-target"]'),
+    ).toBeNull();
+    expect(
+      root.querySelector('[data-testid="estimate-7"] [data-testid="accuracy-target"]'),
+    ).toBeNull();
+    expect(text(root, '[data-testid="estimate-28"] [data-testid="accuracy-target"]')).toBe(
+      'Outside the 5% target',
+    );
+  });
+
+  it('flips the verdict for accuracy when limit is changed to 6', () => {
+    const batch = batchOf('VM-SYN-006');
+    const strength = { ...mockStrength(batch), accuracyTargetPct: 6 };
+    const root = render(batch, { status: 'loaded', strength });
+
+    expect(text(root, '[data-testid="estimate-28"] [data-testid="accuracy-target"]')).toBe(
+      'Within the 6% target',
+    );
+  });
+
+  it.each([
+    { miss: '-4.96%', estimatedPsi: 9504, shown: '5.0', verdict: 'Within' },
+    { miss: '5.00%', estimatedPsi: 10500, shown: '5.0', verdict: 'Within' },
+    { miss: '5.04%', estimatedPsi: 10504, shown: '5.04', verdict: 'Outside' },
+    { miss: '5.004%', estimatedPsi: 10500.4, shown: '5.004', verdict: 'Outside' },
+    { miss: '5.0004%', estimatedPsi: 10500.04, shown: '>5.000', verdict: 'Outside' },
+  ])(
+    'shows a $miss miss as "$shown%" and $verdict the target',
+    ({ estimatedPsi, shown, verdict }) => {
+      const root = renderMiss(estimatedPsi);
+
+      expect(text(root, '[data-testid="estimate-28"] [data-testid="difference"]')).toContain(
+        `(${shown}%)`,
+      );
+      expect(text(root, '[data-testid="estimate-28"] [data-testid="accuracy-target"]')).toBe(
+        `${verdict} the 5% target`,
+      );
+    },
+  );
 });

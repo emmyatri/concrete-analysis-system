@@ -50,6 +50,7 @@ describe('Shell', () => {
       'Search batches',
       'Break results',
       'Curing readings',
+      'Settings',
     ]);
   });
 
@@ -73,7 +74,7 @@ describe('Shell', () => {
   }
 
   it('shows the app version in the menu footer', () => {
-    expect(page().querySelector('.shell-version')?.textContent).toContain('v0.1.0');
+    expect(page().querySelector('.shell-version')?.textContent).toContain('v1.0.0');
   });
 
   it('shows "Local API ready" once /api/health answers', () => {

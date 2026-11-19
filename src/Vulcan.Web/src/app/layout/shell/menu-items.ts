@@ -11,4 +11,5 @@ export const SHELL_MENU: readonly ShellMenuItem[] = [
   { label: 'Search batches', icon: 'pi pi-search', route: '/batches' },
   { label: 'Break results', icon: 'pi pi-chart-bar', route: '/breaks' },
   { label: 'Curing readings', icon: 'pi pi-clock', route: '/curing' },
+  { label: 'Settings', icon: 'pi pi-cog', route: '/settings' },
 ];

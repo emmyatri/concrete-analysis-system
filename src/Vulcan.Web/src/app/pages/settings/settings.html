@@ -1,0 +1,67 @@
+<div class="settings">
+  <h1 class="page-title">Settings</h1>
+
+  <section class="card" aria-labelledby="cloud-folder-heading">
+    <h2 id="cloud-folder-heading" class="card-title">Cloud folder</h2>
+    <p class="hint">
+      Save to cloud on a batch report puts the PDF and the data export in this folder, under
+      CBAS\&lt;batch number&gt;. Choose a folder that OneDrive, Google Drive or another sync app
+      keeps online. Nothing is uploaded until you click Save to cloud.
+    </p>
+
+    @switch (status()) {
+      @case ('loading') {
+        <p class="value" data-testid="cloud-folder-loading">Loading…</p>
+      }
+      @case ('error') {
+        <p class="message error" role="alert" data-testid="cloud-folder-load-error">
+          Couldn't load the cloud folder setting. Check that the app is open and try again.
+        </p>
+      }
+      @default {
+        @if (cloudFolder().path; as path) {
+          <p class="value path" data-testid="cloud-folder-path">{{ path }}</p>
+          @if (!cloudFolder().exists) {
+            <p class="message warning" role="alert" data-testid="cloud-folder-missing">
+              This folder can't be found. Check that your sync app is running, or choose another
+              folder.
+            </p>
+          }
+        } @else {
+          <p class="value not-set" data-testid="cloud-folder-not-set">Not set</p>
+        }
+      }
+    }
+
+    @if (saveError(); as message) {
+      <p class="message error" role="alert" data-testid="cloud-folder-save-error">{{ message }}</p>
+    }
+
+    <div class="actions">
+      @if (isDesktopHost) {
+        <p-button
+          [label]="cloudFolder().path ? 'Change folder' : 'Choose folder'"
+          icon="pi pi-folder-open"
+          [disabled]="saving() || status() !== 'loaded'"
+          (onClick)="chooseFolder()"
+          data-testid="choose-cloud-folder"
+        />
+      } @else {
+        <p class="hint" data-testid="cloud-folder-desktop-only">
+          Choosing a folder works in the desktop app.
+        </p>
+      }
+
+      @if (cloudFolder().path) {
+        <p-button
+          label="Clear"
+          severity="secondary"
+          [outlined]="true"
+          [disabled]="saving()"
+          (onClick)="clearFolder()"
+          data-testid="clear-cloud-folder"
+        />
+      }
+    </div>
+  </section>
+</div>

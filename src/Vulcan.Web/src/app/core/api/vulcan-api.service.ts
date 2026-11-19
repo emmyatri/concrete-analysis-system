@@ -1,12 +1,13 @@
 ﻿import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 
-import { CreateBatchRequest, CreateBatchResponse } from './batches';
+import { CreateBatchRequest, CreateBatchResponse, UpdateBatchRequest } from './batches';
 import {
   BatchDetail,
   BatchQuery,
   BatchStrength,
   BatchSummary,
+  CloudFolderSetting,
   CreateBreakResultRequest,
   CreateBreakResultResponse,
   CreateCuringReadingRequest,
@@ -18,6 +19,9 @@ import {
   SpecificGravity,
   ValidationLimit,
 } from './models';
+
+/** Settings' cloud folder (SCRUM-214). */
+export const CLOUD_FOLDER_URL = '/api/settings/cloud-folder';
 
 /**
  * Every call the screens make to the local API (M1-60), one method per request. All paths are under /api.
@@ -52,6 +56,11 @@ export class VulcanApiService {
   /** Saves a new batch with its composition and oxides. A 400 lists the bad values by ValidationLimit key. */
   createBatch(request: CreateBatchRequest) {
     return this.http.post<CreateBatchResponse>('/api/batches', request);
+  }
+
+  /** Saves changes to a batch. A 400 lists the bad values by ValidationLimit key, like createBatch. */
+  updateBatch(batchNumber: string, request: UpdateBatchRequest) {
+    return this.http.put<unknown>(`/api/batches/${encodeURIComponent(batchNumber)}`, request);
   }
 
   /** Cylinders not broken yet, soonest due first. Follows the Synthetic data switch like Search. */
@@ -102,5 +111,19 @@ export class VulcanApiService {
   getEarlyWarnings(includeSynthetic: boolean) {
     const params = new HttpParams().set('includeSynthetic', String(includeSynthetic));
     return this.http.get<EarlyWarningBatch[]>('/api/warnings/early', { params });
+  }
+
+  /** The folder "Save to cloud" writes to (SCRUM-214). Saved on this computer, like the technician name. */
+  getCloudFolder() {
+    return this.http.get<CloudFolderSetting>(CLOUD_FOLDER_URL);
+  }
+
+  /** A 400 lists the problem under "CloudFolder.Path" (not a full path, or the folder doesn't exist). */
+  setCloudFolder(path: string) {
+    return this.http.put<void>(CLOUD_FOLDER_URL, { path });
+  }
+
+  clearCloudFolder() {
+    return this.http.delete<void>(CLOUD_FOLDER_URL);
   }
 }

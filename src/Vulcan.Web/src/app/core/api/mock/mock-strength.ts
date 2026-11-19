@@ -37,6 +37,35 @@ const MINIMUM_PSI = 3000;
 const SHORTFALL_PCT = 5;
 const EXPECTED_FINAL_VS_WCM_PCT = 30;
 
+/**
+ * Client-decisions section 14.1 (SCRUM-203): the average 3- and 7-day breaks as a percent of the
+ * 3,000 PSI break minimum, not the batch's expected final. Mirrors Break.Day3WarnPct and Break.Day7FailPct.
+ */
+const EARLY_BREAK_BANDS = [
+  {
+    age: 'Day3',
+    days: 3,
+    limitKey: 'Break.Day3WarnPct',
+    field: 'day3AverageBreakPct',
+    limit: 40,
+    outcome: '',
+  },
+  {
+    age: 'Day7',
+    days: 7,
+    limitKey: 'Break.Day7FailPct',
+    field: 'day7AverageBreakPct',
+    limit: 70,
+    outcome: 'The batch will probably fail.',
+  },
+] as const;
+
+/**
+ * The prediction engine will use an initial accuracy target of within 5% of the actual 28-day
+ * compressive strength (client-decisions section 14.2).
+ */
+const ACCURACY_TARGET_PCT = 5;
+
 /** ADR-005 section 4.5: ACI 211.1-97 Table 6.3.4(a), non-air-entrained: [w/cm, 28-day PSI]. */
 const ACI_WCM_TABLE: [number, number][] = [
   [0.33, 7000],
@@ -180,6 +209,7 @@ export function mockStrength(batch: BatchDetail): BatchStrength {
       isSynthetic: specimen.isSynthetic,
     }));
 
+  const breakWarnings = breakBandWarnings(batch);
   const result: BatchStrength = {
     id: batch.id,
     batchNumber: batch.batchNumber,
@@ -187,15 +217,16 @@ export function mockStrength(batch: BatchDetail): BatchStrength {
     expectedFinalBreakPsi: batch.expectedFinalBreakPsi,
     cementType: batch.cementType,
     status: 'InsufficientCuringData',
-    atRisk: false,
+    atRisk: breakWarnings.length > 0,
     projected28DayPsi: null,
     shortfallPsi: null,
     shortfallPct: null,
+    accuracyTargetPct: ACCURACY_TARGET_PCT,
     curvePoints: [],
     unadjustedCurvePoints: [],
     estimates: [],
     measuredBreaks,
-    earlyWarnings: [...rangeWarnings(batch), ...waterCementWarnings(batch)],
+    earlyWarnings: [...breakWarnings, ...rangeWarnings(batch), ...waterCementWarnings(batch)],
     curingPoints,
   };
 
@@ -271,7 +302,7 @@ export function mockStrength(batch: BatchDetail): BatchStrength {
   return {
     ...result,
     status: 'Estimated',
-    atRisk: predictionWarnings.length > 0,
+    atRisk: predictionWarnings.length > 0 || result.atRisk,
     projected28DayPsi: projected,
     shortfallPsi,
     shortfallPct,
@@ -313,6 +344,50 @@ export function mockEarlyWarnings(
       shortfallPct: strength.shortfallPct,
       earlyWarnings: strength.earlyWarnings,
     }));
+}
+
+/**
+ * Low average 3- and 7-day breaks (client-decisions section 14.1), worded like the server's
+ * EarlyWarningService. Worked out from the breaks each time, since the average moves as cylinders are entered.
+ */
+function breakBandWarnings(batch: BatchDetail): EarlyWarning[] {
+  const warnings: EarlyWarning[] = EARLY_BREAK_BANDS.flatMap(
+    ({ age, days, limitKey, field, limit, outcome }) => {
+      const mean = averageBreak(batch, age);
+      if (mean === null) return [];
+      const averagePsi = Math.round(mean);
+      const pct = round((averagePsi / MINIMUM_PSI) * 100, 1);
+      if (pct >= limit) return [];
+      const bandPsi = Math.round((limit * MINIMUM_PSI) / 100);
+      const ending = outcome === '' ? '' : ' ' + outcome;
+      return [
+        {
+          warning: `${days}-day breaks averaged ${psi(averagePsi)}, below ${psi(bandPsi)} (${limit}% of ${psi(MINIMUM_PSI)}).${ending}`,
+          field,
+          value: pct,
+          limitKey,
+          limit,
+        },
+      ];
+    },
+  );
+
+  // Recommendations (client-decisions §14, SCRUM-204): "watch" only until 7-day breaks exist;
+  // "abandon" only when both are low.
+  const day3Warning = warnings.find((w) => w.limitKey === 'Break.Day3WarnPct');
+  const day7Warning = warnings.find((w) => w.limitKey === 'Break.Day7FailPct');
+
+  const hasDay7Breaks = averageBreak(batch, 'Day7') !== null;
+
+  if (day3Warning && !hasDay7Breaks) {
+    day3Warning.recommendation = 'Watch this batch at the 7-day break.';
+  }
+  if (day3Warning && day7Warning) {
+    day7Warning.recommendation =
+      "Both early breaks are low. Vulcan's practice is to abandon this batch and start a new one.";
+  }
+
+  return warnings;
 }
 
 /**

@@ -6,6 +6,7 @@ namespace Vulcan.Application.Services.EarlyWarning;
 public class EarlyWarning
 {
     public required string Warning { get; set; }
+    public string? Recommendation { get; set; }
     public required string Field { get; set; }
     public required double Value { get; set; }
     public required string LimitKey { get; set; }
@@ -42,6 +43,7 @@ public class EarlyWarning
             Field,
             Value,
             LimitKey,
-            Limit
+            Limit,
+            Recommendation
         );
 }

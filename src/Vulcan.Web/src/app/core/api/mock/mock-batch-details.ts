@@ -96,6 +96,7 @@ function warningsFor(batch: Omit<BatchDetail, 'warnings'>): SavedWarning[] {
     }
     for (const reading of specimen.curingReadings) {
       check('CuringReading', reading.id, 'Curing.AmbientTempF', reading.ambientTempF);
+      check('CuringReading', reading.id, 'Curing.MoisturePct', reading.moisturePct);
     }
   }
   return warnings;

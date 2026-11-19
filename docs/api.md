@@ -716,6 +716,37 @@ Send with the `200` response.
 }
 ```
 
+### Export Batch Data
+
+Returns a batch's data as one Excel workbook, with a tab per table. Read-only; no technician header is needed.
+
+**Endpoint:** `GET /api/batches/{batchNumber}/export`
+
+**Request Parameters:**
+
+* `batchNumber`: from route. The batch number. Matching ignores upper/lowercase.
+
+**Response Status Codes:**
+
+* `200`: the workbook was created
+* `404`: no batch with that number
+
+**Response:**
+
+Sent with the `200` response as `application/vnd.openxmlformats-officedocument.spreadsheetml.sheet`, named `{batchNumber}-export.xlsx`. Every tab has a bold, frozen header row, even when it has no data rows, and a filter when it has data.
+
+| Tab | One row per | Columns |
+|---|---|---|
+| Batch | batch | Batch number, Cast at (UTC), Final weight (lb), Expected final break (PSI), Cement type, Mix water pH, Cement surface pH, Cement (%), SCM (%), SCM type, Coarse aggregate (%), Fine aggregate (%), Water (%), Alumina (%), Iron oxide (%), Magnesium oxide (%), Sulfur trioxide (%), IsSynthetic |
+| Curing readings | curing reading | Batch number, Specimen label, Taken at (UTC), Internal temperature (°F), Ambient temperature (°F), Moisture (% of sample weight), Relative humidity (%), Resistivity (Ω/ft), CO₂ (ppm), IsSynthetic |
+| Breaks | break result | Batch number, Specimen label, Test age (days), Broken at (UTC), Compressive strength (PSI), IsSynthetic |
+| Predictions | stored prediction | Batch number, Calibration version, Basis, Horizon (days), Estimated strength (PSI), Equivalent age (days), Adjustment stage, Unadjusted strength (PSI), Created at (UTC), IsSynthetic |
+
+* Numbers are Excel numbers and timestamps are Excel dates (UTC, shown as `yyyy-mm-dd hh:mm:ss`), so they sort, filter and chart without conversion. Predictions keep full stored precision; the app rounds them for display.
+* Text is always stored as text, so a value like `=SUM(1+1)` is never run as a formula.
+* `IsSynthetic` is TRUE for synthetic batches and specimens.
+* Built with ClosedXML (MIT license; no cost to Vulcan).
+
 ## Specimen
 
 ### Create Specimen
@@ -1127,6 +1158,10 @@ Use to get the strength predictions for a given batch.
         },
         "shortfallPct": {
             "type": ["number", "null"]
+        },
+        "accuracyTargetPct": {
+            "type": ["number", "null"],
+            "description": "Allowed % difference between the 28-day estimate and the actual 28-day break (Prediction.AccuracyTargetPct). Null when not configured."
         },
         "curvePoints": {
             "type": "array",
@@ -2492,3 +2527,68 @@ Status Code: `200`
     }
 ]
 ```
+
+## Settings
+
+Settings that belong to this computer, saved in `%LOCALAPPDATA%\VulcanCBAS\settings.json` (not the database).
+
+### Get Cloud Folder
+
+Returns the folder that "Save to cloud" on a batch report writes to (SCRUM-214, ADR-007 §2.3).
+
+**Endpoint:** `GET /api/settings/cloud-folder`
+
+**Response Status Codes:**
+
+* `200`: always
+
+**Response Schema:**
+
+```json
+{
+    "title": "CloudFolderResponse",
+    "type": "object",
+    "properties": {
+        "path": {
+            "type": ["string", "null"],
+            "description": "Full folder path. Null when no folder is set."
+        },
+        "exists": {
+            "type": "boolean",
+            "description": "False when no folder is set or the saved folder can't be found."
+        }
+    },
+    "required": ["path", "exists"]
+}
+```
+
+### Set Cloud Folder
+
+Saves the cloud folder. Needs the technician header, like every save.
+
+**Endpoint:** `PUT /api/settings/cloud-folder`
+
+**Request Body:**
+
+```json
+{
+    "path": "C:\\Users\\jrivera\\OneDrive\\Lab"
+}
+```
+
+The path is saved without a trailing separator.
+
+**Response Status Codes:**
+
+* `204`: saved
+* `400`: blank, not a full path, or the folder doesn't exist. The message is under `CloudFolder.Path` (see [`400` Response](#400-response)).
+
+### Clear Cloud Folder
+
+Sets the cloud folder back to not set. Needs the technician header.
+
+**Endpoint:** `DELETE /api/settings/cloud-folder`
+
+**Response Status Codes:**
+
+* `204`: cleared

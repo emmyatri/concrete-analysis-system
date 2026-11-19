@@ -70,6 +70,11 @@ export class CuringChart {
   readonly expandable = input(true);
   /** The measurement to show first; the expanded view opens on the one shown on the page. */
   readonly initialMeasurement = input<CuringMeasurement>('internalTempF');
+  /**
+   * The batch report's version: one fixed measurement, titled by it, with no selector, Expand or
+   * hover, drawn at 3x so it stays sharp in the PDF.
+   */
+  readonly printMode = input(false);
   /** Asks Batch Detail to open the larger view, on the measurement shown now. */
   readonly expand = output<CuringMeasurement>();
 
@@ -140,6 +145,11 @@ export class CuringChart {
     return `Line = average of ${cylinders} ${cylinders === 1 ? 'cylinder' : 'cylinders'} · band = lowest to highest · readings so far: ${firstHour}–${lastHour}h`;
   });
 
+  /** The selected measurement's name, the chart's title on the report. */
+  protected readonly measurementLabel = computed(
+    () => measurementLabels[this.selectedMeasurement()],
+  );
+
   /** Identifies the configuration pieces for the curing chart.*/
   protected readonly chart = computed(() =>
     curingChartConfig(
@@ -167,39 +177,79 @@ export class CuringChart {
     };
   }
 
-  protected readonly guidePlugins: Plugin<'line'>[] = [
-    {
-      /** Faint vertical lines at Day 1 and Day 3, labeled "Day 1" / "Day 3" (M2-44, M2 hi-fi mock). */
-      id: 'curing-day-labels',
-      afterDatasetsDraw: (chart) => {
-        const xAxis = chart.scales['x'];
-        if (!xAxis) return;
+  /** Chart options; the report's copy is static and drawn at 3x for print. */
+  protected readonly options = computed(() => {
+    const options = this.chart().options;
+    if (!this.printMode()) return options;
 
-        const { ctx, chartArea } = chart;
-
-        ctx.save();
-        const style = this.document.defaultView?.getComputedStyle(this.document.documentElement);
-        ctx.fillStyle = style?.getPropertyValue('--p-surface-950').trim() || '#171717';
-        ctx.font = `${Math.round((this.fontSize() * 11) / 12)}px ${this.colors().font}`;
-        ctx.textAlign = 'left';
-
-        for (const day of [1, 3]) {
-          const x = xAxis.getPixelForValue(day);
-          ctx.fillText(`Day ${day}`, x + 8, chartArea.top + this.fontSize());
-        }
-
-        ctx.restore();
+    const scales = options.scales ?? {};
+    return {
+      ...options,
+      devicePixelRatio: 3,
+      animation: false as const,
+      events: [],
+      // Stands alone on the report, so no gutter to line up with the strength chart.
+      layout: { padding: { top: 4, right: 8 } },
+      scales: {
+        ...scales,
+        // Show the days under each chart, since the Day 1 / Day 3 labels are left off.
+        x: {
+          ...scales['x'],
+          ticks: { ...scales['x']?.ticks, display: true },
+          title: { ...scales['x']?.title, display: true, text: 'Days since cast' },
+        },
+        // Wide enough for labels like "440 ppm" and "100 Ω/ft" at the report's text size.
+        y: {
+          ...scales['y'],
+          afterFit: (scale: { width: number }) => {
+            scale.width = 64;
+          },
+        },
       },
-    },
+      plugins: {
+        ...options.plugins,
+        tooltip: { ...options.plugins?.tooltip, enabled: false },
+      },
+    };
+  });
 
-    /** Hovered day plugin (M2-44, M2 hi-fi mock). */
-    chartHoverPlugin(
-      () => this.hoveredDay(),
-      (day) => this.hoveredDayChange.emit(day),
-    ),
-  ];
+  /** On the report, no labels or hover: the charts are small and the x-axis shows the days. */
+  protected readonly plugins = computed<Plugin<'line'>[]>(() =>
+    this.printMode() ? [] : [this.dayLabelsPlugin, this.hoverPlugin],
+  );
+
+  private readonly dayLabelsPlugin: Plugin<'line'> = {
+    /** Faint vertical lines at Day 1 and Day 3, labeled "Day 1" / "Day 3" (M2-44, M2 hi-fi mock). */
+    id: 'curing-day-labels',
+    afterDatasetsDraw: (chart) => {
+      const xAxis = chart.scales['x'];
+      if (!xAxis) return;
+
+      const { ctx, chartArea } = chart;
+
+      ctx.save();
+      const style = this.document.defaultView?.getComputedStyle(this.document.documentElement);
+      ctx.fillStyle = style?.getPropertyValue('--p-surface-950').trim() || '#171717';
+      ctx.font = `${Math.round((this.fontSize() * 11) / 12)}px ${this.colors().font}`;
+      ctx.textAlign = 'left';
+
+      for (const day of [1, 3]) {
+        const x = xAxis.getPixelForValue(day);
+        ctx.fillText(`Day ${day}`, x + 8, chartArea.top + this.fontSize());
+      }
+
+      ctx.restore();
+    },
+  };
+
+  /** Hovered day plugin (M2-44, M2 hi-fi mock). */
+  private readonly hoverPlugin = chartHoverPlugin(
+    () => this.hoveredDay(),
+    (day) => this.hoveredDayChange.emit(day),
+  );
 
   private readonly redrawOnHover = effect(() => {
+    if (this.printMode()) return;
     this.hoveredDay();
     this.chartWidget()?.chart?.draw();
   });

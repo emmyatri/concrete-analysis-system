@@ -3,7 +3,6 @@ import { Routes } from '@angular/router';
 import { technicianGuard } from './core/session/technician.guard';
 import { Shell } from './layout/shell/shell';
 import { BatchEntry } from './pages/batch-entry/batch-entry';
-import { PlaceholderPage } from './pages/placeholder-page';
 import { StartSession } from './pages/start-session/start-session';
 
 export const routes: Routes = [
@@ -34,11 +33,8 @@ export const routes: Routes = [
         loadComponent: () =>
           import('./pages/batch-detail/batch-detail').then((m) => m.BatchDetailPage),
       },
-      {
-        path: 'batches/:batchNumber/edit',
-        component: PlaceholderPage,
-        data: { heading: 'Edit batch' },
-      },
+      // The New batch form, filled in from the saved batch.
+      { path: 'batches/:batchNumber/edit', component: BatchEntry },
       // Add cylinder is now a popup on Batch Detail.
       {
         path: 'batches/:batchNumber/cylinders/new',
@@ -54,7 +50,20 @@ export const routes: Routes = [
         loadComponent: () =>
           import('./pages/curing-readings/curing-readings').then((m) => m.CuringReadingsPage),
       },
+      {
+        path: 'settings',
+        loadComponent: () => import('./pages/settings/settings').then((m) => m.SettingsPage),
+      },
     ],
+  },
+
+  {
+    // Standalone printable report (M3-31 / FR-19).
+    // Outside Shell so the application menu and header
+    // do not appear in the printed report.
+    path: 'batches/:batchNumber/report',
+    canActivate: [technicianGuard],
+    loadComponent: () => import('./pages/batch-report/batch-report').then((m) => m.BatchReport),
   },
   { path: '**', redirectTo: '' },
 ];

@@ -508,6 +508,92 @@ describe('BatchEntry', () => {
   });
 });
 
+describe('BatchEntry as Edit batch', () => {
+  let fixture: ComponentFixture<BatchEntry>;
+
+  const open = async (batchNumber: string) => {
+    clearSavedMockBatches();
+    TestBed.configureTestingModule({
+      imports: [BatchEntry],
+      providers: [
+        provideRouter([]),
+        providePrimeNG({ theme: { preset: VulcanPreset } }),
+        provideHttpClient(withInterceptors([mockApiInterceptor])),
+        { provide: USE_MOCKS, useValue: true },
+      ],
+    });
+    TestBed.inject(ReferenceDataService).load();
+    fixture = TestBed.createComponent(BatchEntry);
+    fixture.componentRef.setInput('batchNumber', batchNumber);
+    fixture.detectChanges();
+    await fixture.whenStable();
+    fixture.detectChanges();
+  };
+
+  const form = () => (fixture.componentInstance as unknown as { form: BatchEntry['form'] }).form;
+  const el = () => fixture.nativeElement as HTMLElement;
+  const click = async (testId: string) => {
+    fixture.detectChanges();
+    await fixture.whenStable();
+    (el().querySelector(`[data-testid="${testId}"] button`) as HTMLButtonElement).click();
+    await fixture.whenStable();
+    fixture.detectChanges();
+  };
+
+  it('fills the form from the saved batch, with number and cast date locked', async () => {
+    await open('VM-SYN-006');
+
+    expect(el().querySelector('h1')?.textContent?.trim()).toBe('Edit batch VM-SYN-006');
+    const { batch, composition } = form().controls;
+    expect(batch.controls.batchNumber.value).toBe('VM-SYN-006');
+    expect(batch.controls.batchNumber.disabled).toBe(true);
+    expect(batch.controls.castAt.disabled).toBe(true);
+    expect(batch.controls.expectedFinalBreakPsi.value).toBe('6200');
+    expect(composition.controls.waterPct.value).toBe('19');
+    expect(el().querySelector('[data-testid="save-add-cylinders"]')).toBeNull();
+    expect(el().querySelector('[data-testid="save-batch"]')?.textContent).toContain('Save changes');
+  });
+
+  it('saves the changes and goes back to the batch', async () => {
+    await open('VM-SYN-006');
+    const navigate = vi.spyOn(TestBed.inject(Router), 'navigate').mockResolvedValue(true);
+    form().controls.batch.controls.mixWaterPh.setValue('7.3');
+
+    await click('save-batch');
+
+    expect(navigate).toHaveBeenCalledWith(['/batches', 'VM-SYN-006']);
+    const saved = await new Promise<{ mixWaterPh: number; isSynthetic: boolean }>((resolve) =>
+      TestBed.inject(VulcanApiService).getBatch('VM-SYN-006').subscribe(resolve),
+    );
+    expect(saved.mixWaterPh).toBe(7.3);
+    expect(saved.isSynthetic).toBe(true);
+  });
+
+  it('sends the cast date exactly as it was loaded', async () => {
+    await open('VM-SYN-006');
+    vi.spyOn(TestBed.inject(Router), 'navigate').mockResolvedValue(true);
+    const update = vi.spyOn(TestBed.inject(VulcanApiService), 'updateBatch');
+    const loadedCastAt = await new Promise<string>((resolve) =>
+      TestBed.inject(VulcanApiService)
+        .getBatch('VM-SYN-006')
+        .subscribe((batch) => resolve(batch.castAt)),
+    );
+
+    await click('save-batch');
+
+    expect(update.mock.calls[0][1].castAt).toBe(loadedCastAt);
+  });
+
+  it('says so when the batch does not exist', async () => {
+    await open('VM-NOPE');
+
+    expect(el().querySelector('[data-testid="save-banner"]')?.textContent).toContain(
+      'Batch VM-NOPE was not found.',
+    );
+    expect(el().querySelector('.columns')).toBeNull();
+  });
+});
+
 describe('toCreateBatchRequest', () => {
   it('trims the batch number and turns typed text into numbers', () => {
     const form = createBatchForm(TestBed.inject(NonNullableFormBuilder));

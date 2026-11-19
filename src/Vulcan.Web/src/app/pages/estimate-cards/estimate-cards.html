@@ -34,6 +34,9 @@
             @if (card.difference) {
               <p class="estimate-line" data-testid="difference">{{ card.difference }}</p>
             }
+            @if (card.target) {
+              <p class="estimate-line" data-testid="accuracy-target">{{ card.target }}</p>
+            }
           } @else {
             <p class="estimate-line" data-testid="due">
               Breaks due {{ card.dueAt | date: 'MM/dd/yy' }}

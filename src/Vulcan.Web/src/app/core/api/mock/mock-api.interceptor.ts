@@ -7,7 +7,7 @@
 import { inject } from '@angular/core';
 import { Observable, of, throwError } from 'rxjs';
 
-import { CreateBatchRequest } from '../batches';
+import { CreateBatchRequest, UpdateBatchRequest } from '../batches';
 import {
   BatchDetail,
   BatchSummary,
@@ -23,11 +23,24 @@ import { MOCK_BATCH_DETAILS, mockBatchDetailFromRequest } from './mock-batch-det
 import { MOCK_BATCHES, MOCK_SPECIFIC_GRAVITIES, MOCK_VALIDATION_LIMITS } from './mock-data';
 import { mockEarlyWarnings, mockStrength } from './mock-strength';
 
+// Keep Search and Home warning counts aligned with Batch Detail.
+// The detailed warnings are calculated using the current validation limits.
+for (const summary of MOCK_BATCHES) {
+  const detail = MOCK_BATCH_DETAILS.find((batch) => batch.batchNumber === summary.batchNumber);
+
+  if (detail) {
+    summary.warningCount = detail.warnings.length;
+  }
+}
+
 /** Batches saved while the app is open, so a new batch shows up in the list until you reload. */
 const savedBatches: BatchSummary[] = [];
 /** The same batches in full, so Batch Detail can open one right after it's saved. */
 const savedDetails: BatchDetail[] = [];
 let nextId = 1000;
+
+/** Settings' cloud folder in mock mode. Any path counts as existing. */
+let mockCloudFolder: string | null = null;
 
 /** The fake batches as they were at start-up. Saved cylinders and breaks change them, so tests put them back. */
 const originalBatches = structuredClone(MOCK_BATCHES);
@@ -38,6 +51,7 @@ const originalDetails = structuredClone(MOCK_BATCH_DETAILS);
  * show up in another.
  */
 export function clearSavedMockBatches(): void {
+  mockCloudFolder = null;
   savedBatches.length = 0;
   savedDetails.length = 0;
   MOCK_BATCHES.splice(0, MOCK_BATCHES.length, ...structuredClone(originalBatches));
@@ -59,6 +73,8 @@ export const mockApiInterceptor: HttpInterceptorFn = (request, next) => {
     return ok(MOCK_SPECIFIC_GRAVITIES);
   if (request.method === 'GET' && path === '/api/batches') return ok(findBatches(request));
   if (request.method === 'POST' && path === '/api/batches') return createBatch(request);
+  if (request.method === 'PUT' && /^\/api\/batches\/[^/]+$/.test(path))
+    return updateBatch(request, path);
   if (request.method === 'POST' && /^\/api\/batches\/[^/]+\/specimens$/.test(path))
     return createSpecimen(request, path);
   if (request.method === 'GET' && /^\/api\/batches\/[^/]+\/strength$/.test(path))
@@ -69,6 +85,7 @@ export const mockApiInterceptor: HttpInterceptorFn = (request, next) => {
     return createBreak(request, path);
   if (request.method === 'POST' && /^\/api\/specimens\/\d+\/readings$/.test(path))
     return createReading(request, path);
+  if (path === '/api/settings/cloud-folder') return cloudFolder(request);
   if (request.method === 'GET' && path === '/api/warnings/early')
     return ok(
       mockEarlyWarnings(
@@ -82,6 +99,18 @@ export const mockApiInterceptor: HttpInterceptorFn = (request, next) => {
 
 function ok<T>(body: T, status = 200): Observable<HttpResponse<T>> {
   return of(new HttpResponse({ status, body }));
+}
+
+function cloudFolder(request: HttpRequest<unknown>) {
+  if (request.method === 'PUT') {
+    mockCloudFolder = (request.body as { path: string }).path;
+    return ok(null, 204);
+  }
+  if (request.method === 'DELETE') {
+    mockCloudFolder = null;
+    return ok(null, 204);
+  }
+  return ok({ path: mockCloudFolder, exists: mockCloudFolder !== null });
 }
 
 function findBatches(request: HttpRequest<unknown>): BatchSummary[] {
@@ -119,6 +148,58 @@ function getBatch(request: HttpRequest<unknown>, path: string) {
         error: { title: 'Not Found', status: 404, detail: `Batch ${batchNumber} was not found.` },
       }),
   );
+}
+
+/**
+ * Saves an edited batch in place, like the server's PUT: its number, cast date, cylinders, history
+ * and IsSynthetic stay as they were. Warnings on the batch, recipe and oxides are worked out again.
+ */
+function updateBatch(request: HttpRequest<unknown>, path: string) {
+  const batchNumber = decodeURIComponent(path.slice('/api/batches/'.length));
+  const list = [savedDetails, MOCK_BATCH_DETAILS].find((details) =>
+    details.some((row) => row.batchNumber.toLowerCase() === batchNumber.toLowerCase()),
+  );
+  if (!list) {
+    return problem(request, 404, 'Not Found', { detail: `Batch ${batchNumber} was not found.` });
+  }
+
+  const index = list.findIndex(
+    (row) => row.batchNumber.toLowerCase() === batchNumber.toLowerCase(),
+  );
+  const existing = list[index];
+  const body = request.body as UpdateBatchRequest;
+  const rebuilt = mockBatchDetailFromRequest(
+    existing.id,
+    {
+      batch: {
+        batchNumber: existing.batchNumber,
+        castAt: existing.castAt,
+        finalWeightLb: body.finalWeightLb,
+        expectedFinalBreakPsi: body.expectedFinalBreakPsi,
+        cementType: body.cementType,
+        mixWaterPh: body.mixWaterPh,
+        cementSurfacePh: body.cementSurfacePh,
+      },
+      composition: body.composition,
+      oxides: body.oxides,
+    },
+    existing.createdBy,
+  );
+
+  const batchLevel = ['Batch', 'Composition', 'CementOxideAnalysis'];
+  list[index] = {
+    ...rebuilt,
+    isSynthetic: existing.isSynthetic,
+    createdAtUtc: existing.createdAtUtc,
+    modifiedAtUtc: new Date().toISOString(),
+    modifiedBy: existing.createdBy,
+    specimens: existing.specimens,
+    warnings: [
+      ...rebuilt.warnings,
+      ...existing.warnings.filter((warning) => !batchLevel.includes(warning.entityType)),
+    ],
+  };
+  return ok(structuredClone(list[index]));
 }
 
 /**

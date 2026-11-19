@@ -57,9 +57,12 @@ public sealed class PredictionSaveChangesInterceptor(
                 or EntityState.Modified)
             .ToList();
 
-        var addedBatches = context.ChangeTracker.Entries<Batch>()
-            // prefer curing readings or break results. This is to accommodate seed data
-            .Where(entry => entry.State is EntityState.Added)
+        var changedBatchEntries = context.ChangeTracker.Entries<Batch>()
+            .Where(entry => entry.State is EntityState.Added
+                            || (entry.State == EntityState.Modified &&
+                                (entry.Property(nameof(Batch.CementType)).IsModified ||
+                                 entry.Property(nameof(Batch.ExpectedFinalBreakPsi)).IsModified ||
+                                 entry.Property(nameof(Batch.CastAt)).IsModified)))
             .ToList();
 
         var addedSpecimens = context.ChangeTracker.Entries<Specimen>()
@@ -69,7 +72,7 @@ public sealed class PredictionSaveChangesInterceptor(
         // nothing to change; exit
         if (changedCuringReadings.Count == 0
             && changedBreakResults.Count == 0
-            && addedBatches.Count == 0
+            && changedBatchEntries.Count == 0
             && addedSpecimens.Count == 0)
         {
             return;
@@ -117,11 +120,25 @@ public sealed class PredictionSaveChangesInterceptor(
             .ThenInclude(s => s.BreakResult)
             .ToList();
 
-        foreach (var entry in addedBatches)
+        foreach (var entry in changedBatchEntries)
         {
-            if (!changedBatches.Any(b => ReferenceEquals(b, entry.Entity)))
+            var batch = entry.Entity;
+
+            if (entry.State == EntityState.Modified && batch.Id != 0)
             {
-                changedBatches.Add(entry.Entity);
+                context.Entry(batch)
+                    .Collection(b => b.Specimens)
+                    .Query()
+                    .Include(s => s.CuringReadings)
+                    .Include(s => s.BreakResult)
+                    .Load();
+            }
+
+            if (!changedBatches.Any(b =>
+                    ReferenceEquals(b, batch) ||
+                    (batch.Id != 0 && b.Id == batch.Id)))
+            {
+                changedBatches.Add(batch);
             }
         }
 

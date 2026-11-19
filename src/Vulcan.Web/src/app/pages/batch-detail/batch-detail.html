@@ -48,6 +48,15 @@
           pButton
           [outlined]="true"
           class="quiet"
+          [routerLink]="['/batches', batch.batchNumber, 'report']"
+          data-testid="batch-report"
+        >
+          <span pButtonLabel>View Report</span>
+        </a>
+        <a
+          pButton
+          [outlined]="true"
+          class="quiet"
           [routerLink]="['/batches', batch.batchNumber, 'edit']"
           ><span pButtonLabel>Edit batch</span></a
         >
@@ -83,7 +92,17 @@
           </p>
           <ul>
             @for (reason of earlyWarningReasons(); track reason.limitKey + reason.warning) {
-              <li [attr.data-limit-key]="reason.limitKey">{{ reason.warning }}</li>
+              <li [attr.data-limit-key]="reason.limitKey">
+                {{ reason.warning }}
+                @if (reason.recommendation) {
+                  <p
+                    class="early-warning-recommendation"
+                    data-testid="early-warning-recommendation"
+                  >
+                    {{ reason.recommendation }}
+                  </p>
+                }
+              </li>
             }
           </ul>
         </div>

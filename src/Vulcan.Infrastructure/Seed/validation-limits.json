@@ -234,6 +234,24 @@
         "Source": "Client doc / FR-5"
     },
     {
+        "Key": "Break.Day3WarnPct",
+        "Severity": "Warn",
+        "Min": 40,
+        "Max": null,
+        "Unit": "%",
+        "Message": "Average 3-day break is below 40% of 3,000 PSI. Check the 7-day breaks.",
+        "Source": "Client answers, Nov 2, 2026 (client-decisions §14.1)"
+    },
+    {
+        "Key": "Break.Day7FailPct",
+        "Severity": "Warn",
+        "Min": 70,
+        "Max": null,
+        "Unit": "%",
+        "Message": "Average 7-day break is below 70% of 3,000 PSI. The batch will probably fail.",
+        "Source": "Client answers, Nov 2, 2026 (client-decisions §14.1)"
+    },
+    {
         "Key": "Curing.InternalTempF",
         "Severity": "Reject",
         "Min": 0,
@@ -261,13 +279,22 @@
         "Source": "Plausibility"
     },
     {
-        "Key": "Curing.MoisturePct",
-        "Severity": "Reject",
-        "Min": 0,
-        "Max": 100,
-        "Unit": "%",
-        "Message": "Moisture percent must be a valid percentage [0-100]",
-        "Source": "FR-6"
+      "Key": "Curing.MoisturePct",
+      "Severity": "Reject",
+      "Min": 0,
+      "Max": 15,
+      "Unit": "%",
+      "Message": "Moisture (% of sample weight) must be within the accepted range [0-15]",
+      "Source": "M3-02 — provisional accepted range, pending client confirmation"
+    },
+    {
+      "Key": "Curing.MoisturePct",
+      "Severity": "Warn",
+      "Min": 2,
+      "Max": 4,
+      "Unit": "%",
+      "Message": "Moisture content is outside the normal range of 2-4% of sample weight.",
+      "Source": "Don, Nov 2, 2026"
     },
     {
         "Key": "Curing.RelativeHumidityPct",
@@ -313,6 +340,15 @@
         "Unit": "%",
         "Message": "Projected 28-day strength is more than 5% below the expected final",
         "Source": "ACI 211.1-97, Table 6.3.4(a); ADR-005"
+    },
+    {
+        "Key": "Prediction.AccuracyTargetPct",
+        "Severity": "Warn",
+        "Min": null,
+        "Max": 5,
+        "Unit": "%",
+        "Message": "28-day estimate is more than 5% from the actual break",
+        "Source": "Don, Nov 2, 2026"
     },
     {
         "Key": "Batch.ExpectedFinalVsWcmPct",

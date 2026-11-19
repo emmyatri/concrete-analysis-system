@@ -1,37 +1,43 @@
 <div class="header">
-  <h3 class="chart-title">Curing readings</h3>
-  <!-- Measurement selector: displays readable labels but stores the measurement key. -->
-  <div class="measurement-selector">
-    <label for="curing-measurement">Display measurement:</label>
-    <p-select
-      inputId="curing-measurement"
-      [options]="measurementOptions"
-      optionLabel="label"
-      optionValue="value"
-      [ngModel]="selectedMeasurement()"
-      (ngModelChange)="selectedMeasurement.set($event)"
-      scrollHeight="120px"
-    />
-    @if (expandable()) {
-      <p-button
-        icon="pi pi-window-maximize"
-        label="Expand"
-        [text]="true"
-        size="small"
-        ariaLabel="Expand the curing readings chart"
-        data-testid="expand-curing"
-        (onClick)="expand.emit(selectedMeasurement())"
+  @if (printMode()) {
+    <h3 class="chart-title">{{ measurementLabel() }}</h3>
+  } @else {
+    <h3 class="chart-title">Curing readings</h3>
+    <!-- Measurement selector: displays readable labels but stores the measurement key. -->
+    <div class="measurement-selector">
+      <label for="curing-measurement">Display measurement:</label>
+      <p-select
+        inputId="curing-measurement"
+        [options]="measurementOptions"
+        optionLabel="label"
+        optionValue="value"
+        [ngModel]="selectedMeasurement()"
+        (ngModelChange)="selectedMeasurement.set($event)"
+        scrollHeight="120px"
       />
-    }
-  </div>
+      @if (expandable()) {
+        <p-button
+          icon="pi pi-window-maximize"
+          label="Expand"
+          [text]="true"
+          size="small"
+          ariaLabel="Expand the curing readings chart"
+          data-testid="expand-curing"
+          (onClick)="expand.emit(selectedMeasurement())"
+        />
+      }
+    </div>
+  }
 </div>
 
 <!-- The computed chart configuration updates when selectedMeasurement changes. -->
 <p-chart
   type="line"
   [data]="chart().data"
-  [options]="chart().options"
-  [plugins]="guidePlugins"
+  [options]="options()"
+  [plugins]="plugins()"
   [height]="height()"
 />
-<small class="curing-caption">{{ readingCaption() }}</small>
+@if (!printMode()) {
+  <small class="curing-caption">{{ readingCaption() }}</small>
+}

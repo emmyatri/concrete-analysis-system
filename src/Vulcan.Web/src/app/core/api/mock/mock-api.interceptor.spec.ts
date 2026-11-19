@@ -182,6 +182,18 @@ describe('mockApiInterceptor', () => {
     }
   });
 
+  it('reports 94 moisture warnings for VM-SYN-003', async () => {
+    const api = setUp(true);
+
+    const detail = await firstValueFrom(api.getBatch('VM-SYN-003'));
+
+    const moistureWarnings = detail.warnings.filter(
+      (warning) => warning.limitKey === 'Curing.MoisturePct',
+    );
+
+    expect(moistureWarnings).toHaveLength(94);
+  });
+
   it('answers an unknown batch number with a 404', async () => {
     const api = setUp(true);
 
@@ -245,12 +257,53 @@ describe('mockApiInterceptor', () => {
     expect(strength.earlyWarnings.map((w) => w.limitKey)).toEqual(['Composition.WaterCementRatio']);
   });
 
+  it('warns from a low 3-day break before there is an estimate', async () => {
+    const api = setUp(true);
+
+    await firstValueFrom(
+      api.createBreakResult(14201, { brokenAt: '2026-10-02T12:00:00.000Z', strengthPsi: 800 }),
+    );
+    const strength = await firstValueFrom(api.getStrength('VM-2026-0142'));
+
+    expect(strength.status).toBe('InsufficientCuringData');
+    expect(strength.atRisk).toBe(true);
+    expect(strength.earlyWarnings[0]).toEqual({
+      warning: '3-day breaks averaged 800 PSI, below 1,200 PSI (40% of 3,000 PSI).',
+      recommendation: 'Watch this batch at the 7-day break.',
+      field: 'day3AverageBreakPct',
+      value: 26.7,
+      limitKey: 'Break.Day3WarnPct',
+      limit: 40,
+    });
+  });
+
+  it('recommends abandoning when both early breaks are low', async () => {
+    const api = setUp(true);
+
+    await firstValueFrom(
+      api.createBreakResult(14201, { brokenAt: '2026-10-02T12:00:00.000Z', strengthPsi: 800 }),
+    );
+    await firstValueFrom(
+      api.createBreakResult(14203, { brokenAt: '2026-10-06T12:00:00.000Z', strengthPsi: 1700 }),
+    );
+    const strength = await firstValueFrom(api.getStrength('VM-2026-0142'));
+
+    const day3Warning = strength.earlyWarnings.find((w) => w.limitKey === 'Break.Day3WarnPct');
+    const day7Warning = strength.earlyWarnings.find((w) => w.limitKey === 'Break.Day7FailPct');
+
+    expect(day3Warning).toBeDefined();
+    expect(day3Warning?.recommendation).toBeUndefined();
+    expect(day7Warning?.recommendation).toBe(
+      "Both early breaks are low. Vulcan's practice is to abandon this batch and start a new one.",
+    );
+  });
+
   it('estimates a batch once a cylinder has readings a day apart', async () => {
     const api = setUp(true);
     const reading = {
       internalTempF: 72,
       ambientTempF: 70,
-      moisturePct: 93,
+      moisturePct: 3,
       relativeHumidityPct: 95,
       resistivityOhmPerFt: 15,
       co2Ppm: 420,

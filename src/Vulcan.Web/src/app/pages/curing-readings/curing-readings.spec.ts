@@ -16,7 +16,7 @@ import { VulcanApiService } from '../../core/api/vulcan-api.service';
 import { VulcanPreset } from '../../theme/vulcan-preset';
 import { CuringReadingsPage, toLocalInput } from './curing-readings';
 
-const GOOD = ['78.4', '68.9', '91.8', '96.1', '14.88', '418.5'];
+const GOOD = ['78.4', '68.9', '3.0', '96.1', '14.88', '418.5'];
 
 describe('CuringReadingsPage', () => {
   let root: HTMLElement;
@@ -94,7 +94,7 @@ describe('CuringReadingsPage', () => {
     // Each saved value shows its unit, formatted like Batch Detail.
     expect(
       [...existingRows()[0].querySelectorAll('td')].slice(2, 8).map((td) => td.textContent?.trim()),
-    ).toEqual(['78.4 °F', '69.5 °F', '91.6%', '96.1%', '15.98 Ω/ft', '416.8 ppm']);
+    ).toEqual(['78.4 °F', '69.5 °F', '3.0%', '96.1%', '15.98 Ω/ft', '416.8 ppm']);
     expect(newRows().length).toBe(1);
     expect(newRows()[0].querySelector('td')?.textContent?.trim()).toBe('8');
     // Time taken starts at now.
@@ -105,7 +105,7 @@ describe('CuringReadingsPage', () => {
     await open();
 
     expect(text('[data-testid="ranges"]')).toBe(
-      'Internal 0–200 °F · Ambient 0–150 °F (normal 60–80) · Moisture 0–100% · RH 0–100% · ' +
+      'Internal 0–200 °F · Ambient 0–150 °F (normal 60–80) · Moisture (% of sample weight) 0–15% (normal 2–4) · RH 0–100% · ' +
         'Resistivity ≥ 0.01 ohms/ft · CO₂ ≥ 0 ppm',
     );
   });
@@ -120,7 +120,7 @@ describe('CuringReadingsPage', () => {
     expect(inputs(newRows()[0])).toHaveLength(0);
     expect(
       [...newRows()[0].querySelectorAll('td')].slice(2, 8).map((td) => td.textContent?.trim()),
-    ).toEqual(['78.4 °F', '68.9 °F', '91.8%', '96.1%', '14.88 Ω/ft', '418.5 ppm']);
+    ).toEqual(['78.4 °F', '68.9 °F', '3.0%', '96.1%', '14.88 Ω/ft', '418.5 ppm']);
     expect(newRows().length).toBe(2);
     expect(newRows()[1].querySelector('td')?.textContent?.trim()).toBe('9');
     expect((await readings()).length).toBe(8);
@@ -128,7 +128,7 @@ describe('CuringReadingsPage', () => {
 
   it('accepts internal temperature with one decimal place', async () => {
     await open();
-    await fill(newRows()[0], ['72.1', '68.9', '91.8', '96.1', '14.88', '418.5']);
+    await fill(newRows()[0], ['72.1', '68.9', '3.0', '96.1', '14.88', '418.5']);
 
     expect(inputs(newRows()[0])[1].classList).not.toContain('cell--error');
 
@@ -141,7 +141,7 @@ describe('CuringReadingsPage', () => {
 
   it('rejects internal temperature with more than one decimal place', async () => {
     await open();
-    await fill(newRows()[0], ['72.12', '68.9', '91.8', '96.1', '14.88', '418.5']);
+    await fill(newRows()[0], ['72.12', '68.9', '3.0', '96.1', '14.88', '418.5']);
 
     expect(inputs(newRows()[0])[1].classList).toContain('cell--error');
 
@@ -154,7 +154,7 @@ describe('CuringReadingsPage', () => {
 
   it('blocks ambient 720 and says why', async () => {
     await open();
-    await fill(newRows()[0], ['78.4', '720', '91.8', '96.1', '14.88', '418.5']);
+    await fill(newRows()[0], ['78.4', '720', '3.0', '96.1', '14.88', '418.5']);
 
     expect(inputs(newRows()[0])[2].classList).toContain('cell--error');
 
@@ -167,7 +167,7 @@ describe('CuringReadingsPage', () => {
 
   it('saves ambient 84.2 in amber with a warning', async () => {
     await open();
-    await fill(newRows()[0], ['78.4', '84.2', '91.8', '96.1', '14.88', '418.5']);
+    await fill(newRows()[0], ['78.4', '84.2', '3.0', '96.1', '14.88', '418.5']);
 
     expect(inputs(newRows()[0])[2].classList).toContain('cell--warn');
 
@@ -183,7 +183,7 @@ describe('CuringReadingsPage', () => {
 
   it('accepts internal temperature entered without a leading zero', async () => {
     await open();
-    await fill(newRows()[0], ['.5', '68.9', '91.8', '96.1', '14.88', '418.5']);
+    await fill(newRows()[0], ['.5', '68.9', '3.0', '96.1', '14.88', '418.5']);
 
     expect(inputs(newRows()[0])[1].classList).not.toContain('cell--error');
 
@@ -228,7 +228,7 @@ describe('CuringReadingsPage', () => {
 
   it('Save all saves the good rows and keeps the bad ones, so one bad row blocks nothing else', async () => {
     await open();
-    await fill(newRows()[0], ['78.4', '720', '91.8', '96.1', '14.88', '418.5']);
+    await fill(newRows()[0], ['78.4', '720', '3.0', '96.1', '14.88', '418.5']);
     root.querySelector<HTMLButtonElement>('[data-testid="add-row"] button')!.click();
     await settle();
     await fill(newRows()[1], GOOD);
@@ -270,7 +270,7 @@ describe('CuringReadingsPage', () => {
     await settle();
 
     expect(status(newRows()[0])).toBe('Not saved');
-    expect(messages()).toEqual(['Row 1 · Moisture — Moisture is too wet']);
+    expect(messages()).toEqual(['Row 1 · Moisture (% of sample weight) — Moisture is too wet']);
     expect(inputs(newRows()[0])[3].classList).toContain('cell--error');
   });
 

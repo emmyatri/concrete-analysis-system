@@ -33,6 +33,22 @@ export interface CreateBatchRequest {
   };
 }
 
+/**
+ * PUT /api/batches/{batchNumber}: the batch's fields at the top level, with its composition and
+ * oxides. The batch number and IsSynthetic can't change.
+ */
+export interface UpdateBatchRequest {
+  castAt: string;
+  finalWeightLb: number;
+  expectedFinalBreakPsi: number;
+  cementType: CementType;
+  mixWaterPh: number;
+  cementSurfacePh: number;
+  isSynthetic: boolean;
+  composition: CreateBatchRequest['composition'];
+  oxides: CreateBatchRequest['oxides'];
+}
+
 /** 201 response. */
 export interface CreateBatchResponse {
   id: number;

@@ -32,7 +32,7 @@ type Field =
 
 /**
  * The six measurements, in grid order, with the ValidationLimit key that checks each. `digits` and
- * `unit` are how a saved value reads, the same as on Batch Detail ("78.4 °F", "91.6%").
+ * `unit` are how a saved value reads, the same as on Batch Detail ("78.4 °F", "3.0%").
  */
 export const COLUMNS: {
   field: Field;
@@ -63,8 +63,8 @@ export const COLUMNS: {
   {
     field: 'moisturePct',
     key: 'Curing.MoisturePct',
-    header: 'Moisture (%)',
-    name: 'Moisture',
+    header: 'Moisture (% of sample weight)',
+    name: 'Moisture (% of sample weight)',
     digits: '1.1-2',
     unit: '%',
   },

@@ -259,6 +259,7 @@ export interface MeasuredBreak {
 /** An early warning (SCRUM-180). limitKey matches ValidationLimit.key; limit is the bound it crossed. */
 export interface EarlyWarning {
   warning: string;
+  recommendation?: string | null;
   field: string;
   value: number;
   limitKey: string;
@@ -294,6 +295,8 @@ export interface BatchStrength {
   /** ExpectedFinalBreakPsi minus projected28DayPsi. Negative means above target. */
   shortfallPsi: number | null;
   shortfallPct: number | null;
+  /** Allowed % difference between the 28-day estimate and the actual 28-day break. Null when no percentage assigned. */
+  accuracyTargetPct: number | null;
   /** Days 1–28. Empty when status is InsufficientCuringData. */
   curvePoints: StrengthCurvePoint[];
   /** The curve before the re-fit. Empty when no estimate was adjusted. */
@@ -302,6 +305,13 @@ export interface BatchStrength {
   measuredBreaks: MeasuredBreak[];
   earlyWarnings: EarlyWarning[];
   curingPoints: CuringPoint[];
+}
+
+/** GET /api/settings/cloud-folder (SCRUM-214). `path` is null when no folder is set. */
+export interface CloudFolderSetting {
+  path: string | null;
+  /** False when the saved folder can't be found, e.g. the sync app was removed. */
+  exists: boolean;
 }
 
 /** GET /api/warnings/early: one batch with at least one early warning (Home, batches at risk). */

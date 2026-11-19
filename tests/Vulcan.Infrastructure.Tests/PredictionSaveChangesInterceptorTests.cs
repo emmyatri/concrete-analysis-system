@@ -1184,6 +1184,70 @@ public sealed class PredictionSaveChangesInterceptorTests()
         }
     }
 
+    [Fact]
+    public async Task Editing_batch_recalculates_stored_predictions()
+    {
+        using var connection = new SqliteConnection("Filename=:memory:");
+        await connection.OpenAsync();
+
+        var options = GetDbOptions(
+            connection,
+            MakeEstimate(),
+            _calibrationVersion,
+            strengthEstimate: _estimator);
+
+        // Seed a batch with existing curing readings,
+        // break results, and stored predictions.
+        await using (var db = new VulcanDbContext(options))
+        {
+            await db.Database.EnsureCreatedAsync();
+            db.Add(_calibrationVersion);
+            SyntheticDataSeeder.Seed(db);
+            await db.SaveChangesAsync();
+        }
+
+        decimal originalPrediction;
+
+        await using (var db = new VulcanDbContext(options))
+        {
+            var batch = db.Batch.Single(
+                b => b.BatchNumber == "VM-SYN-006");
+
+            originalPrediction = db.Prediction
+                .Single(p => p.BatchId == batch.Id &&
+                             p.HorizonDays == 28)
+                .UnadjustedPsi.ShouldNotBeNull();
+
+            // Change a prediction-relevant batch property.
+            // Intentionally do not Include specimens here:
+            // the interceptor must load the required inputs.
+            batch.ExpectedFinalBreakPsi = 5000;
+
+            await db.SaveChangesAsync();
+        }
+
+        // Read the persisted values in a fresh context.
+        await using (var db = new VulcanDbContext(options))
+        {
+            var batch = db.Batch.Single(
+                b => b.BatchNumber == "VM-SYN-006");
+
+            var predictions = db.Prediction
+                .Where(p => p.BatchId == batch.Id)
+                .ToList();
+
+            predictions.Count.ShouldBe(3);
+
+            var updatedPrediction = predictions
+                .Single(p => p.HorizonDays == 28);
+
+            updatedPrediction.UnadjustedPsi.ShouldNotBeNull()
+                .ShouldNotBe(originalPrediction);
+
+            updatedPrediction.CalibrationVersion.ShouldBe("v1");
+        }
+    }
+
     // spot check on VM-SYN-006 following StrengthEstimator tests
     [Fact]
     public async Task Seeding_batch_data_has_correct_prediction()

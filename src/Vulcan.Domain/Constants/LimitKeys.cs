@@ -19,6 +19,8 @@ public static class LimitKeys
     public const string LengthIn = "Specimen.LengthIn";
     public const string WidthIn = "Specimen.WidthIn";
     public const string StrengthPsi = "Break.StrengthPsi";
+    public const string BreakDay3WarnPct = "Break.Day3WarnPct";
+    public const string BreakDay7FailPct = "Break.Day7FailPct";
     public const string MixWaterPh = "Batch.MixWaterPh";
     public const string CementSurfacePh = "Batch.CementSurfacePh";
     public const string FinalWeightLb = "Batch.FinalWeightLb";
@@ -31,5 +33,6 @@ public static class LimitKeys
     public const string Co2Ppm = "Curing.Co2Ppm";
     public const string PredictionMinimumPsi = "Prediction.MinimumPsi";
     public const string PredictionShortfallPct = "Prediction.ShortfallPct";
+    public const string PredictionAccuracyTargetPct = "Prediction.AccuracyTargetPct";
     public const string ExpectedFinalVsWcmPct = "Batch.ExpectedFinalVsWcmPct";
 }

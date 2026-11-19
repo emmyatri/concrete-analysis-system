@@ -12,6 +12,15 @@ public sealed class RecordWarningRepository(VulcanDbContext dbContext)
         await dbContext.RecordWarning.AddRangeAsync(warnings);
     }
 
+    public async Task RemoveBatchFieldWarningsAsync(int batchId)
+    {
+        var stale = await dbContext.RecordWarning
+            .Where(w => w.EntityType == nameof(Batch) && w.EntityId == batchId)
+            .ToListAsync();
+
+        dbContext.RecordWarning.RemoveRange(stale);
+    }
+
     public async Task<IReadOnlyList<RecordWarning>> GetForBatchesAsync(
         IReadOnlyCollection<Batch> batches)
     {

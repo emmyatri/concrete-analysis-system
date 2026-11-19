@@ -1,0 +1,505 @@
+﻿/* =========================================
+   M3-31 — SHARED REPORT STYLES
+   Reusable section and table formatting
+   ========================================= */
+
+app-batch-report {
+  /* =========================================
+     REPORT SECTIONS
+     ========================================= */
+
+  .report-section {
+    margin-top: 28px;
+  }
+
+  /* Six curing charts, two across. */
+  .report-curing-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px 16px;
+
+    app-curing-chart {
+      padding: 4px 0 8px;
+      break-inside: avoid;
+      page-break-inside: avoid;
+    }
+
+    .chart-title {
+      font-size: 11px;
+    }
+  }
+
+  /* A warning shown beside the value it is about. */
+  .field-warning {
+    display: block;
+    margin-top: 2px;
+    color: #9a3412;
+    font-size: 10px;
+    font-weight: 600;
+    line-height: 1.4;
+  }
+
+  .section-heading {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #cbd5e1;
+    margin-bottom: 16px;
+
+    h2 {
+      margin: 0;
+      font-size: 17px;
+      color: #1e293b;
+    }
+  }
+
+  .section-number {
+    font-size: 12px;
+    font-weight: 800;
+    color: #234e70;
+  }
+
+  .section-description {
+    margin: 0 0 14px;
+    color: #64748b;
+    font-size: 11px;
+    line-height: 1.5;
+  }
+
+  .report-note {
+    margin: 14px 0 0;
+    padding-left: 10px;
+    border-left: 2px solid #cbd5e1;
+    color: #64748b;
+    font-size: 10px;
+    line-height: 1.6;
+  }
+
+  /* =========================================
+     SHARED TABLE STYLING
+     ========================================= */
+
+  .report-table-wrapper {
+    width: 100%;
+  }
+
+  .report-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12px;
+
+    th,
+    td {
+      padding: 10px 12px;
+      border-bottom: 1px solid #e2e8f0;
+      text-align: left;
+      vertical-align: top;
+      overflow-wrap: anywhere;
+    }
+
+    th {
+      width: 42%;
+      color: #475569;
+      font-weight: 600;
+    }
+
+    td {
+      color: #1e293b;
+    }
+
+    tr:nth-child(even) {
+      background: #f8fafc;
+    }
+
+    thead {
+      background: #eaf0f5;
+
+      th {
+        color: #234e70;
+        font-size: 11px;
+        font-weight: 700;
+      }
+    }
+  }
+
+  /* =========================================
+     MIX COMPOSITION
+     ========================================= */
+
+  .composition-table {
+    th:last-child,
+    td:last-child {
+      text-align: right;
+      width: 30%;
+    }
+  }
+
+  .material-detail {
+    display: block;
+    margin-top: 3px;
+    color: #64748b;
+    font-size: 10px;
+  }
+
+  .table-total {
+    background: #eaf0f5 !important;
+
+    th,
+    td {
+      font-weight: 700;
+      color: #1e293b;
+      border-top: 2px solid #234e70;
+    }
+  }
+
+  .composition-summary {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+    margin-top: 16px;
+    padding: 12px 14px;
+    border: 1px solid #cbd5e1;
+    border-radius: 4px;
+    background: #f8fafc;
+    font-size: 12px;
+
+    strong {
+      color: #234e70;
+      font-size: 14px;
+    }
+  }
+
+  /* =========================================
+     CEMENT OXIDE ANALYSIS
+     ========================================= */
+
+  .oxides-table {
+    th:nth-child(2),
+    td:nth-child(2) {
+      width: 25%;
+      text-align: center;
+    }
+
+    th:last-child,
+    td:last-child {
+      width: 28%;
+      text-align: right;
+    }
+  }
+
+  /* =========================================
+     SPECIMENS AND BREAK RESULTS
+     ========================================= */
+
+  .specimen-summary {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 12px;
+    margin-bottom: 18px;
+  }
+
+  .specimen-stat {
+    padding: 12px 14px;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 4px;
+
+    span {
+      display: block;
+      margin-bottom: 6px;
+      color: #64748b;
+      font-size: 10px;
+      font-weight: 600;
+      text-transform: uppercase;
+    }
+
+    strong {
+      color: #234e70;
+      font-size: 19px;
+      font-weight: 700;
+    }
+  }
+
+  .specimens-table {
+    table-layout: fixed;
+
+    thead th {
+      font-size: 10px;
+    }
+
+    th,
+    td {
+      padding: 9px 8px;
+      font-size: 10px;
+    }
+
+    th:first-child,
+    td:first-child {
+      width: 18%;
+      font-weight: 600;
+    }
+
+    th:nth-child(2),
+    td:nth-child(2) {
+      width: 15%;
+    }
+
+    th:nth-child(3),
+    td:nth-child(3) {
+      width: 21%;
+    }
+
+    th:nth-child(4),
+    td:nth-child(4) {
+      width: 23%;
+    }
+
+    th:last-child,
+    td:last-child {
+      width: 23%;
+      text-align: right;
+    }
+  }
+
+  .pending-value {
+    color: #64748b;
+    font-style: italic;
+  }
+
+  /* =========================================
+     STRENGTH DEVELOPMENT CHART
+     ========================================= */
+
+  .strength-report-section {
+    width: 100%;
+  }
+
+  .report-strength-chart {
+    width: 100%;
+    min-width: 0;
+    margin: 18px 0;
+    padding: 12px 0;
+    background: #ffffff;
+
+    app-strength-chart {
+      display: block;
+      width: 100%;
+      padding: 0;
+    }
+
+    p-chart {
+      display: block;
+      width: 100%;
+    }
+
+    .p-chart {
+      width: 100%;
+    }
+
+    canvas {
+      display: block;
+      max-width: 100%;
+    }
+  }
+
+  /* =========================================
+     STRENGTH PREDICTIONS AND CALIBRATION
+     ========================================= */
+
+  .prediction-summary {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+    margin-bottom: 20px;
+  }
+
+  .prediction-stat {
+    padding: 14px;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 4px;
+
+    span {
+      display: block;
+      margin-bottom: 8px;
+      color: #64748b;
+      font-size: 10px;
+      font-weight: 600;
+      text-transform: uppercase;
+    }
+
+    strong {
+      color: #234e70;
+      font-size: 19px;
+    }
+  }
+
+  .prediction-subheading {
+    margin: 24px 0 12px;
+    color: #1e293b;
+    font-size: 13px;
+  }
+
+  .predictions-table,
+  .calibration-table {
+    table-layout: fixed;
+
+    th,
+    td {
+      padding: 10px 8px;
+      font-size: 11px;
+    }
+  }
+
+  .calibration-table {
+    th:first-child,
+    td:first-child {
+      width: 12%;
+    }
+
+    th:nth-child(2),
+    td:nth-child(2) {
+      width: 70%;
+    }
+
+    th:last-child,
+    td:last-child {
+      width: 18%;
+    }
+  }
+
+  /* Shared calculation methodology and calibration details. */
+  .calibration-detail {
+    margin-top: 12px;
+    padding: 16px;
+    border: 1px solid #e2e8f0;
+    border-left: 3px solid #234e70;
+    background: #f8fafc;
+    border-radius: 4px;
+
+    & + .calibration-detail {
+      margin-top: 10px;
+    }
+
+    p {
+      margin: 12px 0 0;
+      color: #334155;
+      font-size: 11px;
+      line-height: 1.6;
+      overflow-wrap: anywhere;
+    }
+  }
+
+  .calibration-detail-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+
+    strong {
+      color: #234e70;
+      font-size: 12px;
+    }
+
+    span {
+      color: #64748b;
+      font-size: 11px;
+      font-weight: 600;
+    }
+  }
+
+  /* =========================================
+     07 — WARNINGS AND RECOMMENDATIONS
+     ========================================= */
+
+  .report-risk-assessment {
+    margin: 12px 0 20px;
+    padding: 14px 16px;
+    border: 1px solid #e8c4c4;
+    border-left: 3px solid #a94442;
+    border-radius: 4px;
+    background: #fff8f7;
+    color: #334155;
+    font-size: 11px;
+    line-height: 1.6;
+
+    > strong {
+      display: block;
+      margin-bottom: 8px;
+      color: #913737;
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    ul {
+      margin: 8px 0 0;
+      padding-left: 20px;
+    }
+
+    li {
+      margin-bottom: 6px;
+      padding-left: 2px;
+      overflow-wrap: anywhere;
+    }
+
+    li:last-child {
+      margin-bottom: 0;
+    }
+
+    p {
+      margin: 8px 0 0;
+    }
+  }
+
+  /* Recorded validation warnings */
+
+  .report-table[data-testid='report-validation-warnings'] {
+    table-layout: fixed;
+
+    th,
+    td {
+      padding: 9px 8px;
+      font-size: 10px;
+      line-height: 1.5;
+      overflow-wrap: anywhere;
+    }
+
+    th:nth-child(1),
+    td:nth-child(1) {
+      width: 23%;
+    }
+
+    th:nth-child(2),
+    td:nth-child(2) {
+      width: 25%;
+    }
+
+    th:nth-child(3),
+    td:nth-child(3) {
+      width: 12%;
+      font-variant-numeric: tabular-nums;
+    }
+
+    th:nth-child(4),
+    td:nth-child(4) {
+      width: 40%;
+    }
+  }
+
+  /* =========================================
+     EMPTY STATES
+     ========================================= */
+
+  .report-empty {
+    margin: 16px 0;
+    padding: 14px 16px;
+    background: #f8fafc;
+    border: 1px dashed #cbd5e1;
+    border-radius: 4px;
+    color: #475569;
+    font-size: 12px;
+  }
+}

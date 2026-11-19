@@ -161,11 +161,17 @@ public class EarlyWarningServiceTests()
         syn002.ShortfallPct.ShouldBe(10.21);
         syn002.EarlyWarnings.Count(w => w.LimitKey == LimitKeys.AmbientTempF).ShouldBe(1);
 
-        // Moisture loss: at risk once the 3- and 7-day breaks come in low; no input warning.
+        // Moisture loss: at risk after the 3- and 7-day breaks.
+        // Low moisture is also flagged as an input warning.
         var syn003 = await Evaluate("VM-SYN-003");
         syn003.AtRisk.ShouldBeTrue();
-        syn003.Projected28DayPsi.ShouldBe(4503d);
-        syn003.EarlyWarnings.Single().LimitKey.ShouldBe(LimitKeys.PredictionShortfallPct);
+        syn003.Projected28DayPsi.ShouldBe(4535d);
+
+        syn003.EarlyWarnings.ShouldContain(
+            w => w.LimitKey == LimitKeys.PredictionShortfallPct);
+
+        syn003.EarlyWarnings.Count(
+            w => w.LimitKey == LimitKeys.MoisturePct).ShouldBe(1);
 
         // pH: flagged on entry but on track.
         var syn009 = await Evaluate("VM-SYN-009");
@@ -177,8 +183,9 @@ public class EarlyWarningServiceTests()
             (await Evaluate(onTrack)).EarlyWarnings.ShouldBeEmpty(onTrack);
         }
 
-        // 150 cold ambient readings, the VM-SYN-006 w/c and the VM-SYN-009 pH. No early breaks.
-        db.RecordWarning.Count().ShouldBe(152);
+        // 150 cold ambient readings, 94 moisture readings,
+        // one w/c warning, and one pH warning.
+        db.RecordWarning.Count().ShouldBe(246);
     }
 
     [Fact]
@@ -258,7 +265,7 @@ public class EarlyWarningServiceTests()
             TakenAt = castAt.AddDays(1),
             InternalTempF = 75m,
             AmbientTempF = 70m,
-            MoisturePct = 90m,
+            MoisturePct = 3m,
             RelativeHumidityPct = 95m,
             ResistivityOhmPerFt = 20m,
             Co2Ppm = 400m
@@ -269,7 +276,7 @@ public class EarlyWarningServiceTests()
             TakenAt = castAt.AddDays(2),
             InternalTempF = 75m,
             AmbientTempF = 70m,
-            MoisturePct = 90m,
+            MoisturePct = 3m,
             RelativeHumidityPct = 95m,
             ResistivityOhmPerFt = 20m,
             Co2Ppm = 400m
@@ -359,5 +366,138 @@ public class EarlyWarningServiceTests()
         warnings
             .Where(w => w.LimitKey.StartsWith("Prediction.") || w.LimitKey == LimitKeys.ExpectedFinalVsWcmPct)
             .ShouldAllBe(w => w.Warning.Contains(" PSI") && w.Warning.Any(char.IsDigit));
+    }
+
+    // Client-decisions §14.1. Two cylinders 100 PSI either side of the average, so the band is checked
+    // against the average for that age, not each break.
+    [Theory]
+    [InlineData(TestAgeDays.Day3, 800, true)]
+    [InlineData(TestAgeDays.Day3, 1500, false)]
+    [InlineData(TestAgeDays.Day7, 1700, true)]
+    [InlineData(TestAgeDays.Day7, 2400, false)]
+    public async Task Low_3_and_7_day_break_averages_put_the_batch_at_risk(
+        TestAgeDays age,
+        int averagePsi,
+        bool flagged)
+    {
+        using var connection = new SqliteConnection("Filename=:memory:");
+        await connection.OpenAsync();
+        var db = GetDbContext(connection);
+        await InitTestDb(db);
+        var evaluator = SetupEarlyWarningService(db);
+
+        var result = await evaluator.Evaluate(
+            BatchWithBreaks((age, averagePsi - 100), (age, averagePsi + 100)));
+
+        var key = age == TestAgeDays.Day3 ? LimitKeys.BreakDay3WarnPct : LimitKeys.BreakDay7FailPct;
+        result.EarlyWarnings.Any(w => w.LimitKey == key).ShouldBe(flagged);
+        result.AtRisk.ShouldBe(flagged);
+    }
+
+    [Fact]
+    public async Task Low_early_breaks_read_as_plain_language()
+    {
+        using var connection = new SqliteConnection("Filename=:memory:");
+        await connection.OpenAsync();
+        var db = GetDbContext(connection);
+        await InitTestDb(db);
+        var evaluator = SetupEarlyWarningService(db);
+
+        var result = await evaluator.Evaluate(
+            BatchWithBreaks((TestAgeDays.Day3, 800), (TestAgeDays.Day7, 1700), (TestAgeDays.Day28, 2500)));
+
+        var day3 = result.EarlyWarnings.Single(w => w.LimitKey == LimitKeys.BreakDay3WarnPct);
+        day3.Warning.ShouldBe(
+            "3-day breaks averaged 800 PSI, below 1,200 PSI (40% of 3,000 PSI).");
+        day3.Value.ShouldBe(26.7);
+        day3.Limit.ShouldBe(40d);
+        day3.Recommendation.ShouldBeNull();
+
+        var day7 = result.EarlyWarnings.Single(w => w.LimitKey == LimitKeys.BreakDay7FailPct);
+        day7.Warning.ShouldBe(
+            "7-day breaks averaged 1,700 PSI, below 2,100 PSI (70% of 3,000 PSI). The batch will probably fail.");
+        day7.Value.ShouldBe(56.7);
+        day7.Limit.ShouldBe(70d);
+        day7.Recommendation.ShouldBe(
+            "Both early breaks are low. Vulcan's practice is to abandon this batch and start a new one.");
+
+        // The 28-day break is checked by BreakResultValidator when it's saved, not here.
+        result.EarlyWarnings.ShouldNotContain(w => w.LimitKey == LimitKeys.StrengthPsi);
+    }
+
+    private static Batch BatchWithBreaks(params (TestAgeDays Age, int Psi)[] breaks)
+    {
+        var castAt = new DateTime(2026, 11, 1, 12, 0, 0, DateTimeKind.Utc);
+        return new Batch
+        {
+            BatchNumber = "VM-TEST-BANDS",
+            CastAt = castAt,
+            ExpectedFinalBreakPsi = 5000,
+            CementType = CementType.TypeI,
+            Specimens =
+            [
+                .. breaks.Select((b, i) => new Specimen
+                {
+                    Label = $"D{(int)b.Age}-{i + 1}",
+                    LengthIn = 12m,
+                    WidthIn = 6m,
+                    TestAgeDays = b.Age,
+                    BreakResult = new BreakResult
+                    {
+                        BrokenAt = castAt.AddDays((int)b.Age),
+                        StrengthPsi = b.Psi
+                    }
+                })
+            ]
+        };
+    }
+
+    [Fact]
+    public async Task Low_3_day_only_says_watch_and_never_abandon()
+    {
+        using var connection = new SqliteConnection("Filename=:memory:");
+        await connection.OpenAsync();
+        var db = GetDbContext(connection);
+        await InitTestDb(db);
+        var evaluator = SetupEarlyWarningService(db);
+
+        var result = await evaluator.Evaluate(
+            BatchWithBreaks((TestAgeDays.Day3, 800)));
+
+        var day3 = result.EarlyWarnings.Single(w => w.LimitKey == LimitKeys.BreakDay3WarnPct);
+        day3.Recommendation.ShouldBe("Watch this batch at the 7-day break.");
+        result.EarlyWarnings.ShouldNotContain(w => w.Recommendation != null && w.Recommendation.Contains("abandon"));
+    }
+
+    [Fact]
+    public async Task Low_3_day_then_passing_7_day_has_no_recommendation()
+    {
+        using var connection = new SqliteConnection("Filename=:memory:");
+        await connection.OpenAsync();
+        var db = GetDbContext(connection);
+        await InitTestDb(db);
+        var evaluator = SetupEarlyWarningService(db);
+
+        var result = await evaluator.Evaluate(
+            BatchWithBreaks((TestAgeDays.Day3, 800), (TestAgeDays.Day7, 2400)));
+
+        var day3 = result.EarlyWarnings.Single(w => w.LimitKey == LimitKeys.BreakDay3WarnPct);
+        day3.Recommendation.ShouldBeNull();
+    }
+
+    [Fact]
+    public async Task Low_7_day_only_has_no_recommendation()
+    {
+        using var connection = new SqliteConnection("Filename=:memory:");
+        await connection.OpenAsync();
+        var db = GetDbContext(connection);
+        await InitTestDb(db);
+        var evaluator = SetupEarlyWarningService(db);
+
+        var result = await evaluator.Evaluate(
+            BatchWithBreaks((TestAgeDays.Day7, 1700)));
+
+        var day7 = result.EarlyWarnings.Single(w => w.LimitKey == LimitKeys.BreakDay7FailPct);
+        day7.Recommendation.ShouldBeNull();
     }
 }

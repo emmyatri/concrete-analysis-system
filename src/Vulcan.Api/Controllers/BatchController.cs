@@ -14,6 +14,7 @@ namespace Vulcan.Api.Controllers;
 [Route("/api/batches")]
 public class BatchController(
     BatchService batchService,
+    BatchExportService batchExportService,
     WaterCementRatioCalculator waterCementRatioCalculator,
     IRecordWarningRepository recordWarningRepository,
     ILogger<BatchController> logger
@@ -111,6 +112,26 @@ public class BatchController(
     {
         var result = await batchService.UpdateAsync(batchNumber, request.ToDomain(batchNumber));
         return HandleBatchResult(result);
+    }
+
+    [HttpGet("{batchNumber}/export")]
+    public async Task<IActionResult> ExportBatch(
+        [FromRoute] string batchNumber)
+    {
+        var workbook = await batchExportService.ExportAsync(batchNumber);
+
+        if (workbook is null)
+        {
+            return NotFound();
+        }
+
+        var normalizedBatchNumber =
+            BatchValidator.NormalizeBatchNumber(batchNumber);
+
+        return File(
+            workbook,
+            BatchExportService.ContentType,
+            $"{normalizedBatchNumber}-export.xlsx");
     }
 
     private IActionResult HandleBatchResult(ServiceResult<Batch> batchResult,

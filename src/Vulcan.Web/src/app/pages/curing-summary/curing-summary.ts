@@ -69,7 +69,7 @@ const ROWS: Row[] = [
   {
     label: 'Moisture change',
     value: change('moisturePct'),
-    format: (v) => `${signed(v, '1.1-1')}%`,
+    format: (v) => `${signed(v, '1.1-1')} pts`,
   },
   {
     label: 'Relative humidity (avg)',

@@ -1,5 +1,6 @@
 using Vulcan.Application.Contracts;
 using Vulcan.Application.Interfaces;
+using Vulcan.Domain.Constants;
 using Vulcan.Domain.Enums;
 using Vulcan.Domain.Interfaces;
 using Vulcan.Prediction.Adjustments;
@@ -13,6 +14,7 @@ public sealed class StrengthService(
     IPredictionRepository predictionRepository,
     IStrengthEstimateService strengthEstimateService,
     ICalibrationProvider calibrationProvider,
+    ILimitProvider limitProvider,
     IEarlyWarningEvaluator? earlyWarningEvaluator = null)
 {
     public async Task<GetBatchStrengthResponse?> GetByBatchNumberAsync(
@@ -270,6 +272,8 @@ public sealed class StrengthService(
                 ? warningEvaluation.ShortfallPct
                 : shortfallPct,
 
+            AccuracyTargetPct = TryGetAccuracyTargetPct(),
+
             CurvePoints = curvePoints,
             UnadjustedCurvePoints = unadjustedCurvePoints,
             Estimates = strengthEstimates,
@@ -277,5 +281,17 @@ public sealed class StrengthService(
             EarlyWarnings = warningEvaluation?.EarlyWarnings.ToList() ?? [],
             CuringPoints = curingPoints
         };
+    }
+
+    private double? TryGetAccuracyTargetPct()
+    {
+        try
+        {
+            return (double?)limitProvider.Get(LimitKeys.PredictionAccuracyTargetPct).Warn?.Max;
+        }
+        catch (KeyNotFoundException)
+        {
+            return null;
+        }
     }
 }

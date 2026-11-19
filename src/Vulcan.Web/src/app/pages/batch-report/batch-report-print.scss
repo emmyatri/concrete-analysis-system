@@ -1,0 +1,256 @@
+﻿/* =========================================
+   M3-31 — PRINTABLE BATCH REPORT
+   US Letter, portrait orientation
+
+   Global stylesheet:
+   Imported through src/styles.scss
+   ========================================= */
+
+@page {
+  size: letter portrait;
+
+  /* Room for the running header and footer, without wide side margins. */
+  margin: 0.6in 0.5in 0.6in;
+
+  /* Running header — every printed page. */
+  @top-left {
+    content: 'VULCAN CBAS';
+    color: #234e70;
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 9pt;
+    font-weight: 700;
+    letter-spacing: 1px;
+    border-bottom: 1px solid #cbd5e1;
+  }
+
+  @top-right {
+    content: 'CONCRETE BATCH REPORT';
+    color: #64748b;
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 8pt;
+    border-bottom: 1px solid #cbd5e1;
+  }
+
+  /* Running footer — every printed page. */
+  @bottom-left {
+    content: 'Vulcan CBAS | Batch Report';
+    color: #64748b;
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 8pt;
+    border-top: 1px solid #cbd5e1;
+  }
+
+  @bottom-right {
+    content: 'Page ' counter(page) ' of ' counter(pages);
+    color: #234e70;
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 8pt;
+    font-weight: 700;
+    border-top: 1px solid #cbd5e1;
+  }
+}
+
+/* Page 1 has the report's own title block, so it doesn't repeat the running header. */
+@page :first {
+  @top-left {
+    content: none;
+    border-bottom: none;
+  }
+
+  @top-right {
+    content: none;
+    border-bottom: none;
+  }
+}
+
+@media print {
+  /* =========================================
+     REPORT CONTAINER
+     ========================================= */
+
+  app-batch-report {
+    display: block;
+    min-height: 0;
+    background: white !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  app-batch-report .batch-report {
+    padding: 0 !important;
+  }
+
+  /*
+   * The page margins come from @page alone. !important because the screen styles in
+   * batch-report.scss (0.6in padding, 8.5in width) are more specific and otherwise add a second
+   * margin inside the page's.
+   */
+  app-batch-report .report-document {
+    box-sizing: border-box;
+    display: block;
+    width: 100% !important;
+    max-width: none !important;
+    min-height: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    border: none;
+    border-radius: 0;
+    box-shadow: none !important;
+    background: #ffffff;
+  }
+
+  /* Remove screen-only layout constraints when printing. */
+  html,
+  body {
+    margin: 0 !important;
+    padding: 0 !important;
+    background: #ffffff !important;
+  }
+
+  app-batch-report .batch-report {
+    width: 100%;
+    max-width: none;
+    margin: 0;
+    padding: 0;
+    background: #ffffff;
+  }
+
+  /* Prevent the report from inheriting screen card styling. */
+  app-batch-report .strength-report-section {
+    width: 100%;
+  }
+
+  /* Running page-margin boxes replace the document footer. */
+  app-batch-report .report-footer {
+    display: none !important;
+  }
+
+  /* =========================================
+     HIDE APPLICATION CONTROLS
+     ========================================= */
+
+  app-batch-report .report-actions,
+  app-batch-report .report-message {
+    display: none !important;
+  }
+
+  /* =========================================
+     PAGE BREAKS
+     ========================================= */
+
+  /*
+   * Sections flow one after another and may continue onto the next page. What must not happen
+   * is a heading, its description or a summary left at the bottom of a page with its content on
+   * the next, so those stay with whatever follows them.
+   */
+  app-batch-report .report-header,
+  app-batch-report .section-heading,
+  app-batch-report .section-description,
+  app-batch-report .specimen-summary,
+  app-batch-report .prediction-subheading {
+    break-after: avoid;
+    page-break-after: avoid;
+  }
+
+  /*
+   * Space between sections. Most of it is padding, because a top margin is dropped when a
+   * section starts a new page and padding is not, so it also clears the running header.
+   */
+  app-batch-report .report-section {
+    margin-top: 4px;
+    padding-top: 14px;
+  }
+
+  /* =========================================
+     TABLE PAGINATION
+     ========================================= */
+
+  app-batch-report .report-table tr {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  /*
+   * Keep each table in one piece: a short table moves to the next page whole instead of
+   * splitting. A table taller than a page still continues, with its headings repeated.
+   */
+  app-batch-report .report-table-wrapper {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  /* Never split a paragraph across pages. */
+  app-batch-report .section-description,
+  app-batch-report .report-note {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  /* Repeat headings on multi-page tables. */
+
+  app-batch-report .composition-table thead,
+  app-batch-report .specimens-table thead {
+    display: table-header-group;
+  }
+
+  app-batch-report .composition-table tfoot {
+    display: table-footer-group;
+  }
+
+  /* =========================================
+     KEEP RELATED CONTENT TOGETHER
+     ========================================= */
+
+  app-batch-report .composition-summary,
+  app-batch-report .specimen-summary,
+  app-batch-report .report-footer {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  /* =========================================
+     STRENGTH CHART PRINT LAYOUT
+     ========================================= */
+
+  /* The chart itself never splits; its section can. */
+  app-batch-report .report-strength-chart {
+    width: 100%;
+    margin: 12px 0;
+    padding: 0;
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  app-batch-report .report-strength-chart canvas {
+    max-width: 100% !important;
+  }
+
+  /* =========================================
+     SECTION 07 — PRINT LAYOUT
+     ========================================= */
+
+  /* Keep the risk assessment together where possible. */
+  app-batch-report .report-risk-assessment {
+    break-inside: avoid;
+    page-break-inside: avoid;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  /* Repeat warning table headings when spanning pages. */
+  app-batch-report [data-testid='report-validation-warnings'] thead {
+    display: table-header-group;
+  }
+
+  /* Allow a long warning table to continue on another page. */
+  app-batch-report [data-testid='report-validation-warnings'] {
+    break-inside: auto;
+    page-break-inside: auto;
+  }
+
+  /* Keep individual warning records together. */
+  app-batch-report [data-testid='report-validation-warnings'] tr {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+}
