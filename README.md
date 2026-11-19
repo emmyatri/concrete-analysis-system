@@ -220,6 +220,10 @@ readonly mixWaterPh = new FormControl<number | null>(null);
 | [`docs/client-decisions.md`](docs/client-decisions.md)   | Decisions adopted from the client's Rev 1 spec and industry standards, with sources   |
 | [`docs/adr/`](docs/adr/)                                 | Architecture decisions (SQLite, in-process API, canonical units, Angular in WebView2) |
 | [`docs/m1-acceptance.md`](docs/m1-acceptance.md)         | The Milestone 1 test script used for the bug bash and the demo                        |
+| [`docs/m2-acceptance.md`](docs/m2-acceptance.md)         | Milestone 2 client demo script                                                        |
+| [`docs/m2-qa-checklist.md`](docs/m2-qa-checklist.md)     | Milestone 2 comprehensive internal QA checklist                                       |
+| [`docs/m3-acceptance.md`](docs/m3-acceptance.md)         | Milestone 3 client demo script (happy path)                                           |
+| [`docs/m3-qa-checklist.md`](docs/m3-qa-checklist.md)     | Milestone 3 comprehensive internal QA checklist                                       |
 | [`CONTRIBUTING.md`](CONTRIBUTING.md)                     | Branching, PR rules and the Definition of Done. **Read before your first PR.**        |
 
 ---
