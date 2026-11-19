@@ -18,7 +18,7 @@ Vulcan Materials.
 | M3 — Calibration & Reporting            | Calibration against real breaks, printable/exportable reports                            | Fri, Nov 20, 2026    |
 | Final delivery                          | Signed installer, docs, training, source handoff                                         | Fri, Dec 4, 2026     |
 
-Current version: `0.1.0-m2` (pre-release)
+Current version: `1.0.0`
 
 ---
 
@@ -128,7 +128,7 @@ Vulcan.slnx
 ├─ src/
 │  ├─ Vulcan.Domain/          Data classes and every validation rule. Uses nothing else.
 │  ├─ Vulcan.Application/     App logic (services) and the data shapes sent to/from the API.
-│  ├─ Vulcan.Prediction/      Strength prediction (empty until Milestone 2).
+│  ├─ Vulcan.Prediction/      Strength prediction (ACI 209R-92 estimates and calibration).
 │  ├─ Vulcan.Infrastructure/  Database (EF Core + SQLite), audit stamping, logging.
 │  ├─ Vulcan.Api/             Server endpoints under /api; re-checks every value (SLA NFR-6).
 │  │                          Also serves the built Angular app from wwwroot/.
@@ -292,7 +292,7 @@ For personal overrides, use `appsettings.Development.local.json`. It's git-ignor
 For Vulcan and anyone using the app. No .NET, Node or internet connection needed.
 
 1. **Download the installer:**
-   **[VulcanCBAS-Setup.exe](https://github.com/emmyatri/concrete-analysis-system/releases/download/v0.1.0-m2/VulcanCBAS-Setup.exe)**
+   **[VulcanCBAS-Setup.exe](https://github.com/emmyatri/concrete-analysis-system/releases/download/v1.0.0/VulcanCBAS-Setup.exe)**
    (about 265 MB, always the latest release). Older versions are on the
    [Releases page](https://github.com/emmyatri/concrete-analysis-system/releases).
 2. **Double-click it.** Windows may say **"Windows protected your PC"** because the installer isn't signed yet. Click
@@ -339,7 +339,7 @@ script does.
 | #   | Do this                                                     | Pass if                                                                                  |
 | --- | ----------------------------------------------------------- | ---------------------------------------------------------------------------------------- |
 | 1   | Run the installer, choose **Install for all users**         | Admin prompt appears; installs to `C:\Program Files\Vulcan CBAS`; app opens at the end   |
-| 2   | Look at the side menu footer                                | It shows the version, e.g. **v0.1.0-m1**                                                 |
+| 2   | Look at the side menu footer                                | It shows the version, e.g. **v1.0.0**                                                    |
 | 3   | Start Menu → type **Vulcan**                                | **Vulcan CBAS** is listed and opens the app                                              |
 | 4   | Open `%LOCALAPPDATA%\VulcanCBAS\`                           | `vulcan.db` and a `logs` folder are there                                                |
 | 5   | Close the app, run the **same installer again**             | Upgrades with no errors; the app still opens                                             |
@@ -392,8 +392,8 @@ to it. Share the installer instead.
 
 ```powershell
 git switch main; git pull
-git tag v0.1.0-m1
-git push origin v0.1.0-m1
+git tag v1.0.0
+git push origin v1.0.0
 ```
 
 ## Troubleshooting
