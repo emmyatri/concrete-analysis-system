@@ -4,7 +4,7 @@
 |---|---|
 | **File** | `docs/m3-acceptance.md` |
 | **Ticket** | SCRUM-199 (M3-82) |
-| **Target Build** | `v0.1.0-m3` |
+| **Target Build** | `v1.0.0` |
 | **Target Execution Time** | 20-minute client walkthrough (target; execution time to be recorded below) |
 | **Purpose** | Client-facing milestone demonstration. The comprehensive internal tests are in `docs/m3-qa-checklist.md`. |
 | **Requirements Covered** | FR-17, FR-19, SC-4, NFR-3 |
@@ -39,11 +39,17 @@
 
 ## Test Execution Matrix
 
-> **Execution flow:** Sections 1–3 use seeded `VM-SYN-006` (plus one moisture save). Section 4 is desktop-only. Section 5 is the SLA check, not extra clicks.
+> **Execution flow:** Sections 1–3 use seeded `VM-SYN-006`. Nothing is saved to it, so its numbers stay as listed below. Section 4 is desktop-only. Section 5 is the SLA check, not extra clicks.
 >
 > **Happy path only.** Edge cases (reject 16% moisture, enter an 800 PSI 3-day break, Wi-Fi off) live in `docs/m3-qa-checklist.md`.
 >
-> **Before you start (step 0, not counted):** Close the app, delete `%LOCALAPPDATA%\VulcanCBAS\vulcan.db`, then relaunch.
+> **Before you start (step 0, not counted):** Close the app, delete `%LOCALAPPDATA%\VulcanCBAS\vulcan.db`, then start the app with the demo data flag:
+>
+> ```powershell
+> & "C:\Program Files\Vulcan CBAS\Vulcan.Desktop.exe" --SeedSyntheticData=true
+> ```
+>
+> A plain relaunch starts with an **empty** database, and every VM-SYN step fails. The flag loads the nine VM-SYN batches with their stored predictions.
 >
 > **Desktop vs browser:** Save as PDF / Export / Cloud need the Windows desktop host. On `npm start`, demo Print report and skip Section 4 as **Blocked**, not Fail.
 >
@@ -61,7 +67,7 @@
 > | Step | Action / What to Type | Expected Result | Req ID | Pass / Fail |
 > |---|---|---|---|:---:|
 > | 1.1 | Open **Curing readings** for `VM-SYN-006`. | Column **Moisture (% of sample weight)**. Hint includes **0–15% (normal 2–4)**. | FR-17 | ☐ |
-> | 1.2 | On a new row, enter a complete reading with Moisture `5.0`. Save. | Row saves. Moisture is amber (outside 2–4%, still allowed). | FR-17 | ☐ |
+> | 1.2 | On the new row, type Moisture `5.0`. **Don't save.** Clear the row afterward. | Moisture cell turns amber (outside 2–4%, still allowed).<br>Saving would recalculate VM-SYN-006's predictions and change the numbers in Section 2. | FR-17 | ☐ |
 > | 1.3 | **View batch** → curing strip → **Moisture**. | Axis title **Moisture (% of sample weight)**. Scale is a few percent, not 0–100. | FR-17 | ☐ |
 
 ---
@@ -76,7 +82,7 @@
 > | Step | Action / What to Type | Expected Result | Req ID | Pass / Fail |
 > |---|---|---|---|:---:|
 > | 2.1 | Point at the **3-day** and **7-day** estimate cards. | No **5% target** line on those cards. 7-day estimate **3,969 PSI**. | SC-4, FR-14 | ☐ |
-> | 2.2 | Point at the **28-day** card. | Estimate ~**4,733 PSI**. Actual **4,994 PSI** — **261 PSI / 5.2% below**. Copy: **Outside the 5% target**. | SC-4 | ☐ |
+> | 2.2 | Point at the **28-day** card. | Estimate ~**4,733 PSI**. Actual **4,994 PSI**. Copy: **Estimate was 261 PSI (5.2%) below the actual break** and **Outside the 5% target**. | SC-4 | ☐ |
 > | 2.3 | Point at the basis / calibration line. | **Adjusted using the 3- and 7-day breaks** (Calibration v1). | FR-14 | ☐ |
 
 ---
@@ -88,8 +94,8 @@
 >
 > | Step | Action / What to Type | Expected Result | Req ID | Pass / Fail |
 > |---|---|---|---|:---:|
-> | 3.1 | Open the report. | Seven sections: Batch Record, Mix Composition, Cement Oxide Analysis, Specimens and Break Results, Strength Development, Strength Predictions and Calibration, Warnings and Recommendations. | FR-19 | ☐ |
-> | 3.2 | Section 06. | Expected **6,200 PSI**. Projected ~**4,733 PSI**. Calibration version shown. | FR-19 | ☐ |
+> | 3.1 | Open the report. | Eight sections: Batch Record, Mix Composition, Cement Oxide Analysis, Specimens and Break Results, Strength Development, Curing Conditions, Strength Predictions and Calibration, Warnings and Recommendations. | FR-19 | ☐ |
+> | 3.2 | Section 07. | Expected **6,200 PSI**. Projected ~**4,733 PSI**. Calibration version shown. | FR-19 | ☐ |
 > | 3.3 | Click **Print report**. | Print dialog. Cancel is fine. | FR-19 | ☐ |
 > | 3.4 | **Desktop:** **Save as PDF** and open the file. | PDF has the same sections; toolbar buttons are not on the page. **Browser:** button is absent — skip. | FR-19 | ☐ |
 
@@ -102,9 +108,9 @@
 >
 > | Step | Action / What to Type | Expected Result | Req ID | Pass / Fail |
 > |---|---|---|---|:---:|
-> | 4.1 | **Export data** for VM-SYN-006. | Spreadsheet / CSV opens; batch number and ~4,733 PSI projection match the report. | FR-19 | ☐ |
+> | 4.1 | **Export data** for VM-SYN-006 and open it in Excel. | **VM-SYN-006-export.xlsx**: one workbook with **Batch**, **Curing readings**, **Breaks** and **Predictions** tabs. Batch number and the ~4,733 PSI 28-day estimate match the report. | FR-19 | ☐ |
 > | 4.2 | **Settings** → **Cloud folder** → **Choose folder**. | Path is stored. | FR-19 | ☐ |
-> | 4.3 | Back on the report, **Save to cloud**. | PDF + export land under `CBAS\VM-SYN-006` in that folder. | FR-19, NFR-3 | ☐ |
+> | 4.3 | Back on the report, **Save to cloud**, then **Yes**. | The app asks before writing anything. After **Yes**, the PDF and the workbook land under `CBAS\VM-SYN-006` in that folder. | FR-19, NFR-3, SC-6 | ☐ |
 
 ---
 

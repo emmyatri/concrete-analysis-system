@@ -4,9 +4,9 @@
 |---|---|
 | **File**                 | `docs/m3-qa-checklist.md`                                                                |
 | **Ticket**               | SCRUM-199 (M3-82)                                                                        |
-| **Target Build**         | `v0.1.0-m3`                                                                              |
+| **Target Build**         | `v1.0.0`                                                                              |
 | **Purpose**              | Full internal check for the M3 chunk. The client demo script is `docs/m3-acceptance.md`. |
-| **Requirements Covered** | FR-17, FR-19, SC-4, NFR-3                                                                |
+| **Requirements Covered** | FR-1, FR-14, FR-17, FR-19, SC-4, SC-6, NFR-3                                                                |
 
 ---
 
@@ -24,6 +24,7 @@
   8. [Cloud Folder](#section-8-cloud)
   9. [Offline PDF](#section-9-offline)
   10. [SLA Acceptance Criterion](#section-10-sla)
+  11. [Edit Batch](#section-11-edit-batch)
 - [Sign-Off & Acceptance Summary](#sign-off--acceptance-summary)
 
 ---
@@ -45,11 +46,17 @@
 
 > **Scope:** Only the M3 chunk. Do **not** re-run the M1 batch-entry / cylinder scripts or the M2 strength-chart / curing-strip / early-warning scripts unless a step below depends on them. Record a missing build as **Blocked**, not **Fail**.
 >
-> **Execution flow:** Sections 1–2 use a technician-created batch (or `VM-2026-0142` in mock). Sections 3–8 use seeded `VM-SYN-006`. Section 9 needs the Windows desktop host. Section 10 is documentation, not a screen test.
+> **Execution flow:** Sections 1–2 use a technician-created batch (or `VM-2026-0142` in mock). Sections 3–8 use seeded `VM-SYN-006`. Section 9 needs the Windows desktop host. Section 10 is documentation, not a screen test. Section 11 edits `VM-SYN-006` and sets it back, so run it last.
 >
 > **Host:** Print, Save as PDF, Export data, Save to cloud, folder picker, and Wi-Fi-off PDF only exist in the **WPF / WebView2 desktop host** (`isDesktopHost`). `npm start` in a browser shows **Print report** only. Record desktop-only steps as **Blocked** if you are on the browser build.
 >
-> **Before you start (step 0, not counted):** Close the app, delete `%LOCALAPPDATA%\VulcanCBAS\vulcan.db`, then relaunch so synthetic batches reload with stored predictions.
+> **Before you start (step 0, not counted):** Close the app, delete `%LOCALAPPDATA%\VulcanCBAS\vulcan.db`, then start the app with the demo data flag:
+>
+> ```powershell
+> & "C:\Program Files\Vulcan CBAS\Vulcan.Desktop.exe" --SeedSyntheticData=true
+> ```
+>
+> A plain relaunch starts with an **empty** database, and every VM-SYN step fails. The flag loads the nine VM-SYN batches with their stored predictions.
 >
 > **Known gap (break-band recommendations):** No seeded synthetic batch has a 3-day average below 1,200 PSI or a 7-day average below 2,100 PSI, so the Day-3 / Day-7 recommendation copy is **not** visible until you enter a low break in Section 2. That is a data fixture gap, not a missing UI.
 >
@@ -90,7 +97,7 @@
 > | 2.2 | After the batch has an initial prediction, **Enter break results** for A1 (Day 3) at **800 PSI**. Save. | Break saves. Average 3-day is below 1,200 PSI. | FR-16 | ☐ |
 > | 2.3 | Open Batch Detail for that batch. | Early-warning banner lists a 3-day reason. Under that reason, recommendation:<br>**Watch this batch at the 7-day break.**<br>`[data-testid=early-warning-recommendation]` | FR-16 | ☐ |
 > | 2.4 | Home → **Batches at risk** → hover the **Top reason** cell for this batch. | Tooltip (`title`) shows the same recommendation when this reason is the top one. | FR-16 | ☐ |
-> | 2.5 | Add a Day-7 break of **1,500 PSI** on a Day-7 cylinder of the same batch (after that cylinder has curing). | Banner recommendation for the 7-day reason:<br>**Consider abandoning this mix.** | FR-16 | ☐ |
+> | 2.5 | Add a Day-7 break of **1,500 PSI** on a Day-7 cylinder of the same batch (after that cylinder has curing). | Banner recommendation for the 7-day reason:<br>**Both early breaks are low. Vulcan's practice is to abandon this batch and start a new one.**<br>The 3-day line **Watch this batch at the 7-day break.** is gone, because a 7-day break now exists. | FR-16 | ☐ |
 
 ---
 
@@ -104,7 +111,7 @@
 > | Step | Action / What to Type | Expected Result | Req ID | Pass / Fail |
 > |---|---|---|---|:---:|
 > | 3.1 | Open `VM-SYN-006`. Read the 3-day and 7-day estimate cards. | Neither card shows **Outside the 5% target** or **Within the 5% target**. The 5% verdict is **28-day only**. | SC-4 | ☐ |
-> | 3.2 | Read the **28-day** estimate card. | **Exact (seeded):**<br>• Estimate about **4,733 PSI**<br>• Actual **4,994 PSI** — **261 PSI / 5.2% below** the estimate<br>• **Outside the 5% target**<br>Card also still shows the M2 shortfall vs expected 6,200 PSI. | SC-4, FR-14 | ☐ |
+> | 3.2 | Read the **28-day** estimate card. | **Exact (seeded):**<br>• Estimate about **4,733 PSI**<br>• Actual **4,994 PSI**<br>• **Estimate was 261 PSI (5.2%) below the actual break**<br>• **Outside the 5% target**<br>Card also still shows the M2 shortfall vs expected 6,200 PSI. | SC-4, FR-14 | ☐ |
 > | 3.3 | Confirm the 7-day card number. | 7-day estimate **3,969 PSI** (sanity check that you are on the post-#83 seed, not an old DB). | FR-14 | ☐ |
 > | 3.4 | Look in **Settings** (and anywhere else) for a control to change 5% → 6%. | **No such control.** Record this step **Blocked / N/A** (unit-tested only). Do not Fail. | SC-4 | ☐ |
 > | 3.5 | Open an on-track batch with 28-day breaks if one exists (`VM-SYN-001`). | 28-day card does **not** show **Outside the 5% target**. | SC-4 | ☐ |
@@ -121,7 +128,7 @@
 > | Step | Action / What to Type | Expected Result | Req ID | Pass / Fail |
 > |---|---|---|---|:---:|
 > | 4.1 | Read the **basis** line on each estimate card. | **Adjusted using the 3- and 7-day breaks** (and **Calibration v1** appears on the cards where that copy is wired). | FR-14, FR-19 | ☐ |
-> | 4.2 | Click **View batch report**. | Section **06 Strength Predictions and Calibration** lists Day 3 / 7 / 28 estimates, an **Adjustment** column, and **Calibration version: v1** (or the stored version string). | FR-19 | ☐ |
+> | 4.2 | Click **View batch report**. | Section **07 Strength Predictions and Calibration** lists Day 3 / 7 / 28 estimates, an **Adjustment** column, and **Calibration version: v1** (or the stored version string). | FR-19 | ☐ |
 > | 4.3 | Open `VM-2026-0142` (or any batch with **no** breaks and **no** 24h curing). | Cards: **Not enough curing data yet** and/or **Before any breaks · Calibration v1** once a prediction exists without breaks. | FR-14 | ☐ |
 > | 4.4 | Do **not** expect the UI to re-fit coefficients live. | Changing a break updates the stored prediction after save; there is no “recalculate method” button. | FR-14 | ☐ |
 
@@ -137,13 +144,14 @@
 > | Step | Action / What to Type | Expected Result | Req ID | Pass / Fail |
 > |---|---|---|---|:---:|
 > | 5.1 | Click **View batch report**. | Report loads for VM-SYN-006. **Back to batch** returns to detail. | FR-19 | ☐ |
-> | 5.2 | Confirm the seven numbered sections exist. | **01** Batch Record<br>**02** Mix Composition<br>**03** Cement Oxide Analysis<br>**04** Specimens and Break Results<br>**05** Strength Development<br>**06** Strength Predictions and Calibration<br>**07** Warnings and Recommendations | FR-19 | ☐ |
+> | 5.2 | Confirm the eight numbered sections exist. | **01** Batch Record<br>**02** Mix Composition<br>**03** Cement Oxide Analysis<br>**04** Specimens and Break Results<br>**05** Strength Development<br>**06** Curing Conditions<br>**07** Strength Predictions and Calibration<br>**08** Warnings and Recommendations | FR-19 | ☐ |
 > | 5.3 | Section 01. | Batch number, SYNTHETIC badge, cast, cement type, expected final **6,200 PSI**, created-by metadata. | FR-19 | ☐ |
 > | 5.4 | Section 04. | Cylinders and recorded breaks present. If a batch had zero breaks it would say **No breaks recorded yet** — SYN-006 should **not** show that empty state. | FR-19 | ☐ |
 > | 5.5 | Section 05. | Strength chart is on the page (print-mode, no Expand needed). | FR-19 | ☐ |
-> | 5.6 | Section 06. | Expected 28-day **6,200 PSI**. Projected 28-day about **4,733 PSI**. Adjustment / calibration version filled in. | FR-19, SC-4 | ☐ |
-> | 5.7 | Section 07. | Strength risk assessment plus input warnings (w/cm and any moisture / ambient flags). Recommendations appear when the batch has them. | FR-16, FR-19 | ☐ |
-> | 5.8 | Open report for a batch with no breaks (e.g. `VM-2026-0142` before Section 2). | Section 04 shows **No breaks recorded yet**. Section 06 may show **No strength predictions** / insufficient curing. | FR-19 | ☐ |
+> | 5.6 | Section 06. | Six curing charts, two across. Each is titled with its measurement and the x-axis reads **Days since cast**. | FR-12, FR-19 | ☐ |
+> | 5.7 | Section 07. | Expected 28-day **6,200 PSI**. Projected 28-day about **4,733 PSI**. Adjustment / calibration version filled in. | FR-19, SC-4 | ☐ |
+> | 5.8 | Section 08, then look back at Sections 01–02. | Section 08: strength risk assessment plus input warnings (w/cm and any moisture / ambient flags). Recommendations appear when the batch has them.<br>Flagged values in Sections 01–02 (e.g. w/cm) also show their warning text inline under the value. | FR-16, FR-19 | ☐ |
+> | 5.9 | Open report for a batch with no breaks (e.g. `VM-2026-0142` before Section 2). | Section 04 shows **No breaks recorded yet**. Section 07 may show **No strength predictions** / insufficient curing. | FR-19 | ☐ |
 
 ---
 
@@ -156,7 +164,7 @@
 > |---|---|---|---|:---:|
 > | 6.1 | On the SYN-006 report, confirm **Print report** is enabled. | Button is present on browser **and** desktop. | FR-19 | ☐ |
 > | 6.2 | Click **Print report**. | System print dialog opens. Cancel is fine; no crash. | FR-19 | ☐ |
-> | 6.3 | **Desktop only:** click **Save as PDF**. Pick a folder. | A PDF is written. Open it: sections 01–07 still present; action buttons are **not** in the printed page. | FR-19 | ☐ |
+> | 6.3 | **Desktop only:** click **Save as PDF**. Pick a folder. | A PDF is written. Open it: sections 01–08 still present; action buttons are **not** in the printed page. | FR-19 | ☐ |
 > | 6.4 | **Browser (`npm start`):** confirm **Save as PDF**, **Export data**, and **Save to cloud** are **absent**. | Expected on the Angular-only host. Record **Blocked** for 6.3 / 7.x / 8.x if you cannot use Windows desktop. | FR-19 | ☐ |
 
 ---
@@ -168,24 +176,28 @@
 >
 > | Step | Action / What to Type | Expected Result | Req ID | Pass / Fail |
 > |---|---|---|---|:---:|
-> | 7.1 | On the SYN-006 report click **Export data**. Save the file. | A spreadsheet / CSV downloads without error. | FR-19 | ☐ |
-> | 7.2 | Open the file. | Batch identity, mix, oxides, specimens/breaks, curing, and prediction fields are present. Values match the on-screen report for this batch (spot-check batch number, expected 6,200 PSI, projected ~4,733 PSI). | FR-19 | ☐ |
-> | 7.3 | Export a second batch (`VM-SYN-001`). | File is for **that** batch, not a leftover SYN-006 export. | FR-19 | ☐ |
+> | 7.1 | On the SYN-006 report click **Export data**. Save the file. | The save dialog suggests **VM-SYN-006-export.xlsx**. The file saves without error. | FR-19 | ☐ |
+> | 7.2 | Open the file in Excel. | One workbook with four tabs: **Batch** (1 row), **Curing readings** (150 rows), **Breaks** (9 rows), **Predictions** (3 rows).<br>Batch tab: batch number, expected final **6,200**, mix and oxide fields. Predictions tab: 28-day estimate about **4,733**.<br>No `####` cells. Sorting a PSI or date column sorts by value, not as text. | FR-19 | ☐ |
+> | 7.3 | Export a second batch (`VM-SYN-001`). | File is **VM-SYN-001-export.xlsx** with VM-SYN-001's data, not a leftover SYN-006 export. | FR-19 | ☐ |
 
 ---
 
 <a id="section-8-cloud"></a>
 ### Section 8: Cloud Folder
 
-> **Desktop only.** Settings → Cloud folder. Save to cloud writes PDF + export under `CBAS\<batch number>` in the chosen sync folder. Nothing uploads until you click **Save to cloud**.
+> **Desktop only.** Settings → Cloud folder. Save to cloud writes PDF + export under `CBAS\<batch number>` in the chosen sync folder. Nothing is written until you click **Save to cloud** and confirm (SC-6).
 >
 > | Step | Action / What to Type | Expected Result | Req ID | Pass / Fail |
 > |---|---|---|---|:---:|
 > | 8.1 | Open **Settings**. | Card **Cloud folder**. Hint mentions OneDrive / Google Drive and `CBAS\<batch number>`. | FR-19, SC-6 | ☐ |
 > | 8.2 | With no folder set. | Value **Not set**. Button **Choose folder**. | FR-19 | ☐ |
 > | 8.3 | Choose a real folder (local is enough for this test). | Path is shown. Button becomes **Change folder**. **Clear** appears. | FR-19 | ☐ |
-> | 8.4 | Return to the SYN-006 report → **Save to cloud**. | PDF and export appear under that folder in `CBAS\VM-SYN-006` (or the documented subfolder name). | FR-19, NFR-3 | ☐ |
-> | 8.5 | **Save to cloud** with folder **Not set**, or with a path that no longer exists. | Error / warning, not a silent success. Settings can show **This folder can't be found.** | FR-19 | ☐ |
+> | 8.4 | Return to the SYN-006 report → **Save to cloud**. | A Yes / No confirmation appears before anything is written. | SC-6 | ☐ |
+> | 8.5 | Click **No**. | Nothing is written. There is no new `CBAS\VM-SYN-006` folder or file. | SC-6 | ☐ |
+> | 8.6 | **Save to cloud** again → **Yes**. | `CBAS\VM-SYN-006` holds **VM-SYN-006 report &lt;today&gt;.pdf** and **VM-SYN-006-export.xlsx**. | FR-19, NFR-3 | ☐ |
+> | 8.7 | **Save to cloud** a third time. | The confirmation adds **This replaces the copies saved there earlier.** After **Yes**, the files' modified times update. | SC-6 | ☐ |
+> | 8.8 | Settings → **Clear**, then **Save to cloud** on the report. | Message: **Choose a cloud folder in Settings first.** Nothing is written. | FR-19 | ☐ |
+> | 8.9 | Choose a folder, then rename it in File Explorer. **Save to cloud**, then open Settings. | Warning: **Can't find the cloud folder:** with the path. Nothing is written.<br>Settings shows **This folder can't be found.** Rename the folder back when done. | FR-19 | ☐ |
 
 ---
 
@@ -214,11 +226,29 @@
 
 ---
 
+<a id="section-11-edit-batch"></a>
+### Section 11: Edit Batch
+
+> *Run this section last. It changes `VM-SYN-006` and then sets it back, so the demo numbers match again.*
+>
+> **Starting point:** Batch Detail for `VM-SYN-006`. Note the warning count next to the batch number and the 28-day card's **was … before breaks** value (6,212).
+>
+> | Step | Action / What to Type | Expected Result | Req ID | Pass / Fail |
+> |---|---|---|---|:---:|
+> | 11.1 | Click **Edit batch**. | Title **Edit batch VM-SYN-006**. The form shows the saved values.<br>**Batch number** and **cast date/time** are locked. The button reads **Save changes**; there is no **Save & add cylinders**. | FR-1 | ☐ |
+> | 11.2 | Change **Expected final break** from `6200` to `5000`. Click **Save changes**. | Back on Batch Detail. Expected final reads **5,000 PSI**.<br>**Changed by** shows the technician name and the time you saved. | FR-1 | ☐ |
+> | 11.3 | Read the 28-day estimate card. | Predictions were recalculated: the **was … before breaks** value is no longer **6,212**, and the target comparison now uses **5,000 PSI**. | FR-14 | ☐ |
+> | 11.4 | Click **Edit batch**, change any field, then click **Cancel**. | Back on Batch Detail. Nothing changed; expected final is still **5,000 PSI**. | FR-1 | ☐ |
+> | 11.5 | **Edit batch** → set Expected final back to `6200` → **Save changes**. | 28-day card shows **was 6,212 before breaks** again and an estimate of about **4,733 PSI**. | FR-1, FR-14 | ☐ |
+> | 11.6 | Check the warning count next to the batch number. | Same count as before Step 11.1. Saving replaces the batch's warnings instead of adding duplicates. | FR-16 | ☐ |
+
+---
+
 ## Sign-Off & Acceptance Summary
 
 | Metric | Value |
 |---|---|
-| **Total Test Steps**   | 47            |
+| **Total Test Steps**   | 58            |
 | **Steps Passed**       | _____         |
 | **Steps Failed**       | _____         |
 | **Steps Blocked**      | _____         |
